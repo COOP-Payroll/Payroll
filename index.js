@@ -13,6 +13,7 @@ const pensionRouter = require("./routes/pension.js");
 const deptRouter = require("./routes/department.js");
 const subscriptionRouter = require("./routes/subscription.js");
 const authRouter = require("./routes/auth.js");
+const companyIdRouter = require("./routes/companyId");
 
 const app = express();
 
@@ -28,8 +29,9 @@ app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
 app.use("/login", authRouter);
+// app.use("/companyIdFormat", companyIdRouter);
 
-sequelize.sync({ force: true }).then(() => console.log("db is ready"));
+sequelize.sync().then(() => console.log("db is ready"));
 
 app.listen(process.env.PORT, () => {
   // cron.schedule("* * *  * *  * * *", async () => {

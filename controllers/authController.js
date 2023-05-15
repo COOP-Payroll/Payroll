@@ -17,7 +17,6 @@ const signToken = (id) => {
 
 const createSendToken = (company, statusCode, res) => {
   const token = signToken(company.id);
-  console.log(company.id);
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
@@ -51,7 +50,6 @@ exports.login = async (req, res, next) => {
 
     //check if user exists and password is correct
     const company = await Company.findOne({ where: { email } });
-    console.log(JSON.stringify(company, null, 4));
     if (
       !company ||
       company.companyCode != companyCode ||
