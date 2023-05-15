@@ -30,9 +30,13 @@ exports.createTaxslab = async (req, res, next) => {
 
     try {
         const { from_Salary, to_Salary, income_tax_payable, deductible_Fee, companyId, isActive } = req.body;
-console.log(req.body)
+
 
         const taxslab = await Taxslab.create({ from_Salary, to_Salary, income_tax_payable, deductible_Fee,  });
+
+
+
+
 
 
         res.status(200).json({

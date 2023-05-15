@@ -44,6 +44,10 @@ const Company = sequelize.define("Company", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  companyCode: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 
 Company.beforeCreate((company, options) => {
