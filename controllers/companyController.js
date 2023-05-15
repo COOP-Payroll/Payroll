@@ -2,6 +2,7 @@ const Company = require("../models/company.js");
 const Package = require("../models/package.js");
 const Subscription = require("../models/subscription.js");
 const { calculateNextPayment } = require("../utils/helper.js");
+const moment = require("moment");
 
 // create Company
 exports.createCompany = async (req, res) => {
@@ -20,6 +21,8 @@ exports.createCompany = async (req, res) => {
     if (!package) {
       res.status(404).json({ error: "package does not exist!" });
     } else {
+      const currentDate = moment();
+      res.status(200).json(daysLeft);
       const subscription = await Subscription.create({ duration });
       await subscription.setPackage(packageId);
       await subscription.setCompany(company.id);
@@ -28,7 +31,8 @@ exports.createCompany = async (req, res) => {
         duration,
         normalDate: Date.now(),
       });
-      await subscription.update({ nextPaymentDate });
+      const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
+      await subscription.update({ nextPaymentDate, leftPaymentDate });
       res.status(201).json(subscription);
     }
   } catch (error) {
