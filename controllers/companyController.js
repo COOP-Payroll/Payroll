@@ -1,5 +1,6 @@
 const Company = require("../models/company.js");
 const Package = require("../models/package.js");
+const Pension = require("../models/pension.js");
 const Subscription = require("../models/subscription.js");
 const Taxslab = require("../models/taxslab.js");
 const User = require("../models/user.js");
@@ -19,7 +20,8 @@ exports.createCompany = async (req, res) => {
   const duration = Number(req.body.duration);
   try {
     const company = await Company.create(data);
-    const package = await Package.findByPk(packageId);
+
+    const package = await Package.findByPk(Number(packageId));
     if (!package) {
       res.status(404).json({ error: "package does not exist!" });
     } else {
@@ -39,17 +41,34 @@ exports.createCompany = async (req, res) => {
       const taxslabs = await Taxslab.findAll({
         where: { userId: Number(superAdmin.id), isActive: true },
       });
-      await Promise.all(
+      const pensions = await Pension.findAll({
+        where: { userId: Number(superAdmin.id), isActive: true },
+      });
+
+      const tax = await Promise.all(
         taxslabs.map((taxslab) => {
           Taxslab.create({
-            ...taxslab,
-            userId: 0,
-            companyId: Number(company.id),
+            from_Salary: Number(taxslab.from_Salary),
+            to_Salary: Number(taxslab.to_Salary),
+            income_tax_payable: Number(taxslab.income_tax_payable),
+            deductible_Fee: Number(taxslab.deductible_Fee),
+            CompanyId: Number(company.id),
+            UserId: null,
           });
-          // taxslab.setCompany(Number(company.id));
-          // taxslab.setUser(0);
         })
       );
+
+      const pen = await Promise.all(
+        pensions.map((pension) => {
+          Pension.create({
+            employerContribution: Number(pension.employerContribution),
+            employeeContribution: Number(pension.employeeContribution),
+            CompanyId: Number(company.id),
+            UserId: null,
+          });
+        })
+      );
+
       res.status(201).json(subscription);
     }
   } catch (error) {
@@ -60,6 +79,7 @@ exports.createCompany = async (req, res) => {
       });
       res.status(400).json(errors);
     }
+    console.log("err", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

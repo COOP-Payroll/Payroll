@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-const Company  =require('./company.js')
+const Company = require("./company.js");
 
 const AllowanceDefinition = sequelize.define("AllowanceDefinition", {
   name: {
@@ -14,7 +14,6 @@ const AllowanceDefinition = sequelize.define("AllowanceDefinition", {
   isExempted: {
     type: DataTypes.STRING,
     defaultValue: false,
-
   },
   exemptedAmount: {
     type: DataTypes.STRING,
@@ -22,12 +21,11 @@ const AllowanceDefinition = sequelize.define("AllowanceDefinition", {
   },
   //if taxable is true
   startingAmount: {
-    type:DataTypes.FLOAT,
+    type: DataTypes.FLOAT,
   },
 });
 
 AllowanceDefinition.belongsTo(Company);
 Company.hasMany(AllowanceDefinition);
-
 
 module.exports = AllowanceDefinition;

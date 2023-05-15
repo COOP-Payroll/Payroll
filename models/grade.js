@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-const Company  =require('./company.js')
+const Company = require("./company.js");
 
 const Grade = sequelize.define("Grade", {
   name: {
@@ -15,7 +15,6 @@ const Grade = sequelize.define("Grade", {
     type: DataTypes.FLOAT,
     defaultValue: false,
   },
-  
 });
 Grade.belongsTo(Company);
 Company.hasMany(Grade);

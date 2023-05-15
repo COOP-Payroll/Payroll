@@ -58,13 +58,34 @@ exports.protectAll = async (req, res, next) => {
 };
 
 //Restricted to
-exports.restrictToA = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user?.role)) {
+exports.restrictTo = (roles) => {
+  return async (req, res, next) => {
+    if (req.user.role === "Companyadmin") {
+      next();
+    } else {
+      const permissions = req.user.customRole[0].permissions.find(
+        (per) => per.module === Object.keys(roles).toString()
+      );
+      if (permissions[Object.values(roles)]) {
+        next();
+      } else {
+        return res.status(403).json({
+          message: "You do not have permission to perform this action",
+        });
+      }
+    }
+  };
+};
+
+//Restricted to
+exports.restrictToAdmin = (role) => {
+  return async (req, res, next) => {
+    if (req.user.role === role) {
+      next();
+    } else {
       return res.status(403).json({
         message: "You do not have permission to perform this action",
       });
     }
-    next();
   };
 };
