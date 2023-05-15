@@ -9,6 +9,9 @@ const Pension = sequelize.define("Pension", {
   employeeContribution: {
     type: DataTypes.INTEGER,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+  },
 });
 
 Company.hasMany(Pension);

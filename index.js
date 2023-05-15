@@ -28,7 +28,27 @@ app.use("/subscription", subscriptionRouter);
 
 sequelize.sync().then(() => console.log("db is ready"));
 
+app.use((req, res, next) => {
+  const error = new Error("Not Found");
+  error.status = 404;
+  next(error);
+});
+app.use((err, req, res, next) => {
+  res.removeHeader("Cross-Origin-Embedder-Policy");
+  const errorStatus = err.status || 500;
+  const errorMessage = err.message || "Something went Wrong";
+
+  return res.status(errorStatus).json({
+    success: false,
+    status: errorStatus,
+    message: errorMessage,
+    stack: err.stack,
+  });
+});
+
+
 app.listen(process.env.PORT, () => {
+
   // cron.schedule("* * *  * *  * * *", async () => {
   //   run.run();
   // });

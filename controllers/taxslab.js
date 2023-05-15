@@ -29,11 +29,12 @@ exports.getTaxslabById = async (req, res) => {
 exports.createTaxslab = async (req, res, next) => {
 
     try {
-
         const { from_Salary, to_Salary, income_tax_payable, deductible_Fee, companyId, isActive } = req.body;
 console.log(req.body)
 
         const taxslab = await Taxslab.create({ from_Salary, to_Salary, income_tax_payable, deductible_Fee,  });
+
+
         res.status(200).json({
             message: 'Successfully Registered',
             taxslab
@@ -104,3 +105,47 @@ exports.deleteTaxslab = async (req, res, next) => {
     }
 
 };
+
+/////
+
+
+// API endpoint for super admin to update tax rules
+exports.assignTaxruleToCompany=async(req,res,next) => {
+    try {
+        const { taxRuleId } = req.params;
+        const { name, rate } = req.body;
+
+        // Find the tax rule
+        const taxRule = await TaxRule.findByPk(taxRuleId);
+        if (!taxRule) {
+            return res.status(404).json({ error: 'Tax rule not found' });
+        }
+
+        // Update the tax rule
+        taxRule.name = name;
+        taxRule.rate = rate;
+        await taxRule.save();
+
+        // Retrieve the super admin
+        const superAdmin = await SuperAdmin.findOne();
+        if (!superAdmin) {
+            return res.status(404).json({ error: 'Super admin not found' });
+        }
+
+        // Update the tax rule for the super admin
+        await superAdmin.addTaxRule(taxRule);
+
+        // Retrieve all companies
+        const companies = await Company.findAll();
+
+        // Update the tax rule for each company
+        for (const company of companies) {
+            await company.setTaxRule(taxRule);
+        }
+
+        return res.json(taxRule);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
