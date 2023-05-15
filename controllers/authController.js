@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Company = require("../models/company");
+const User = require("../models/user");
 
 const signToken = (id) => {
   try {
@@ -45,7 +46,7 @@ exports.login = async (req, res, next) => {
     if (!email || !password || !companyCode) {
       return res
         .status(404)
-        .json({ message: "please provide email, password or company code" });
+        .json({ error: "please provide email, password or company code" });
     }
 
     //check if user exists and password is correct
@@ -84,6 +85,39 @@ exports.login = async (req, res, next) => {
     //next(createError.createError(404, 'failed'));
     res.status(404).json({
       status: "fail123",
+      message: err,
+    });
+  }
+};
+
+///super admin login
+exports.superAdminLogin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    //check if email and password exist company code
+    if (!email || !password) {
+      return res
+        .status(404)
+        .json({ error: "please provide email, password or company code" });
+    }
+    //check if user exists and password is correct
+    const user = await User.findOne({ where: { email } });
+
+    if (
+      !user ||
+      user.role != "superAdmin" ||
+      !(await bcrypt.compare(password, user.password))
+    ) {
+      return res.status(401).json({ error: "Incorrect email, password" });
+      //next(createError.createError(401,'Incorrect email, password or company Code'))
+    }
+
+    //if everything is ok send token to the client
+    createSendToken(user, 200, res);
+  } catch (err) {
+    res.status(404).json({
+      status: "error occour",
       message: err,
     });
   }
