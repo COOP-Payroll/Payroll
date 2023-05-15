@@ -14,6 +14,11 @@ const deptRouter = require("./routes/department.js");
 const subscriptionRouter = require("./routes/subscription.js");
 const authRouter = require("./routes/auth.js");
 const companyIdRouter = require("./routes/companyId");
+const allowance = require("./routes/allowance");
+const allowanceDefinition = require("./routes/allowanceDefinition");
+const deduction = require("./routes/deduction");
+const grade = require("./routes/grade");
+const deductionDefinition = require("./routes/deductionDefinition");
 
 const app = express();
 
@@ -30,6 +35,11 @@ app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
 app.use("/login", authRouter);
 // app.use("/companyIdFormat", companyIdRouter);
+app.use("/allowancedefinition", allowanceDefinition);
+app.use("/allowance", allowance);
+app.use("/deductiondefinition", deductionDefinition);
+app.use("/deduction", deduction);
+app.use("/grade", grade);
 
 sequelize.sync({ alter: true }).then(() => console.log("db is ready"));
 
