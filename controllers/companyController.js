@@ -1,6 +1,8 @@
 const Company = require("../models/company.js");
 const Package = require("../models/package.js");
 const Subscription = require("../models/subscription.js");
+const Taxslab = require("../models/taxslab.js");
+const User = require("../models/user.js");
 const { calculateNextPayment } = require("../utils/helper.js");
 const moment = require("moment");
 
@@ -33,10 +35,24 @@ exports.createCompany = async (req, res) => {
       });
       const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
       await subscription.update({ nextPaymentDate, leftPaymentDate });
+      const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+      const taxslabs = await Taxslab.findAll({
+        where: { userId: Number(superAdmin.id), isActive: true },
+      });
+      await Promise.all(
+        taxslabs.map((taxslab) => {
+          Taxslab.create({
+            ...taxslab,
+            userId: 0,
+            companyId: Number(company.id),
+          });
+          // taxslab.setCompany(Number(company.id));
+          // taxslab.setUser(0);
+        })
+      );
       res.status(201).json(subscription);
     }
   } catch (error) {
-    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
