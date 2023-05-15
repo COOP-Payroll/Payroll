@@ -11,6 +11,11 @@ const taxslabRouter = require("./routes/taxslab.js");
 const pensionRouter = require("./routes/pension.js");
 const deptRouter = require("./routes/department.js");
 const subscriptionRouter = require("./routes/subscription.js");
+const allowance = require('./routes/allowance')
+const allowanceDefinition = require('./routes/allowanceDefinition')
+const deduction = require('./routes/deduction')
+const grade = require('./routes/grade')
+const deductionDefinition = require('./routes/deductionDefinition')
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
 
@@ -18,6 +23,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
 
+app.use("/allowancedefinition", allowanceDefinition)
+app.use("/allowance", allowance)
+app.use("/deductiondefinition", deductionDefinition)
+app.use("/deduction", deduction)
+app.use("/grade", grade)
 app.use("/user", userRouter);
 app.use("/company", companyRouter);
 app.use("/package", packageRouter);
@@ -29,6 +39,7 @@ app.use("/subscription", subscriptionRouter);
 sequelize.sync().then(() => console.log("db is ready"));
 
 app.listen(process.env.PORT, () => {
+  console.log(process.env.PORT)
   // cron.schedule("* * *  * *  * * *", async () => {
   //   run.run();
   // });

@@ -21,8 +21,7 @@ const Package =sequelize.define('Package', {
        
     },
     service: [{
-        type: DataTypes.STRING,
-        
+        type: DataTypes.STRING,       
     }
     ],
     discount:{
