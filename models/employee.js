@@ -37,43 +37,28 @@ const Employee = sequelize.define("Employee", {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
-    employeeTIN: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-    },
+ 
     email: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
-    phoneNumber: {
-        type: DataTypes.BOOLEAN,
+    phoneNumber1: {
+        type: DataTypes.INTEGER,
+      allowNull:false
+    },
+    phoneNumber2: {
+        type: DataTypes.INTEGER,
         defaultValue: true,
     },
     optionalNumber: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
-    isDeactivated: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-    },
-    hireDate: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-    },
-    joiningDate: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-    },
-    employeeCode: {
+    isActive:{
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
 
-    accountNumber: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-    },
     password: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
@@ -82,10 +67,10 @@ const Employee = sequelize.define("Employee", {
 
 });
 
-Subscription.belongsTo(Package);
-Package.hasOne(Subscription);
+// Subscription.belongsTo(Package);
+// Package.hasOne(Subscription);
 
-Subscription.belongsTo(Company);
-Company.hasOne(Subscription);
+// Subscription.belongsTo(Company);
+// Company.hasOne(Subscription);
 
 module.exports = Employee;

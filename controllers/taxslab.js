@@ -1,9 +1,10 @@
 const Taxslab = require('../models/taxslab.js');
+const User=require('../models/user.js')
 
 // Define controller methods for handling User requests
 exports.getAllTaxslabs = async (req, res) => {
     try {
-        const taxslab = await Taxslab.findAll();
+        const taxslab = await Taxslab.findAll({ include: User });
         res.status(200).json({
             count: taxslab.length,
             taxslab
@@ -14,6 +15,10 @@ exports.getAllTaxslabs = async (req, res) => {
     }
 
 };
+
+
+
+
 
 exports.getTaxslabById = async (req, res) => {
     try {
@@ -33,11 +38,7 @@ exports.createTaxslab = async (req, res, next) => {
 
 
         const taxslab = await Taxslab.create({ from_Salary, to_Salary, income_tax_payable, deductible_Fee,  });
-
-
-
-
-
+      taxslab.setUser(1);
 
         res.status(200).json({
             message: 'Successfully Registered',
