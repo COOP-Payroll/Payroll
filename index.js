@@ -20,7 +20,7 @@ const deduction = require("./routes/deduction");
 const grade = require("./routes/grade");
 const deductionDefinition = require("./routes/deductionDefinition");
 const payrollRouter = require("./routes/payroll");
-const employeeRouter=require('./routes/employee.js')
+const employeeRouter = require("./routes/employee.js");
 
 const app = express();
 
@@ -59,7 +59,7 @@ app.use("/grade", grade);
 
 app.use("/payroll", payrollRouter);
 
-sequelize.sync({force: true}).then(() => console.log("db is ready"));
+sequelize.sync({ force: true }).then(() => console.log("db is ready"));
 
 app.listen(process.env.PORT, () => {
   // cron.schedule("* * *  * *  * * *", async () => {

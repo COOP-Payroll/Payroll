@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
+const Employee=require('./employee.js')
 
 const Grade = sequelize.define("Grade", {
   name: {
@@ -18,5 +19,8 @@ const Grade = sequelize.define("Grade", {
 });
 Grade.belongsTo(Company);
 Company.hasMany(Grade);
+
+Grade.belongsTo(Employee);
+Employee.hasOne(Grade);
 
 module.exports = Grade;
