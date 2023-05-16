@@ -9,6 +9,6 @@ router.post("/", userController.createUser);
 router.put("/:id", userController.updateUser);
 router.put("/CompanyStatus/update", userController.updateCompanyStatus);
 router.delete("/:id", userController.deleteUser);
-router.put('/taxrules/:taxRuleId');
+router.put("/taxrules/:taxRuleId");
 
 module.exports = router;

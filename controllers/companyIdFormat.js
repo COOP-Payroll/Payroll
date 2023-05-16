@@ -1,7 +1,7 @@
 const CompanyIdFormat = require("../models/companyIdFormat");
 
 // create CompanyIdFormat
-exports.createCompany = async (req, res) => {
+exports.createCompanyIdFormat = async (req, res) => {
   try {
     const companyIdFormat = await CompanyIdFormat.create(req.body);
   } catch (error) {

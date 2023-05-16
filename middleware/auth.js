@@ -21,7 +21,7 @@ exports.protectAll = async (req, res, next) => {
       });
     }
     //verification token
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_CODE);
+    const decoded = await promisify(jwt.verify)(token, 'secret');
     // console.log(decoded.id);
     //check if user still exists
     let currentUser;
