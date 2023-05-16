@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
+const Employee=require('./employee.js')
 
 const EmergencyContact = sequelize.define("EmergencyContact", {
     relation: {
@@ -14,20 +15,20 @@ const EmergencyContact = sequelize.define("EmergencyContact", {
 
     optionalPhoneNumber: {
         type: DataTypes.STRING,
-        allowNull: false,
+      
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
+       
     },
     kebele: {
         type: DataTypes.STRING,
-        allowNull: false,
+       
     },
 ///Employee ID
 });
 
-//Company.hasMany(Department);
-// Department.belongsTo(Company);
+Employee.hasMany(EmergencyContact);
+EmergencyContact.belongsTo(Employee);
 
 module.exports = EmergencyContact;

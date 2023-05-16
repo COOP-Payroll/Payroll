@@ -78,8 +78,9 @@ exports.createCompany = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
       res.status(400).json(errors);
+    } else {
+      res.status(500).json({ error: "Internal server error" });
     }
-    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
