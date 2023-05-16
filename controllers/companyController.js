@@ -79,7 +79,6 @@ exports.createCompany = async (req, res) => {
       });
       res.status(400).json(errors);
     }
-    console.log("err", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -101,8 +100,11 @@ exports.getCompanyById = async (req, res) => {
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
     });
-    if (!company) res.status(404).json({ error: "Company does not exist" });
-    res.json(company);
+    if (!company) {
+      res.status(404).json({ error: "Company does not exist" });
+    } else {
+      res.json(company);
+    }
   } catch (error) {
     res.json(error);
   }
@@ -115,19 +117,21 @@ exports.updateCompany = async (req, res) => {
 
   try {
     const company = await Company.findByPk(Number(id));
-    if (!company) res.status(404).json({ error: "Company does not exist" });
+    if (!company) {
+      res.status(404).json({ error: "Company does not exist" });
+    } else {
+      // Disallow updating password field
+      if (body.password) {
+        delete body.password;
+      }
 
-    // Disallow updating password field
-    if (body.password) {
-      delete body.password;
+      // Validate the updated data against the model
+      await company.validate();
+      await company.update(body);
+
+      // Return the updated company object
+      return res.json(company);
     }
-
-    // Validate the updated data against the model
-    await company.validate();
-    await company.update(body);
-
-    // Return the updated company object
-    return res.json(company);
   } catch (error) {
     // Handle validation errors
     if (error.name === "SequelizeValidationError") {
@@ -148,11 +152,13 @@ exports.deleteCompany = async (req, res) => {
   const { id } = req.params;
   try {
     const company = await Company.findByPk(Number(id));
-    if (!company) res.status(404).json({ error: "Company does not exist" });
-    await company.destroy();
-    res.json("company deleted successfully");
+    if (!company) {
+      res.status(404).json({ error: "Company does not exist" });
+    } else {
+      await company.destroy();
+      res.json("company deleted successfully");
+    }
   } catch (error) {
-    console.log("err", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
