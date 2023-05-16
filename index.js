@@ -4,7 +4,7 @@ require("dotenv").config();
 const sequelize = require("./database/db.js");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
-
+const cors = require("cors");
 const userRouter = require("./routes/user.js");
 const companyRouter = require("./routes/company.js");
 const packageRouter = require("./routes/package.js");
@@ -14,8 +14,29 @@ const deptRouter = require("./routes/department.js");
 const subscriptionRouter = require("./routes/subscription.js");
 const authRouter = require("./routes/auth.js");
 const companyIdRouter = require("./routes/companyId");
+const allowance = require("./routes/allowance");
+const allowanceDefinition = require("./routes/allowanceDefinition");
+const deduction = require("./routes/deduction");
+const grade = require("./routes/grade");
+const deductionDefinition = require("./routes/deductionDefinition");
+const payrollRouter = require("./routes/payroll");
+const employeeRouter = require("./routes/employee.js");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:*",
+      "http://10.2.125.124:4000",
+      "*",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -28,8 +49,8 @@ app.use("/taxslab", taxslabRouter);
 app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
-app.use("/login", authRouter);
-// app.use("/companyIdFormat", companyIdRouter);
+app.use("/approvalmethod", approvalMethod);
+app.use("/Payroll", payroll);
 
 sequelize.sync().then(() => console.log("db is ready"));
 
@@ -39,3 +60,4 @@ app.listen(process.env.PORT, () => {
   // });
   console.log("connected to backend");
 });
+

@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
+const User = require("./user.js");
 
 const Taxslab = sequelize.define("Taxslab", {
   from_Salary: {
@@ -27,5 +28,8 @@ const Taxslab = sequelize.define("Taxslab", {
 
 Company.hasMany(Taxslab);
 Taxslab.belongsTo(Company);
+
+User.hasMany(Taxslab);
+Taxslab.belongsTo(User);
 
 module.exports = Taxslab;

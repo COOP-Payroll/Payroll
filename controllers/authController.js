@@ -3,27 +3,24 @@ const jwt = require("jsonwebtoken");
 const Company = require("../models/company");
 const User = require("../models/user");
 
-const signToken = (id) => {
+const signToken = (id, role) => {
   try {
-    return jwt.sign({ id }, "secret", {
-      expiresIn: process.env.JWT_EXPIRES_IN,
+    return jwt.sign({ id, role }, "secret", {
+      expiresIn: "90d",
     });
   } catch (err) {
-    res.status(404).json({
-      status: "fail",
-      message: err,
-    });
+    return err;
   }
 };
 
 const createSendToken = (company, statusCode, res) => {
-  const token = signToken(company.id);
+  const token = signToken(company.id, company.role);
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      Date.now() + 1000 * 24 * 60 * 60 * 1000
     ),
 
-    secure: process.env.NODE_ENV === "production" ? true : false,
+    secure: "production" ? true : false,
     httpOnly: true,
   };
   company.password = undefined;
@@ -97,13 +94,11 @@ exports.superAdminLogin = async (req, res, next) => {
 
     //check if email and password exist company code
     if (!email || !password) {
-      return res
-        .status(404)
-        .json({ error: "please provide email, password or company code" });
+      return res.status(404).json({ error: "please provide email, password" });
     }
     //check if user exists and password is correct
     const user = await User.findOne({ where: { email } });
-
+    console.log("user", user);
     if (
       !user ||
       user.role != "superAdmin" ||
@@ -111,11 +106,13 @@ exports.superAdminLogin = async (req, res, next) => {
     ) {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
+    } else {
+      createSendToken(user, 200, res);
     }
 
     //if everything is ok send token to the client
-    createSendToken(user, 200, res);
   } catch (err) {
+    console.log("err", err);
     res.status(404).json({
       status: "error occour",
       message: err,
