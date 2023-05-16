@@ -41,7 +41,7 @@ app.use("/deductiondefinition", deductionDefinition);
 app.use("/deduction", deduction);
 app.use("/grade", grade);
 
-sequelize.sync({alter: true}).then(() => console.log("db is ready"));
+sequelize.sync({ alter: true }).then(() => console.log("db is ready"));
 
 app.listen(process.env.PORT, () => {
   // cron.schedule("* * *  * *  * * *", async () => {
