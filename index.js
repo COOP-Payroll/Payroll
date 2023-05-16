@@ -4,7 +4,7 @@ require("dotenv").config();
 const sequelize = require("./database/db.js");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
-
+const cors = require("cors");
 const userRouter = require("./routes/user.js");
 const companyRouter = require("./routes/company.js");
 const packageRouter = require("./routes/package.js");
@@ -22,6 +22,19 @@ const deductionDefinition = require("./routes/deductionDefinition");
 const payrollRouter = require("./routes/payroll");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:*",
+      "http://10.2.125.124:4000",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
