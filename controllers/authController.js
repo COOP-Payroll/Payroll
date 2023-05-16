@@ -9,10 +9,7 @@ const signToken = (id, role) => {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
   } catch (err) {
-    res.status(404).json({
-      status: "fail",
-      message: err,
-    });
+    return err;
   }
 };
 
@@ -101,7 +98,7 @@ exports.superAdminLogin = async (req, res, next) => {
     }
     //check if user exists and password is correct
     const user = await User.findOne({ where: { email } });
-    console.log("user", user)
+    console.log("user", user);
     if (
       !user ||
       user.role != "superAdmin" ||
@@ -110,11 +107,12 @@ exports.superAdminLogin = async (req, res, next) => {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
     } else {
-      //if everything is ok send token to the client
       createSendToken(user, 200, res);
     }
+
+    //if everything is ok send token to the client
   } catch (err) {
-    console.log("err", err)
+    console.log("err", err);
     res.status(404).json({
       status: "error occour",
       message: err,
