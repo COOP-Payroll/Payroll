@@ -22,6 +22,7 @@ const Employee = sequelize.define("Employee", {
   role: {
     type: DataTypes.ENUM("employee", "approver"),
     allowNull: false,
+    defaultValue: "employee",
   },
   nationality: {
     type: DataTypes.STRING,
@@ -30,58 +31,51 @@ const Employee = sequelize.define("Employee", {
   marriageStatus: {
     type: DataTypes.ENUM("Single", "Married", "Divorced"),
     defaultValue: true,
+    defaultValue: "Single",
   },
   id_number: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.STRING,
   },
-  employeeTIN: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
-  },
+
   email: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   phoneNumber: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   optionalNumber: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.STRING,
+ 
   },
   isDeactivated: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    defaultValue: false,
   },
   hireDate: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.DATE,
   },
   joiningDate: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.DATE,
   },
   employeeCode: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.STRING,
   },
 
   accountNumber: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   password: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    type: DataTypes.STRING,
   },
 });
 
-Subscription.belongsTo(Package);
-Package.hasOne(Subscription);
+// Subscription.belongsTo(Package);
+// Package.hasOne(Subscription);
 
-Subscription.belongsTo(Company);
-Company.hasOne(Subscription);
+// Subscription.belongsTo(Company);
+// Company.hasOne(Subscription);
 
 module.exports = Employee;

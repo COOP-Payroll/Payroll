@@ -27,6 +27,10 @@ exports.getAllTaxslabs = async (req, res) => {
   }
 };
 
+
+
+
+
 exports.getTaxslabById = async (req, res) => {
   try {
     const { id } = req.params;
