@@ -101,7 +101,6 @@ exports.superAdminLogin = async (req, res, next) => {
     }
     //check if user exists and password is correct
     const user = await User.findOne({ where: { email } });
-
     if (
       !user ||
       user.role != "superAdmin" ||
