@@ -21,6 +21,8 @@ const grade = require("./routes/grade");
 const deductionDefinition = require("./routes/deductionDefinition");
 const payrollRouter = require("./routes/payroll");
 const employeeRouter = require("./routes/employee.js");
+const payrollDefinition = require("./routes/payrollDefinition");
+const approvalMethod = require("./routes/approvalMethod");
 
 const app = express();
 
@@ -49,8 +51,18 @@ app.use("/taxslab", taxslabRouter);
 app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
+app.use("/login", authRouter);
+app.use("/employee", employeeRouter);
+// app.use("/companyIdFormat", companyIdRouter);
+app.use("/allowancedefinition", allowanceDefinition);
+app.use("/allowance", allowance);
+app.use("/deductiondefinition", deductionDefinition);
+app.use("/deduction", deduction);
+app.use("/grade", grade);
+
+app.use("/payroll", payrollRouter);
 app.use("/approvalmethod", approvalMethod);
-app.use("/Payroll", payroll);
+app.use("/payrollDefinition", payrollDefinition);
 
 sequelize.sync().then(() => console.log("db is ready"));
 
@@ -60,4 +72,3 @@ app.listen(process.env.PORT, () => {
   // });
   console.log("connected to backend");
 });
-
