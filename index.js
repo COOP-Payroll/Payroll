@@ -4,7 +4,7 @@ require("dotenv").config();
 const sequelize = require("./database/db.js");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
-
+const cors = require("cors");
 const userRouter = require("./routes/user.js");
 const companyRouter = require("./routes/company.js");
 const packageRouter = require("./routes/package.js");
@@ -19,8 +19,22 @@ const allowanceDefinition = require("./routes/allowanceDefinition");
 const deduction = require("./routes/deduction");
 const grade = require("./routes/grade");
 const deductionDefinition = require("./routes/deductionDefinition");
+const payrollRouter = require("./routes/payroll");
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:*",
+      "http://10.2.125.124:4000",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -34,12 +48,13 @@ app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
 app.use("/login", authRouter);
-// app.use("/companyIdFormat", companyIdRouter);
 app.use("/allowancedefinition", allowanceDefinition);
 app.use("/allowance", allowance);
 app.use("/deductiondefinition", deductionDefinition);
 app.use("/deduction", deduction);
 app.use("/grade", grade);
+
+app.use("/payroll", payrollRouter);
 
 sequelize.sync().then(() => console.log("db is ready"));
 
