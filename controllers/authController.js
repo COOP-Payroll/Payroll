@@ -101,6 +101,7 @@ exports.superAdminLogin = async (req, res, next) => {
     }
     //check if user exists and password is correct
     const user = await User.findOne({ where: { email } });
+    console.log("user", user)
     if (
       !user ||
       user.role != "superAdmin" ||
@@ -113,6 +114,7 @@ exports.superAdminLogin = async (req, res, next) => {
     //if everything is ok send token to the client
     createSendToken(user, 200, res);
   } catch (err) {
+    console.log("err", err)
     res.status(404).json({
       status: "error occour",
       message: err,
