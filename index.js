@@ -14,7 +14,12 @@ const deptRouter = require("./routes/department.js");
 const subscriptionRouter = require("./routes/subscription.js");
 const authRouter = require("./routes/auth.js");
 const companyIdRouter = require("./routes/companyId");
-const employeeRouter = require("./routes/employee.js");
+const allowance = require("./routes/allowance");
+const allowanceDefinition = require("./routes/allowanceDefinition");
+const deduction = require("./routes/deduction");
+const grade = require("./routes/grade");
+const deductionDefinition = require("./routes/deductionDefinition");
+const employeeRouter=require('./routes/employee.js')
 
 const app = express();
 
@@ -32,30 +37,15 @@ app.use("/subscription", subscriptionRouter);
 app.use("/login", authRouter);
 app.use("/employee", employeeRouter);
 // app.use("/companyIdFormat", companyIdRouter);
+app.use("/allowancedefinition", allowanceDefinition);
+app.use("/allowance", allowance);
+app.use("/deductiondefinition", deductionDefinition);
+app.use("/deduction", deduction);
+app.use("/grade", grade);
 
 sequelize.sync().then(() => console.log("db is ready"));
 
-app.use((req, res, next) => {
-  const error = new Error("Not Found");
-  error.status = 404;
-  next(error);
-});
-app.use((err, req, res, next) => {
-  res.removeHeader("Cross-Origin-Embedder-Policy");
-  const errorStatus = err.status || 500;
-  const errorMessage = err.message || "Something went Wrong";
-
-  return res.status(errorStatus).json({
-    success: false,
-    status: errorStatus,
-    message: errorMessage,
-    stack: err.stack,
-  });
-});
-
-
 app.listen(process.env.PORT, () => {
-
   // cron.schedule("* * *  * *  * * *", async () => {
   //   run.run();
   // });

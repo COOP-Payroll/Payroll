@@ -9,7 +9,7 @@ const Address = sequelize.define("Address", {
     },
     state: {
         type: DataTypes.STRING,
-        allowNull: false,
+    
     },
 
     zone_or_city: {
@@ -18,11 +18,11 @@ const Address = sequelize.define("Address", {
     },
     woreda: {
         type: DataTypes.STRING,
-        allowNull: false,
+        
     },
     kebele: {
         type: DataTypes.STRING,
-        allowNull: false,
+        
     },
     houseNumber: {
         type: DataTypes.STRING,
