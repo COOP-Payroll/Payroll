@@ -1,4 +1,4 @@
-const Payroll = require("../models/payroll")
+const Payroll = require("../models/payrollDefinition")
 const Company = require("../models/company");
 const { getCompanyById } = require("./companyController");
 const { where } = require("sequelize");

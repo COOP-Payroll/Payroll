@@ -17,7 +17,7 @@ const deduction = require('./routes/deduction')
 const grade = require('./routes/grade')
 const deductionDefinition = require('./routes/deductionDefinition')
 const approvalMethod = require("./routes/approvalMethod")
-const payroll = require("./routes/payroll")
+const payroll = require("./routes/payrollDefinition")
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
 
