@@ -36,6 +36,28 @@ exports.createEmployee = async (req, res, next) => {
     // }
     const { address, employeeInfo, emergencyInfo, basicInfo } = req.body;
 
+    if(!basicInfo?.DepartmentId){
+      res.status(404).json("There is no department")
+    }
+
+   else if (!basicInfo?.GradeId) {
+      res.status(404).json("There is no Grade");
+    }
+  
+    else {
+    const gradeId=await Grade.findByPk(Number(basicInfo?.GradeId));
+    const departmentId= await Department.findByPk(Number(basicInfo?.DepartmentId));
+
+    if(!gradeId){
+      res.status(404).json('There is no Grade with this ID')
+    }
+   else if(!departmentId){
+       res.status(404).json("There is no Department with this ID");
+    }
+    // else if(basicInfo.basicSalary<){
+
+    // }
+    else{
     const address1 = await Address.create(address);
     const employeeInfo1 = await EmployeeInfo.create(employeeInfo);
 
@@ -61,10 +83,13 @@ exports.createEmployee = async (req, res, next) => {
     // const Employees = await Employee.create({ deptName, location, shorthandRepresentation });
     res.status(200).json({
       message: "Successfully Registered",
-      //   basicInfo1,
+        basicInfo1,
     });
+
+  }
+  }
   } catch (error) {
-    console.log("first", error);
+    
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
