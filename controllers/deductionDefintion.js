@@ -30,13 +30,28 @@ exports.createDeductionDefinition = async (req, res, next) => {
         //insert required field
         const companyId = req.params.companyId;
        // const { name,startingAmount, ispercent} = req.body;
-        console.log(companyId)
+        console.log(Company)
+        const name=req.body.name;
+        const startingAmount=req.body.startingAmount;
+        const  isPercent=req.body.isPercent;
+        console.log(name,startingAmount,isPercent)
+// save here const name = req.body.name;
+        
+
         const deductionDefinition = await DeductionDefinition.create({
-             name:req.body.name,
-             startingAmount:req.body.startingAmount,
-             ispercent:req.body.ispercent,
-            })
-            await DeductionDefinition.setCompany(companyId)             
+        name: name,
+        startingAmount: startingAmount,
+        isPercent: isPercent
+        });
+
+        const company = await Company.findByPk(companyId);
+        if (company) {
+        await deductionDefinition.setCompany(company);
+        } else {
+        // Handle the case where the company with the given ID is not found
+        console.log("no company with this id")
+        }
+
         res.status(200).json({
             message: 'Successfully Registered',
             deductionDefinition

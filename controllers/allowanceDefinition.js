@@ -1,9 +1,10 @@
 const AllowanceDefinition = require('../models/allowanceDefinition');
-
+const Company = require('../models/company')
 // Define controller methods for handling User requests
 exports.getAllAllowanceDefinition = async (req, res) => {
+
     try {
-        const allowanceDefinitions = await AllowanceDefinition.findAll();
+        const allowanceDefinitions = await AllowanceDefinition.findAll({});
         res.status(200).json({
             count: allowanceDefinitions.length,
             allowanceDefinitions
@@ -30,11 +31,11 @@ exports.createAllowanceDefinition = async (req, res, next) => {
 
     try {
         //insert required field
-        const companyId= req.body.companyId;
+        const Company= req.params.companyId;
         const { name,isTaxable,isExempted,exemptedAmount,startingAmount } = req.body;
 
         const allowanceDefinition = await AllowanceDefinition.create({ name,isTaxable,isExempted,exemptedAmount,startingAmount});
-                                    await allowanceDefinition.setCompany(companyId)
+                                    await allowanceDefinition.setCompany(Company);
         res.status(200).json({
             message: 'Successfully Registered',
             allowanceDefinition
