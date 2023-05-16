@@ -109,10 +109,10 @@ exports.superAdminLogin = async (req, res, next) => {
     ) {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
+    } else {
+      //if everything is ok send token to the client
+      createSendToken(user, 200, res);
     }
-
-    //if everything is ok send token to the client
-    createSendToken(user, 200, res);
   } catch (err) {
     console.log("err", err)
     res.status(404).json({
