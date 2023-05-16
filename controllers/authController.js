@@ -97,9 +97,7 @@ exports.superAdminLogin = async (req, res, next) => {
 
     //check if email and password exist company code
     if (!email || !password) {
-      return res
-        .status(404)
-        .json({ error: "please provide email, password or company code" });
+      return res.status(404).json({ error: "please provide email, password" });
     }
     //check if user exists and password is correct
     const user = await User.findOne({ where: { email } });
