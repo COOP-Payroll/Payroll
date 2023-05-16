@@ -19,6 +19,7 @@ const allowanceDefinition = require("./routes/allowanceDefinition");
 const deduction = require("./routes/deduction");
 const grade = require("./routes/grade");
 const deductionDefinition = require("./routes/deductionDefinition");
+const payrollRouter = require("./routes/payroll");
 
 const app = express();
 
@@ -34,12 +35,13 @@ app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
 app.use("/login", authRouter);
-// app.use("/companyIdFormat", companyIdRouter);
 app.use("/allowancedefinition", allowanceDefinition);
 app.use("/allowance", allowance);
 app.use("/deductiondefinition", deductionDefinition);
 app.use("/deduction", deduction);
 app.use("/grade", grade);
+
+app.use("/payroll", payrollRouter);
 
 sequelize.sync().then(() => console.log("db is ready"));
 
