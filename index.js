@@ -59,7 +59,7 @@ app.use("/grade", grade);
 
 app.use("/payroll", payrollRouter);
 
-sequelize.sync({force: true}).then(() => console.log("db is ready"));
+sequelize.sync().then(() => console.log("db is ready"));
 
 app.listen(process.env.PORT, () => {
   // cron.schedule("* * *  * *  * * *", async () => {
