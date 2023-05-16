@@ -17,10 +17,10 @@ const createSendToken = (company, statusCode, res) => {
   const token = signToken(company.id, company.role);
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      Date.now() + 1000 * 24 * 60 * 60 * 1000
     ),
 
-    secure: process.env.NODE_ENV === "production" ? true : false,
+    secure: "production" ? true : false,
     httpOnly: true,
   };
   company.password = undefined;
