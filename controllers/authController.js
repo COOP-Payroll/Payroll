@@ -6,7 +6,7 @@ const User = require("../models/user");
 const signToken = (id, role) => {
   try {
     return jwt.sign({ id, role }, "secret", {
-      expiresIn: process.env.JWT_EXPIRES_IN,
+      expiresIn: "90d",
     });
   } catch (err) {
     return err;
