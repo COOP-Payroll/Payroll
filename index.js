@@ -16,6 +16,8 @@ const allowanceDefinition = require('./routes/allowanceDefinition')
 const deduction = require('./routes/deduction')
 const grade = require('./routes/grade')
 const deductionDefinition = require('./routes/deductionDefinition')
+const approvalMethod = require("./routes/approvalMethod")
+const payroll = require("./routes/payroll")
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
 
@@ -35,6 +37,8 @@ app.use("/taxslab", taxslabRouter);
 app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
+app.use("/approvalmethod", approvalMethod);
+app.use("/Payroll", payroll);
 
 sequelize.sync().then(() => console.log("db is ready"));
 
@@ -45,3 +49,4 @@ app.listen(process.env.PORT, () => {
   // });
   console.log("connected to backend");
 });
+

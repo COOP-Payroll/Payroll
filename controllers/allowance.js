@@ -91,7 +91,6 @@ exports.deleteAllowance = async (req, res, next) => {
 
     try {
         const { id } = req.params;
-
         const allowance = await Allowance.findOne({ where: { id: id } });
         if (allowance) {
 
