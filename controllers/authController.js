@@ -9,30 +9,33 @@ const signToken = (id, role) => {
       expiresIn: "90d",
     });
   } catch (err) {
+    // res.json(err);
     return err;
   }
 };
 
-const createSendToken = (company, statusCode, res) => {
-  const token = signToken(company.id, company.role);
-  const cookieOptions = {
-    expires: new Date(
-      Date.now() + 1000 * 24 * 60 * 60 * 1000
-    ),
+const createSendToken = async (company, statusCode, res) => {
+  try {
+    const token = signToken(company.id, company.role);
+    const cookieOptions = {
+      expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
-    secure: "production" ? true : false,
-    httpOnly: true,
-  };
-  company.password = undefined;
-  res.cookie("jwt", token, cookieOptions);
-  res.status(statusCode).json({
-    message: "successful",
-    token,
+      secure: "production" ? true : false,
+      httpOnly: true,
+    };
+    company.password = undefined;
+    res.cookie("jwt", token, cookieOptions);
+    res.status(statusCode).json({
+      message: "successful",
+      token,
 
-    data: {
-      company,
-    },
-  });
+      data: {
+        company,
+      },
+    });
+  } catch (error) {
+    return res.json(error);
+  }
 };
 
 exports.login = async (req, res, next) => {
@@ -98,7 +101,6 @@ exports.superAdminLogin = async (req, res, next) => {
     }
     //check if user exists and password is correct
     const user = await User.findOne({ where: { email } });
-    console.log("user", user);
     if (
       !user ||
       user.role != "superAdmin" ||
@@ -107,12 +109,11 @@ exports.superAdminLogin = async (req, res, next) => {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
     } else {
-      createSendToken(user, 200, res);
+      return createSendToken(user, 200, res);
     }
 
     //if everything is ok send token to the client
   } catch (err) {
-    console.log("err", err);
     res.status(404).json({
       status: "error occour",
       message: err,
