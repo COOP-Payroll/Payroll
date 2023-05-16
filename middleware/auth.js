@@ -1,5 +1,7 @@
 const Company = require("../models/company");
 const { promisify } = require("util");
+const User = require("../models/user");
+const jwt = require("jsonwebtoken");
 
 exports.protectAll = async (req, res, next) => {
   try {
@@ -22,12 +24,19 @@ exports.protectAll = async (req, res, next) => {
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_CODE);
     // console.log(decoded.id);
     //check if user still exists
-    const currentUser = await Company.findByPk(Number(decoded.id));
-    console.log(JSON.stringify(currentUser), null, 4);
+    let currentUser;
+
+    if (decoded.role === "superAdmin") {
+      currentUser = await User.findByPk(Number(decoded.id));
+    } else {
+      currentUser = await Company.findByPk(Number(decoded.id));
+    }
+
+    // console.log(JSON.stringify(currentUser), null, 4);
     if (!currentUser) {
       return res
         .status(401)
-        .json({ message: "company does not longer exists" });
+        .json({ error: `${currentUser.role} does not longer exists` });
     }
     //check if user change password after jwt was issued
     // if (currentUser.changedPasswordAfter(decoded.iat)) {
@@ -40,6 +49,7 @@ exports.protectAll = async (req, res, next) => {
     // console.log(currentUser);
     next();
   } catch (err) {
+    // console.log("first", err);
     res.status(404).json({
       status: "Error occured",
       message: err,
@@ -48,13 +58,34 @@ exports.protectAll = async (req, res, next) => {
 };
 
 //Restricted to
-exports.restrictToA = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user?.role)) {
+exports.restrictTo = (roles) => {
+  return async (req, res, next) => {
+    if (req.user.role === "Companyadmin") {
+      next();
+    } else {
+      const permissions = req.user.customRole[0].permissions.find(
+        (per) => per.module === Object.keys(roles).toString()
+      );
+      if (permissions[Object.values(roles)]) {
+        next();
+      } else {
+        return res.status(403).json({
+          message: "You do not have permission to perform this action",
+        });
+      }
+    }
+  };
+};
+
+//Restricted to
+exports.restrictToAdmin = (role) => {
+  return async (req, res, next) => {
+    if (req.user.role === role) {
+      next();
+    } else {
       return res.status(403).json({
         message: "You do not have permission to perform this action",
       });
     }
-    next();
   };
 };

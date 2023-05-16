@@ -19,6 +19,6 @@ const Department = sequelize.define("Department", {
 });
 
 Company.hasMany(Department);
-Department.belongsTo(Company);
+// Department.belongsTo(Company);
 
 module.exports = Department;

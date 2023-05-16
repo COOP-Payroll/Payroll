@@ -3,9 +3,9 @@ const jwt = require("jsonwebtoken");
 const Company = require("../models/company");
 const User = require("../models/user");
 
-const signToken = (id) => {
+const signToken = (id, role) => {
   try {
-    return jwt.sign({ id }, "secret", {
+    return jwt.sign({ id, role }, "secret", {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
   } catch (err) {
@@ -17,7 +17,7 @@ const signToken = (id) => {
 };
 
 const createSendToken = (company, statusCode, res) => {
-  const token = signToken(company.id);
+  const token = signToken(company.id, company.role);
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
