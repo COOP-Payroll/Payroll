@@ -22,7 +22,7 @@ const Employee = sequelize.define("Employee", {
   role: {
     type: DataTypes.ENUM("employee", "approver"),
     allowNull: false,
-    defaultValue:"employee"
+    defaultValue: "employee",
   },
   nationality: {
     type: DataTypes.STRING,
@@ -31,27 +31,23 @@ const Employee = sequelize.define("Employee", {
   marriageStatus: {
     type: DataTypes.ENUM("Single", "Married", "Divorced"),
     defaultValue: true,
-    defaultValue:"Single"
+    defaultValue: "Single",
   },
   id_number: {
     type: DataTypes.STRING,
-    
   },
-  employeeTIN: {
-    type: DataTypes.STRING,
-   
-  },
+
   email: {
     type: DataTypes.STRING,
-    allowNull:false
+    allowNull: false,
   },
   phoneNumber: {
     type: DataTypes.STRING,
-  allowNull:false
+    allowNull: false,
   },
   optionalNumber: {
     type: DataTypes.STRING,
-    allowNull:false
+ 
   },
   isDeactivated: {
     type: DataTypes.BOOLEAN,
@@ -59,24 +55,21 @@ const Employee = sequelize.define("Employee", {
   },
   hireDate: {
     type: DataTypes.DATE,
-
   },
   joiningDate: {
     type: DataTypes.DATE,
-    
   },
   employeeCode: {
     type: DataTypes.STRING,
-    
   },
 
   accountNumber: {
     type: DataTypes.STRING,
-    allowNull:false
+    allowNull: false,
   },
   password: {
     type: DataTypes.STRING,
-     },
+  },
 });
 
 // Subscription.belongsTo(Package);

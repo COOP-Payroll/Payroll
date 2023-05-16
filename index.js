@@ -12,15 +12,31 @@ const taxslabRouter = require("./routes/taxslab.js");
 const pensionRouter = require("./routes/pension.js");
 const deptRouter = require("./routes/department.js");
 const subscriptionRouter = require("./routes/subscription.js");
-const allowance = require('./routes/allowance')
-const allowanceDefinition = require('./routes/allowanceDefinition')
-const deduction = require('./routes/deduction')
-const grade = require('./routes/grade')
-const deductionDefinition = require('./routes/deductionDefinition')
-const approvalMethod = require("./routes/approvalMethod")
-const payroll = require("./routes/payrollDefinition")
-const cron = require("node-cron");
-const bodyParser = require("body-parser");
+const authRouter = require("./routes/auth.js");
+const companyIdRouter = require("./routes/companyId");
+const allowance = require("./routes/allowance");
+const allowanceDefinition = require("./routes/allowanceDefinition");
+const deduction = require("./routes/deduction");
+const grade = require("./routes/grade");
+const deductionDefinition = require("./routes/deductionDefinition");
+const payrollRouter = require("./routes/payroll");
+const employeeRouter = require("./routes/employee.js");
+
+const app = express();
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:*",
+      "http://10.2.125.124:4000",
+      "*",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
