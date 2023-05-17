@@ -66,6 +66,7 @@ exports.createEmployee = async (req, res, next) => {
         await basicInfo1.setEmployeeInfo(employeeInfo1);
         await basicInfo1.setDepartment(Number(basicInfo.DepartmentId));
         await basicInfo1.setGrade(Number(basicInfo.GradeId));
+        await basicInfo1.setCompany(Number(req.user.id))
         //const emergencyInfo1 = await EmergencyContact.create(emergencyInfo);
         // console.log("employeeInfo1", basicInfo1);
 
