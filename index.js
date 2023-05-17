@@ -1,15 +1,11 @@
 const express = require("express");
-
 const cors = require("cors");
 require("dotenv").config();
-
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
-
 const sequelize = require("./database/db.js");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const userRouter = require("./routes/user.js");
 const companyRouter = require("./routes/company.js");
 const packageRouter = require("./routes/package.js");
@@ -29,7 +25,6 @@ const employeeRouter = require("./routes/employee.js");
 
 const payrollDefinition = require("./routes/payrollDefinition");
 const approvalMethod = require("./routes/approvalMethod");
-
 
 const app = express();
 
@@ -70,7 +65,6 @@ app.use("/grade", grade);
 app.use("/payroll", payrollRouter);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
-
 
 sequelize.sync().then(() => console.log("db is ready"));
 
