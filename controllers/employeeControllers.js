@@ -11,12 +11,12 @@ exports.getAllEmployee = async (req, res) => {
     const Employees = await Employee.findAll({
       include: [Address, EmployeeInfo, EmergencyContact, Department, Grade,Company],
     });
-    res.status(200).json({
+    return res.status(200).json({
       count: Employees.length,
       Employees,
     });
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -24,9 +24,9 @@ exports.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
     const Employee = await Employee.findByPk(id);
-    res.json({ Employee });
+    return res.json({ Employee });
   } catch (er) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -37,66 +37,61 @@ exports.createEmployee = async (req, res, next) => {
    let password= req.user.companyCode.substring(0, 4) + '0000';
    
 
-    if(!basicInfo?.DepartmentId){
-      res.status(404).json("There is no department")
-    }
-
-   else if (!basicInfo?.GradeId) {
-      res.status(404).json("There is no Grade");
-    }
-  
-    else {
-    const gradeId=await Grade.findByPk(Number(basicInfo?.GradeId));
-    const departmentId= await Department.findByPk(Number(basicInfo?.DepartmentId));
-
-    if(!gradeId){
-      res.status(404).json('There is no Grade with this ID')
-    }
-   else if(!departmentId){
-       res.status(404).json("There is no Department with this ID");
-    }
-    else if (      employeeInfo.basicSalary < gradeId.minSalary ||  employeeInfo.basicSalary > gradeId.maxSalary ) {
-      res.status(404).json(`Basic SALARY must be between  ${gradeId.minSalary} and  ${gradeId.maxSalary}`);
+    if (!basicInfo?.DepartmentId) {
+      return res.status(404).json("There is no department");
+    } else if (!basicInfo?.GradeId) {
+      return res.status(404).json("There is no Grade");
     } else {
-    
-      const address1 = await Address.create(address);
-      const employeeInfo1 = await EmployeeInfo.create(employeeInfo);
-      const basicInfo1 = await Employee.create(basicInfo,...password);
-
-      //add ADDRESS TO EMPLOYEE
-      await basicInfo1.setAddress(address1);
-      await basicInfo1.setEmployeeInfo(employeeInfo1);
-      await basicInfo1.setDepartment(Number(basicInfo.DepartmentId));
-      await basicInfo1.setGrade(Number(basicInfo.GradeId));
-      await basicInfo1.setCompany(Number(req.user.id))
-      //const emergencyInfo1 = await EmergencyContact.create(emergencyInfo);
-      // console.log("employeeInfo1", basicInfo1);
-
-      const emergencies = await Promise.all(
-        emergencyInfo.map((emer) => EmergencyContact.create(emer))
-      );
-      // console.log("first", emergencies)
-
-      const ss = await Promise.all(
-        emergencies.map((emer) => emer.setEmployee(basicInfo1))
+      const gradeId = await Grade.findByPk(Number(basicInfo?.GradeId));
+      const departmentId = await Department.findByPk(
+        Number(basicInfo?.DepartmentId)
       );
 
-   
-      res.status(200).json({
-        message: "Successfully Registered",
-        basicInfo1,
-      });
+      if (!gradeId) {
+        return res.status(404).json("There is no Grade with this ID");
+      } else if (!departmentId) {
+        return res.status(404).json("There is no Department with this ID");
+      }
+      // else if(basicInfo.basicSalary<){
+
+      // }
+      else {
+        const address1 = await Address.create(address);
+        const employeeInfo1 = await EmployeeInfo.create(employeeInfo);
+
+        const basicInfo1 = await Employee.create(basicInfo);
+
+        //add ADDRESS TO EMPLOYEE
+        await basicInfo1.setAddress(address1);
+        await basicInfo1.setEmployeeInfo(employeeInfo1);
+        await basicInfo1.setDepartment(Number(basicInfo.DepartmentId));
+        await basicInfo1.setGrade(Number(basicInfo.GradeId));
+        //const emergencyInfo1 = await EmergencyContact.create(emergencyInfo);
+        // console.log("employeeInfo1", basicInfo1);
+
+        const emergencies = await Promise.all(
+          emergencyInfo.map((emer) => EmergencyContact.create(emer))
+        );
+        // console.log("first", emergencies)
+
+        const ss = await Promise.all(
+          emergencies.map((emer) => emer.setEmployee(basicInfo1))
+        );
+
+        // const Employees = await Employee.create({ deptName, location, shorthandRepresentation });
+        return res.status(200).json({
+          message: "Successfully Registered",
+          basicInfo1,
+        });
+      }
     }
-  }
   } catch (error) {
-    console.log("first",error)
-    
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      res.status(400).json(errors);
+      return res.status(400).json(errors);
     } else {
       return res.status(500).json({ error: "Internal server error" });
     }
@@ -121,11 +116,11 @@ exports.updateEmployee = async (req, res, next) => {
 
     const result = await Employee.update(updates, { where: { id: id } });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "updated successfully",
     });
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -136,11 +131,13 @@ exports.deleteEmployee = async (req, res, next) => {
     const Employee = await Employee.findOne({ where: { id: id } });
     if (Employee) {
       await Employee.destroy({ where: { id } });
-      res.status(200).json({ message: "Employee deleted successfully" });
+      return res.status(200).json({ message: "Employee deleted successfully" });
     } else {
-      res.status(409).json({ message: "There is no Employee with this ID" });
+      return res
+        .status(409)
+        .json({ message: "There is no Employee with this ID" });
     }
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };

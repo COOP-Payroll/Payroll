@@ -7,16 +7,15 @@ exports.createUser = async (req, res) => {
 
   try {
     const user = await User.create({ ...body });
-    res.json(user);
+    return res.json(user);
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      res.status(400).json(errors);
+      return res.status(400).json(errors);
     }
-    console.log("error", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -26,7 +25,7 @@ exports.getAllUser = async (req, res) => {
   const users = await User.findAll({
     attributes: { exclude: ["password"] },
   });
-  res.json(users);
+  return res.json(users);
 };
 
 // get only one user
@@ -37,10 +36,10 @@ exports.getUserById = async (req, res) => {
     const user = await User.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
     });
-    if (!user) res.status(404).json({ error: "User does not exist" });
-    res.json(user);
+    if (!user) return res.status(404).json({ error: "User does not exist" });
+    return res.json(user);
   } catch (error) {
-    res.json(error);
+    return res.json(error);
   }
 };
 
@@ -51,7 +50,7 @@ exports.updateUser = async (req, res) => {
 
   try {
     const user = await User.findByPk(Number(id));
-    if (!user) res.status(404).json({ error: "user does not exist" });
+    if (!user) return res.status(404).json({ error: "user does not exist" });
 
     if (body.password) {
       delete body.password;
@@ -59,7 +58,7 @@ exports.updateUser = async (req, res) => {
 
     await user.validate();
     await user.update({ ...body });
-    res.json(user);
+    return res.json(user);
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const validationErrors = error.errors.map((error) => ({
@@ -78,11 +77,11 @@ exports.deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
     const user = await User.findByPk(Number(id));
-    if (!user) res.status(404).json({ error: "user does not exist" });
+    if (!user) return res.status(404).json({ error: "user does not exist" });
     await user.destroy();
-    res.json("user deleted successfully");
+    return res.json("user deleted successfully");
   } catch (error) {
-    res.status(400).json(error.errors);
+    return res.status(400).json(error.errors);
   }
 };
 
@@ -92,11 +91,11 @@ exports.updateCompanyStatus = async (req, res) => {
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
     });
-    if (!company) res.status(404).json({ error: "company does not exist" });
+    if (!company)
+      return res.status(404).json({ error: "company does not exist" });
     await company.update({ status });
-    res.json(company);
+    return res.json(company);
   } catch (error) {
-    console.log("err", error);
-    res.status(400).json(error.errors);
+    return res.status(400).json(error.errors);
   }
 };

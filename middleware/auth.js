@@ -21,7 +21,7 @@ exports.protectAll = async (req, res, next) => {
       });
     }
     //verification token
-    const decoded = await promisify(jwt.verify)(token, 'secret');
+    const decoded = await promisify(jwt.verify)(token, "secret");
     // console.log(decoded.id);
     //check if user still exists
     let currentUser;
@@ -50,7 +50,7 @@ exports.protectAll = async (req, res, next) => {
     next();
   } catch (err) {
     // console.log("first", err);
-    res.status(404).json({
+    return res.status(404).json({
       status: "Error occured",
       message: err,
     });
