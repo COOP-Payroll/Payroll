@@ -17,27 +17,22 @@ exports.getAllTaxslabs = async (req, res) => {
         },
       ],
     });
-    res.status(200).json({
+    return res.status(200).json({
       count: taxslab.length,
       taxslab,
     });
   } catch (err) {
-    console.log("err", err);
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
-
-
-
-
 
 exports.getTaxslabById = async (req, res) => {
   try {
     const { id } = req.params;
     const taxslab = await Taxslab.findByPk(id);
-    res.json(taxslab);
+    return res.json(taxslab);
   } catch (er) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -53,26 +48,24 @@ exports.createTaxslab = async (req, res, next) => {
     });
 
     try {
+      const { from_Salary, to_Salary, income_tax_payable, deductible_Fee } =
+        req.body;
 
-        const { from_Salary, to_Salary, income_tax_payable, deductible_Fee } = req.body;
-console.log(req.body)
-
-        const taxslab = await Taxslab.create({ from_Salary, to_Salary, income_tax_payable, deductible_Fee,  });
-        res.status(200).json({
-            message: 'Successfully Registered',
-            taxslab
-        });
+      const taxslab = await Taxslab.create({
+        from_Salary,
+        to_Salary,
+        income_tax_payable,
+        deductible_Fee,
+      });
+      return res.status(200).json({
+        message: "Successfully Registered",
+        taxslab,
+      });
     } catch (err) {
-        res.status(500).json('Something gonna wrong')
+      return res.status(500).json("Something gonna wrong");
     }
-
-    res.status(200).json({
-      message: "Successfully Registered",
-      taxslab,
-    });
   } catch (err) {
-    console.log("err", err);
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -110,11 +103,11 @@ exports.updateTaxslab = async (req, res, next) => {
 
     const result = await Taxslab.update(updates, { where: { id: id } });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "updated successfully",
     });
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -125,12 +118,14 @@ exports.deleteTaxslab = async (req, res, next) => {
     const taxslab = await Taxslab.findOne({ where: { id: id } });
     if (taxslab) {
       await Taxslab.destroy({ where: { id } });
-      res.status(200).json({ message: " deleted successfully" });
+      return res.status(200).json({ message: " deleted successfully" });
     } else {
-      res.status(409).json({ message: "There is no tax rule with this ID" });
+      return res
+        .status(409)
+        .json({ message: "There is no tax rule with this ID" });
     }
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
