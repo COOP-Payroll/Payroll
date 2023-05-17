@@ -1,0 +1,48 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../database/db.js");
+
+const Payroll = sequelize.define("Payroll", {
+  grossSalary: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  taxableIncome: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  incomeTax: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  totalDeduction: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  totalAllowance: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  NetSalary: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  employee_pension_amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  employer_pension_amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  status: {
+    type: DataTypes.ENUM,
+    values: ["created", "ordered", "pending", "approved"],
+    defaultValue: "created",
+  },
+  isPaid: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+});
+
+module.exports = Payroll;

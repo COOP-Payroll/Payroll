@@ -1,7 +1,11 @@
 const Company = require("../models/company.js");
 const Package = require("../models/package.js");
+const Pension = require("../models/pension.js");
 const Subscription = require("../models/subscription.js");
+const Taxslab = require("../models/taxslab.js");
+const User = require("../models/user.js");
 const { calculateNextPayment } = require("../utils/helper.js");
+const moment = require("moment");
 
 // create Company
 exports.createCompany = async (req, res) => {
@@ -16,10 +20,13 @@ exports.createCompany = async (req, res) => {
   const duration = Number(req.body.duration);
   try {
     const company = await Company.create(data);
-    const package = await Package.findByPk(packageId);
+
+    const package = await Package.findByPk(Number(packageId));
     if (!package) {
       res.status(404).json({ error: "package does not exist!" });
     } else {
+      const currentDate = moment();
+      // res.status(200).json(daysLeft);
       const subscription = await Subscription.create({ duration });
       await subscription.setPackage(packageId);
       await subscription.setCompany(company.id);
@@ -28,19 +35,52 @@ exports.createCompany = async (req, res) => {
         duration,
         normalDate: Date.now(),
       });
-      await subscription.update({ nextPaymentDate });
+      const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
+      await subscription.update({ nextPaymentDate, leftPaymentDate });
+      const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+      const taxslabs = await Taxslab.findAll({
+        where: { userId: Number(superAdmin.id), isActive: true },
+      });
+      const pensions = await Pension.findAll({
+        where: { userId: Number(superAdmin.id), isActive: true },
+      });
+
+      const tax = await Promise.all(
+        taxslabs.map((taxslab) => {
+          Taxslab.create({
+            from_Salary: Number(taxslab.from_Salary),
+            to_Salary: Number(taxslab.to_Salary),
+            income_tax_payable: Number(taxslab.income_tax_payable),
+            deductible_Fee: Number(taxslab.deductible_Fee),
+            CompanyId: Number(company.id),
+            UserId: null,
+          });
+        })
+      );
+
+      const pen = await Promise.all(
+        pensions.map((pension) => {
+          Pension.create({
+            employerContribution: Number(pension.employerContribution),
+            employeeContribution: Number(pension.employeeContribution),
+            CompanyId: Number(company.id),
+            UserId: null,
+          });
+        })
+      );
+
       res.status(201).json(subscription);
     }
   } catch (error) {
-    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
       res.status(400).json(errors);
+    } else {
+      res.status(500).json({ error: "Internal server error" });
     }
-    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -61,8 +101,11 @@ exports.getCompanyById = async (req, res) => {
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
     });
-    if (!company) res.status(404).json({ error: "Company does not exist" });
-    res.json(company);
+    if (!company) {
+      res.status(404).json({ error: "Company does not exist" });
+    } else {
+      res.json(company);
+    }
   } catch (error) {
     res.json(error);
   }
@@ -75,19 +118,21 @@ exports.updateCompany = async (req, res) => {
 
   try {
     const company = await Company.findByPk(Number(id));
-    if (!company) res.status(404).json({ error: "Company does not exist" });
+    if (!company) {
+      res.status(404).json({ error: "Company does not exist" });
+    } else {
+      // Disallow updating password field
+      if (body.password) {
+        delete body.password;
+      }
 
-    // Disallow updating password field
-    if (body.password) {
-      delete body.password;
+      // Validate the updated data against the model
+      await company.validate();
+      await company.update(body);
+
+      // Return the updated company object
+      return res.json(company);
     }
-
-    // Validate the updated data against the model
-    await company.validate();
-    await company.update(body);
-
-    // Return the updated company object
-    return res.json(company);
   } catch (error) {
     // Handle validation errors
     if (error.name === "SequelizeValidationError") {
@@ -108,11 +153,13 @@ exports.deleteCompany = async (req, res) => {
   const { id } = req.params;
   try {
     const company = await Company.findByPk(Number(id));
-    if (!company) res.status(404).json({ error: "Company does not exist" });
-    await company.destroy();
-    res.json("company deleted successfully");
+    if (!company) {
+      res.status(404).json({ error: "Company does not exist" });
+    } else {
+      await company.destroy();
+      res.json("company deleted successfully");
+    }
   } catch (error) {
-    console.log("err", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

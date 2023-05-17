@@ -1,21 +1,20 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-const Company  =require('./company.js')
+const Company = require("./company.js");
 
 const DeductionDefinition = sequelize.define("DeductionDefinition", {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  isPercent:{
+  isPercent: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
   },
-  startingAmount:{
+  startingAmount: {
     type: DataTypes.FLOAT,
     defaultValue: 0,
-  }
-
+  },
 });
 
 DeductionDefinition.belongsTo(Company);
