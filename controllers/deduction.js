@@ -30,8 +30,8 @@ exports.createDeduction = async (req, res, next) => {
     try {
         //insert required field
         const  amount = req.body.amount;
-        const gradeId  = req.params.gradeId;
-        const definitionId =  req.params.definitionId;
+        const gradeId  = req.body.gradeId;
+        const definitionId =  req.body.definitionId;
         console.log(amount,gradeId,definitionId)
         const deduction = await Deduction.create({ amount});
                         //   await deduction.setGrade(gradeId);

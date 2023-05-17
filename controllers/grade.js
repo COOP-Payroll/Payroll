@@ -1,13 +1,22 @@
 const Grade = require('../models/grade');
 const Company = require('../models/company');
+const { where } = require('sequelize');
+
 // Define controller methods for handling User requests
 
 exports.getAllGrade = async (req, res) => {
+    const companyId = req.user.id;
+    console.log(companyId);
     try {
-        const grades = await Grade.findAll();
+        const criteria={
+            companyId: req.user.id
+        }
+        const companyGrade = await Grade.findOne({where:criteria})
+              console.log("same companyGrade",companyGrade)
+        //const grades = await Grade.findAll();
         res.status(200).json({
-            count: grades.length,
-            grades
+            count: companyGrade.length,
+            companyGrade
         });
 
     } catch (err) {
@@ -18,24 +27,32 @@ exports.getAllGrade = async (req, res) => {
 
 exports.getGradeById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const id  = req.params.id;
         const grade = await Grade.findByPk(id);
         res.json(grade);
     } catch (er) {
         res.status(500).json('Something gonna wrong')
     }
-
 };
 
 exports.createGrade = async (req, res, next) => {
 
     try {
         //insert required field
-       // console.log(req.params.companyId)
-        const { name, minSalary,maxSalary } = req.body;
-        const companyId = req.params.companyId;
-        console.log(companyId)
 
+        const { name, minSalary,maxSalary } = req.body;
+        const companyId = req.user.id;
+        console.log(name, minSalary, maxSalary)
+        console.log("company id",req.user.id)
+        const criteria={
+            minSalary:req.body.minSalary ,
+            maxSalary:  req.body.maxSalary
+        }
+        const sameGrade = await Grade.findOne({where:criteria})
+              console.log("same grade",sameGrade)
+        if(sameGrade){
+            res.json("this grade is defined already ")
+        }else{
         const grade = await Grade.create({ name, minSalary,maxSalary });
                        await grade.setCompany(companyId)
         
@@ -43,6 +60,7 @@ exports.createGrade = async (req, res, next) => {
             message: 'Successfully Registered',
             grade
         });
+    }
     } catch (err) {
         res.status(500).json('Something gonna wrong')
     }
@@ -50,7 +68,6 @@ exports.createGrade = async (req, res, next) => {
 };
 
 exports.updateGrade = async (req, res, next) => {
-
 
     try {
         //insert required field

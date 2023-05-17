@@ -2,8 +2,16 @@ const DeductionDefinition = require('../models/deductionDefinition');
 const Company = require('../models/company');
 // Define controller methods for handling User requests for deduction definition 
 exports.getAllDeductionDefinition = async (req, res) => {
+    const Company = req.user.id;
+    console.log(Company)
     try {
-        const deductionDefinitions = await DeductionDefinition.findAll();
+        
+        const criteria={
+            CompanyId: req.user.id
+        }
+        const deductionDefinitions = await DeductionDefinition.findAll(criteria)
+             // console.log("same deductionDefinitions",deductionDefinitions)
+        //const grades = await Grade.findAll();
         res.status(200).json({
             count: deductionDefinitions.length,
             deductionDefinitions
@@ -25,12 +33,12 @@ exports.getDeductionDefinitionById = async (req, res) => {
 };
 
 exports.createDeductionDefinition = async (req, res, next) => {
-
+    const companyId = req.user.id;
     try {
         //insert required field
-        const companyId = req.params.companyId;
+        
        // const { name,startingAmount, ispercent} = req.body;
-        console.log(Company)
+        console.log("Company",companyId)
         const name=req.body.name;
         const startingAmount=req.body.startingAmount;
         const  isPercent=req.body.isPercent;
@@ -49,7 +57,7 @@ exports.createDeductionDefinition = async (req, res, next) => {
         await deductionDefinition.setCompany(company);
         } else {
         // Handle the case where the company with the given ID is not found
-        console.log("no company with this id")
+        res.json("no company with this id")
         }
 
         res.status(200).json({

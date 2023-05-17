@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/", allowance.getAllowanceById);
 router.get("/:id", allowance.getAllAllowance);
-router.post("/:gradeId/:definitionId", allowance.createAllowance);
+router.post("/", allowance.createAllowance);
 router.put("/:id", allowance.updateAllowance);
 router.delete("/:id", allowance.deleteAllowance);
 

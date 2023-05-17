@@ -6,16 +6,16 @@ const User = require("../models/user.js");
 exports.getAllTaxslabs = async (req, res) => {
   try {
     const taxslab = await Taxslab.findAll({
-      include: [
-        {
-          model: Company,
-          attributes: { exclude: ["password"] },
-        },
-        {
-          model: User,
-          attributes: { exclude: ["password"] },
-        },
-      ],
+      // include: [
+      //   {
+      //     model: Company,
+      //     attributes: { exclude: ["password"] },
+      //   },
+      //   {
+      //     model: User,
+      //     attributes: { exclude: ["password"] },
+      //   },
+      // ],
     });
     res.status(200).json({
       count: taxslab.length,
