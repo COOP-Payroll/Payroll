@@ -35,8 +35,10 @@ exports.createGrade = async (req, res, next) => {
         const { name, minSalary,maxSalary } = req.body;
         const companyId = req.params.companyId;
         console.log(companyId)
+
         const grade = await Grade.create({ name, minSalary,maxSalary });
                        await grade.setCompany(companyId)
+        
         res.status(200).json({
             message: 'Successfully Registered',
             grade

@@ -52,7 +52,19 @@ exports.createTaxslab = async (req, res, next) => {
       deductible_Fee,
     });
 
-    await taxslab.setUser(Number(req.user.id));
+    try {
+
+        const { from_Salary, to_Salary, income_tax_payable, deductible_Fee } = req.body;
+console.log(req.body)
+
+        const taxslab = await Taxslab.create({ from_Salary, to_Salary, income_tax_payable, deductible_Fee,  });
+        res.status(200).json({
+            message: 'Successfully Registered',
+            taxslab
+        });
+    } catch (err) {
+        res.status(500).json('Something gonna wrong')
+    }
 
     res.status(200).json({
       message: "Successfully Registered",
