@@ -46,7 +46,7 @@ exports.protectAll = async (req, res, next) => {
     // }
     //grant access to protected route
     req.user = currentUser;
-    // console.log(currentUser);
+    //console.log(currentUser);
     next();
   } catch (err) {
     // console.log("first", err);
@@ -58,23 +58,27 @@ exports.protectAll = async (req, res, next) => {
 };
 
 //Restricted to
-exports.restrictTo = (roles) => {
+exports.restrictTo = (role) => {
   return async (req, res, next) => {
-    if (req.user.role === "Companyadmin") {
+  
+    if (req.user.role === role)
+     {
       next();
-    } else {
-      const permissions = req.user.customRole[0].permissions.find(
-        (per) => per.module === Object.keys(roles).toString()
-      );
-      if (permissions[Object.values(roles)]) {
-        next();
-      } else {
+    // } else {
+    //   const permissions = req.user?.customRole[0]?.permissions.find(
+    //     (per) => per.module === Object.keys(roles).toString()
+    //   );
+    //   if (permissions[Object.values(roles)]) {
+    //     next();
+    //   
+  } 
+    else {
         return res.status(403).json({
           message: "You do not have permission to perform this action",
         });
       }
     }
-  };
+  
 };
 
 //Restricted to

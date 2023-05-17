@@ -4,11 +4,12 @@ const EmergencyContact = require("../models/emergency_Contact.js");
 const Address = require("../models/address.js");
 const Department = require("../models/department.js");
 const Grade = require("../models/grade.js");
+const Company=require('../models/company.js')
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
   try {
     const Employees = await Employee.findAll({
-      include: [Address, EmployeeInfo, EmergencyContact, Department, Grade],
+      include: [Address, EmployeeInfo, EmergencyContact, Department, Grade,Company],
     });
     res.status(200).json({
       count: Employees.length,
@@ -31,10 +32,10 @@ exports.getEmployeeById = async (req, res) => {
 
 exports.createEmployee = async (req, res, next) => {
   try {
-    // if (!basicInfo?.DepartmentId) {
-    //   res.status();
-    // }
+
     const { address, employeeInfo, emergencyInfo, basicInfo } = req.body;
+   let password= req.user.companyCode.substring(0, 4) + '0000';
+   
 
     if(!basicInfo?.DepartmentId){
       res.status(404).json("There is no department")
@@ -54,41 +55,41 @@ exports.createEmployee = async (req, res, next) => {
    else if(!departmentId){
        res.status(404).json("There is no Department with this ID");
     }
-    // else if(basicInfo.basicSalary<){
+    else if (      employeeInfo.basicSalary < gradeId.minSalary ||  employeeInfo.basicSalary > gradeId.maxSalary ) {
+      res.status(404).json(`Basic SALARY must be between  ${gradeId.minSalary} and  ${gradeId.maxSalary}`);
+    } else {
+    
+      const address1 = await Address.create(address);
+      const employeeInfo1 = await EmployeeInfo.create(employeeInfo);
+      const basicInfo1 = await Employee.create(basicInfo,...password);
 
-    // }
-    else{
-    const address1 = await Address.create(address);
-    const employeeInfo1 = await EmployeeInfo.create(employeeInfo);
+      //add ADDRESS TO EMPLOYEE
+      await basicInfo1.setAddress(address1);
+      await basicInfo1.setEmployeeInfo(employeeInfo1);
+      await basicInfo1.setDepartment(Number(basicInfo.DepartmentId));
+      await basicInfo1.setGrade(Number(basicInfo.GradeId));
+      await basicInfo1.setCompany(Number(req.user.id))
+      //const emergencyInfo1 = await EmergencyContact.create(emergencyInfo);
+      // console.log("employeeInfo1", basicInfo1);
 
-    const basicInfo1 = await Employee.create(basicInfo);
+      const emergencies = await Promise.all(
+        emergencyInfo.map((emer) => EmergencyContact.create(emer))
+      );
+      // console.log("first", emergencies)
 
-    //add ADDRESS TO EMPLOYEE
-    await basicInfo1.setAddress(address1);
-    await basicInfo1.setEmployeeInfo(employeeInfo1);
-    await basicInfo1.setDepartment(Number(basicInfo.DepartmentId));
-    await basicInfo1.setGrade(Number(basicInfo.GradeId));
-    //const emergencyInfo1 = await EmergencyContact.create(emergencyInfo);
-    // console.log("employeeInfo1", basicInfo1);
+      const ss = await Promise.all(
+        emergencies.map((emer) => emer.setEmployee(basicInfo1))
+      );
 
-    const emergencies = await Promise.all(
-      emergencyInfo.map((emer) => EmergencyContact.create(emer))
-    );
-    // console.log("first", emergencies)
-
-    const ss = await Promise.all(
-      emergencies.map((emer) => emer.setEmployee(basicInfo1))
-    );
-
-    // const Employees = await Employee.create({ deptName, location, shorthandRepresentation });
-    res.status(200).json({
-      message: "Successfully Registered",
+   
+      res.status(200).json({
+        message: "Successfully Registered",
         basicInfo1,
-    });
-
-  }
+      });
+    }
   }
   } catch (error) {
+    console.log("first",error)
     
     if (error.name === "SequelizeValidationError") {
       const errors = {};

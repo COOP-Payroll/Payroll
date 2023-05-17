@@ -2,6 +2,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Package = require("../models/package.js");
 const Company = require("../models/company.js");
+const bcrypt=require('bcrypt')
 
 const Employee = sequelize.define("Employee", {
   fullname: {
@@ -47,7 +48,6 @@ const Employee = sequelize.define("Employee", {
   },
   optionalNumber: {
     type: DataTypes.STRING,
- 
   },
   isDeactivated: {
     type: DataTypes.BOOLEAN,
@@ -70,12 +70,45 @@ const Employee = sequelize.define("Employee", {
   password: {
     type: DataTypes.STRING,
   },
+  // passwordChangedAt: Date,
+  // passwordResetToken: String,
+  // passwordResetExpires: Date,
+
 });
+
+
+Employee.beforeCreate((employee, options) => {
+  const saltRounds = 10;
+  return bcrypt
+    .hash(employee.password, saltRounds)
+    .then((hash) => {
+      employee.password = hash;
+    })
+    .catch((err) => {
+      throw new Error(err);
+    });
+});
+
+Employee.beforeUpdate((employee, options) => {
+  if (employee.changed("password")) {
+    const saltRounds = 10;
+    return bcrypt
+      .hash(employee.password, saltRounds)
+      .then((hash) => {
+        employee.password = hash;
+      })
+      .catch((err) => {
+        throw new Error(err);
+      });
+  }
+}
+);
 
 // Subscription.belongsTo(Package);
 // Package.hasOne(Subscription);
 
-// Subscription.belongsTo(Company);
-// Company.hasOne(Subscription);
+Company.hasMany(Employee);
+Employee.belongsTo(Company);
+
 
 module.exports = Employee;
