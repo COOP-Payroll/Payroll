@@ -7,12 +7,12 @@ exports.getAllSubscription = async (req, res) => {
     const packages = await Subscription.findAll({
       include: [Company],
     });
-    res.status(200).json({
+    return res.status(200).json({
       count: packages.length,
       packages,
     });
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 

@@ -23,10 +23,9 @@ exports.createCompany = async (req, res) => {
 
     const package = await Package.findByPk(Number(packageId));
     if (!package) {
-      res.status(404).json({ error: "package does not exist!" });
+      return res.status(404).json({ error: "package does not exist!" });
     } else {
       const currentDate = moment();
-      // res.status(200).json(daysLeft);
       const subscription = await Subscription.create({ duration });
       await subscription.setPackage(packageId);
       await subscription.setCompany(company.id);
@@ -58,7 +57,7 @@ exports.createCompany = async (req, res) => {
         })
       );
 
-      const pen = await Promise.all(
+      await Promise.all(
         pensions.map((pension) => {
           Pension.create({
             employerContribution: Number(pension.employerContribution),
@@ -69,17 +68,20 @@ exports.createCompany = async (req, res) => {
         })
       );
 
-      res.status(201).json(subscription);
+      return res.status(201).json(subscription);
     }
   } catch (error) {
+    let errors = {};
     if (error.name === "SequelizeValidationError") {
-      const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      res.status(400).json(errors);
+      return res.status(400).json(errors);
     } else {
-      res.status(500).json({ error: "Internal server error" });
+      error.errors.forEach((err) => {
+        errors[err.path] = [err.message];
+      });
+      return res.status(400).json(errors);
     }
   }
 };
@@ -90,7 +92,7 @@ exports.getAllCompany = async (req, res) => {
     attributes: { exclude: ["password"] },
     include: [Subscription],
   });
-  res.json(companys);
+  return res.json(companys);
 };
 
 // get only one company
@@ -102,12 +104,12 @@ exports.getCompanyById = async (req, res) => {
       attributes: { exclude: ["password"] },
     });
     if (!company) {
-      res.status(404).json({ error: "Company does not exist" });
+      return res.status(404).json({ error: "Company does not exist" });
     } else {
-      res.json(company);
+      return res.json(company);
     }
   } catch (error) {
-    res.json(error);
+    return res.json(error);
   }
 };
 
@@ -119,7 +121,7 @@ exports.updateCompany = async (req, res) => {
   try {
     const company = await Company.findByPk(Number(id));
     if (!company) {
-      res.status(404).json({ error: "Company does not exist" });
+      return res.status(404).json({ error: "Company does not exist" });
     } else {
       // Disallow updating password field
       if (body.password) {
@@ -157,9 +159,9 @@ exports.deleteCompany = async (req, res) => {
       res.status(404).json({ error: "Company does not exist" });
     } else {
       await company.destroy();
-      res.json("company deleted successfully");
+      return res.json("company deleted successfully");
     }
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

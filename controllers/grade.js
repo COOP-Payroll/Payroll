@@ -1,6 +1,5 @@
-const Grade = require('../models/grade');
-const Company = require('../models/company');
-const { where } = require('sequelize');
+const Grade = require("../models/grade");
+const Company = require("../models/company");
 
 // Define controller methods for handling User requests
 

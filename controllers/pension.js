@@ -33,12 +33,12 @@ exports.createPension = async (req, res, next) => {
       employeeContribution,
     });
     await pensions.setUser(Number(req.user.id));
-    res.status(200).json({
+    return res.status(200).json({
       message: "Successfully Registered",
       pensions,
     });
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -57,11 +57,11 @@ exports.updatePension = async (req, res, next) => {
 
     const result = await Pension.update(updates, { where: { id: id } });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "updated successfully",
     });
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
 
@@ -72,11 +72,13 @@ exports.deletePension = async (req, res, next) => {
     const pension = await Pension.findOne({ where: { id: id } });
     if (pension) {
       await Pension.destroy({ where: { id } });
-      res.status(200).json({ message: "Deleted successfully" });
+      return res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res.status(409).json({ message: "There is no pension with this ID" });
+      return res
+        .status(409)
+        .json({ message: "There is no pension with this ID" });
     }
   } catch (err) {
-    res.status(500).json("Something gonna wrong");
+    return res.status(500).json("Something gonna wrong");
   }
 };
