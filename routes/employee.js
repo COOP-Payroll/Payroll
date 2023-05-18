@@ -2,14 +2,20 @@ const express = require("express");
 const employeeController = require("../controllers/employeeControllers.js");
 const router = express.Router();
 const middleware=require("../middleware/auth.js")
-router.get("/", employeeController.getAllEmployee);
+router.get(
+  "/",
+
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  employeeController.getAllEmployee
+);
 router.get("/:id",
 
 employeeController.getEmployeeById);
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictToAll("companyAdmin"),
 
   employeeController.createEmployee
 );

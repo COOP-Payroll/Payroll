@@ -7,7 +7,7 @@ const AccountInfo = sequelize.define("AccountInfo", {
     accountNumber: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique:true
+    
     },
     image: {
         type: DataTypes.STRING,
