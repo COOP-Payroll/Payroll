@@ -76,12 +76,11 @@ exports.createTaxslab = async (req, res, next) => {
 
       await taxslab.setUser(req.user.id);
 
-     return res.status(200).json({
+      return res.status(200).json({
         message: "Successfully Registered",
-
         taxslab,
       });
-    } else if (req.user.role === "companyAdmin") {
+;    } else if (req.user.role === "companyAdmin") {
       const { from_Salary, to_Salary, income_tax_payable, deductible_Fee } =
         req.body;
       const taxslab = await Taxslab.create({
@@ -100,7 +99,7 @@ exports.createTaxslab = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log("first", error);
+
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
