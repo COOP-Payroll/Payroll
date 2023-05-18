@@ -1,7 +1,10 @@
-// Company.js
+// // Company.js
 
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
+const Company = require("./company.js");
+
+const validValues = ["companyCode", "year", "department"];
 
 const IdFormat = sequelize.define("IdFormat", {
   companyCode: {
@@ -14,16 +17,16 @@ const IdFormat = sequelize.define("IdFormat", {
     type: DataTypes.STRING,
   },
   separator: {
-    type: DataTypes.STRING,
-    default: "/",
+    type: DataTypes.ENUM,
+    values: ["/", "-"],
+    defaultValue: "/",
   },
   order: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
+    type: DataTypes.STRING,
     allowNull: false,
     validate: {
       isValidOrder(value) {
-        const validValues = ["companyCode", "year", "department"];
-        if (!value.every((val) => validValues.includes(val))) {
+        if (!value.split(",").every((val) => validValues.includes(val))) {
           throw new Error(
             "Invalid value for order. Must be 'companyCode', 'year', or 'department'."
           );
@@ -32,5 +35,8 @@ const IdFormat = sequelize.define("IdFormat", {
     },
   },
 });
+
+IdFormat.belongsTo(Company);
+Company.hasOne(IdFormat);
 
 module.exports = IdFormat;

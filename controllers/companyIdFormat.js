@@ -5,9 +5,10 @@ exports.createCompanyIdFormat = async (req, res) => {
   // const { companyCode, year, department, separator, order } = req.body;
   try {
     const companyIds = await IdFormat.findAll();
-    if (companyIds)
+    if (companyIds.length >= 1)
       return res.status(400).json({ error: "idformat already exist" });
     const companyIdFormat = await IdFormat.create(req.body);
+    await companyIdFormat.setCompany(Number(req.user.id));
     return res.status(201).json(companyIdFormat);
   } catch (error) {
     if (error.name === "SequelizeValidationError") {

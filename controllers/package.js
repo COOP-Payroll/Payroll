@@ -4,12 +4,31 @@ const Package = require("../models/package.js");
 exports.getAllPackages = async (req, res) => {
   try {
     const packages = await Package.findAll();
-    return res.status(200).json({
-      count: packages.length,
-      packages,
-    });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  
+      return res.status(200).json({
+        count: packages.length,
+        packages,
+      });
+  
+    
+  }  catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
