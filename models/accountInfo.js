@@ -1,25 +1,26 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
+const Employee=require('./employee.js')
 
 const AccountInfo = sequelize.define("AccountInfo", {
     accountNumber: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        unique:true
     },
     image: {
         type: DataTypes.STRING,
-        allowNull: false,
-    },
+     },
 
     isActive: {
         type: DataTypes.BOOLEAN,
-        allowNull: true,
+       
     },
    
 });
 
-//Company.hasMany(Department);
-// Department.belongsTo(Company);
+Employee.hasMany(AccountInfo);
+AccountInfo.belongsTo(Employee);
 
 module.exports = AccountInfo;

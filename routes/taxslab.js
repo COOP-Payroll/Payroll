@@ -8,17 +8,33 @@ const middleware = require("../middleware/auth.js");
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictToAdmin("superAdmin"),
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
   taxslabController.getAllTaxslabs
+);
+
+
+router.get(
+  "/tax/:id",
+  taxslabController.getCompanyWITHtAXSLAB
 );
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictToAdmin("superAdmin"),
+  middleware.restrictToAll("superAdmin","companyAdmin"),
   taxslabController.createTaxslab
 );
 router.delete("/:id", taxslabController.deleteTaxslab);
 router.put("/:id", taxslabController.updateTaxslab);
+
+
+router.put(
+  "/updateMany/tax",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+  taxslabController.updateMany
+);
+
+
 router.get("/:id", taxslabController.getTaxslabById);
 
 module.exports = router;
