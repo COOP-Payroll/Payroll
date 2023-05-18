@@ -26,7 +26,6 @@ exports.createCompany = async (req, res) => {
       return res.status(404).json({ error: "package does not exist!" });
     } else {
       const currentDate = moment();
-      // res.status(200).json(daysLeft);
       const subscription = await Subscription.create({ duration });
       await subscription.setPackage(packageId);
       await subscription.setCompany(company.id);
@@ -58,7 +57,7 @@ exports.createCompany = async (req, res) => {
         })
       );
 
-      const pen = await Promise.all(
+      await Promise.all(
         pensions.map((pension) => {
           Pension.create({
             employerContribution: Number(pension.employerContribution),
@@ -72,14 +71,19 @@ exports.createCompany = async (req, res) => {
       return res.status(201).json(subscription);
     }
   } catch (error) {
+    let errors = {};
     if (error.name === "SequelizeValidationError") {
-      const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
       return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      error?.errors?.forEach((err) => {
+        errors[err.path] = [err.message];
+        return res.status(400).json(errors);
+      });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json(error);
     }
   }
 };

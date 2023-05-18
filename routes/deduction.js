@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/", deduction.getAllDeduction);
 router.get("/:id", deduction.getDeductionById);
-router.post("/:gradeId/:definitionId", deduction.createDeduction);
+router.post("/", deduction.createDeduction);
 router.put("/:id", deduction.updateDeduction);
 router.delete("/:id", deduction.deleteDeduction);
 

@@ -20,6 +20,7 @@ exports.getAllAllowance = async (req, res) => {
 exports.getAllowanceById = async (req, res) => {
     try {
         const { id } = req.params;
+
         const allowance = await Allowance.findByPk(id);
         res.json(allowance);
     } catch (er) {
@@ -33,8 +34,8 @@ exports.createAllowance = async (req, res, next) => {
     try {
         //insert required field
         const  amount = req.body.amount;
-        const gradeId  = req.params.gradeId;
-        const allowanceDefinitionId =  req.params.definitionId;
+        const gradeId  = req.body.gradeId;
+        const allowanceDefinitionId =  req.body.definitionId;
         console.log(amount, gradeId, allowanceDefinitionId)
         const allowance = await Allowance.create({ amount});
                         //   await allowance.setGrade(gradeId);
@@ -42,14 +43,14 @@ exports.createAllowance = async (req, res, next) => {
 
         const grade = await Grade.findByPk(gradeId);
         if (grade) {
-        await allowance.setGrade(grade);
+            await allowance.setGrade(grade);
         } else {
         // Handle the case where the company with the given ID is not found
         console.log("no grade with this id")
         }
         const allDefinition = await AllowanceDefinition.findByPk(allowanceDefinitionId);
         if (allDefinition) {
-        await allowance.setAllowanceDefinition(allowanceDefinitionId);
+            await allowance.setAllowanceDefinition(allowanceDefinitionId);
         } else {
         // Handle the case where the company with the given ID is not found
         console.log("no allowance with this id")

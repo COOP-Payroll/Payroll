@@ -25,35 +25,40 @@ exports.getDeductionById = async (req, res) => {
 };
 
 exports.createDeduction = async (req, res, next) => {
-  try {
-    //insert required field
-    const amount = req.body.amount;
-    const gradeId = req.params.gradeId;
-    const definitionId = req.params.definitionId;
-    const deduction = await Deduction.create({ amount });
-    //   await deduction.setGrade(gradeId);
-    //   await deduction.setDeductionDefinition(deductionDefinitionId);
-    const grade = await Grade.findByPk(gradeId);
-    if (grade) {
-      await deduction.setGrade(gradeId);
-    } else {
-      // Handle the case where the company with the given ID is not found
-      console.log("no grade with this id");
+
+    try {
+        //insert required field
+        const  amount = req.body.amount;
+        const gradeId  = req.body.gradeId;
+        const definitionId =  req.body.definitionId;
+        console.log(amount,gradeId,definitionId)
+        const deduction = await Deduction.create({ amount});
+                        //   await deduction.setGrade(gradeId);
+                        //   await deduction.setDeductionDefinition(deductionDefinitionId);
+        const grade = await Grade.findByPk(gradeId);
+        if (grade) {
+        await deduction.setGrade(gradeId);
+        } else {
+        // Handle the case where the company with the given ID is not found
+        console.log("no grade with this id")
+        }
+        const dedDefinition = await DeductionDefinition.findByPk(definitionId);
+        if (dedDefinition) {
+        await deduction.setDeductionDefinition(definitionId);
+        } else {
+        // Handle the case where the company with the given ID is not found
+        console.log("no deduction with this id")
+        }
+                        
+        res.status(200).json({
+            message: 'Successfully Registered',
+            deduction
+        });
+    } catch (err) {
+        res.status(500).json('Something gonna wrong2')
+
     }
-    const dedDefinition = await DeductionDefinition.findByPk(definitionId);
-    if (dedDefinition) {
-      await deduction.setDeductionDefinition(definitionId);
-    } else {
-      // Handle the case where the company with the given ID is not found
-      console.log("no deduction with this id");
-    }
-    return res.status(200).json({
-      message: "Successfully Registered",
-      deduction,
-    });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong2");
-  }
+    
 };
 exports.updateDeduction = async (req, res, next) => {
   try {

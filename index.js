@@ -73,5 +73,5 @@ app.listen(process.env.PORT, () => {
   // cron.schedule("* * *  * *  * * *", async () => {
   //   run.run();
   // });
-  console.log("connected to backend");
+  console.log(`connected to backend`);
 });

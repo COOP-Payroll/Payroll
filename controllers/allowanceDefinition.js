@@ -3,8 +3,14 @@ const Company = require('../models/company')
 // Define controller methods for handling User requests
 exports.getAllAllowanceDefinition = async (req, res) => {
 
+    const Company = req.user.id;
+    console.log(Company)
     try {
-        const allowanceDefinitions = await AllowanceDefinition.findAll({});
+        
+        const criteria={
+            CompanyId: req.user.id
+        }
+        const allowanceDefinitions = await AllowanceDefinition.findAll(criteria);
         res.status(200).json({
             count: allowanceDefinitions.length,
             allowanceDefinitions
@@ -18,7 +24,7 @@ exports.getAllAllowanceDefinition = async (req, res) => {
 
 exports.getAllowanceDefinitionById = async (req, res) => {
     try {
-        const { id } = req.params;
+        const  {id}  = req.params;
         const allowanceDefinition = await AllowanceDefinition.findByPk(id);
         res.json(allowanceDefinition);
     } catch (er) {
@@ -31,7 +37,8 @@ exports.createAllowanceDefinition = async (req, res, next) => {
 
     try {
         //insert required field
-        const Company= req.params.companyId;
+        const Company= req.user.id;
+        console.log(Company)
         const { name,isTaxable,isExempted,exemptedAmount,startingAmount } = req.body;
 
         const allowanceDefinition = await AllowanceDefinition.create({ name,isTaxable,isExempted,exemptedAmount,startingAmount});
