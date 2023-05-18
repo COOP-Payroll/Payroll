@@ -66,7 +66,8 @@ app.use("/payroll", payrollRouter);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
 
-sequelize.sync().then(() => console.log("db is ready"));
+sequelize.sync({force:false}).then(() => console.log("db is ready"));
+// sequelize.sync({alter:true}).then(() => console.log("updated"));
 
 app.listen(process.env.PORT, () => {
   // cron.schedule("* * *  * *  * * *", async () => {

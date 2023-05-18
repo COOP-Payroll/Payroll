@@ -92,7 +92,7 @@ exports.createCompany = async (req, res) => {
 exports.getAllCompany = async (req, res) => {
   const companys = await Company.findAll({
     attributes: { exclude: ["password"] },
-    include: [Subscription],
+    include: [Subscription,Taxslab],
   });
   return res.json(companys);
 };
