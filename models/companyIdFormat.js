@@ -1,9 +1,9 @@
 // Company.js
 
 const { DataTypes } = require("sequelize");
-const sequelize = require("./sequelize");
+const sequelize = require("../database/db.js");
 
-const IdFormat = sequelize.define("Company", {
+const IdFormat = sequelize.define("IdFormat", {
   companyCode: {
     type: DataTypes.STRING,
   },
@@ -18,10 +18,17 @@ const IdFormat = sequelize.define("Company", {
     default: "/",
   },
   order: {
-    type: DataTypes.STRING,
+    type: DataTypes.ARRAY(DataTypes.STRING),
     allowNull: false,
     validate: {
-      isIn: [["companyCode", "year", "department"]],
+      isValidOrder(value) {
+        const validValues = ["companyCode", "year", "department"];
+        if (!value.every((val) => validValues.includes(val))) {
+          throw new Error(
+            "Invalid value for order. Must be 'companyCode', 'year', or 'department'."
+          );
+        }
+      },
     },
   },
 });
