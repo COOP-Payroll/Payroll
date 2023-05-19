@@ -75,8 +75,8 @@ exports.createCompany = async (req, res) => {
     if (error.name === "SequelizeValidationError") {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
+        return res.status(400).json(errors);
       });
-      return res.status(400).json(errors);
     } else if (error.name === "SequelizeUniqueConstraintError") {
       error?.errors?.forEach((err) => {
         errors[err.path] = [err.message];
