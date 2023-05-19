@@ -24,6 +24,10 @@ const Package = sequelize.define("Package", {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  isTrial: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 });
 
 module.exports = Package;

@@ -25,7 +25,7 @@ const employeeRouter = require("./routes/employee.js");
 const approver =require('./routes/approver')
 const payrollDefinition = require("./routes/payrollDefinition");
 const approvalMethod = require("./routes/approvalMethod");
-
+const payrollApprovement = require("./routes/payrollApprovement");
 const app = express();
 
 app.use(
@@ -65,7 +65,7 @@ app.use("/approver",approver)
 app.use("/payroll", payrollRouter);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
-
+app.use("/PayrollApprovement",payrollApprovement)
 
 sequelize.sync().then(() => console.log("db is ready"));
 // sequelize.sync({alter:true}).then(() => console.log("updated"));

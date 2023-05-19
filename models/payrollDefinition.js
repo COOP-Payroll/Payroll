@@ -3,7 +3,7 @@ const sequelize = require("../database/db.js");
 
 const Company = require("./company.js");
 
-const Payroll = sequelize.define("Payroll", {
+const PayrollDefinition = sequelize.define("PayrollDefinition", {
 payrollName:{
     type:DataTypes.STRING,
     allowNull:false,
@@ -32,7 +32,7 @@ payrollName:{
   },
 });
 
-Payroll.belongsTo(Company);
-Company.hasMany(Payroll);
+PayrollDefinition.belongsTo(Company);
+Company.hasMany(PayrollDefinition);
 
-module.exports = Payroll;
+module.exports = PayrollDefinition;
