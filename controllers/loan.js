@@ -1,18 +1,21 @@
-const Allowance = require("../models/allowance");
-const AllowanceDefinition = require("../models/allowanceDefinition");
-const Grade = require("../models/grade");
+const Loan = require("../models/loan.js");
+const LoanDefinition = require("../models/loanDefinition.js");
+const  Employee = require("../models/employee.js");
 
 // Define controller methods for handling User requests for deduction definition
-exports.getAllAllowance = async (req, res) => {
+exports.getAllLoan = async (req, res) => {
   try {
 
-    
-    const allowances = await Allowance.findAll();
+       const criteria = {
+         companyId: req.user.id,
+       };
+    const loans = await Loan.findAll({where:criteria});
     res.status(200).json({
-      count: allowances.length,
-      allowances,
+      count: loans.length,
+      loans,
     });
   } catch (error) {
+    console.log("first",error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -64,35 +67,41 @@ exports.createAllowance = async (req, res, next) => {
   try {
     //insert required field
     const amount = req.body.amount;
-    const gradeId = req.body.gradeId;
-    const allowanceDefinitionId = req.body.definitionId;
-    console.log(amount, gradeId, allowanceDefinitionId);
-    const allowance = await Allowance.create({ amount });
+    const employeeId = req.body.employeeId;
+    const loanDefinitionId = req.body.loanDefinitionId;
+    console.log(amount, loanDefinitionId, employeeId);
+    const loan = await Loan.create({ amount });
     //   await allowance.setGrade(gradeId);
     //   await allowance.setAllowanceDefinition(allowanceDefinitionId);
 
-    const grade = await Grade.findByPk(gradeId);
-    if (grade) {
-      await allowance.setGrade(grade);
-    } else {
-      // Handle the case where the company with the given ID is not found
-      console.log("no grade with this id");
-    }
-    const allDefinition = await AllowanceDefinition.findByPk(
-      allowanceDefinitionId
-    );
-    if (allDefinition) {
-      await allowance.setAllowanceDefinition(allowanceDefinitionId);
-    } else {
-      // Handle the case where the company with the given ID is not found
-      console.log("no allowance with this id");
-    }
+    const employee = await Employee.findByPk(employeeId);
+    const loanDefinition=await LoanDefinition.findByPk(loanDefinitionId);
+    if (!employee) {
+    res.status(404).json("No Employee with this id");
+    //   console.log("no Employee with this id");
+    }  
+    else if(!loanDefinition){
+     res.status(404).json("No Loan Definition with this id");
+    }   
 
-    res.status(200).json({
-      message: "Successfully Registered",
-      allowance,
-    });
+    
+    else {
+          await loan.setEmployee(employee);
+          await loan.setLoanDefinition(loanDefinition)
+          await loan.setCompany(req.user.id)
+
+            res.status(200).json({
+              message: "Successfully Registered",
+              loan,
+            });
+      // Handle the case where the company with the given ID is not found
+      
+    }
+   
+
+  
   } catch (error) {
+    console.log(error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -112,7 +121,7 @@ exports.createAllowance = async (req, res, next) => {
     }
   }
 };
-exports.updateAllowance = async (req, res, next) => {
+exports.updateLoan = async (req, res, next) => {
   try {
     //insert required field
     const { amount } = req.body;
@@ -121,12 +130,22 @@ exports.updateAllowance = async (req, res, next) => {
     if (amount) {
       updates.amount = amount;
     }
+    // const criteria = {
+    //   companyId: req.user.id,
+    // };
 
-    const result = await Allowance.update(updates, { where: { id: id } });
+        const checkLoan = await Loan.findOne({ where: { id: id,companyId:req.user.id } });
+        console.log("first",checkLoan)
+        if(checkLoan){
+    const result = await Loan.update({ amount: amount }, { where: { id: id } });
 
     res.status(200).json({
       message: "updated successfully",
-    });
+      result
+    });}
+    else{
+        res.status(404).json("No such Id")
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -148,17 +167,17 @@ exports.updateAllowance = async (req, res, next) => {
   }
 };
 
-exports.deleteAllowance = async (req, res, next) => {
+exports.deleteLoan = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const allowance = await Allowance.findOne({ where: { id: id } });
-    if (allowance) {
-      await Allowance.destroy({ where: { id } });
+    const laon = await Loan.findOne({ where: { id: id ,companyId:req.user.id} });
+    if (laon) {
+      await Loan.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
       res
         .status(409)
-        .json({ message: "There is no Deduction Definition with this ID" });
+        .json({ message: "There is no Loan Definition with this ID" });
     }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {

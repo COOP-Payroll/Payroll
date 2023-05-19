@@ -10,7 +10,7 @@ const Department = sequelize.define("Department", {
   },
   location: {
     type: DataTypes.STRING,
-    allowNull: false,
+   
   },
 
   shorthandRepresentation: {

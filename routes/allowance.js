@@ -3,8 +3,8 @@ const allowance = require("../controllers/allowance");
 
 const router = express.Router();
 
-router.get("/", allowance.getAllowanceById);
-router.get("/:id", allowance.getAllAllowance);
+router.get("/", allowance.getAllAllowance);
+router.get("/:id", allowance.getAllowanceById);
 router.post("/", allowance.createAllowance);
 router.put("/:id", allowance.updateAllowance);
 router.delete("/:id", allowance.deleteAllowance);
