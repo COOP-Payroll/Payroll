@@ -9,8 +9,24 @@ exports.getAllDeduction = async (req, res) => {
       count: deductions.length,
       deductions,
     });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -19,44 +35,75 @@ exports.getDeductionById = async (req, res) => {
     const { id } = req.params;
     const deduction = await Deduction.findByPk(id);
     return res.json(deduction);
-  } catch (er) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
 exports.createDeduction = async (req, res, next) => {
 
     try {
-        //insert required field
-        const  amount = req.body.amount;
-        const gradeId  = req.body.gradeId;
-        const definitionId =  req.body.definitionId;
-        console.log(amount,gradeId,definitionId)
-        const deduction = await Deduction.create({ amount});
-                        //   await deduction.setGrade(gradeId);
-                        //   await deduction.setDeductionDefinition(deductionDefinitionId);
-        const grade = await Grade.findByPk(gradeId);
-        if (grade) {
+      //insert required field
+      const amount = req.body.amount;
+      const gradeId = req.body.gradeId;
+      const definitionId = req.body.definitionId;
+      console.log(amount, gradeId, definitionId);
+      const deduction = await Deduction.create({ amount });
+      //   await deduction.setGrade(gradeId);
+      //   await deduction.setDeductionDefinition(deductionDefinitionId);
+      const grade = await Grade.findByPk(gradeId);
+      if (grade) {
         await deduction.setGrade(gradeId);
-        } else {
+      } else {
         // Handle the case where the company with the given ID is not found
-        console.log("no grade with this id")
-        }
-        const dedDefinition = await DeductionDefinition.findByPk(definitionId);
-        if (dedDefinition) {
+        console.log("no grade with this id");
+      }
+      const dedDefinition = await DeductionDefinition.findByPk(definitionId);
+      if (dedDefinition) {
         await deduction.setDeductionDefinition(definitionId);
-        } else {
+      } else {
         // Handle the case where the company with the given ID is not found
-        console.log("no deduction with this id")
-        }
-                        
-        res.status(200).json({
-            message: 'Successfully Registered',
-            deduction
-        });
-    } catch (err) {
-        res.status(500).json('Something gonna wrong2')
+        console.log("no deduction with this id");
+      }
 
+      res.status(200).json({
+        message: "Successfully Registered",
+        deduction,
+      });
+    } catch (error) {
+      if (error.name === "SequelizeValidationError") {
+        const errors = {};
+        error.errors.forEach((err) => {
+          errors[err.path] = [`${err.path} is required`];
+        });
+
+        return res.status(400).json(errors);
+      } else if (error.name === "SequelizeUniqueConstraintError") {
+        const errors = {};
+        error.errors.forEach((err) => {
+          errors[err.path] = [`${err.path} must be unique`];
+        });
+
+        return res.status(400).json(errors);
+      } else {
+        return res.status(500).json({ error: "Internal server error" });
+      }
     }
     
 };
@@ -76,8 +123,24 @@ exports.updateDeduction = async (req, res, next) => {
     return res.status(200).json({
       message: "updated successfully",
     });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 exports.deleteDeduction = async (req, res, next) => {
@@ -93,7 +156,23 @@ exports.deleteDeduction = async (req, res, next) => {
         .status(409)
         .json({ message: "There is no Deduction Definition with this ID" });
     }
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };

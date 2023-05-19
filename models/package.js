@@ -15,11 +15,9 @@ const Package = sequelize.define("Package", {
   max_employee: {
     type: DataTypes.INTEGER,
   },
-  service: [
-    {
-      type: DataTypes.STRING,
-    },
-  ],
+  service: {
+    type: DataTypes.TEXT, // TEXT
+  },
   discount: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
