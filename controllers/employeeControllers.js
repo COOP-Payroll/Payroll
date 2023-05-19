@@ -4,12 +4,14 @@ const EmergencyContact = require("../models/emergency_Contact.js");
 const Address = require("../models/address.js");
 const Department = require("../models/department.js");
 const Grade = require("../models/grade.js");
-const Company=require('../models/company.js');
-const AccountInfo = require('../models/accountInfo.js')
+const Company = require("../models/company.js");
+const AccountInfo = require("../models/accountInfo.js");
+const IdFormat = require("../models/companyIdFormat.js");
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
   try {
-    const Employees = await Employee.findAll({where:{companyId:req.user.id},
+    const Employees = await Employee.findAll({
+      where: { companyId: req.user.id },
       include: [
         Address,
         EmployeeInfo,
@@ -73,8 +75,13 @@ exports.getEmployeeById = async (req, res) => {
 
 exports.createEmployee = async (req, res, next) => {
   try {
-    const { address, employeeInfo, emergencyInfo, basicInfo, accountInformation } =
-      req.body;
+    const {
+      address,
+      employeeInfo,
+      emergencyInfo,
+      basicInfo,
+      accountInformation,
+    } = req.body;
     let password = req.user.companyCode.substring(0, 4) + "0000";
 
     if (!basicInfo?.DepartmentId) {
@@ -103,7 +110,66 @@ exports.createEmployee = async (req, res, next) => {
       } else {
         const address1 = await Address.create(address);
         const employeeInfo1 = await EmployeeInfo.create(employeeInfo);
-        const basicInfo1 = await Employee.create(basicInfo, ...password);
+
+        // employeeID
+
+        // const company = await IdFormat.findByPk{where: } (Number(req.user.id));
+
+        const idFormat = await IdFormat.findOne({
+          where: { companyId: Number(req.user.id) },
+        });
+
+        if (!idFormat)
+          return res.status(400).json({ error: "define Id Format first" });
+
+        const formatElements = idFormat.order.split(",");
+        // Find the last created employee
+        const lastEmployee = await Employee.findOne({
+          order: [["createdAt", "DESC"]],
+        });
+        let paddedEmployeeCode = "00001"; // Default value if no previous employee exists
+
+        if (lastEmployee) {
+          const lastEmployeeId = lastEmployee.id_number;
+          // Extract the employee code from the last employee's employeeId
+          const lastEmployeeCode = lastEmployeeId.split(idFormat.separator)[3];
+          // Parse the employee code as an integer and increment it by one
+          const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1;
+
+          // Pad the incremented employee code with leading zeros
+          paddedEmployeeCode = incrementedEmployeeCode
+            .toString()
+            .padStart(5, "0");
+        }
+        // Build the employee ID based on the format elements and separator
+        let employeeId = "";
+        for (let i = 0; i < formatElements.length; i++) {
+          const element = formatElements[i];
+          switch (element) {
+            case "companyCode":
+              employeeId += idFormat.companyCode;
+              break;
+            case "year":
+              employeeId += idFormat.year;
+              break;
+            case "department":
+              employeeId += idFormat.department;
+              break;
+          }
+
+          // Add the separator between format elements (except for the last element)
+          if (i !== formatElements.length - 1) {
+            employeeId += idFormat.separator;
+          }
+        }
+        // Append the padded employee code to the employee ID
+        employeeId += idFormat.separator + paddedEmployeeCode;
+
+        const basicInfo1 = await Employee.create({
+          ...basicInfo,
+          password,
+          id_number: employeeId,
+        });
 
         //add ADDRESS TO EMPLOYEE
         await basicInfo1.setAddress(address1);
@@ -121,7 +187,7 @@ exports.createEmployee = async (req, res, next) => {
           accountInformation.map((emer) => AccountInfo.create(emer))
         );
 
-        console.log("first", accountInformation);
+        // console.log("first", accountInformation);
 
         const ss = await Promise.all(
           emergencies.map((emer) => emer.setEmployee(basicInfo1))
@@ -138,7 +204,7 @@ exports.createEmployee = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log("first",error)
+    // console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -164,8 +230,6 @@ exports.updateEmployee = async (req, res, next) => {
     const { deptName, location, shorthandRepresentation } = req.body;
     const updates = req.body;
     const { id } = req.params;
-
- 
 
     const result = await Employee.update(updates, { where: { id: id } });
 
@@ -197,9 +261,9 @@ exports.deleteEmployee = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const Employee = await Employee.findOne({ where: { id: id } });
-    if (Employee) {
-      await Employee.destroy({ where: { id } });
+    const Employe = await Employee.findByPk(Number(id));
+    if (Employe) {
+      await Employe.destroy({ where: { id } });
       res.status(200).json({ message: "Employee deleted successfully" });
     } else {
       res.status(409).json({ message: "There is no Employee with this ID" });
@@ -220,10 +284,8 @@ exports.deleteEmployee = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
+      // console.log("er", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
 };
-
-
-

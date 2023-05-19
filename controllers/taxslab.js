@@ -7,7 +7,7 @@ exports.getAllTaxslabs = async (req, res) => {
   try {
     if (req.user.role === "superAdmin") {
       const taxslab = await Taxslab.findAll({
-        where: { userId: req.user.id ,isActive:true},
+        where: { userId: req.user.id, isActive: true },
         include: [
           {
             model: Company,
@@ -25,7 +25,7 @@ exports.getAllTaxslabs = async (req, res) => {
       });
     } else {
       const taxslab = await Taxslab.findAll({
-        where: { companyId: req.user.id ,isActive:true},
+        where: { companyId: req.user.id, isActive: true },
         include: [
           {
             model: Company,
@@ -80,7 +80,7 @@ exports.createTaxslab = async (req, res, next) => {
         message: "Successfully Registered",
         taxslab,
       });
-;    } else if (req.user.role === "companyAdmin") {
+    } else if (req.user.role === "companyAdmin") {
       const { from_Salary, to_Salary, income_tax_payable, deductible_Fee } =
         req.body;
       const taxslab = await Taxslab.create({
@@ -99,7 +99,6 @@ exports.createTaxslab = async (req, res, next) => {
       });
     }
   } catch (error) {
-
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
