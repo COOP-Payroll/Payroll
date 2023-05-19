@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
 const sequelize = require("./database/db.js");

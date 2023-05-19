@@ -35,7 +35,6 @@ const Company = sequelize.define("Company", {
   },
   AccountNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
   },
   role: {
     type: DataTypes.STRING,
@@ -48,6 +47,10 @@ const Company = sequelize.define("Company", {
   companyCode: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  country: {
+    type: DataTypes.STRING,
+    defaultValue: "Ethiopia",
   },
 });
 

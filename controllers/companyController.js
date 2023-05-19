@@ -8,70 +8,155 @@ const { calculateNextPayment } = require("../utils/helper.js");
 const moment = require("moment");
 
 // create Company
-exports.createCompany = async (req, res) => {
-  const data = Object.keys(req.body)
-    .filter((key) => key !== "duration" && key !== "packageId")
-    .reduce((acc, key) => {
-      acc[key] = req.body[key];
-      return acc;
-    }, {});
+// exports.createCompany = async (req, res) => {
+//   const data = Object.keys(req.body)
+//     .filter((key) => key !== "duration" && key !== "packageId")
+//     .reduce((acc, key) => {
+//       acc[key] = req.body[key];
+//       return acc;
+//     }, {});
 
-  const packageId = Number(req.body.packageId);
-  const duration = Number(req.body.duration);
+//   const packageId = Number(req.body.packageId);
+//   const duration = Number(req.body.duration);
+//   try {
+//     const company = await Company.create(data);
+
+//     const package = await Package.findByPk(Number(packageId));
+//     if (!package) {
+//       return res.status(404).json({ error: "package does not exist!" });
+//     } else {
+//       const currentDate = moment();
+//       const subscription = await Subscription.create({ duration });
+//       await subscription.setPackage(packageId);
+//       await subscription.setCompany(company.id);
+//       const nextPaymentDate = await calculateNextPayment({
+//         chargeType: package.packageName,
+//         duration,
+//         normalDate: Date.now(),
+//       });
+//       const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
+//       await subscription.update({ nextPaymentDate, leftPaymentDate });
+//       const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+//       const taxslabs = await Taxslab.findAll({
+//         where: { userId: Number(superAdmin.id), isActive: true },
+//       });
+//       const pensions = await Pension.findAll({
+//         where: { userId: Number(superAdmin.id), isActive: true },
+//       });
+
+//       const tax = await Promise.all(
+//         taxslabs.map((taxslab) => {
+//           Taxslab.create({
+//             from_Salary: Number(taxslab.from_Salary),
+//             to_Salary: Number(taxslab.to_Salary),
+//             income_tax_payable: Number(taxslab.income_tax_payable),
+//             deductible_Fee: Number(taxslab.deductible_Fee),
+//             CompanyId: Number(company.id),
+//             UserId: null,
+//           });
+//         })
+//       );
+
+//       await Promise.all(
+//         pensions.map((pension) => {
+//           Pension.create({
+//             employerContribution: Number(pension.employerContribution),
+//             employeeContribution: Number(pension.employeeContribution),
+//             CompanyId: Number(company.id),
+//             UserId: null,
+//           });
+//         })
+//       );
+
+//       return res.status(201).json(subscription);
+//     }
+//   } catch (error) {
+//     let errors = {};
+//     if (error.name === "SequelizeValidationError") {
+//       error.errors.forEach((err) => {
+//         errors[err.path] = [`${err.path} is required`];
+//       });
+//       return res.status(400).json(errors);
+//     } else if (error.name === "SequelizeUniqueConstraintError") {
+//       error?.errors?.forEach((err) => {
+//         errors[err.path] = [err.message];
+//       });
+//       return res.status(400).json(errors);
+//     } else {
+//       return res.status(500).json(error);
+//     }
+//   }
+// };
+
+// get AllCompany
+
+exports.createCompany = async (req, res) => {
   try {
+    const data = Object.keys(req.body)
+      .filter((key) => key !== "duration" && key !== "packageId")
+      .reduce((acc, key) => {
+        acc[key] = req.body[key];
+        return acc;
+      }, {});
+
+    const packageId = Number(req.body.packageId);
+    const duration = Number(req.body.duration);
+
     const company = await Company.create(data);
 
     const package = await Package.findByPk(Number(packageId));
     if (!package) {
-      return res.status(404).json({ error: "package does not exist!" });
-    } else {
-      const currentDate = moment();
-      const subscription = await Subscription.create({ duration });
-      await subscription.setPackage(packageId);
-      await subscription.setCompany(company.id);
-      const nextPaymentDate = await calculateNextPayment({
-        chargeType: package.packageName,
-        duration,
-        normalDate: Date.now(),
-      });
-      const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
-      await subscription.update({ nextPaymentDate, leftPaymentDate });
-      const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
-      const taxslabs = await Taxslab.findAll({
-        where: { userId: Number(superAdmin.id), isActive: true },
-      });
-      const pensions = await Pension.findAll({
-        where: { userId: Number(superAdmin.id), isActive: true },
-      });
-
-      const tax = await Promise.all(
-        taxslabs.map((taxslab) => {
-          Taxslab.create({
-            from_Salary: Number(taxslab.from_Salary),
-            to_Salary: Number(taxslab.to_Salary),
-            income_tax_payable: Number(taxslab.income_tax_payable),
-            deductible_Fee: Number(taxslab.deductible_Fee),
-            CompanyId: Number(company.id),
-            UserId: null,
-          });
-        })
-      );
-
-      await Promise.all(
-        pensions.map((pension) => {
-          Pension.create({
-            employerContribution: Number(pension.employerContribution),
-            employeeContribution: Number(pension.employeeContribution),
-            CompanyId: Number(company.id),
-            UserId: null,
-          });
-        })
-      );
-
-      return res.status(201).json(subscription);
+      return res.status(404).json({ error: "Package does not exist!" });
     }
+
+    const currentDate = moment();
+    const subscription = await Subscription.create({ duration });
+    await subscription.setPackage(packageId);
+    await subscription.setCompany(company.id);
+    const nextPaymentDate = await calculateNextPayment({
+      chargeType: package.packageName,
+      duration,
+      normalDate: Date.now(),
+    });
+    const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
+    await subscription.update({ nextPaymentDate, leftPaymentDate });
+
+    const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+    const taxslabs = await Taxslab.findAll({
+      where: { userId: Number(superAdmin.id), isActive: true },
+    });
+    const pensions = await Pension.findAll({
+      where: { userId: Number(superAdmin.id), isActive: true },
+    });
+
+    const tax = await Promise.all(
+      taxslabs.map((taxslab) => {
+        return Taxslab.create({
+          from_Salary: Number(taxslab.from_Salary),
+          to_Salary: Number(taxslab.to_Salary),
+          income_tax_payable: Number(taxslab.income_tax_payable),
+          deductible_Fee: Number(taxslab.deductible_Fee),
+          CompanyId: Number(company.id),
+          UserId: null,
+        });
+      })
+    );
+
+    await Promise.all(
+      pensions.map((pension) => {
+        return Pension.create({
+          employerContribution: Number(pension.employerContribution),
+          employeeContribution: Number(pension.employeeContribution),
+          CompanyId: Number(company.id),
+          UserId: null,
+        });
+      })
+    );
+
+    return res.status(201).json(subscription);
   } catch (error) {
     let errors = {};
+
     if (error.name === "SequelizeValidationError") {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
@@ -79,20 +164,20 @@ exports.createCompany = async (req, res) => {
       return res.status(400).json(errors);
     } else if (error.name === "SequelizeUniqueConstraintError") {
       error?.errors?.forEach((err) => {
-        errors[err.path] = [err.message];  
+        errors[err.path] = [err.message];
       });
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json(error);
+      console.error("Error creating company:", error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
 };
 
-// get AllCompany
 exports.getAllCompany = async (req, res) => {
   const companys = await Company.findAll({
     attributes: { exclude: ["password"] },
-    include: [Subscription,Taxslab],
+    include: [Subscription, Taxslab],
   });
   return res.json(companys);
 };
