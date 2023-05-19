@@ -4,14 +4,15 @@ const Package = require("../models/package.js");
 exports.getAllPackages = async (req, res) => {
   try {
     const packages = await Package.findAll();
-  
-      return res.status(200).json({
-        count: packages.length,
-        packages,
-      });
-  
-    
-  }  catch (error) {
+    // const package = packages[0];
+    // console.log(package);
+    // var pack = JSON.stringify(package.service);
+    // var parsed = JSON.parse(pack);
+    return res.status(200).json({
+      count: packages.length,
+      pack: packages,
+    });
+  } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {

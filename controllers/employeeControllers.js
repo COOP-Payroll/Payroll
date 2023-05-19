@@ -25,6 +25,7 @@ exports.getAllEmployee = async (req, res) => {
       Employees,
     });
   } catch (error) {
+    console.log("first",error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -79,9 +80,12 @@ exports.createEmployee = async (req, res, next) => {
 
     if (!basicInfo?.DepartmentId) {
       res.status(404).json("There is no department");
-    } else if (!basicInfo?.GradeId) {
+    }
+     else if (!basicInfo?.GradeId)
+      {
       res.status(404).json("There is no Grade");
-    } else {
+    } else 
+    {
       const gradeId = await Grade.findByPk(Number(basicInfo?.GradeId));
       const departmentId = await Department.findByPk(
         Number(basicInfo?.DepartmentId)
