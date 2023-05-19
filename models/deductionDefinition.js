@@ -7,14 +7,14 @@ const DeductionDefinition = sequelize.define("DeductionDefinition", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  isPercent: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-  },
-  startingAmount: {
-    type: DataTypes.FLOAT,
-    defaultValue: 0,
-  },
+  // isPercent: {
+  //   type: DataTypes.BOOLEAN,
+  //   allowNull: false,
+  // },
+  // startingAmount: {
+  //   type: DataTypes.FLOAT,
+  //   defaultValue: 0,
+  // },
 });
 
 DeductionDefinition.belongsTo(Company);
