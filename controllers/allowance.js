@@ -4,17 +4,17 @@ const Grade = require('../models/grade')
 
 // Define controller methods for handling User requests for deduction definition 
 exports.getAllAllowance = async (req, res) => {
+    
     try {
+        
         const allowances = await Allowance.findAll();
         res.status(200).json({
             count: allowances.length,
             allowances
         });
-
     } catch (err) {
         res.status(500).json('Something gonna wrong')
     }
-
 };
 
 exports.getAllowanceById = async (req, res) => {

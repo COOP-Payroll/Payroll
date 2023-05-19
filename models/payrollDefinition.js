@@ -6,7 +6,8 @@ const Company = require("./company.js");
 const Payroll = sequelize.define("Payroll", {
 payrollName:{
     type:DataTypes.STRING,
-    allowNull:false
+    allowNull:false,
+    
 },
   startDate: {
     type: DataTypes.DATE,

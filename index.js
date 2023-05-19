@@ -22,7 +22,7 @@ const grade = require("./routes/grade");
 const deductionDefinition = require("./routes/deductionDefinition");
 const payrollRouter = require("./routes/payroll");
 const employeeRouter = require("./routes/employee.js");
-
+const approver =require('./routes/approver')
 const payrollDefinition = require("./routes/payrollDefinition");
 const approvalMethod = require("./routes/approvalMethod");
 
@@ -61,10 +61,11 @@ app.use("/allowance", allowance);
 app.use("/deductiondefinition", deductionDefinition);
 app.use("/deduction", deduction);
 app.use("/grade", grade);
-
+app.use("/approver",approver)
 app.use("/payroll", payrollRouter);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
+
 
 sequelize.sync().then(() => console.log("db is ready"));
 
