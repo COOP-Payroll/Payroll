@@ -4,7 +4,9 @@ const IdFormat = require("../models/companyIdFormat");
 exports.createCompanyIdFormat = async (req, res) => {
   // const { companyCode, year, department, separator, order } = req.body;
   try {
-    const companyIds = await IdFormat.findAll();
+    const companyIds = await IdFormat.findAll({
+      where: { companyId: Number(req.user.id) },
+    });
     if (companyIds.length >= 1)
       return res.status(400).json({ error: "idformat already exist" });
     const companyIdFormat = await IdFormat.create(req.body);
@@ -25,7 +27,9 @@ exports.createCompanyIdFormat = async (req, res) => {
 // get all companyIdFormat
 exports.getAllCompanyIdFormat = async (req, res) => {
   try {
-    const IdFormates = await IdFormat.findAll();
+    const IdFormates = await IdFormat.findAll({
+      where: { companyId: Number(req.user.id) },
+    });
     const parsedCompanies = await Promise.all(
       IdFormates.map((company) => {
         // company.order = JSON.parse(company.order);
