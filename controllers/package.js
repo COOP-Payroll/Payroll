@@ -4,14 +4,12 @@ const Package = require("../models/package.js");
 exports.getAllPackages = async (req, res) => {
   try {
     const packages = await Package.findAll();
-  
-      return res.status(200).json({
-        count: packages.length,
-        packages,
-      });
-  
-    
-  }  catch (error) {
+
+    return res.status(200).json({
+      count: packages.length,
+      packages,
+    });
+  } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -51,6 +49,7 @@ exports.createPackage = async (req, res, next) => {
       price,
       service,
       discount,
+      isTrial,
     } = req.body;
 
     const packages = await Package.create({
@@ -60,6 +59,7 @@ exports.createPackage = async (req, res, next) => {
       min_employee,
       service,
       discount,
+      isTrial,
     });
     return res.status(200).json({
       message: "Successfully Registered",
@@ -79,6 +79,7 @@ exports.updatePackage = async (req, res, next) => {
       price,
       service,
       discount,
+      isTrial,
     } = req.body;
     const updates = {};
     const { id } = req.params;
@@ -100,6 +101,9 @@ exports.updatePackage = async (req, res, next) => {
     }
     if (discount) {
       updates.discount = discount;
+    }
+    if (isTrial) {
+      updates.isTrial = isTrial;
     }
 
     const result = await Package.update(updates, { where: { id: id } });
