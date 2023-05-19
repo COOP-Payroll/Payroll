@@ -2,7 +2,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Package = require("../models/package.js");
 const Company = require("../models/company.js");
-const bcrypt=require('bcrypt')
+const bcrypt = require("bcrypt");
 
 const Employee = sequelize.define("Employee", {
   fullname: {
@@ -73,9 +73,7 @@ const Employee = sequelize.define("Employee", {
   // passwordChangedAt: Date,
   // passwordResetToken: String,
   // passwordResetExpires: Date,
-
 });
-
 
 Employee.beforeCreate((employee, options) => {
   const saltRounds = 10;
@@ -101,14 +99,12 @@ Employee.beforeUpdate((employee, options) => {
         throw new Error(err);
       });
   }
-}
-);
+});
 
 // Subscription.belongsTo(Package);
 // Package.hasOne(Subscription);
 
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
-
 
 module.exports = Employee;
