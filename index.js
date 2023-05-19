@@ -55,7 +55,7 @@ app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
 app.use("/login", authRouter);
 app.use("/employee", employeeRouter);
-// app.use("/companyIdFormat", companyIdRouter);
+app.use("/companyIdFormat", companyIdRouter);
 app.use("/allowancedefinition", allowanceDefinition);
 app.use("/allowance", allowance);
 app.use("/deductiondefinition", deductionDefinition);
@@ -68,6 +68,7 @@ app.use("/payrollDefinition", payrollDefinition);
 
 
 sequelize.sync().then(() => console.log("db is ready"));
+// sequelize.sync({alter:true}).then(() => console.log("updated"));
 
 app.listen(process.env.PORT, () => {
   // cron.schedule("* * *  * *  * * *", async () => {

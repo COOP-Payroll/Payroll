@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("your-sequelize-instance"); // Your Sequelize instance
+const Employee=require('./employee.js')
 
 const CustomRole = sequelize.define("CustomRole", {
   name: {
@@ -31,5 +32,9 @@ const CustomRole = sequelize.define("CustomRole", {
     },
   ],
 });
+
+
+Employee.hasOne(CustomRole);
+CustomRole.belongsTo(Employee);
 
 module.exports = CustomRole;

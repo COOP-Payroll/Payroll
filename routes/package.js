@@ -7,8 +7,8 @@ const middleware = require("../middleware/auth.js");
 // Define routes for handling User requests
 router.get(
   "/",
-  middleware.protectAll,
-  middleware.restrictToAdmin("superAdmin"),
+//   middleware.protectAll,
+//   middleware.restrictToAdmin("superAdmin"),
   packageController.getAllPackages
 );
 router.post(
@@ -31,8 +31,8 @@ router.put(
 );
 router.get(
   "/:id",
-  middleware.protectAll,
-  middleware.restrictToAdmin("superAdmin"),
+//   middleware.protectAll,
+//   middleware.restrictToAdmin("superAdmin"),
   packageController.getpackageById
 );
 

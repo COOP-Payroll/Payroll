@@ -1,37 +1,42 @@
-// const { DataTypes } = require("sequelize");
-// const sequelize = require("../database/db.js");
-// const Company = require("../models/company.js");
+// // Company.js
 
-// const CompanyIdFormat = sequelize.define("CompanyIdFormat", {
-//   separator: {
-//     type: DataTypes.ENUM,
-//     values: ["/", "-"],
-//     defaultValue: "/",
-//   },
-//   companyCode: [
-//     {
-//       // isSelected: DataTypes.BOOLEAN,
-//       // level: DataTypes.INTEGER,
-//       type: DataTypes.BOOLEAN,
-//       allowNull: false,
-//     },
-//     { type: DataTypes.STRING, allowNull: false },
-//   ],
-//   deptShortHand: {
-//     isSelected: DataTypes.BOOLEAN,
-//     level: DataTypes.INTEGER,
-//   },
-//   year: {
-//     isSelected: DataTypes.BOOLEAN,
-//     level: DataTypes.INTEGER,
-//   },
-//   format: {
-//     type: DataTypes.STRING,
-//     allowNull: false,
-//   },
-// });
+const { DataTypes } = require("sequelize");
+const sequelize = require("../database/db.js");
+const Company = require("./company.js");
 
-// Company.hasOne(CompanyIdFormat);
-// CompanyIdFormat.belongsTo(Company);
+const validValues = ["companyCode", "year", "department"];
 
-// module.exports = CompanyIdFormat;
+const IdFormat = sequelize.define("IdFormat", {
+  companyCode: {
+    type: DataTypes.STRING,
+  },
+  year: {
+    type: DataTypes.STRING,
+  },
+  department: {
+    type: DataTypes.STRING,
+  },
+  separator: {
+    type: DataTypes.ENUM,
+    values: ["/", "-"],
+    defaultValue: "/",
+  },
+  order: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      isValidOrder(value) {
+        if (!value.split(",").every((val) => validValues.includes(val))) {
+          throw new Error(
+            "Invalid value for order. Must be 'companyCode', 'year', or 'department'."
+          );
+        }
+      },
+    },
+  },
+});
+
+IdFormat.belongsTo(Company);
+Company.hasOne(IdFormat);
+
+module.exports = IdFormat;

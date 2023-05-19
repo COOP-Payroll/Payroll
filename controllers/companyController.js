@@ -77,11 +77,13 @@ exports.createCompany = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
       return res.status(400).json(errors);
-    } else {
-      error.errors.forEach((err) => {
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      error?.errors?.forEach((err) => {
         errors[err.path] = [err.message];
+        return res.status(400).json(errors);
       });
-      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json(error);
     }
   }
 };
@@ -90,7 +92,7 @@ exports.createCompany = async (req, res) => {
 exports.getAllCompany = async (req, res) => {
   const companys = await Company.findAll({
     attributes: { exclude: ["password"] },
-    include: [Subscription],
+    include: [Subscription,Taxslab],
   });
   return res.json(companys);
 };

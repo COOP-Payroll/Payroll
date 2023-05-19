@@ -3,14 +3,41 @@ const Pension = require("../models/pension.js");
 // Define controller methods for handling User requests
 exports.getAllPension = async (req, res) => {
   try {
-    const pensions = await Pension.findAll();
-    res.status(200).json({
-      count: pensions.length,
-      pensions,
-    });
-  } catch (err) {
-    console.log("first", err);
-    res.status(500).json("Something gonna wrong");
+    if (req.user.role === "superAdmin") {
+      const pensions = await Pension.findAll({
+        where: { userId: req.user.id },
+      });
+      res.status(200).json({
+        count: pensions.length,
+        pensions,
+      });
+    } else if (req.user.role === "companyAdmin") {
+      const pensions = await Pension.findAll({
+        where: { companyId: req.user.id },
+      });
+      res.status(200).json({
+        count: pensions.length,
+        pensions,
+      });
+    }
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -19,8 +46,24 @@ exports.getpensionById = async (req, res) => {
     const { id } = req.params;
     const pension = await Pension.findByPk(id);
     res.json(pension);
-  } catch (er) {
-    res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -28,17 +71,56 @@ exports.createPension = async (req, res, next) => {
   try {
     const { employerContribution, employeeContribution } = req.body;
 
-    const pensions = await Pension.create({
-      employerContribution,
-      employeeContribution,
-    });
-    await pensions.setUser(Number(req.user.id));
-    return res.status(200).json({
-      message: "Successfully Registered",
-      pensions,
-    });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+    if (req.user.role === "superAdmin") {
+      const getAllPension = await Pension.findByPk(req.user.id);
+
+      if (!getAllPension) {
+        res.status(409).json("Pension is already defined update it ");
+      } else {
+        const pensions = await Pension.create({
+          employerContribution,
+          employeeContribution,
+        });
+        await pensions.setUser(Number(req.user.id));
+        return res.status(200).json({
+          message: "Successfully Registered",
+          pensions,
+        });
+      }
+    } else if (req.user.role === "companyAdmin") {
+      const getAllPension = await Pension.findByPk(req.user.id);
+      if (!getAllPension) {
+        res.status(409).json("Pension is already defined update it ");
+      } else {
+        const pensions = await Pension.create({
+          employerContribution,
+          employeeContribution,
+        });
+        await pensions.setCompany(Number(req.user.id));
+        return res.status(200).json({
+          message: "Successfully Registered",
+          pensions,
+        });
+      }
+    }
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -48,20 +130,68 @@ exports.updatePension = async (req, res, next) => {
     const updates = {};
     const { id } = req.params;
 
-    if (employerContribution) {
-      updates.employerContribution = employerContribution;
-    }
-    if (employeeContribution) {
-      updates.employeeContribution = employeeContribution;
-    }
+    if (req.user.role === "superAdmin") {
+      if (employerContribution) {
+        updates.employerContribution = employerContribution;
+      }
+      if (employeeContribution) {
+        updates.employeeContribution = employeeContribution;
+      }
 
-    const result = await Pension.update(updates, { where: { id: id } });
+      const result = await Pension.update(
+        { isActive: false },
+        { where: { id: id } }
+      );
+      const newPension = await Pension.create({
+        employeeContribution,
+        employerContribution,
+      });
+      await newPension.setUser(Number(req.user.id));
 
-    return res.status(200).json({
-      message: "updated successfully",
-    });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+      return res.status(200).json({
+        message: "updated successfully",
+        newPension,
+      });
+    } 
+    else if (req.user.role === "companyAdmin") {
+      if (employerContribution) {
+        updates.employerContribution = employerContribution;
+      }
+      if (employeeContribution) {
+        updates.employeeContribution = employeeContribution;
+      }
+
+      const result = await Pension.update({ isActive: false }, { where: { id: id } }  );
+      const newPension = await Pension.create({
+        employeeContribution,
+        employerContribution,
+      });
+      await newPension.setCompany(Number(req.user.id));
+
+      return res.status(200).json({
+        message: "updated successfully",
+        newPension
+      });
+    }
+  } catch (error) {
+    console.log("first", error)
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -78,7 +208,23 @@ exports.deletePension = async (req, res, next) => {
         .status(409)
         .json({ message: "There is no pension with this ID" });
     }
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };

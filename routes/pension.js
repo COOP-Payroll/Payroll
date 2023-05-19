@@ -7,17 +7,21 @@ const middleware = require("../middleware/auth.js");
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictToAdmin("superAdmin"),
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
   pensionController.getAllPension
 );
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictToAdmin("superAdmin"),
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
   pensionController.createPension
 );
-router.delete("/:id", pensionController.deletePension);
-router.put("/:id", pensionController.updatePension);
+
+router.put("/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+
+pensionController.updatePension);
 router.get("/:id", pensionController.getpensionById);
 
 module.exports = router;
