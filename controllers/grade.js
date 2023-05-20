@@ -5,21 +5,20 @@ const Company = require("../models/company");
 
 exports.getAllGrade = async (req, res) => {
   const companyId = req.user.id;
-  console.log(companyId);
   try {
     const criteria = {
       companyId: req.user.id,
     };
     const companyGrade = await Grade.findOne({ where: criteria });
-    if(!companyGrade){
-res.status(200).json('There no Grade')
-    }else{
-    console.log("same companyGrade", companyGrade);
-    //const grades = await Grade.findAll();
-    res.status(200).json({
-      count: companyGrade.length,
-      companyGrade,
-    });}
+    if (!companyGrade) {
+      res.status(200).json("There no Grade");
+    } else {
+      //const grades = await Grade.findAll();
+      res.status(200).json({
+        count: companyGrade.length,
+        companyGrade,
+      });
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
