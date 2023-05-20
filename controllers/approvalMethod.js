@@ -44,9 +44,9 @@ exports.createApprovalMethod = async (req, res) => {
     const criteria={
       where: {companyId: req.user.id},
     };
-    const isExist = await ApprovalMethod.findAll({criteria})
-
-    if(isExist){
+    const isExist = await ApprovalMethod.count({criteria})
+    console.log("exist",isExist)
+    if(isExist>=1){
         res.json("this company setted approval method")
     }else{
         const appMethod = await ApprovalMethod.create({
@@ -106,9 +106,13 @@ exports.updateApprovalMethod = async (req, res, next) => {
     }
 
     if (appMethod) {
-      const result = await ApprovalMethod.update(updates, {
+        const result = await ApprovalMethod.update(updates, {
         where: { id: id },
       });
+      res.json({
+        message:"success",
+        appMethod
+      })
     } else {
       console.log("no such approval method");
     }

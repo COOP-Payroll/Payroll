@@ -134,7 +134,7 @@ exports.createPayroll = async (req, res) => {
 exports.updatePayrollDefinition = async (req, res, next) => {
   const id = req.params.id;
   try {
-      const { payrollName, startDate, endDate } = req.body;
+      const { payrollName, startDate, endDate,status} = req.body;
       const updates = {};
       const { id } = req.params;
 
@@ -147,7 +147,9 @@ exports.updatePayrollDefinition = async (req, res, next) => {
       if (endDate) {
           updates.endDate = endDate;
       }
-    
+      if (status) {
+        updates.status = status;
+    }
       const result = await Payroll.update(updates, { where: { id: id } });
 
       res.status(200).json({
