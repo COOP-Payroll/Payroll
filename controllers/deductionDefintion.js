@@ -70,15 +70,15 @@ exports.createDeductionDefinition = async (req, res, next) => {
       // const { name,startingAmount, ispercent} = req.body;
       console.log("Company", companyId);
       const name = req.body.name;
-      const startingAmount = req.body.startingAmount;
-      const isPercent = req.body.isPercent;
-      console.log(name, startingAmount, isPercent);
+      // const startingAmount = req.body.startingAmount;
+      // const isPercent = req.body.isPercent;
+
       // save here const name = req.body.name;
 
       const deductionDefinition = await DeductionDefinition.create({
         name: name,
-        startingAmount: startingAmount,
-        isPercent: isPercent,
+        // startingAmount: startingAmount,
+        // isPercent: isPercent,
       });
 
       const company = await Company.findByPk(companyId);
@@ -95,6 +95,7 @@ exports.createDeductionDefinition = async (req, res, next) => {
       });
       //console.log(deductionDefinition)
     } catch (error) {
+      console.log("first",error)
       if (error.name === "SequelizeValidationError") {
         const errors = {};
         error.errors.forEach((err) => {
@@ -117,7 +118,7 @@ exports.createDeductionDefinition = async (req, res, next) => {
 exports.updateDeductionDefinition = async (req, res, next) => {
   try {
     //insert required field
-    const { name, startingAmount, ispercent } = req.body;
+    const { name,  } = req.body;
     const updates = {};
     const { id } = req.params;
 

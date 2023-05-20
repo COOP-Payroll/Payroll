@@ -10,14 +10,14 @@ exports.getAllGrade = async (req, res) => {
     const criteria = {
       companyId: req.user.id,
     };
-    const companyGrade = await Grade.findOne({ where: criteria });
+    const companyGrade = await Grade.findAll({ where: criteria });
+
     if(!companyGrade){
 res.status(200).json('There no Grade')
-    }else{
-    console.log("same companyGrade", companyGrade);
-    //const grades = await Grade.findAll();
-    res.status(200).json({
-      count: companyGrade.length,
+    }
+    else{
+     res.status(200).json({
+        count: companyGrade.length,
       companyGrade,
     });}
   } catch (error) {

@@ -79,9 +79,9 @@ exports.createCompany = async (req, res) => {
       return res.status(400).json(errors);
     } else if (error.name === "SequelizeUniqueConstraintError") {
       error?.errors?.forEach((err) => {
-        errors[err.path] = [err.message];
-        return res.status(400).json(errors);
+        errors[err.path] = [err.message];  
       });
+      return res.status(400).json(errors);
     } else {
       return res.status(500).json(error);
     }
