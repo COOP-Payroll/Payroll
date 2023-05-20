@@ -67,6 +67,7 @@ exports.createPackage = async (req, res, next) => {
       packages,
     });
   } catch (err) {
+    console.log("first", err);
     return res.status(500).json("Something gonna wrong");
   }
 };
