@@ -3,12 +3,12 @@ const Payroll = require("../models/payrollDefinition");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllPayroll = async (req, res, next) => {
   try {
-    const CompanyId = req.params.companyId;
+    const CompanyId = req.user.id;
     //console.log(CompanyId)
     const criteria = {
       CompanyId,
     };
-    const payroll = await Payroll.findOne({ where: criteria });
+    const payroll = await Payroll.findAll(criteria);
 
     return res.status(200).json({
       count: payroll.length,
@@ -18,34 +18,60 @@ exports.getAllPayroll = async (req, res, next) => {
     return res.status(500).json("Something gonna wrongi");
   }
 };
+//get by id
+exports.getPayrollDefinitionById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const payroll = await Payroll.findByPk(Number(id));
+    if (!payroll) {
+      return res.status(404).json({ error: "payroll does not exist" });
+    } else {
+      return res.json(payroll);
+    }
+  } catch (error) {
+    return res.json(error);
+  }
+};
 
 exports.createPayroll = async (req, res) => {
   try {
     const startDate = new Date(req.body.startDate);
     const endDate = new Date(req.body.endDate);
-    const CompanyId = req.params.companyId;
-    const criteria = {
+    const CompanyId = req.user.id;
+    //console.log("logged in company", req.user.id)
+    const criteria1 = {
       CompanyId: CompanyId,
       startDate: req.body.startDate,
     };
-
+    const criteria = {
+      CompanyId: CompanyId,
+    };
     const ifPayroll = await Payroll.count({
+      where: criteria1,
+    });
+    const newPayroll = await Payroll.count({
       where: criteria,
     });
+    console.log(ifPayroll,"exists");
 
     if (ifPayroll >= 1) {
       return res.json("You have already defined the payroll for this month.");
-    } else if (ifPayroll === 0) {
+    } else if (newPayroll === 0) {
       const newPayroll = await Payroll.create({
         payrollName: req.body.payrollName,
         startDate: req.body.startDate,
         endDate: req.body.endDate,
+        status:"created",
+        isRollBacked:false,
+        isPaid:false,
       });
       await newPayroll.setCompany(CompanyId);
+
       return res.status(201).json("Successfully defined your first payroll.");
     } else {
       const latestPayroll = await Payroll.findOne({
-        order: [["updatedAt", "DESC"]],
+        order: [["createdAt", "DESC"]],
       });
 
       let latestDate;
@@ -54,17 +80,27 @@ exports.createPayroll = async (req, res) => {
           payrollName: req.body.payrollName,
           startDate: req.body.startDate,
           endDate: req.body.endDate,
+          status:"created",
+          isRollBacked:false,
+          isPaid:false,
         });
+        await newPayroll.setCompany(CompanyId)
+
         return res.json(newPayroll);
       } else {
-        latestDate = latestPayroll.updatedAt;
+        latestDate = latestPayroll.endDate;
+       // const dateTimeString = "2023-05-18T03:14:59.294Z";
+        // const datePart = new Date(latestDate).toISOString().split('T')[0];
+        // console.log(datePart);
+        console.log("latestPayroll",latestDate);
+        
         const interval = Math.round(
           (startDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
         );
         const newInterval = Math.round(
           (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         );
-
+          
         if (newInterval < 20 || newInterval > 30) {
           return res.json(
             "The payroll duration should be between 20 and 30 days."
@@ -79,7 +115,12 @@ exports.createPayroll = async (req, res) => {
               payrollName: req.body.payrollName,
               startDate: req.body.startDate,
               endDate: req.body.endDate,
+              status:"created",
+              isRollBacked:false,
+              isPaid:false,
             });
+            await newPayroll.setCompany(CompanyId)
+
             return res.status(201).json(newPayroll);
           }
         }
@@ -90,56 +131,47 @@ exports.createPayroll = async (req, res) => {
   }
 };
 
-exports.updateApprovalMethod = async (req, res, next) => {
+exports.updatePayrollDefinition = async (req, res, next) => {
   const id = req.params.id;
   try {
-    const appMethod = await ApprovalMethod.findByPk(Number(id));
+      const { payrollName, startDate, endDate,status} = req.body;
+      const updates = {};
+      const { id } = req.params;
 
-    const updates = {};
-    const minimumApprover = req.body.minimumApprover;
-    const approvalLevel = req.body.approvalLevel;
-    const isCompleted = req.body.isCompleted;
-    const isThereMasterApprover = req.body.isThereMasterApprover;
-    const approvalMethod = req.body.approvalMethod;
-    if (minimumApprover) {
-      updates.minimumApprover = minimumApprover;
+      if (payrollName) {
+          updates.payrollName = payrollName;
+      }
+      if (startDate) {
+          updates.startDate = startDate;
+      }
+      if (endDate) {
+          updates.endDate = endDate;
+      }
+      if (status) {
+        updates.status = status;
     }
-    if (approvalLevel) {
-      updates.approvalLevel = approvalLevel;
-    }
-    if (isCompleted) {
-      updates.isCompleted = isCompleted;
-    }
-    if (isThereMasterApprover) {
-      updates.isThereMasterApprover = isThereMasterApprover;
-    }
-    if (approvalMethod) {
-      updates.approvalMethod = approvalMethod;
-    }
+      const result = await Payroll.update(updates, { where: { id: id } });
 
-    if (appMethod) {
-      const result = await ApprovalMethod.update(updates, {
-        where: { id: id },
-      });
-    } else {
-      console.log("no such approval method");
-    }
+      res.status(200).json({
+          message: "updated successfully"
+      })
+ 
   } catch (error) {
     return res.status(500).json("Something gonna wrong");
   }
 };
 
-exports.deleteApprovalMethod = async (req, res, next) => {
+exports.deletePayrollDefinition = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const approvalMethod = await ApprovalMethod.findOne({ where: { id: id } });
-    if (approvalMethod) {
-      await approvalMethod.destroy({ where: { id } });
+    const payroll = await Payroll.findOne({ where: { id: id } });
+    if (payroll) {
+      await Payroll.destroy({ where: { id } });
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
       return res
         .status(409)
-        .json({ message: "There is no  such approval method with this ID" });
+        .json({ message: "There is no  such payroll with this ID" });
     }
   } catch (err) {
     return res.status(500).json("Something gonna wrong");

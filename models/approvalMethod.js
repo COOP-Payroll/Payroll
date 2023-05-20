@@ -25,13 +25,15 @@ const ApprovalMethod = sequelize.define("ApprovalMethod", {
   },
   lastUpdated: {
     type: DataTypes.DATE,
-    default: Date.now,
+    default: Date.now(),
+    // allowNull:false
   },
   isThereMasterApprover: {
     type: DataTypes.BOOLEAN,
     default: false,
   },
 });
+
 
 ApprovalMethod.belongsTo(Company);
 Company.hasOne(ApprovalMethod);

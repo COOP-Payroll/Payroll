@@ -296,7 +296,7 @@ exports.createEmployee = async (req, res, next) => {
           employeeId += idFormat.companyCode;
           break;
         case "year":
-          employeeId += employeeInfo.hireDate.split("-")[0];
+          employeeId += employeeInfo.hireDate.split("/")[2];
           break;
         case "department":
           employeeId += departmentId.shorthandRepresentation;

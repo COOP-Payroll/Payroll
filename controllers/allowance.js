@@ -4,6 +4,19 @@ const Grade = require("../models/grade");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
+<<<<<<< HEAD
+    
+    try {
+        
+        const allowances = await Allowance.findAll();
+        res.status(200).json({
+            count: allowances.length,
+            allowances
+        });
+    } catch (err) {
+        res.status(500).json('Something gonna wrong')
+    }
+=======
   try {
 
     
@@ -31,6 +44,7 @@ exports.getAllAllowance = async (req, res) => {
       return res.status(500).json({ error: "Internal server error" });
     }
   }
+>>>>>>> 49421b529e8a792330349c0f0aa03934134ed285
 };
 
 exports.getAllowanceById = async (req, res) => {
