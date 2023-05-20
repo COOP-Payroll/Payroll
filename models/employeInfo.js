@@ -36,7 +36,4 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
 //Company.hasMany(Department);
 // Department.belongsTo(Company);
 
-Employee.hasOne(EmployeeInfo);
-EmployeeInfo.belongsTo(Employee);
-
 module.exports = EmployeeInfo;

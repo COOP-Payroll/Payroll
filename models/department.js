@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
-const Employee=require('./employee.js')
+const Employee = require("./employee.js");
 
 const Department = sequelize.define("Department", {
   deptName: {
@@ -10,7 +10,6 @@ const Department = sequelize.define("Department", {
   },
   location: {
     type: DataTypes.STRING,
-   
   },
 
   shorthandRepresentation: {
@@ -22,8 +21,7 @@ const Department = sequelize.define("Department", {
 Company.hasMany(Department);
 Department.belongsTo(Company);
 
-
-Employee.hasOne(Department);
-Department.belongsTo(Employee);
+Department.hasMany(Employee);
+Employee.belongsTo(Department);
 
 module.exports = Department;
