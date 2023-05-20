@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
 const sequelize = require("./database/db.js");
@@ -17,6 +16,7 @@ const authRouter = require("./routes/auth.js");
 const companyIdRouter = require("./routes/companyId");
 const allowance = require("./routes/allowance");
 const allowanceDefinition = require("./routes/allowanceDefinition");
+const loanDefinition = require("./routes/loanDefinition");
 const deduction = require("./routes/deduction");
 const grade = require("./routes/grade");
 const deductionDefinition = require("./routes/deductionDefinition");
@@ -26,6 +26,9 @@ const approver =require('./routes/approver')
 const payrollDefinition = require("./routes/payrollDefinition");
 const approvalMethod = require("./routes/approvalMethod");
 const payrollApprovement = require("./routes/payrollApprovement");
+const customRoleRouter = require("./routes/customRole.js");
+const loanRoute = require("./routes/loan.js");
+
 const app = express();
 
 app.use(
@@ -59,6 +62,8 @@ app.use("/companyIdFormat", companyIdRouter);
 app.use("/allowancedefinition", allowanceDefinition);
 app.use("/allowance", allowance);
 app.use("/deductiondefinition", deductionDefinition);
+app.use("/loanDefinition", loanDefinition);
+app.use("/loan", loanRoute);
 app.use("/deduction", deduction);
 app.use("/grade", grade);
 app.use("/approver",approver)
@@ -66,6 +71,7 @@ app.use("/payroll", payrollRouter);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
 app.use("/PayrollApprovement",payrollApprovement)
+app.use("/customRole", customRoleRouter);
 
 sequelize.sync().then(() => console.log("db is ready"));
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
