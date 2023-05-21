@@ -3,6 +3,9 @@ const sequelize = require("../database/db.js");
 const Package = require("../models/package.js");
 const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
+const Address = require("./address.js");
+const EmployeeInfo = require("./employeInfo.js");
+const Department = require("./department.js");
 
 const Employee = sequelize.define("Employee", {
   fullname: {
@@ -106,5 +109,11 @@ Employee.beforeUpdate((employee, options) => {
 
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
+
+EmployeeInfo.hasOne(Employee);
+Employee.belongsTo(EmployeeInfo);
+
+Address.hasOne(Employee);
+Employee.belongsTo(Address);
 
 module.exports = Employee;

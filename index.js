@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
-const sequelize = require("./database/db.js");
+const sequelize = require("./database/db");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
 const userRouter = require("./routes/user.js");
@@ -28,6 +28,8 @@ const approvalMethod = require("./routes/approvalMethod");
 const payrollApprovement = require("./routes/payrollApprovement");
 const customRoleRouter = require("./routes/customRole.js");
 const loanRoute = require("./routes/loan.js");
+const companyAccountInfoRouter = require("./routes/companyAccountInfo");
+const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
 
 const app = express();
 
@@ -72,6 +74,8 @@ app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
 app.use("/PayrollApprovement", payrollApprovement);
 app.use("/customRole", customRoleRouter);
+app.use("/companyAccInfo", companyAccountInfoRouter);
+app.use("/employeeAccInfo", employeeAccountInfoRouter);
 
 sequelize.sync().then(() => console.log("db is ready"));
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
