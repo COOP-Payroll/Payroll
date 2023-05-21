@@ -2,7 +2,14 @@ const AccountInfo = require("../models/accountInfo");
 
 exports.createEmployeeAccountInfo = async (req, res) => {
   try {
-    const { employeeId, isVerified, accountNumber, image } = req.body;
+    const { employeeId, isVerified, accountNumber } = req.body;
+    const { file } = req;
+    //  const { name, hireDate, username, password } = req.body;
+
+    if (!file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+
     const existingAccount = await AccountInfo.findOne({
       where: {
         accountNumber: req.body.accountNumber,
@@ -24,11 +31,14 @@ exports.createEmployeeAccountInfo = async (req, res) => {
       await activeAccount.update({ isActive: false });
     }
 
+    // Access the uploaded image file
+    const { path } = file;
+
     const newAccountInfo = await AccountInfo.create({
       accountNumber,
       isVerified,
       EmployeeId: employeeId,
-      image,
+      image: path,
     });
 
     res.status(201).json({
@@ -58,8 +68,9 @@ exports.getAllEmployeeAccountInfo = async (req, res) => {
   try {
     const { id } = req.params;
     const employeeeAccountInfos = await AccountInfo.findAll({
-      where: { EmployeeId: id },
+      where: { EmployeeId: id, isActive: true },
     });
+    // let employeeeAccountInfo = employeeeAccountInfos[0]
     return res.status(200).json(employeeeAccountInfos);
   } catch (error) {
     return res.json(error);

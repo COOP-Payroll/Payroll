@@ -4,6 +4,13 @@ exports.createCompanyAccountInfo = async (req, res) => {
   try {
     const companyId = Number(req.user.id);
 
+    const { file } = req;
+    //  const { name, hireDate, username, password } = req.body;
+
+    if (!file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+
     const existingAccount = await CompanyAccountInfo.findOne({
       where: {
         companyId,
@@ -26,9 +33,13 @@ exports.createCompanyAccountInfo = async (req, res) => {
       await activeAccount.update({ isActive: false });
     }
 
+    // Access the uploaded image file
+    const { path } = file;
+
     const newAccountInfo = await CompanyAccountInfo.create({
       ...req.body,
       CompanyId: companyId,
+      image: path,
     });
 
     res.status(201).json({
@@ -58,9 +69,13 @@ exports.getAllCompanyAccountInfo = async (req, res) => {
   try {
     const companyId = Number(req.user.id);
     const companyAccountInfos = await CompanyAccountInfo.findAll({
-      where: { CompanyId: companyId },
+      where: { CompanyId: companyId, isActive: true },
     });
-    return res.status(200).json(companyAccountInfos);
+    let companyAccountInfo = companyAccountInfos[0];
+    // const baseUrl = "http://192.168.42.140:6000/D://COOP/Payroll"; // Replace with your server's base URL
+    // const imageUrl = `${baseUrl}/${companyAccountInfo.image}`;
+    // companyAccountInfo.dataValues.imageUrl = companyAccountInfo.image;
+    return res.status(200).json(companyAccountInfo);
   } catch (error) {
     return res.json(error);
   }
