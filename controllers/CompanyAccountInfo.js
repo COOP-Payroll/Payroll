@@ -72,9 +72,9 @@ exports.getAllCompanyAccountInfo = async (req, res) => {
       where: { CompanyId: companyId, isActive: true },
     });
     let companyAccountInfo = companyAccountInfos[0];
-    // const baseUrl = "http://192.168.42.140:6000/D://COOP/Payroll"; // Replace with your server's base URL
-    // const imageUrl = `${baseUrl}/${companyAccountInfo.image}`;
-    // companyAccountInfo.dataValues.imageUrl = companyAccountInfo.image;
+    const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your server's base URL
+    const imageUrl = `${baseUrl}/${companyAccountInfo.image}`;
+    companyAccountInfo.dataValues.imageUrl = imageUrl;
     return res.status(200).json(companyAccountInfo);
   } catch (error) {
     return res.json(error);
