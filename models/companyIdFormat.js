@@ -21,6 +21,10 @@ const IdFormat = sequelize.define("IdFormat", {
     values: ["/", "-"],
     defaultValue: "/",
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
   order: {
     type: DataTypes.STRING,
     allowNull: false,

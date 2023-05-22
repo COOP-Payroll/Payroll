@@ -35,6 +35,15 @@ router.put(
 );
 
 
+//RESTORE TO DEFAULT
+
+router.put(
+  "/restoreTodefault/tax",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+  taxslabController.restoreToDefault
+);
+
 router.get("/:id", taxslabController.getTaxslabById);
 
 module.exports = router;

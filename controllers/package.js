@@ -66,8 +66,24 @@ exports.createPackage = async (req, res, next) => {
       message: "Successfully Registered",
       packages,
     });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 

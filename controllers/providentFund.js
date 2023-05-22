@@ -1,23 +1,23 @@
-const Pension = require("../models/pension.js");
+const ProvidentFund = require("../models/providentFund.js");
 
 // Define controller methods for handling User requests
-exports.getAllPension = async (req, res) => {
+exports.getAllProvidentFund = async (req, res) => {
   try {
     if (req.user.role === "superAdmin") {
-      const pensions = await Pension.findAll({
+      const ProvidentFunds = await ProvidentFund.findAll({
         where: { userId: req.user.id },
       });
       res.status(200).json({
-        count: pensions.length,
-        pensions,
+        count: ProvidentFunds.length,
+        ProvidentFunds,
       });
     } else if (req.user.role === "companyAdmin") {
-      const pensions = await Pension.findAll({
+      const ProvidentFunds = await ProvidentFund.findAll({
         where: { companyId: req.user.id },
       });
       res.status(200).json({
-        count: pensions.length,
-        pensions,
+        count: ProvidentFunds.length,
+        ProvidentFunds,
       });
     }
   } catch (error) {
@@ -41,11 +41,11 @@ exports.getAllPension = async (req, res) => {
   }
 };
 
-exports.getpensionById = async (req, res) => {
+exports.getProvidentFundById = async (req, res) => {
   try {
     const { id } = req.params;
-    const pension = await Pension.findByPk(id);
-    res.json(pension);
+    const providentFunds = await ProvidentFund.findByPk(id);
+    res.json(providentFunds);
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -67,47 +67,46 @@ exports.getpensionById = async (req, res) => {
   }
 };
 
-exports.createPension = async (req, res, next) => {
+exports.createProvidentFund = async (req, res, next) => {
   try {
     const { employerContribution, employeeContribution } = req.body;
 
-    console.log("user ID",req.user.id)
-
     if (req.user.role === "superAdmin") {
+      const getAllProvidentFund = await ProvidentFund.findAll({where:{ userId:req.user.id}});
 
-      const getAllPension = await Pension.findAll({where:{userId:req.user.id}});
-
-      if (!getAllPension || getAllPension.length !=0 ) {
-        res.status(409).json("Pension is already defined update it ");
+      if (!getAllProvidentFund  || getAllProvidentFund.length  !=0) {
+        res.status(409).json("ProvidentFund is already defined update it ");
       } else {
-        const pensions = await Pension.create({
+        const ProvidentFunds = await ProvidentFund.create({
           employerContribution,
           employeeContribution,
         });
-        await pensions.setUser(Number(req.user.id));
+        await ProvidentFunds.setUser(Number(req.user.id));
         return res.status(200).json({
           message: "Successfully Registered",
-          pensions,
+          ProvidentFunds,
         });
       }
     } else if (req.user.role === "companyAdmin") {
-      const getAllPension = await Pension.findAll({where:{companyId:req.user.id}});
-      if (!getAllPension  || getAllPension.length !=0) {
-        res.status(409).json("Pension is already defined update it ");
+      const getAllProvidentFund = await ProvidentFund.findAll({companyId:req.user.id});
+
+
+      console.log("first",!getAllProvidentFund)
+        if (!getAllProvidentFund  || getAllProvidentFund.length  !=0) {
+        res.status(409).json("ProvidentFund is already defined update it ");
       } else {
-        const pensions = await Pension.create({
+        const ProvidentFunds = await ProvidentFund.create({
           employerContribution,
           employeeContribution,
         });
-        await pensions.setCompany(Number(req.user.id));
+        await ProvidentFunds.setCompany(Number(req.user.id));
         return res.status(200).json({
           message: "Successfully Registered",
-          pensions,
+          ProvidentFunds,
         });
       }
     }
   } catch (error) {
-    console.log("first",error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -128,7 +127,7 @@ exports.createPension = async (req, res, next) => {
   }
 };
 
-exports.updatePension = async (req, res, next) => {
+exports.updateProvidentFund = async (req, res, next) => {
   try {
     const { employeeContribution, employerContribution } = req.body;
     const updates = {};
@@ -142,22 +141,21 @@ exports.updatePension = async (req, res, next) => {
         updates.employeeContribution = employeeContribution;
       }
 
-      const result = await Pension.update(
+      const result = await ProvidentFund.update(
         { isActive: false },
         { where: { id: id } }
       );
-      const newPension = await Pension.create({
+      const newProvidentFund = await ProvidentFund.create({
         employeeContribution,
         employerContribution,
       });
-      await newPension.setUser(Number(req.user.id));
+      await newProvidentFund.setUser(Number(req.user.id));
 
       return res.status(200).json({
         message: "updated successfully",
-        newPension,
+        newProvidentFund,
       });
-    } 
-    else if (req.user.role === "companyAdmin") {
+    } else if (req.user.role === "companyAdmin") {
       if (employerContribution) {
         updates.employerContribution = employerContribution;
       }
@@ -165,20 +163,23 @@ exports.updatePension = async (req, res, next) => {
         updates.employeeContribution = employeeContribution;
       }
 
-      const result = await Pension.update({ isActive: false }, { where: { id: id } }  );
-      const newPension = await Pension.create({
+      const result = await ProvidentFund.update(
+        { isActive: false },
+        { where: { id: id } }
+      );
+      const newProvidentFund = await ProvidentFund.create({
         employeeContribution,
         employerContribution,
       });
-      await newPension.setCompany(Number(req.user.id));
+      await newProvidentFund.setCompany(Number(req.user.id));
 
       return res.status(200).json({
         message: "updated successfully",
-        newPension
+        newProvidentFund,
       });
     }
   } catch (error) {
-    console.log("first", error)
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -199,18 +200,18 @@ exports.updatePension = async (req, res, next) => {
   }
 };
 
-exports.deletePension = async (req, res, next) => {
+exports.deleteProvidentFund = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const pension = await Pension.findOne({ where: { id: id } });
-    if (pension) {
-      await Pension.destroy({ where: { id } });
+    const providentFund = await ProvidentFund.findOne({ where: { id: id } });
+    if (providentFund) {
+      await ProvidentFund.destroy({ where: { id } });
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
       return res
         .status(409)
-        .json({ message: "There is no pension with this ID" });
+        .json({ message: "There is no ProvidentFund with this ID" });
     }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {

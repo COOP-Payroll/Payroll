@@ -1,6 +1,7 @@
 const CustomRole = require("../models/customRole.js");
 const Permission=require("../models/permission.js");
-const Company=require('../models/company.js')
+const Company=require('../models/company.js');
+const Employee = require("../models/employee.js");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllCustomRole = async (req, res) => {
@@ -11,9 +12,12 @@ exports.getAllCustomRole = async (req, res) => {
   try {
     const customRole = await CustomRole.findAll({
       where: { companyId: req.user.id },
-      include: [Permission],
+     
     });
-res.status(200).json(customRole);
+res.status(200).json(
+  {
+    count:customRole.length,
+  customRole});
  
   } catch (error) {
     console.error("Error retrieving permissions:", error);
@@ -186,3 +190,52 @@ exports.deleteCustomRole = async (req, res, next) => {
     }
   }
 };
+
+
+exports.assignToEmployee= async(req,res,next)=>{
+try {
+const {employeeId, roleId}=req.body;
+
+const getRole=await CustomRole.findOne({where:{id:roleId}});
+const getEmployee= await Employee.findOne({where:{id:employeeId}})
+
+
+if(!getRole){
+  
+  res.status(409).json({ message: "There is no Role with this ID" });
+}
+else if (!getEmployee) {
+   res.status(409).json({ message: "There is no Employee with this ID" });
+}
+else{
+
+  const assignedRole = await getEmployee.setCustomRole(Number(roleId));
+  
+  res.status(200).json({ message: "Role Assigned successfully",
+  assignedRole ,
+});
+
+
+}
+
+
+} catch (error) {
+  if (error.name === "SequelizeValidationError") {
+    const errors = {};
+    error.errors.forEach((err) => {
+      errors[err.path] = [`${err.path} is required`];
+    });
+
+    return res.status(400).json(errors);
+  } else if (error.name === "SequelizeUniqueConstraintError") {
+    const errors = {};
+    error.errors.forEach((err) => {
+      errors[err.path] = [`${err.path} must be unique`];
+    });
+
+    return res.status(400).json(errors);
+  } else {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+}

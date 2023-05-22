@@ -14,9 +14,26 @@ router.post(
   middleware.restrictToAll("companyAdmin"),
   companyIdRouter.createCompanyIdFormat
 );
+
 router.get("/", companyIdRouter.getAllCompanyIdFormat);
 // router.get("/:id", companyController.getCompanyById);
-// router.put("/:id", companyController.updateCompany);
-// router.delete("/:id", companyController.deleteCompany);
+router.put(
+  "/",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  companyIdRouter.updateCompanyIdFormat
+);
+router.delete(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  companyIdRouter.deleteCompanyIdFormat
+);
+router.get(
+  "/activeIdFormat",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  companyIdRouter.getActiveCompany
+);
 
 module.exports = router;
