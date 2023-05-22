@@ -36,8 +36,8 @@ exports.getPayrollDefinitionById = async (req, res) => {
 
 exports.createPayroll = async (req, res) => {
   try {
-    const startDate = new Date(req.body.startDate);
-    const endDate = new Date(req.body.endDate);
+    const startDate = req.body.startDate;
+    const endDate = req.body.endDate;
     const CompanyId = req.user.id;
     //console.log("logged in company", req.user.id)
     const criteria1 = {
@@ -53,7 +53,7 @@ exports.createPayroll = async (req, res) => {
     const newPayroll = await Payroll.count({
       where: criteria,
     });
-    console.log(ifPayroll,"exists");
+    console.log(ifPayroll, "exists");
 
     if (ifPayroll >= 1) {
       return res.json("You have already defined the payroll for this month.");
@@ -62,9 +62,9 @@ exports.createPayroll = async (req, res) => {
         payrollName: req.body.payrollName,
         startDate: req.body.startDate,
         endDate: req.body.endDate,
-        status:"created",
-        isRollBacked:false,
-        isPaid:false,
+        status: "created",
+        isRollBacked: false,
+        isPaid: false,
       });
       await newPayroll.setCompany(CompanyId);
 
@@ -80,27 +80,27 @@ exports.createPayroll = async (req, res) => {
           payrollName: req.body.payrollName,
           startDate: req.body.startDate,
           endDate: req.body.endDate,
-          status:"created",
-          isRollBacked:false,
-          isPaid:false,
+          status: "created",
+          isRollBacked: false,
+          isPaid: false,
         });
-        await newPayroll.setCompany(CompanyId)
+        await newPayroll.setCompany(CompanyId);
 
         return res.json(newPayroll);
       } else {
         latestDate = latestPayroll.endDate;
-       // const dateTimeString = "2023-05-18T03:14:59.294Z";
+        // const dateTimeString = "2023-05-18T03:14:59.294Z";
         // const datePart = new Date(latestDate).toISOString().split('T')[0];
         // console.log(datePart);
-        console.log("latestPayroll",latestDate);
-        
+        console.log("latestPayroll", latestDate);
+
         const interval = Math.round(
           (startDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
         );
         const newInterval = Math.round(
           (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         );
-          
+
         if (newInterval < 20 || newInterval > 30) {
           return res.json(
             "The payroll duration should be between 20 and 30 days."
@@ -115,11 +115,11 @@ exports.createPayroll = async (req, res) => {
               payrollName: req.body.payrollName,
               startDate: req.body.startDate,
               endDate: req.body.endDate,
-              status:"created",
-              isRollBacked:false,
-              isPaid:false,
+              status: "created",
+              isRollBacked: false,
+              isPaid: false,
             });
-            await newPayroll.setCompany(CompanyId)
+            await newPayroll.setCompany(CompanyId);
 
             return res.status(201).json(newPayroll);
           }
@@ -134,28 +134,27 @@ exports.createPayroll = async (req, res) => {
 exports.updatePayrollDefinition = async (req, res, next) => {
   const id = req.params.id;
   try {
-      const { payrollName, startDate, endDate,status} = req.body;
-      const updates = {};
-      const { id } = req.params;
+    const { payrollName, startDate, endDate, status } = req.body;
+    const updates = {};
+    const { id } = req.params;
 
-      if (payrollName) {
-          updates.payrollName = payrollName;
-      }
-      if (startDate) {
-          updates.startDate = startDate;
-      }
-      if (endDate) {
-          updates.endDate = endDate;
-      }
-      if (status) {
-        updates.status = status;
+    if (payrollName) {
+      updates.payrollName = payrollName;
     }
-      const result = await Payroll.update(updates, { where: { id: id } });
+    if (startDate) {
+      updates.startDate = startDate;
+    }
+    if (endDate) {
+      updates.endDate = endDate;
+    }
+    if (status) {
+      updates.status = status;
+    }
+    const result = await Payroll.update(updates, { where: { id: id } });
 
-      res.status(200).json({
-          message: "updated successfully"
-      })
- 
+    res.status(200).json({
+      message: "updated successfully",
+    });
   } catch (error) {
     return res.status(500).json("Something gonna wrong");
   }

@@ -74,8 +74,8 @@ exports.createPension = async (req, res, next) => {
     if (req.user.role === "superAdmin") {
       const getAllPension = await Pension.findByPk(req.user.id);
 
-      if (!getAllPension) {
-        res.status(409).json("Pension is already defined update it ");
+      if (getAllPension) {
+        return res.status(409).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({
           employerContribution,
@@ -89,8 +89,8 @@ exports.createPension = async (req, res, next) => {
       }
     } else if (req.user.role === "companyAdmin") {
       const getAllPension = await Pension.findByPk(req.user.id);
-      if (!getAllPension) {
-        res.status(409).json("Pension is already defined update it ");
+      if (getAllPension) {
+        return res.status(409).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({
           employerContribution,
@@ -152,8 +152,7 @@ exports.updatePension = async (req, res, next) => {
         message: "updated successfully",
         newPension,
       });
-    } 
-    else if (req.user.role === "companyAdmin") {
+    } else if (req.user.role === "companyAdmin") {
       if (employerContribution) {
         updates.employerContribution = employerContribution;
       }
@@ -161,7 +160,10 @@ exports.updatePension = async (req, res, next) => {
         updates.employeeContribution = employeeContribution;
       }
 
-      const result = await Pension.update({ isActive: false }, { where: { id: id } }  );
+      const result = await Pension.update(
+        { isActive: false },
+        { where: { id: id } }
+      );
       const newPension = await Pension.create({
         employeeContribution,
         employerContribution,
@@ -170,11 +172,11 @@ exports.updatePension = async (req, res, next) => {
 
       return res.status(200).json({
         message: "updated successfully",
-        newPension
+        newPension,
       });
     }
   } catch (error) {
-    console.log("first", error)
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
