@@ -113,17 +113,17 @@ exports.createCompany = async (req, res) => {
       return res.status(409).json({ error: "Account Info already exists" });
     }
 
+    const package = await Package.findByPk(packageId);
+    if (!package) {
+      return res.status(404).json({ error: "Package does not exist!" });
+    }
+
     const company = await Company.create(companyData);
     const companyAccountInfo = await CompanyAccountInfo.create({
       accountNumber,
       isVerified,
       CompanyId: company.id,
     });
-
-    const package = await Package.findByPk(packageId);
-    if (!package) {
-      return res.status(404).json({ error: "Package does not exist!" });
-    }
 
     const currentDate = moment();
     const subscription = await Subscription.create({ duration });
@@ -139,41 +139,43 @@ exports.createCompany = async (req, res) => {
     await subscription.update({ nextPaymentDate, leftPaymentDate });
 
     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
-    const taxslabs = await Taxslab.findAll({
-      where: { userId: Number(superAdmin.id), isActive: true },
-    });
-    // const pensions = await Pension.findAll({
-    //   where: { userId: Number(superAdmin.id), isActive: true },
-    // });
+    // console.log("superAdmin", superAdmin);
+    const [taxslabs, pensions] = await Promise.all([
+      Taxslab.findAll({ where: { userId: superAdmin.id, isActive: true } }),
+      Pension.findAll({ where: { userId: superAdmin.id, isActive: true } }),
+    ]);
 
-    const tax = await Promise.all(
+    // console.log("first", taxslabs);
+    // console.log("taxslabs", taxslabs[0].from_Salary);
+
+    // const tax = await Promise.all(
+    const taxes = await Promise.all(
       taxslabs.map((taxslab) =>
         Taxslab.create({
           from_Salary: Number(taxslab.from_Salary),
           to_Salary: Number(taxslab.to_Salary),
           income_tax_payable: Number(taxslab.income_tax_payable),
           deductible_Fee: Number(taxslab.deductible_Fee),
-          CompanyId: Number(req.user.id),
-          UserId: null,
-        })
-      )
-    );
-
-    await Promise.all(
-      pensions.map((pension) =>
-        Pension.create({
-          employerContribution: Number(pension.employerContribution),
-          employeeContribution: Number(pension.employeeContribution),
           CompanyId: company.id,
           UserId: null,
         })
       )
     );
 
+    const pensiones = await Promise.all(
+      pensions.map((pension) =>
+        Pension.create({
+          employerContribution: pension.employerContribution,
+          employeeContribution: pension.employeeContribution,
+          UserId: null,
+          CompanyId: company.id,
+        })
+      )
+    );
 
     return res.status(201).json({
-      message:"Restored to default",
-      tax
+      message: "Restored to default",
+      tax,
     });
   } catch (error) {
     if (

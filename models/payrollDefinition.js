@@ -4,11 +4,10 @@ const sequelize = require("../database/db.js");
 const Company = require("./company.js");
 
 const PayrollDefinition = sequelize.define("PayrollDefinition", {
-payrollName:{
-    type:DataTypes.STRING,
-    allowNull:false,
-    
-},
+  payrollName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   startDate: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -19,8 +18,8 @@ payrollName:{
   },
   status: {
     type: DataTypes.STRING,
-    enum: ['created', 'ordered', 'pending', 'approved','active','paid'],
-    default: 'created'
+    enum: ["created", "ordered", "pending", "approved", "active", "paid"],
+    default: "created",
   },
   isRollBacked: {
     type: DataTypes.BOOLEAN,
