@@ -21,7 +21,7 @@ exports.getAllEmployee = async (req, res) => {
         AccountInfo,
         Department,
         Grade,
-        Company,
+        // Company,
         CustomRole,
       ],
     });
@@ -45,6 +45,7 @@ exports.getAllEmployee = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
+      // console.log("first", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
