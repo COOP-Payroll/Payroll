@@ -139,12 +139,10 @@ exports.createCompany = async (req, res) => {
     await subscription.update({ nextPaymentDate, leftPaymentDate });
 
     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
-    const taxslabs = await Taxslab.findAll({
-      where: { userId: Number(superAdmin.id), isActive: true },
-    });
-    // const pensions = await Pension.findAll({
-    //   where: { userId: Number(superAdmin.id), isActive: true },
-    // });
+    const [taxslabs, pensions] = await Promise.all([
+      Taxslab.findAll({ where: { userId: superAdmin.id, isActive: true } }),
+      Pension.findAll({ where: { userId: superAdmin.id, isActive: true } }),
+    ]);
 
     const tax = await Promise.all(
       taxslabs.map((taxslab) =>
@@ -153,13 +151,13 @@ exports.createCompany = async (req, res) => {
           to_Salary: Number(taxslab.to_Salary),
           income_tax_payable: Number(taxslab.income_tax_payable),
           deductible_Fee: Number(taxslab.deductible_Fee),
-          CompanyId: Number(req.user.id),
+          CompanyId: company.id,
           UserId: null,
         })
       )
     );
 
-    await Promise.all(
+    const pension = await Promise.all(
       pensions.map((pension) =>
         Pension.create({
           employerContribution: Number(pension.employerContribution),
@@ -170,10 +168,8 @@ exports.createCompany = async (req, res) => {
       )
     );
 
-
     return res.status(201).json({
-      message:"Restored to default",
-      tax
+      message: "company created",
     });
   } catch (error) {
     if (
