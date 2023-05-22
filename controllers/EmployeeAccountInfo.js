@@ -70,8 +70,14 @@ exports.getAllEmployeeAccountInfo = async (req, res) => {
     const employeeeAccountInfos = await AccountInfo.findAll({
       where: { EmployeeId: id, isActive: true },
     });
-    // let employeeeAccountInfo = employeeeAccountInfos[0]
-    return res.status(200).json(employeeeAccountInfos);
+    let employeeAccountInfo = employeeeAccountInfos[0];
+    const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your base URL
+    const imageUrl = `${baseUrl}${employeeAccountInfo.image.replace(
+      /\\/g,
+      "/"
+    )}`;
+    employeeAccountInfo.dataValues.imageUrl = imageUrl;
+    return res.status(200).json(employeeAccountInfo);
   } catch (error) {
     return res.json(error);
   }
