@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
@@ -32,6 +33,8 @@ const companyAccountInfoRouter = require("./routes/companyAccountInfo");
 const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
 
 const app = express();
+
+app.use("/uploads", express.static("./uploads/"));
 
 app.use(
   cors({
@@ -76,6 +79,9 @@ app.use("/PayrollApprovement", payrollApprovement);
 app.use("/customRole", customRoleRouter);
 app.use("/companyAccInfo", companyAccountInfoRouter);
 app.use("/employeeAccInfo", employeeAccountInfoRouter);
+
+// app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+app.use("/uploads", express.static("./uploads/"));
 
 sequelize.sync().then(() => console.log("db is ready"));
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
