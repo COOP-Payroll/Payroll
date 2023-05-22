@@ -174,8 +174,8 @@ exports.createCompany = async (req, res) => {
     );
 
     return res.status(201).json({
-      message: "Restored to default",
-      tax,
+      message: "Created successfully",
+
     });
   } catch (error) {
     if (

@@ -7,10 +7,6 @@ const Taxslab = sequelize.define("Taxslab", {
   from_Salary: {
     type: DataTypes.DOUBLE,
     allowNull: false,
-<<<<<<< HEAD
-=======
-   
->>>>>>> eb278fe5c9c1b2d22deb89968ce96b0675444ab2
   },
 
   to_Salary: {

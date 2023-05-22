@@ -78,7 +78,7 @@ exports.createPension = async (req, res, next) => {
         where: { userId: req.user.id },
       });
 
-      if (!getAllPension || getAllPension.length != 0) {
+      if ( getAllPension.length != 0) {
         res.status(409).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({
@@ -95,7 +95,7 @@ exports.createPension = async (req, res, next) => {
       const getAllPension = await Pension.findAll({
         where: { companyId: req.user.id },
       });
-      if (!getAllPension || getAllPension.length != 0) {
+      if (getAllPension.length != 0) {
         res.status(409).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({

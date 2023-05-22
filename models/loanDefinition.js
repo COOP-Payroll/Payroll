@@ -27,7 +27,7 @@ const LoanDefinition = sequelize.define("LoanDefinition", {
 LoanDefinition.belongsTo(Company);
 Company.hasMany(LoanDefinition);
 
-LoanDefinition.belongsTo(Employee);
-Employee.hasMany(LoanDefinition);
+LoanDefinition.belongsTo(Company);
+Company.hasMany(LoanDefinition);
 
 module.exports = LoanDefinition;
