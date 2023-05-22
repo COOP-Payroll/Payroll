@@ -72,8 +72,11 @@ exports.getAllCompanyAccountInfo = async (req, res) => {
       where: { CompanyId: companyId, isActive: true },
     });
     let companyAccountInfo = companyAccountInfos[0];
-    const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your server's base URL
-    const imageUrl = `${baseUrl}/${companyAccountInfo.image}`;
+    const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your base URL
+    const imageUrl = `${baseUrl}${companyAccountInfo.image.replace(
+      /\\/g,
+      "/"
+    )}`;
     companyAccountInfo.dataValues.imageUrl = imageUrl;
     return res.status(200).json(companyAccountInfo);
   } catch (error) {
