@@ -478,11 +478,10 @@ console.log("first",req.user.id);
       })
     );
 res.status(200).json({
-  message:"Restored to default",
-  deletedData:deletedData,
-  tax
-
-})
+  message: "Restored to default",
+  deletedData: tax,
+  tax,
+});
 
 
     

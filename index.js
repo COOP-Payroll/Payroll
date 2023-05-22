@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
-const sequelize = require("./database/db.js");
+const sequelize = require("./database/db");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
 const userRouter = require("./routes/user.js");
@@ -22,14 +22,24 @@ const grade = require("./routes/grade");
 const deductionDefinition = require("./routes/deductionDefinition");
 const payrollRouter = require("./routes/payroll");
 const employeeRouter = require("./routes/employee.js");
+const approver = require("./routes/approver");
 const payrollDefinition = require("./routes/payrollDefinition");
 const approvalMethod = require("./routes/approvalMethod");
+const payrollApprovement = require("./routes/payrollApprovement");
 const customRoleRouter = require("./routes/customRole.js");
 const loanRoute = require("./routes/loan.js");
-const providentFund=require('./routes/providentFund.js')
+const companyAccountInfoRouter = require("./routes/companyAccountInfo");
+const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
 
 const app = express();
 
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(express.json());
+
+app.use(bodyParser.json());
+app.use("/uploads", express.static("./uploads/"));
 app.use(
   cors({
     origin: [
@@ -65,13 +75,39 @@ app.use("/loanDefinition", loanDefinition);
 app.use("/loan", loanRoute);
 app.use("/deduction", deduction);
 app.use("/grade", grade);
+app.use("/approver", approver);
 app.use("/payroll", payrollRouter);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
+app.use("/PayrollApprovement", payrollApprovement);
 app.use("/customRole", customRoleRouter);
-app.use("/providentFund", providentFund);
+app.use("/companyAccInfo", companyAccountInfoRouter);
+app.use("/employeeAccInfo", employeeAccountInfoRouter);
+
+
+app.use((req, res, next) => {
+  const error = new Error("There is no such URL");
+  error.status = 404;
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  res.removeHeader("Cross-Origin-Embedder-Policy");
+  const errorStatus = err.status || 500;
+  const errorMessage = err.message || "Something went Wrong";
+
+  return res.status(errorStatus).json({
+    success: false,
+    status: errorStatus,
+    message: errorMessage,
+    // stack: err.stack,
+  });
+});
+
 
 sequelize.sync({}).then(() => console.log("db is ready"));
+
+
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
 
 app.listen(process.env.PORT, () => {

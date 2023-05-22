@@ -23,7 +23,6 @@ const Company = sequelize.define("Company", {
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
   },
   password: {
     type: DataTypes.STRING,
@@ -32,9 +31,6 @@ const Company = sequelize.define("Company", {
   phoneNumber: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
-  AccountNumber: {
-    type: DataTypes.STRING,
   },
   role: {
     type: DataTypes.STRING,

@@ -5,7 +5,6 @@ const Company = require("../models/company");
 
 exports.getAllGrade = async (req, res) => {
   const companyId = req.user.id;
-  console.log(companyId);
   try {
     const criteria = {
       companyId: req.user.id,
