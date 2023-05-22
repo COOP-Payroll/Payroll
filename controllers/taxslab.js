@@ -42,8 +42,24 @@ exports.getAllTaxslabs = async (req, res) => {
         taxslab,
       });
     }
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -52,8 +68,24 @@ exports.getTaxslabById = async (req, res) => {
     const { id } = req.params;
     const taxslab = await Taxslab.findByPk(id);
     return res.json(taxslab);
-  } catch (er) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -65,40 +97,70 @@ exports.createTaxslab = async (req, res, next) => {
 
     //CHECK SUPER ADMIN
     if (req.user.role === "superAdmin") {
-      const { from_Salary, to_Salary, income_tax_payable, deductible_Fee } =
+      const { from_Salary, to_Salary, income_tax_payable, deductible_Fee ,remark} =
         req.body;
-      const taxslab = await Taxslab.create({
-        from_Salary,
-        to_Salary,
-        income_tax_payable,
-        deductible_Fee,
-      });
 
-      await taxslab.setUser(req.user.id);
-
-      return res.status(200).json({
-        message: "Successfully Registered",
-        taxslab,
+      const checkTax = await Taxslab.findAll({
+        where: {
+          userId: req.user.id,
+          from_Salary: from_Salary,
+          to_Salary: to_Salary,
+        },
       });
+      console.log("first",checkTax.length)
+      if ( checkTax.length !=0 ) {
+        res.status(409).json("Taxslab is already defined");
+      } else {
+        const taxslab = await Taxslab.create({
+          from_Salary,
+          to_Salary,
+          income_tax_payable,
+          deductible_Fee,
+          remark,
+        });
+
+        await taxslab.setUser(req.user.id);
+        return res.status(200).json({
+          message: "Successfully Registered",
+          taxslab,
+        });
+      }
     } else if (req.user.role === "companyAdmin") {
-      const { from_Salary, to_Salary, income_tax_payable, deductible_Fee } =
+      const { from_Salary, to_Salary, income_tax_payable, deductible_Fee,remark } =
         req.body;
-      const taxslab = await Taxslab.create({
-        from_Salary,
-        to_Salary,
-        income_tax_payable,
-        deductible_Fee,
+      const checkTax = await Taxslab.findAll({
+        where: {
+          companyId: req.user.id,
+          from_Salary: from_Salary,
+          to_Salary: to_Salary,
+        },
       });
 
-      const company = await Company.findByPk(req.user.id);
-      await taxslab.setCompany(company);
+      if (checkTax ==="undefined" || checkTax.length ===0) {
+         const taxslab = await Taxslab.create({
+           from_Salary,
+           to_Salary,
+           income_tax_payable,
+           deductible_Fee,
+           remark,
+         });
 
-      return res.status(200).json({
-        message: "Successfully Registered",
-        taxslab,
-      });
+         const company = await Company.findByPk(req.user.id);
+         await taxslab.setCompany(company);
+
+         return res.status(200).json({
+           message: "Successfully Registered",
+           taxslab,
+         });
+      
+      } else {
+          res.status(409).json("Taxslab is already defined");
+
+       
+      }
     }
   } catch (error) {
+    console.log("first",error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -123,20 +185,26 @@ exports.updateTaxslab = async (req, res, next) => {
   try {
     const data = req.body;
     const { id } = req.params;
+   
+
+    const {remark ,...otherData}=data;
+    console.log(otherData)
 
     const taxslab = await Taxslab.findOne({ where: { id: id } });
     if (taxslab) {
       const result = await Taxslab.update(
-        { isActive: false },
+        { isActive: false, remark: remark },      
         { where: { id: id } }
       );
-      console.log(data);
+      // console.log(data);
 
-      const taxslab = await Taxslab.create(data);
+
+      const taxslab = await Taxslab.create(otherData);
 
       return res
         .status(200)
-        .json({ message: " Tax Rule is updated successfully", taxslab });
+        .json({ message: " Tax Rule is updated successfully",
+        taxslab });
     } else {
       return res
         .status(409)
@@ -197,15 +265,13 @@ exports.updateTaxslab = async (req, res, next) => {
 
 exports.deleteTaxslab = async (req, res, next) => {
   try {
-    const data = req.body;
+
+
     const { id } = req.params;
 
     const taxslab = await Taxslab.findOne({ where: { id: id } });
     if (taxslab) {
-      const result = await Taxslab.update(
-        { isActive: false },
-        { where: { id: id } }
-      );
+       await taxslab.destroy({ where: { id } });
 
       return res
         .status(200)
@@ -375,3 +441,68 @@ exports.updateMany = async (req, res, next) => {
     }
   }
 };
+
+
+//RESTORE TO DEFAULT
+
+exports.restoreToDefault= async(req,res,next)=>{
+
+  try {
+
+   const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+   const taxslabs = await Taxslab.findAll({
+     where: { userId: Number(superAdmin.id), isActive: true },
+   });
+
+const deletedData=await Taxslab.destroy({ where: {
+    companyId:req.user.id,
+    isActive:true,
+  },
+});
+
+console.log("first",req.user.id);
+
+    const tax = await Promise.all(
+      taxslabs.map((taxslab) => {
+        return Taxslab.create({
+          from_Salary: Number(taxslab.from_Salary),
+          to_Salary: Number(taxslab.to_Salary),
+          income_tax_payable: Number(taxslab.income_tax_payable),
+          deductible_Fee: Number(taxslab.deductible_Fee),
+          CompanyId: Number(req.user.id),
+          UserId: null,
+        }
+        
+        );
+    
+      })
+    );
+res.status(200).json({
+  message: "Restored to default",
+  deletedData: tax,
+  tax,
+});
+
+
+    
+  } catch (error) {
+    console.log("first",error)
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+}

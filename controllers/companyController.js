@@ -157,7 +157,7 @@ exports.createCompany = async (req, res) => {
       )
     );
 
-    await Promise.all(
+    const pension = await Promise.all(
       pensions.map((pension) =>
         Pension.create({
           employerContribution: Number(pension.employerContribution),
@@ -168,7 +168,9 @@ exports.createCompany = async (req, res) => {
       )
     );
 
-    return res.status(201).json(subscription);
+    return res.status(201).json({
+      message: "company created",
+    });
   } catch (error) {
     if (
       error.name === "SequelizeValidationError" ||
