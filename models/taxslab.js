@@ -7,36 +7,42 @@ const Taxslab = sequelize.define("Taxslab", {
   from_Salary: {
     type: DataTypes.DOUBLE,
     allowNull: false,
-   
   },
+
   to_Salary: {
     type: DataTypes.DOUBLE,
     allowNull: false,
-    
   },
+
   income_tax_payable: {
     type: DataTypes.DOUBLE,
     allowNull: false,
   },
+
   deductible_Fee: {
     type: DataTypes.DOUBLE,
     allowNull: false,
   },
+
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+
+
   remark:{
     type:DataTypes.STRING,
     
   }
+
+  
 });
 
 Company.hasMany(Taxslab);
 Taxslab.belongsTo(Company);
 
 
-User.hasMany(Taxslab);
+ User.hasMany(Taxslab);
 Taxslab.belongsTo(User);
 
 module.exports = Taxslab;

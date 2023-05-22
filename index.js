@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require("path");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
@@ -104,6 +103,7 @@ app.use((err, req, res, next) => {
 });
 
 sequelize.sync().then(() => console.log("db is ready"));
+
 
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
 

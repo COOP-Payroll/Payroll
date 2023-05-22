@@ -113,17 +113,17 @@ exports.createCompany = async (req, res) => {
       return res.status(409).json({ error: "Account Info already exists" });
     }
 
+    const package = await Package.findByPk(packageId);
+    if (!package) {
+      return res.status(404).json({ error: "Package does not exist!" });
+    }
+
     const company = await Company.create(companyData);
     const companyAccountInfo = await CompanyAccountInfo.create({
       accountNumber,
       isVerified,
       CompanyId: company.id,
     });
-
-    const package = await Package.findByPk(packageId);
-    if (!package) {
-      return res.status(404).json({ error: "Package does not exist!" });
-    }
 
     const currentDate = moment();
     const subscription = await Subscription.create({ duration });
@@ -139,12 +139,17 @@ exports.createCompany = async (req, res) => {
     await subscription.update({ nextPaymentDate, leftPaymentDate });
 
     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+    // console.log("superAdmin", superAdmin);
     const [taxslabs, pensions] = await Promise.all([
       Taxslab.findAll({ where: { userId: superAdmin.id, isActive: true } }),
       Pension.findAll({ where: { userId: superAdmin.id, isActive: true } }),
     ]);
 
-    const tax = await Promise.all(
+    // console.log("first", taxslabs);
+    // console.log("taxslabs", taxslabs[0].from_Salary);
+
+    // const tax = await Promise.all(
+    const taxes = await Promise.all(
       taxslabs.map((taxslab) =>
         Taxslab.create({
           from_Salary: Number(taxslab.from_Salary),
@@ -157,19 +162,20 @@ exports.createCompany = async (req, res) => {
       )
     );
 
-    const pension = await Promise.all(
+    const pensiones = await Promise.all(
       pensions.map((pension) =>
         Pension.create({
-          employerContribution: Number(pension.employerContribution),
-          employeeContribution: Number(pension.employeeContribution),
-          CompanyId: company.id,
+          employerContribution: pension.employerContribution,
+          employeeContribution: pension.employeeContribution,
           UserId: null,
+          CompanyId: company.id,
         })
       )
     );
 
     return res.status(201).json({
-      message: "company created",
+      message: "Created successfully",
+
     });
   } catch (error) {
     if (

@@ -7,14 +7,17 @@ const Address = require("./address.js");
 const EmployeeInfo = require("./employeInfo.js");
 const Department = require("./department.js");
 
+
 const Employee = sequelize.define("Employee", {
   fullname: {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
   images: {
     type: DataTypes.STRING,
   },
+
   sex: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -23,6 +26,7 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.DATE,
     allowNull: false,
   },
+
   role: {
     type: DataTypes.ENUM("employee", "approver"),
     allowNull: false,
@@ -37,7 +41,7 @@ const Employee = sequelize.define("Employee", {
     defaultValue: true,
     defaultValue: "Single",
   },
-  id_number: {
+  employee_id_number: {
     type: DataTypes.STRING,
   },
 
@@ -51,6 +55,20 @@ const Employee = sequelize.define("Employee", {
   },
   optionalNumber: {
     type: DataTypes.STRING,
+  },
+
+  id_image: {
+    type: DataTypes.STRING,
+
+  },
+  id_type: {
+    type: DataTypes.ENUM("kebele", "passport", "driving _License"),
+    allowNull: false,
+    defaultValue: "kebele",
+  },
+  id_Number: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   isDeactivated: {
     type: DataTypes.BOOLEAN,
@@ -66,17 +84,20 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.STRING,
   },
 
-  accountNumber: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+  // accountNumber: {
+  //   type: DataTypes.STRING,
+  //   allowNull: false,
+  // },
+
   password: {
     type: DataTypes.STRING,
   },
+
   // passwordChangedAt: Date,
   // passwordResetToken: String,
   // passwordResetExpires: Date,
 });
+
 
 Employee.beforeCreate((employee, options) => {
   const saltRounds = 10;

@@ -7,7 +7,8 @@ const Grade = require("../models/grade.js");
 const Company = require("../models/company.js");
 const AccountInfo = require("../models/accountInfo.js");
 const IdFormat = require("../models/companyIdFormat.js");
-const CustomRole=require("../models/customRole.js")
+const CustomRole = require("../models/customRole.js");
+const multer = require("multer");
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
   try {
@@ -84,6 +85,8 @@ exports.createEmployee = async (req, res, next) => {
       basicInfo,
       accountInformation,
     } = req.body;
+
+
     let password = req.user.companyCode.substring(0, 4) + "0000";
     const conflicts = [];
     const createdAccountInfos = [];
@@ -132,7 +135,7 @@ exports.createEmployee = async (req, res, next) => {
     let paddedEmployeeCode = "00001";
 
     if (lastEmployee) {
-      const lastEmployeeId = lastEmployee.id_number;
+      const lastEmployeeId = lastEmployee.employee_id_number;
       let lastEmployeeCode = lastEmployeeId.split(idFormat.separator);
       lastEmployeeCode = lastEmployeeCode[lastEmployeeCode.length - 1];
       const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1;
@@ -164,7 +167,7 @@ exports.createEmployee = async (req, res, next) => {
     const basicInfo1 = await Employee.create({
       ...basicInfo,
       password,
-      id_number: employeeId,
+      employee_id_number: employeeId,
       CompanyId: Number(req.user.id),
       DepartmentId: Number(basicInfo.DepartmentId),
       GradeId: Number(basicInfo.GradeId),
@@ -172,9 +175,9 @@ exports.createEmployee = async (req, res, next) => {
       EmployeeInfoId: Number(employeeInfo1.id),
     });
 
+    console.log("first", req.body);
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
-
       const accountExists = await AccountInfo.findOne({
         where: { accountNumber },
       });
@@ -218,6 +221,7 @@ exports.createEmployee = async (req, res, next) => {
       conflicts,
     });
   } catch (error) {
+    console.log("first",error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -300,4 +304,89 @@ exports.deleteEmployee = async (req, res, next) => {
       return res.status(500).json({ error: "Internal server error" });
     }
   }
+};
+///
+
+//Import from Excel
+const xlsx = require("xlsx");
+const storage4 = multer.memoryStorage();
+// create instance of multer and specify storage engine
+const upload4 = multer({ storage: storage4 }).single("file");
+
+exports.createEmployeeFile = async (req, res, next) => {
+  let generalDepartment = "";
+
+  const newDepartment = await Department.find({
+    companyName: req.user.CompanyName,
+    deptName: "General",
+  });
+
+  generalDepartment = mongoose.Types.ObjectId(newDepartment[0]?._id);
+
+  upload4(req, res, async (err) => {
+    if (err) {
+      next(err);
+    } else {
+      try {
+        const workbook = xlsx.read(req?.file?.buffer);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = xlsx.utils.sheet_to_json(worksheet);
+        const numRecords = data.length;
+        const emails = [];
+        const employeData = data.map((row) => ({
+          fullname: row["fullname"],
+          nationality: row["nationality"],
+          phoneNumber: row["phoneNumber"],
+          email: row["email"],
+          accountNumber: row["Account Number"],
+          date_of_birth: row["date_of_birth"],
+          sex: row["sex"],
+          department: row["department"] ? row["department"] : generalDepartment,
+          id_number: row["id_number"],
+          basicSalary: row["basicSalary"],
+          companyId: req.user.id,
+          password: req.user.CompanyName.substring(0, 4) + "0000",
+          emails: emails.push(row["email"]),
+        }));
+
+        const newEmp = await Employee.insertMany(
+          employeData,
+          async function (err) {
+            if (err) {
+              console.log("error");
+              res.status(404).json({
+                message: "please check every employee has unique email address",
+              });
+            } else {
+              // console.log(employeData);
+              console.log("Data imported successfully!");
+              const text =
+                "Your password is   " +
+                req.user.CompanyName +
+                "0000" +
+                "    please change your password ";
+
+              for (i = 0; i < employeData.length; i++) {
+                // await sendEmail({
+                //     email: emails[i],
+                //     subject: 'You are successfully registed on CoopPayroll SAAS ',
+                //     text
+                // });
+              }
+              res.status(200).json({
+                status: "success",
+                message: "Employee Registered successfully",
+              });
+            }
+          }
+        );
+        //  const text = 'Your password is   ' + req.user.CompanyName + '0000' + '    please change your password ';
+      } catch (error) {
+        res.status(404).json({
+          message: "1please check every employee has unique email address",
+        });
+      }
+    }
+  });
 };

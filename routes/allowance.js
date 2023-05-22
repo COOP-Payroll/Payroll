@@ -31,7 +31,7 @@ router.delete(
   "/:id",
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
-  allowance.deleteAllowance
+  allowance.deleteAllowance,
 );
 
 module.exports = router;
