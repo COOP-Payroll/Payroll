@@ -116,4 +116,7 @@ Employee.belongsTo(EmployeeInfo);
 Address.hasOne(Employee);
 Employee.belongsTo(Address);
 
+// Department.hasMany(Employee);
+// Employee.belongsTo(Department);
+
 module.exports = Employee;

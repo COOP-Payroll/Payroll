@@ -7,12 +7,10 @@ const Taxslab = sequelize.define("Taxslab", {
   from_Salary: {
     type: DataTypes.DOUBLE,
     allowNull: false,
-   
   },
   to_Salary: {
     type: DataTypes.DOUBLE,
     allowNull: false,
-    
   },
   income_tax_payable: {
     type: DataTypes.DOUBLE,
@@ -26,15 +24,13 @@ const Taxslab = sequelize.define("Taxslab", {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
-  remark:{
-    type:DataTypes.STRING,
-    
-  }
+  remark: {
+    type: DataTypes.STRING,
+  },
 });
 
 Company.hasMany(Taxslab);
 Taxslab.belongsTo(Company);
-
 
 User.hasMany(Taxslab);
 Taxslab.belongsTo(User);

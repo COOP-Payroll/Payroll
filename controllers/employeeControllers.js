@@ -7,7 +7,7 @@ const Grade = require("../models/grade.js");
 const Company = require("../models/company.js");
 const AccountInfo = require("../models/accountInfo.js");
 const IdFormat = require("../models/companyIdFormat.js");
-const CustomRole=require("../models/customRole.js")
+const CustomRole = require("../models/customRole.js");
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
   try {
@@ -166,7 +166,7 @@ exports.createEmployee = async (req, res, next) => {
       password,
       id_number: employeeId,
       CompanyId: Number(req.user.id),
-      DepartmentId: Number(basicInfo.DepartmentId),
+      departmentId: Number(basicInfo.DepartmentId),
       GradeId: Number(basicInfo.GradeId),
       AddressId: Number(address1.id),
       EmployeeInfoId: Number(employeeInfo1.id),

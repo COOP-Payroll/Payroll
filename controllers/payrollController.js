@@ -7,7 +7,7 @@ exports.createPayroll = async (req, res) => {
 
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
 
-  if (!payrollDefinitionId)
+  if (!payrolldef)
     return res.status(404).json({ error: "payroll is not defined" });
 
   res.set({

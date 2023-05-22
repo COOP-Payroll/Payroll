@@ -21,7 +21,12 @@ const Department = sequelize.define("Department", {
 Company.hasMany(Department);
 Department.belongsTo(Company);
 
-Department.hasMany(Employee);
-Employee.belongsTo(Department);
+// Department.hasMany(Employee);
+// Employee.belongsTo(Department);
+// Set up the one-to-many association
+// Department.hasMany(Employee, { foreignKey: "departmentId" });
+
+Employee.hasOne(Department); // User has one Profile
+Department.belongsTo(Employee);
 
 module.exports = Department;

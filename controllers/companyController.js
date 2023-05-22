@@ -1,5 +1,6 @@
 const Company = require("../models/company.js");
 const CompanyAccountInfo = require("../models/companyAccountInfo.js");
+const Department = require("../models/department.js");
 const Package = require("../models/package.js");
 const Pension = require("../models/pension.js");
 const Subscription = require("../models/subscription.js");
@@ -191,7 +192,7 @@ exports.createCompany = async (req, res) => {
 exports.getAllCompany = async (req, res) => {
   const companys = await Company.findAll({
     attributes: { exclude: ["password"] },
-    include: [Subscription, Taxslab],
+    include: [Subscription, Taxslab, Department],
   });
   return res.json(companys);
 };
