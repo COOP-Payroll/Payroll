@@ -23,8 +23,12 @@
     "node-cron": "^3.0.2",
     "sequelize": "^6.31.1",
     "sqlite3": "^5.1.6",
+<<<<<<< HEAD
     "util": "^0.12.5",
     "xlsx": "^0.18.5"
+=======
+    "util": "^0.12.5"
+>>>>>>> 3405f716c94d163ff52dee6724b2da0b7b23c3aa
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

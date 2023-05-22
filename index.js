@@ -33,7 +33,6 @@ const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
 
 const app = express();
 
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -84,7 +83,6 @@ app.use("/customRole", customRoleRouter);
 app.use("/companyAccInfo", companyAccountInfoRouter);
 app.use("/employeeAccInfo", employeeAccountInfoRouter);
 
-
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
   error.status = 404;
@@ -104,8 +102,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-
-sequelize.sync({force:true}).then(() => console.log("db is ready"));
+sequelize.sync().then(() => console.log("db is ready"));
 
 
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
