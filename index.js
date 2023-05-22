@@ -33,8 +33,13 @@ const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
 
 const app = express();
 
-app.use("/uploads", express.static("./uploads/"));
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(express.json());
+
+app.use(bodyParser.json());
+app.use("/uploads", express.static("./uploads/"));
 app.use(
   cors({
     origin: [
@@ -79,10 +84,30 @@ app.use("/customRole", customRoleRouter);
 app.use("/companyAccInfo", companyAccountInfoRouter);
 app.use("/employeeAccInfo", employeeAccountInfoRouter);
 
-// app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
-app.use("/uploads", express.static("./uploads/"));
 
-sequelize.sync().then(() => console.log("db is ready"));
+app.use((req, res, next) => {
+  const error = new Error("There is no such URL");
+  error.status = 404;
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  res.removeHeader("Cross-Origin-Embedder-Policy");
+  const errorStatus = err.status || 500;
+  const errorMessage = err.message || "Something went Wrong";
+
+  return res.status(errorStatus).json({
+    success: false,
+    status: errorStatus,
+    message: errorMessage,
+    // stack: err.stack,
+  });
+});
+
+
+sequelize.sync({}).then(() => console.log("db is ready"));
+
+
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
 
 app.listen(process.env.PORT, () => {

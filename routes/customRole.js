@@ -21,8 +21,15 @@ router.put(
   "/update/:id",
   middleware.protectAll,
   middleware.restrictToAll("companyAdmin"),
-
   customRoleControllers.updateCustomRole
+);
+
+
+router.put(
+  "/assignRoleToEmployee",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  customRoleControllers.assignToEmployee
 );
 // router.delete("/:id", CustomRole.deleteAllowance);
 

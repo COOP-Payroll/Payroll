@@ -152,12 +152,12 @@ exports.createCompany = async (req, res) => {
     const taxes = await Promise.all(
       taxslabs.map((taxslab) =>
         Taxslab.create({
-          from_Salary: taxslab.from_Salary,
-          to_Salary: taxslab.to_Salary,
-          income_tax_payable: taxslab.income_tax_payable,
-          deductible_Fee: taxslab.deductible_Fee,
-          UserId: null,
+          from_Salary: Number(taxslab.from_Salary),
+          to_Salary: Number(taxslab.to_Salary),
+          income_tax_payable: Number(taxslab.income_tax_payable),
+          deductible_Fee: Number(taxslab.deductible_Fee),
           CompanyId: company.id,
+          UserId: null,
         })
       )
     );
@@ -173,7 +173,10 @@ exports.createCompany = async (req, res) => {
       )
     );
 
-    return res.status(201).json(subscription);
+    return res.status(201).json({
+      message: "Restored to default",
+      tax,
+    });
   } catch (error) {
     if (
       error.name === "SequelizeValidationError" ||
