@@ -12,6 +12,7 @@ const Deduction = sequelize.define("Deduction", {
   //grade id
   //Deduction id
 });
+
 Deduction.belongsTo(DeductionDefinition);
 DeductionDefinition.hasMany(Deduction);
 

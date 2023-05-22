@@ -17,11 +17,13 @@ router.post(
   pensionController.createPension
 );
 
-router.put("/:id",
+router.put(
+  "/:id",
   middleware.protectAll,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
 
-pensionController.updatePension);
+  pensionController.updatePension
+);
 router.get("/:id", pensionController.getpensionById);
 
 module.exports = router;

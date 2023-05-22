@@ -1,3 +1,6 @@
+// const Company = require("../models/company");
+// const CompanyAccountInfo = require("../models/companyAccountInfo");
+
 const CompanyAccountInfo = require("../models/companyAccountInfo");
 
 exports.createCompanyAccountInfo = async (req, res) => {
@@ -68,16 +71,20 @@ exports.createCompanyAccountInfo = async (req, res) => {
 exports.getAllCompanyAccountInfo = async (req, res) => {
   try {
     const companyId = Number(req.user.id);
-    const companyAccountInfos = await CompanyAccountInfo.findAll({
+    const companyAccountInfo = await CompanyAccountInfo.findOne({
       where: { CompanyId: companyId, isActive: true },
     });
-    let companyAccountInfo = companyAccountInfos[0];
-    const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your base URL
-    const imageUrl = `${baseUrl}${companyAccountInfo.image.replace(
-      /\\/g,
-      "/"
-    )}`;
-    companyAccountInfo.dataValues.imageUrl = imageUrl;
+
+    // const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your base URL
+    const baseUrl = "https://localhost:6000/";
+    if (companyAccountInfo.image) {
+      const imageUrl = `${baseUrl}${companyAccountInfo.image.replace(
+        /\\/g,
+        "/"
+      )}`;
+      companyAccountInfo.dataValues.imageUrl = imageUrl;
+    }
+
     return res.status(200).json(companyAccountInfo);
   } catch (error) {
     return res.json(error);

@@ -24,6 +24,12 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  employement_Type: {
+    type: DataTypes.ENUM("permanent", "contract", "hourly"),
+    allowNull: false,
+    defaultValue: "permanent",
+  },
+
   //Grade ID
   //CUSTOM ROLE
   //DEPARTMENT ID

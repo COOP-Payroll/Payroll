@@ -1,13 +1,13 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
-const Employee = require("./employee.js");
 
 const Department = sequelize.define("Department", {
   deptName: {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
   location: {
     type: DataTypes.STRING,
   },
@@ -25,8 +25,5 @@ Department.belongsTo(Company);
 // Employee.belongsTo(Department);
 // Set up the one-to-many association
 // Department.hasMany(Employee, { foreignKey: "departmentId" });
-
-Employee.hasOne(Department); // User has one Profile
-Department.belongsTo(Employee);
 
 module.exports = Department;

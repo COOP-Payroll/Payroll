@@ -78,7 +78,7 @@ exports.createPension = async (req, res, next) => {
         where: { userId: req.user.id },
       });
 
-      if (getAllPension.length != 0) {
+      if ( getAllPension.length != 0) {
         res.status(409).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({

@@ -8,20 +8,26 @@ const LoanDefinition = sequelize.define("LoanDefinition", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  //   isPercent: {
-  //     type: DataTypes.BOOLEAN,
-  //     allowNull: false,
-  //   },
-  //   startingAmount: {
-  //     type: DataTypes.FLOAT,
-  //     defaultValue: 0,
-  //   },
+
+
+
+//   isPercent: {
+//     type: DataTypes.BOOLEAN,
+//     allowNull: false,
+//   },
+//   startingAmount: {
+//     type: DataTypes.FLOAT,
+//     defaultValue: 0,
+//   },
+
+
+
 });
 
 LoanDefinition.belongsTo(Company);
 Company.hasMany(LoanDefinition);
 
-LoanDefinition.belongsTo(Employee);
-Employee.hasMany(LoanDefinition);
+LoanDefinition.belongsTo(Company);
+Company.hasMany(LoanDefinition);
 
 module.exports = LoanDefinition;
