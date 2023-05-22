@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Employee = require("../models/employee.js");
-const Company = require('../models/company.js');
+const Company = require("../models/company.js");
 
 const Approver = sequelize.define("Approver", {
   level: {

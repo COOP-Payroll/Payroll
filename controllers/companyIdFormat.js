@@ -8,7 +8,9 @@ exports.createCompanyIdFormat = async (req, res) => {
       where: { companyId: Number(req.user.id) },
     });
     if (companyIds.length >= 1)
-      return res.status(400).json({ error: "idformat already exist" });
+      return res
+        .status(400)
+        .json({ error: "id format already exist, try to update" });
     const companyIdFormat = await IdFormat.create(req.body);
     await companyIdFormat.setCompany(Number(req.user.id));
     return res.status(201).json(companyIdFormat);
@@ -64,25 +66,26 @@ exports.deleteCompanyIdFormat = async (req, res) => {
 
 exports.updateCompanyIdFormat = async (req, res) => {
   try {
-    const idFormat = await IdFormat.findOne({
-      where: { isActive: true, companyId: req.user.id },
-    });
+    const { id } = req.params;
+    const { data } = req.body;
+    const idFormat = await IdFormat.findByPk(id);
     if (!idFormat)
-      return res.status(404).json({ error: "Id format is not exist" });
-    idFormat.isActive = false;
+      return res.status(404).json({ error: "Id format not found" });
+    // idFormat.isActive = false;
     try {
-      await idFormat.save();
-      const companyIdFormat = await IdFormat.create(req.body);
-      try {
-        await companyIdFormat.setCompany(Number(req.user.id));
-        return res.status(200).json({ msg: "id format updated successfully" });
-      } catch (error) {
-        // Handle the error during association
-        await companyIdFormat.destroy(); // Rollback the created companyIdFormat if association fails
-        return res
-          .status(500)
-          .json({ error: "Error associating id format with company" });
-      }
+      await idFormat.update(data);
+      // await idFormat.save();
+      // const companyIdFormat = await IdFormat.create(req.body);
+      // try {
+      //   await companyIdFormat.setCompany(Number(req.user.id));
+      //   return res.status(200).json({ msg: "id format updated successfully" });
+      // } catch (error) {
+      //   // Handle the error during association
+      //   await companyIdFormat.destroy(); // Rollback the created companyIdFormat if association fails
+      //   return res
+      //     .status(500)
+      //     .json({ error: "Error associating id format with company" });
+      // }
     } catch (error) {
       return res.status(500).json(error);
     }
