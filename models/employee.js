@@ -12,9 +12,11 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
   images: {
     type: DataTypes.STRING,
   },
+
   sex: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -23,6 +25,7 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.DATE,
     allowNull: false,
   },
+
   role: {
     type: DataTypes.ENUM("employee", "approver"),
     allowNull: false,
@@ -70,13 +73,17 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
   password: {
     type: DataTypes.STRING,
   },
+
+
   // passwordChangedAt: Date,
   // passwordResetToken: String,
   // passwordResetExpires: Date,
 });
+
 
 Employee.beforeCreate((employee, options) => {
   const saltRounds = 10;

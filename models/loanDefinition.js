@@ -8,6 +8,9 @@ const LoanDefinition = sequelize.define("LoanDefinition", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
+
+
 //   isPercent: {
 //     type: DataTypes.BOOLEAN,
 //     allowNull: false,
@@ -16,6 +19,9 @@ const LoanDefinition = sequelize.define("LoanDefinition", {
 //     type: DataTypes.FLOAT,
 //     defaultValue: 0,
 //   },
+
+
+
 });
 
 LoanDefinition.belongsTo(Company);

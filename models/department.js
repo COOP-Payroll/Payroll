@@ -8,6 +8,8 @@ const Department = sequelize.define("Department", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
+
   location: {
     type: DataTypes.STRING,
   },
@@ -16,10 +18,12 @@ const Department = sequelize.define("Department", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  
 });
 
 Company.hasMany(Department);
 Department.belongsTo(Company);
+
 
 Department.hasMany(Employee);
 Employee.belongsTo(Department);
