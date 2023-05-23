@@ -10,8 +10,20 @@ router.get(
 
   deduction.getAllDeduction
 );
-router.get("/:id", deduction.getDeductionById);
-router.post("/", deduction.createDeduction);
+router.get(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  deduction.getDeductionById
+);
+router.post(
+  "/",
+
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+
+  deduction.createDeduction
+);
 router.put("/:id", deduction.updateDeduction);
 router.delete("/:id", deduction.deleteDeduction);
 

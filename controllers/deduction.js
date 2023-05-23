@@ -1,16 +1,19 @@
 const Deduction = require("../models/deduction");
 const DeductionDefinition = require("../models/deductionDefinition");
 const Grade = require("../models/grade");
+const Company = require("../models/company.js");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllDeduction = async (req, res) => {
   try {
-    const deductions = await Deduction.findAll({where:{companyId:req.user.id}});
+    const deductions = await Deduction.findAll({
+      where: { companyId: req.user.id },
+    });
     return res.status(200).json({
       count: deductions.length,
       deductions,
     });
   } catch (error) {
-    console.log("first",error)
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -62,31 +65,31 @@ exports.createDeduction = async (req, res, next) => {
     //insert required field
     const amount = req.body.amount;
     const gradeId = req.body.gradeId;
-    const definitionId = req.body.definitionId;
-    console.log(amount, gradeId, definitionId);
-    const deduction = await Deduction.create({ amount });
-    //   await deduction.setGrade(gradeId);
+    const deductinDefinitionId = req.body.deductinDefinitionId;
+    console.log(amount, gradeId, deductinDefinitionId);
+ 
     //   await deduction.setDeductionDefinition(deductionDefinitionId);
     const grade = await Grade.findByPk(gradeId);
-    if (grade) {
+    const dedDefinition = await DeductionDefinition.findByPk(
+      deductinDefinitionId
+    );
+    if (!grade) {
+      res.status(404).json("Grade is not defined");
+    } else if (!dedDefinition) {
+      res.status(404).json("Deduction definition is not defined");
+    } 
+    else {
+         const deduction = await Deduction.create({ amount });
+         await deduction.setCompany(Number(req.user.id));
       await deduction.setGrade(gradeId);
-    } else {
-      // Handle the case where the company with the given ID is not found
-      console.log("no grade with this id");
+      await deduction.setDeductionDefinition(deductinDefinitionId);
+      res.status(200).json({
+        message: "Successfully Registered",
+        deduction,
+      });
     }
-    const dedDefinition = await DeductionDefinition.findByPk(definitionId);
-    if (dedDefinition) {
-      await deduction.setDeductionDefinition(definitionId);
-    } else {
-      // Handle the case where the company with the given ID is not found
-      console.log("no deduction with this id");
-    }
-
-    res.status(200).json({
-      message: "Successfully Registered",
-      deduction,
-    });
   } catch (error) {
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
