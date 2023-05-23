@@ -19,7 +19,7 @@ exports.createPayroll = async (req, res) => {
   const workerThreads = employeeIds?.map((employeeId) => {
     return new Promise((resolve, reject) => {
       const worker = new Worker("./controllers/newWorker.js", {
-        workerData: { employeeId, user: req.user.id },
+        workerData: { employeeId, user: req.user.id, payrollDefinitionId },
       });
       worker.on("message", (message) => {
         res.write(

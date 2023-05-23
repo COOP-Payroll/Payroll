@@ -28,8 +28,10 @@ const newWorker = async () => {
     });
 
     const employee = await Employee.findByPk(Number(workerData.employeeId), {
-      include: [Loan, EmployeeInfo],
+      include: [Loan, EmployeeInfo, Loan],
     });
+
+    const loans = await Loan.findAll({ where: { EmployeeId: employee.id } });
     // const benefit = await Grade.findOne({where: {CompanyId: workerData.user, }})
     // console.log("first", employee);
     const allowances = await Allowance.findAll({
@@ -40,7 +42,7 @@ const newWorker = async () => {
       where: { CompanyId: workerData.user, GradeId: employee.GradeId },
     });
 
-    console.log("allowances", allowances);
+    // console.log("allowances", JSON.stringify(allowances, null, 3));
 
     let totalDeduction = 0;
     // let totalAllowance= 0;
@@ -51,24 +53,101 @@ const newWorker = async () => {
     let totalExempted = 0;
     let totalTaxableIncome = 0;
     let overallTotalDeduction = 0;
+    let totalLoan = 0;
 
     //TOTAL ALLOWANCES
     allowances.forEach((allowance) => {
-      totalAllowance += allowance.amount;
+      totalAllowance += Number(allowance.amount);
       //console.log(allowance.is_Exempted)
-      if (allowance.is_Exempted) {
-        totalExempted += allowance.exempted_on_Allowance_amount;
-        if (allowance.amount > allowance.starting_from) {
+      if (allowance.AllowanceDefinition.isExempted) {
+        totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
+        if (
+          Number(allowance.amount) >
+          Number(allowance.AllowanceDefinition.startingAmount)
+        ) {
           totalTaxable +=
-            allowance.amount - allowance.exempted_on_Allowance_amount;
+            Number(allowance.amount) -
+            Number(allowance.AllowanceDefinition.exemptedAmount);
         } else {
-          totalTaxable += allowance.amount;
+          totalTaxable += Number(allowance.amount);
         }
       } else {
-        totalTaxable += allowance.amount;
+        totalTaxable += Number(allowance.amount);
       }
     });
-    console.log("total", totalAllowance);
+
+    //TOTAL DEDUCTION
+    deductions.forEach((deduction) => {
+      totalDeduction += Number(deduction.amount);
+    });
+
+    totalTaxable += Number(employee.EmployeeInfo.basicSalary);
+    // console.log("taxslab", taxslab);
+    for (const taxslabs of taxslab) {
+      // console.log(taxslabs)
+      //  console.log(taxslabs.deductible_Fee)
+
+      if (
+        totalTaxable > taxslabs.from_Salary &&
+        totalTaxable < taxslabs.to_Salary
+      ) {
+        // console.log( "true")
+        deductible_Fee = taxslabs.deductible_Fee;
+        income_tax_payable = taxslabs.income_tax_payable;
+        totalTaxableIncome =
+          totalTaxable *
+            (income_tax_payable == 0 ? 1 : income_tax_payable / 100) -
+          deductible_Fee;
+        //  console.log(tax)
+      } else {
+        deductible_Fee = 0;
+        income_tax_payable = 0;
+        totalTaxableIncome = 0;
+      }
+    }
+
+    loans.forEach((loan) => (totalLoan += loan.amount));
+    overallTotalDeduction =
+      totalLoan +
+      totalTaxableIncome +
+      totalDeduction +
+      employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100);
+
+    const payrollData = {
+      // payrollName: moment().format("MMMM") + " Payroll",
+      // month: moment().format("MMMM"),
+      // year: moment().format("YYYY"),
+      PayrollDefinitionId: workerData.payrollDefinitionId,
+      // grossSalary: (
+      //   employee.Acting +
+      //   employee.overtimeEarning +
+      //   totalAllowance +
+      //   Number(employee.basicSalary) +
+      //   employee.basicSalary * ((employer_pension * 1) / 100)
+      // ).toFixed(2),
+      grossSalary: (
+        totalAllowance +
+        employee.EmployeeInfo.basicSalary +
+        employee.EmployeeInfo.basicSalary * ((employer_pension * 1) / 100)
+      ).toFixed(2),
+      taxableIncome: totalTaxable.toFixed(2),
+      incomeTax: totalTaxableIncome.toFixed(2),
+      totalDeduction: overallTotalDeduction.toFixed(2),
+      totalAllowance,
+      employee_pension_amount: (
+        employee.basicSalary *
+        ((employee_pension * 1) / 100)
+      ).toFixed(2),
+      employer_pension_amount: (
+        employee.EmployeeInfo.basicSalary *
+        ((employer_pension * 1) / 100)
+      ).toFixed(2),
+      NetSalary: (totalTaxable - overallTotalDeduction + totalExempted).toFixed(
+        2
+      ),
+    };
+
+    console.log("payroll", payrollData);
   } catch (error) {
     console.log("error", error);
   }

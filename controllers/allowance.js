@@ -66,34 +66,33 @@ exports.createAllowance = async (req, res, next) => {
     //insert required field
     const amount = req.body.amount;
     const gradeId = req.body.gradeId;
-    const allowanceDefinitionId = req.body.definitionId;
-    console.log(amount, gradeId, allowanceDefinitionId);
-    const allowance = await Allowance.create({ amount });
-    await allowance.setCompany(Number(req.user.id));
+    const allowanceDefinitionId = req.body.allowanceDefinitionId;
+    // console.log(amount, gradeId, allowanceDefinitionId);
     //   await allowance.setAllowanceDefinition(allowanceDefinitionId);
 
     const grade = await Grade.findByPk(gradeId);
-    if (grade) {
-      await allowance.setGrade(grade);
-    } else {
-      // Handle the case where the company with the given ID is not found
-      console.log("no grade with this id");
-    }
     const allDefinition = await AllowanceDefinition.findByPk(
       allowanceDefinitionId
     );
-    if (allDefinition) {
-      await allowance.setAllowanceDefinition(allowanceDefinitionId);
+    // console.log("first",allowanceDefinitionId)
+    if (!grade) {
+      res.status(404).json("Grade is not defined");
+    } else if (!allDefinition) {
+      res.status(404).json("Allowance definition is not defined");
+
       // await allowance.setCompany(Number(req.user.id))
     } else {
       // Handle the case where the company with the given ID is not found
-      console.log("no allowance with this id");
-    }
 
-    res.status(200).json({
-      message: "Successfully Registered",
-      allowance,
-    });
+      const allowance = await Allowance.create({ amount });
+      await allowance.setCompany(Number(req.user.id));
+      await allowance.setAllowanceDefinition(allowanceDefinitionId);
+      await allowance.setGrade(grade);
+      res.status(200).json({
+        message: "Successfully Registered",
+        allowance,
+      });
+    }
   } catch (error) {
     console.log("first", error);
     if (error.name === "SequelizeValidationError") {
