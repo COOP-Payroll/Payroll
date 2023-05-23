@@ -59,18 +59,15 @@ exports.createCustomRole = async (req, res, next) => {
     
     } = req.body;
       
-    console.log("name",req.body.name)
- const criteria = {
-   name: name,
-   };
- const checkrole = await CustomRole.findOne({ where: {companyId:req.user.id,name:req.body.name.name} });
+
+ const checkrole = await CustomRole.findOne({ where: {companyId:req.user.id,name:name} });
 
  if (checkrole) {
    res.json("This Role is defined already ");
  }
 else{
 
-        const customRole = await CustomRole.create(name);
+        const customRole = await CustomRole.create({name:name});
         await customRole.setCompany(req.user.id);
      
         const emergencies = await Promise.all(
