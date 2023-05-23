@@ -4,7 +4,7 @@ const Company = require("./company.js");
 
 const DeductionDefinition = sequelize.define("DeductionDefinition", {
   name: {
-    type: DataTypes.STRING  ,
+    type: DataTypes.STRING,
     allowNull: false,
   },
   // isPercent: {

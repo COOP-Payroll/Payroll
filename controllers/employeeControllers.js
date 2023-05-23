@@ -21,7 +21,7 @@ exports.getAllEmployee = async (req, res) => {
         AccountInfo,
         Department,
         Grade,
-        Company,
+        // Company,
         CustomRole,
       ],
     });
@@ -45,6 +45,7 @@ exports.getAllEmployee = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
+      // console.log("first", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -85,7 +86,6 @@ exports.createEmployee = async (req, res, next) => {
       basicInfo,
       accountInformation,
     } = req.body;
-
 
     let password = req.user.companyCode.substring(0, 4) + "0000";
     const conflicts = [];
@@ -132,14 +132,19 @@ exports.createEmployee = async (req, res, next) => {
     const lastEmployee = await Employee.findOne({
       order: [["createdAt", "DESC"]],
     });
-    let paddedEmployeeCode = "00001";
+    let paddedEmployeeCode =
+      idFormat.digitLength < 5
+        ? "1".padStart(idFormat.digitLength, "0")
+        : "00001";
 
     if (lastEmployee) {
       const lastEmployeeId = lastEmployee.employee_id_number;
       let lastEmployeeCode = lastEmployeeId.split(idFormat.separator);
       lastEmployeeCode = lastEmployeeCode[lastEmployeeCode.length - 1];
       const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1;
-      paddedEmployeeCode = incrementedEmployeeCode.toString().padStart(5, "0");
+      paddedEmployeeCode = incrementedEmployeeCode
+        .toString()
+        .padStart(idFormat.digitLength, "0");
     }
 
     let employeeId = "";
@@ -168,14 +173,13 @@ exports.createEmployee = async (req, res, next) => {
       ...basicInfo,
       password,
       employee_id_number: employeeId,
-      CompanyId: Number(req.user.id),
+      companyId: Number(req.user.id),
       DepartmentId: Number(basicInfo.DepartmentId),
       GradeId: Number(basicInfo.GradeId),
       AddressId: Number(address1.id),
       EmployeeInfoId: Number(employeeInfo1.id),
     });
 
-    console.log("first", req.body);
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
       const accountExists = await AccountInfo.findOne({
@@ -221,7 +225,7 @@ exports.createEmployee = async (req, res, next) => {
       conflicts,
     });
   } catch (error) {
-    console.log("first",error)
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {

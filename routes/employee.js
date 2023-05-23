@@ -1,7 +1,7 @@
 const express = require("express");
 const employeeController = require("../controllers/employeeControllers.js");
 const router = express.Router();
-const middleware=require("../middleware/auth.js")
+const middleware = require("../middleware/auth.js");
 router.get(
   "/",
 
@@ -9,9 +9,11 @@ router.get(
   middleware.restrictToAll("companyAdmin"),
   employeeController.getAllEmployee
 );
-router.get("/:id",
+router.get(
+  "/:id",
 
-employeeController.getEmployeeById);
+  employeeController.getEmployeeById
+);
 router.post(
   "/",
   middleware.protectAll,

@@ -25,6 +25,10 @@ const IdFormat = sequelize.define("IdFormat", {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  digitLength: {
+    type: DataTypes.INTEGER,
+    defaultValue: 5,
+  },
   order: {
     type: DataTypes.STRING,
     allowNull: false,

@@ -28,21 +28,15 @@ const Taxslab = sequelize.define("Taxslab", {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
-
-
-  remark:{
-    type:DataTypes.STRING,
-    
-  }
-
-  
+  remark: {
+    type: DataTypes.STRING,
+  },
 });
 
 Company.hasMany(Taxslab);
 Taxslab.belongsTo(Company);
 
-
- User.hasMany(Taxslab);
+User.hasMany(Taxslab);
 Taxslab.belongsTo(User);
 
 module.exports = Taxslab;

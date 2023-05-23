@@ -4,14 +4,13 @@ const sequelize = require("../database/db.js");
 const Company = require("./company.js");
 
 const ApprovalMethod = sequelize.define("ApprovalMethod", {
-
   minimumApprover: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  
+
   approvalLevel: {
-    type:  DataTypes.INTEGER,
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   approvalMethod: {
@@ -33,7 +32,6 @@ const ApprovalMethod = sequelize.define("ApprovalMethod", {
     default: false,
   },
 });
-
 
 ApprovalMethod.belongsTo(Company);
 Company.hasOne(ApprovalMethod);

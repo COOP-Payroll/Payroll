@@ -3,7 +3,7 @@ const sequelize = require("../database/db.js");
 
 const LoanDefinition = require("./loanDefinition.js");
 const Employee = require("./employee.js");
-const Company=require('../models/company.js')
+const Company = require("../models/company.js");
 const Loan = sequelize.define("Loan", {
   amount: {
     type: DataTypes.DOUBLE,

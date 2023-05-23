@@ -104,7 +104,6 @@ app.use((err, req, res, next) => {
 
 sequelize.sync().then(() => console.log("db is ready"));
 
-
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
 
 app.listen(process.env.PORT, () => {

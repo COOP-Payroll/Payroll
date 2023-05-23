@@ -5,8 +5,7 @@ const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
 const Address = require("./address.js");
 const EmployeeInfo = require("./employeInfo.js");
-const Department = require("./department.js");
-
+const Department = require("./department");
 
 const Employee = sequelize.define("Employee", {
   fullname: {
@@ -59,7 +58,6 @@ const Employee = sequelize.define("Employee", {
 
   id_image: {
     type: DataTypes.STRING,
-
   },
   id_type: {
     type: DataTypes.ENUM("kebele", "passport", "driving _License"),
@@ -98,7 +96,6 @@ const Employee = sequelize.define("Employee", {
   // passwordResetExpires: Date,
 });
 
-
 Employee.beforeCreate((employee, options) => {
   const saltRounds = 10;
   return bcrypt
@@ -128,13 +125,24 @@ Employee.beforeUpdate((employee, options) => {
 // Subscription.belongsTo(Package);
 // Package.hasOne(Subscription);
 
-Company.hasMany(Employee);
-Employee.belongsTo(Company);
+// Company.hasMany(Employee);
+// Employee.belongsTo(Company);
+Company.hasMany(Employee, { foreignKey: "companyId" });
 
 EmployeeInfo.hasOne(Employee);
 Employee.belongsTo(EmployeeInfo);
 
 Address.hasOne(Employee);
 Employee.belongsTo(Address);
+
+// Set up the one-to-one relationship
+Department.hasOne(Employee); // A department has one employee
+Employee.belongsTo(Department); // An employee belongs to a department
+
+// Department.hasOne(Employee); // User has one Profile
+// Employee.belongsTo(Department);
+
+// Department.hasMany(Employee);
+// Employee.belongsTo(Department);
 
 module.exports = Employee;
