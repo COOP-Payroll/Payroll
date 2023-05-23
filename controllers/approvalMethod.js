@@ -20,61 +20,73 @@ exports.getAllApprovalMethod = async (req, res) => {
     res.status(500).json("Something gonna wrong");
   }
 };
+//save approval method 
+async function saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated){
+  
+  const appMethod = await ApprovalMethod.create({
+    minimumApprover,
+    approvalLevel,
+    approvalMethod,
+    isCompleted,
+    isThereMasterApprover,
+    lastUpdated
+  });
+  
+  const company = await Company.findByPk(Number(CompanyId));
 
+  if (company) {
+    console.log("company");
+    await appMethod.setCompany(CompanyId);
+  } else {
+    console.log("no such company");
+  }
+  res.json({
+    success: true,
+    Message: "Successfully defined approvel method",
+    created:appMethod
+  })
+
+}
 exports.createApprovalMethod = async (req, res) => {
   const CompanyId = req.user.id;
-  console.log(CompanyId)
-  try {
-    const minimumApprover = req.body.minimumApprover;
-    const approvalLevel = req.body.approvalLevel;
-    const isCompleted = req.body.isCompleted;
-    const isThereMasterApprover = req.body.isThereMasterApprover;
-    const approvalMethod = req.body.approvalMethod;
-    const lastUpdated = new Date();
 
-    console.log(
-      isCompleted,
-      approvalLevel,
-      minimumApprover,
-      isThereMasterApprover,
-      approvalMethod,
-      lastUpdated
-
-    );
-    const criteria={
-      where: {companyId: req.user.id},
-    };
-    const isExist = await ApprovalMethod.count({criteria})
-    console.log("exist",isExist)
-    if(isExist>=1){
-        res.json("this company setted approval method")
-    }else{
-        const appMethod = await ApprovalMethod.create({
-          minimumApprover,
-          approvalLevel,
-          approvalMethod,
+  const minimumApprover = req.body.minimumApprover;
+  const approvalLevel = req.body.approvalLevel;
+  const isCompleted = req.body.isCompleted;
+  const isThereMasterApprover = req.body.isThereMasterApprover;
+  const approvalMethod = req.body.approvalMethod;
+  const lastUpdated = new Date();
+      try {
+        console.log(
           isCompleted,
+          approvalLevel,
+          minimumApprover,
           isThereMasterApprover,
+          approvalMethod,
           lastUpdated
-        });
 
-        const company = await Company.findByPk(Number(CompanyId));
-
-        if (company) {
-          console.log("company");
-          await appMethod.setCompany(CompanyId);
-        } else {
-          console.log("no such company");
+        );
+        const criteria={
+          where: {companyId: req.user.id},
+        };
+        const isExist = await ApprovalMethod.count({criteria})
+        console.log("exist",isExist)
+        if(isExist>=1){
+            res.json("this company setted approval method")
+        }else{
+          if(approvalMethod==='horizontal'){
+            approvalLevel=0;
+            saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
+          }else if(approvalMethod==='hierarchy'){
+            minimumApprover=approvalLevel;
+            saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
+          }else{
+            return req.json("please choose your approval method properly")
+          }
         }
-        res.json({
-          success: true,
-          Message: "Successfully defined approvel method",
-          created:appMethod
-        })
+      } catch (err) {
+        res.status(500).json("Something gonna wrong");
       }
-  } catch (err) {
-    res.status(500).json("Something gonna wrong");
-  }
 };
 
 exports.updateApprovalMethod = async (req, res, next) => {
