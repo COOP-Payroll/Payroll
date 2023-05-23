@@ -6,9 +6,9 @@ const Company=require("../models/company.js")
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
   try {
-console.log("got ")
+
     const companyId= req.user.id;
-    console.log("got  ", req.user.id);
+
     const allowances = await Allowance.findAll({where:{companyId}});
     res.status(200).json({
       count: allowances.length,
