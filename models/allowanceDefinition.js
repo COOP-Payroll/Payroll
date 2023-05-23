@@ -8,11 +8,11 @@ const AllowanceDefinition = sequelize.define("AllowanceDefinition", {
     allowNull: false,
   },
   isTaxable: {
-    type: DataTypes.STRING,
+    type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
   isExempted: {
-    type: DataTypes.STRING,
+    type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
   exemptedAmount: {
@@ -23,6 +23,7 @@ const AllowanceDefinition = sequelize.define("AllowanceDefinition", {
   startingAmount: {
     type: DataTypes.FLOAT,
   },
+  
 });
 
 AllowanceDefinition.belongsTo(Company);
