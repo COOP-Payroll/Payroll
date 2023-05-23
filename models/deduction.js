@@ -3,6 +3,7 @@ const sequelize = require("../database/db.js");
 
 const DeductionDefinition = require("./deductionDefinition.js");
 const Grade = require("./grade.js");
+const Company = require("./company.js");
 
 const Deduction = sequelize.define("Deduction", {
   amount: {
@@ -19,4 +20,6 @@ DeductionDefinition.hasMany(Deduction);
 Deduction.belongsTo(Grade);
 Grade.hasOne(Deduction);
 
+Deduction.belongsTo(Company);
+Company.hasMany(Deduction);
 module.exports = Deduction;
