@@ -4,12 +4,13 @@ const Grade = require("../models/grade");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllDeduction = async (req, res) => {
   try {
-    const deductions = await Deduction.findAll();
+    const deductions = await Deduction.findAll({where:{companyId:req.user.id}});
     return res.status(200).json({
       count: deductions.length,
       deductions,
     });
   } catch (error) {
+    console.log("first",error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {

@@ -8,7 +8,7 @@ exports.getAllAllowance = async (req, res) => {
   try {
 console.log("got ")
     console.log("got  ", req.user.id);
-    const allowances = await Allowance.findAll({where:{companyId}});
+    const allowances = await Allowance.findAll({where:{companyId:req.user.id}});
     res.status(200).json({
       count: allowances.length,
       allowances,

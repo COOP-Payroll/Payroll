@@ -97,6 +97,8 @@ exports.createCompany = async (req, res) => {
     const { packageId, duration, accountNumber, isVerified, ...companyData } =
       req.body;
 
+
+      console.log("first", accountNumber);
     const getCompany = await Company.findOne({
       where: { email: companyData.email },
     });

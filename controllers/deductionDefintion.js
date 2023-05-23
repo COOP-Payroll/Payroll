@@ -8,7 +8,9 @@ exports.getAllDeductionDefinition = async (req, res) => {
     const criteria = {
       CompanyId: req.user.id,
     };
-    const deductionDefinitions = await DeductionDefinition.findAll(criteria);
+    const deductionDefinitions = await DeductionDefinition.findAll({
+      where: criteria,
+    });
     // console.log("same deductionDefinitions",deductionDefinitions)
     //const grades = await Grade.findAll();
     res.status(200).json({
@@ -70,29 +72,34 @@ exports.createDeductionDefinition = async (req, res, next) => {
     // const { name,startingAmount, ispercent} = req.body;
     // console.log("Company", companyId);
     const name = req.body.name;
-    // const startingAmount = req.body.startingAmount;
-    // const isPercent = req.body.isPercent;
-    // console.log(name, startingAmount, isPercent);
-    // save here const name = req.body.name;
 
-    const deductionDefinition = await DeductionDefinition.create({
-      name: name,
-      // startingAmount: startingAmount,
-      // isPercent: isPercent,
+    const checkDeductionDefinition = await DeductionDefinition.findAll({
+      where: { name: name },
     });
 
-    const company = await Company.findByPk(companyId);
-    if (company) {
-      await deductionDefinition.setCompany(company);
+    if (checkDeductionDefinition.length != 0 ) {
+      res.status(404).json({ error: "Already defined" });
     } else {
-      // Handle the case where the company with the given ID is not found
-      return res.json("no company with this id");
+      const deductionDefinition = await DeductionDefinition.create({
+        name: name,
+        // startingAmount: startingAmount,
+        // isPercent: isPercent,
+      });
+
+      const company = await Company.findByPk(companyId);
+      if (company) {
+        await deductionDefinition.setCompany(company);
+      } else {
+        // Handle the case where the company with the given ID is not found
+        return res.json("no company with this id");
+      }
+
+      res.status(200).json({
+        message: "Successfully Registered",
+        deductionDefinition,
+      });
     }
 
-    res.status(200).json({
-      message: "Successfully Registered",
-      deductionDefinition,
-    });
     //console.log(deductionDefinition)
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
