@@ -20,9 +20,6 @@ DeductionDefinition.hasMany(Deduction);
 Deduction.belongsTo(Grade);
 Grade.hasOne(Deduction);
 
-
-
 Deduction.belongsTo(Company);
 Company.hasMany(Deduction);
 module.exports = Deduction;
-

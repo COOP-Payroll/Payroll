@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
+const Employee = require("./employee.js");
 
 const Payroll = sequelize.define("Payroll", {
   grossSalary: {
@@ -44,5 +45,8 @@ const Payroll = sequelize.define("Payroll", {
     defaultValue: false,
   },
 });
+
+Payroll.belongsTo(Employee);
+Employee.hasOne(Payroll);
 
 module.exports = Payroll;
