@@ -7,7 +7,6 @@ const Company = require("../models/company.js");
 exports.getAllAllowance = async (req, res) => {
   try {
     const companyId = req.user.id;
-
     const allowances = await Allowance.findAll({ where: { companyId } });
     res.status(200).json({
       count: allowances.length,
@@ -68,15 +67,14 @@ exports.createAllowance = async (req, res, next) => {
     const amount = req.body.amount;
     const gradeId = req.body.gradeId;
     const allowanceDefinitionId = req.body.allowanceDefinitionId;
-    console.log(amount, gradeId, allowanceDefinitionId);
-
+    // console.log(amount, gradeId, allowanceDefinitionId);
     //   await allowance.setAllowanceDefinition(allowanceDefinitionId);
 
     const grade = await Grade.findByPk(gradeId);
     const allDefinition = await AllowanceDefinition.findByPk(
       allowanceDefinitionId
     );
-    console.log("first",allowanceDefinitionId)
+    // console.log("first",allowanceDefinitionId)
     if (!grade) {
       res.status(404).json("Grade is not defined");
     } else if (!allDefinition) {

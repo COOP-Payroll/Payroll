@@ -30,6 +30,7 @@ exports.getAllEmployee = async (req, res) => {
       Employees,
     });
   } catch (error) {
+    console.log("first",error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
