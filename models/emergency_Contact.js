@@ -13,15 +13,10 @@ const EmergencyContact = sequelize.define("EmergencyContact", {
     allowNull: false,
   },
 
-  optionalPhoneNumber: {
+  fullname: {
     type: DataTypes.STRING,
   },
-  email: {
-    type: DataTypes.STRING,
-  },
-  kebele: {
-    type: DataTypes.STRING,
-  },
+
   ///Employee ID
 });
 

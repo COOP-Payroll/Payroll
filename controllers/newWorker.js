@@ -2,50 +2,49 @@ const { parentPort, workerData } = require("worker_threads");
 const Pension = require("../models/pension");
 const Taxslab = require("../models/taxslab");
 const Employee = require("../models/employee");
-const Grade = require("../models/grade");
 const Loan = require("../models/loan");
-const EmployeeInfo = require("../models/employeInfo");
 const Allowance = require("../models/allowance");
 const Deduction = require("../models/deduction");
 const AllowanceDefinition = require("../models/allowanceDefinition");
+const Payroll = require("../models/payroll");
+const EmployeeInfo = require("../models/employeInfo");
 
 const newWorker = async () => {
   try {
-    let employer_pension = 0;
-    let employee_pension = 0;
+    const { user, employeeId, payrollDefinitionId } = workerData;
+
     const pension = await Pension.findOne({
       where: {
-        companyId: workerData.user,
+        companyId: user,
         isActive: true,
       },
     });
-    employee_pension = pension?.employeeContribution ?? 1;
-    employer_pension = pension?.employerContribution ?? 1;
 
-    // const taxslab = await .find({ companyId: message.user });
+    const employee_pension = pension?.employeeContribution ?? 1;
+    const employer_pension = pension?.employerContribution ?? 1;
+    // console.log("first", employee_pension);
+    // console.log("first", employer_pension);
+
     const taxslab = await Taxslab.findAll({
-      where: { companyId: workerData.user, isActive: true },
+      where: { companyId: user, isActive: true },
     });
 
-    const employee = await Employee.findByPk(Number(workerData.employeeId), {
-      include: [Loan, EmployeeInfo, Loan],
+    const employee = await Employee.findByPk(Number(employeeId), {
+      include: [Loan, EmployeeInfo],
     });
 
     const loans = await Loan.findAll({ where: { EmployeeId: employee.id } });
-    // const benefit = await Grade.findOne({where: {CompanyId: workerData.user, }})
-    // console.log("first", employee);
+
     const allowances = await Allowance.findAll({
-      where: { CompanyId: workerData.user, GradeId: employee.GradeId },
+      where: { CompanyId: user, GradeId: employee.GradeId },
       include: [AllowanceDefinition],
     });
+
     const deductions = await Deduction.findAll({
-      where: { CompanyId: workerData.user, GradeId: employee.GradeId },
+      where: { CompanyId: user, GradeId: employee.GradeId },
     });
 
-    // console.log("allowances", JSON.stringify(allowances, null, 3));
-
     let totalDeduction = 0;
-    // let totalAllowance= 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
     let income_tax_payable = 0;
@@ -55,12 +54,13 @@ const newWorker = async () => {
     let overallTotalDeduction = 0;
     let totalLoan = 0;
 
-    //TOTAL ALLOWANCES
+    // Calculate total allowances
     allowances.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
-      //console.log(allowance.is_Exempted)
+
       if (allowance.AllowanceDefinition.isExempted) {
         totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
+
         if (
           Number(allowance.amount) >
           Number(allowance.AllowanceDefinition.startingAmount)
@@ -75,36 +75,48 @@ const newWorker = async () => {
         totalTaxable += Number(allowance.amount);
       }
     });
-
-    //TOTAL DEDUCTION
+    // console.log("total taxable", totalTaxable);
+    // Calculate total deductions
     deductions.forEach((deduction) => {
       totalDeduction += Number(deduction.amount);
     });
 
     totalTaxable += Number(employee.EmployeeInfo.basicSalary);
-    // console.log("taxslab", taxslab);
-    for (const taxslabs of taxslab) {
-      // console.log(taxslabs)
-      //  console.log(taxslabs.deductible_Fee)
 
-      if (
-        totalTaxable > taxslabs.from_Salary &&
-        totalTaxable < taxslabs.to_Salary
-      ) {
-        // console.log( "true")
-        deductible_Fee = taxslabs.deductible_Fee;
-        income_tax_payable = taxslabs.income_tax_payable;
-        totalTaxableIncome =
-          totalTaxable *
-            (income_tax_payable == 0 ? 1 : income_tax_payable / 100) -
-          deductible_Fee;
-        //  console.log(tax)
-      } else {
-        deductible_Fee = 0;
-        income_tax_payable = 0;
-        totalTaxableIncome = 0;
-      }
+    // for (const taxslabs of taxslab) {
+    //   if (
+    //     totalTaxable > taxslabs.from_Salary &&
+    //     totalTaxable < taxslabs.to_Salary
+    //   ) {
+    //     console.log("totalTaxableIncome", "totalTaxableIncome");
+    //     deductible_Fee = taxslabs.deductible_Fee;
+    //     income_tax_payable = taxslabs.income_tax_payable;
+    // totalTaxableIncome =
+    //   totalTaxable *
+    //     (income_tax_payable == 0 ? 1 : income_tax_payable / 100) -
+    //   deductible_Fee;
+    //   } else {
+    //     console.log("totalTaxableIncome");
+    //     deductible_Fee = 0;
+    //     income_tax_payable = 0;
+    //     totalTaxableIncome = 0;
+    //   }
+    // }
+    const taxslabs = taxslab.find(
+      (tax) => totalTaxable > tax.from_Salary && totalTaxable < tax.to_Salary
+    );
+
+    if (taxslabs) {
+      deductible_Fee = taxslabs.deductible_Fee;
+      income_tax_payable = taxslabs.income_tax_payable;
+      totalTaxableIncome =
+        totalTaxable *
+          (income_tax_payable == 0 ? 1 : income_tax_payable / 100) -
+        deductible_Fee;
     }
+
+    // console.log("first", taxslabs);
+    // console.log("totalTaxableIncome", totalTaxableIncome);
 
     loans.forEach((loan) => (totalLoan += loan.amount));
     overallTotalDeduction =
@@ -114,17 +126,7 @@ const newWorker = async () => {
       employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100);
 
     const payrollData = {
-      // payrollName: moment().format("MMMM") + " Payroll",
-      // month: moment().format("MMMM"),
-      // year: moment().format("YYYY"),
-      PayrollDefinitionId: workerData.payrollDefinitionId,
-      // grossSalary: (
-      //   employee.Acting +
-      //   employee.overtimeEarning +
-      //   totalAllowance +
-      //   Number(employee.basicSalary) +
-      //   employee.basicSalary * ((employer_pension * 1) / 100)
-      // ).toFixed(2),
+      PayrollDefinitionId: payrollDefinitionId,
       grossSalary: (
         totalAllowance +
         employee.EmployeeInfo.basicSalary +
@@ -134,10 +136,10 @@ const newWorker = async () => {
       incomeTax: totalTaxableIncome.toFixed(2),
       totalDeduction: overallTotalDeduction.toFixed(2),
       totalAllowance,
-      employee_pension_amount: (
-        employee.basicSalary *
-        ((employee_pension * 1) / 100)
+      employee_pension_amount: Number(
+        employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100)
       ).toFixed(2),
+
       employer_pension_amount: (
         employee.EmployeeInfo.basicSalary *
         ((employer_pension * 1) / 100)
@@ -145,11 +147,30 @@ const newWorker = async () => {
       NetSalary: (totalTaxable - overallTotalDeduction + totalExempted).toFixed(
         2
       ),
+      status: "ordered",
+      EmployeeId: employeeId,
     };
 
-    console.log("payroll", payrollData);
+    const payroll = await Payroll.create(payrollData);
+    parentPort.postMessage({ employeeId, payroll });
   } catch (error) {
-    console.log("error", error);
+    console.error("Error occurred:", error);
+    const { employeeId, payrollDefinitionId } = workerData;
+    const errorPayrollData = {
+      PayrollDefinitionId: payrollDefinitionId,
+      grossSalary: 0,
+      taxableIncome: 0,
+      incomeTax: 0,
+      totalDeduction: 0,
+      totalAllowance: 0,
+      employee_pension_amount: 0,
+      employer_pension_amount: 0,
+      NetSalary: 0,
+      status: "failed",
+      EmployeeId: employeeId,
+    };
+    const errorPayroll = await Payroll.create(errorPayrollData);
+    parentPort.postMessage({ employeeId, payroll: errorPayroll });
   }
 };
 
