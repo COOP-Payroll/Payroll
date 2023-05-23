@@ -3,7 +3,8 @@ const sequelize = require("../database/db.js");
 
 const AllowanceDefinition = require("./allowanceDefinition");
 const Grade = require("./grade.js");
-
+// const Employee=require('./employee.js');
+const Company = require("./company.js");
 const Allowance = sequelize.define("Allowance", {
   amount: {
     type: DataTypes.STRING,
@@ -17,5 +18,8 @@ AllowanceDefinition.hasMany(Allowance);
 
 Allowance.belongsTo(Grade);
 Grade.hasOne(Allowance);
+
+Allowance.belongsTo(Company);
+Company.hasMany(Allowance);
 
 module.exports = Allowance;

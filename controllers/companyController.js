@@ -1,4 +1,6 @@
 const Company = require("../models/company.js");
+const CompanyAccountInfo = require("../models/companyAccountInfo.js");
+const Department = require("../models/department.js");
 const Package = require("../models/package.js");
 const Pension = require("../models/pension.js");
 const Subscription = require("../models/subscription.js");
@@ -92,27 +94,43 @@ const moment = require("moment");
 
 exports.createCompany = async (req, res) => {
   try {
-    const data = Object.keys(req.body)
-      .filter((key) => key !== "duration" && key !== "packageId")
-      .reduce((acc, key) => {
-        acc[key] = req.body[key];
-        return acc;
-      }, {});
+    const { packageId, duration, accountNumber, isVerified, ...companyData } =
+      req.body;
 
-    const packageId = Number(req.body.packageId);
-    const duration = Number(req.body.duration);
+    const getCompany = await Company.findOne({
+      where: { email: companyData.email },
+    });
 
-    const company = await Company.create(data);
+    if (getCompany)
+      return res.status(409).json({ error: "email already exist" });
 
-    const package = await Package.findByPk(Number(packageId));
+    const existingAccount = await CompanyAccountInfo.findOne({
+      where: {
+        accountNumber,
+      },
+    });
+
+    if (existingAccount) {
+      return res.status(409).json({ error: "Account Info already exists" });
+    }
+
+    const package = await Package.findByPk(packageId);
     if (!package) {
       return res.status(404).json({ error: "Package does not exist!" });
     }
+
+    const company = await Company.create(companyData);
+    const companyAccountInfo = await CompanyAccountInfo.create({
+      accountNumber,
+      isVerified,
+      CompanyId: company.id,
+    });
 
     const currentDate = moment();
     const subscription = await Subscription.create({ duration });
     await subscription.setPackage(packageId);
     await subscription.setCompany(company.id);
+
     const nextPaymentDate = await calculateNextPayment({
       chargeType: package.packageName,
       duration,
@@ -122,53 +140,58 @@ exports.createCompany = async (req, res) => {
     await subscription.update({ nextPaymentDate, leftPaymentDate });
 
     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
-    const taxslabs = await Taxslab.findAll({
-      where: { userId: Number(superAdmin.id), isActive: true },
-    });
-    const pensions = await Pension.findAll({
-      where: { userId: Number(superAdmin.id), isActive: true },
-    });
+    // console.log("superAdmin", superAdmin);
+    const [taxslabs, pensions] = await Promise.all([
+      Taxslab.findAll({ where: { userId: superAdmin.id, isActive: true } }),
+      Pension.findAll({ where: { userId: superAdmin.id, isActive: true } }),
+    ]);
 
-    const tax = await Promise.all(
-      taxslabs.map((taxslab) => {
-        return Taxslab.create({
+    // console.log("first", taxslabs);
+    // console.log("taxslabs", taxslabs[0].from_Salary);
+
+    // const tax = await Promise.all(
+    const taxes = await Promise.all(
+      taxslabs.map((taxslab) =>
+        Taxslab.create({
           from_Salary: Number(taxslab.from_Salary),
           to_Salary: Number(taxslab.to_Salary),
           income_tax_payable: Number(taxslab.income_tax_payable),
           deductible_Fee: Number(taxslab.deductible_Fee),
-          CompanyId: Number(company.id),
+          CompanyId: company.id,
           UserId: null,
-        });
-      })
+        })
+      )
     );
 
-    await Promise.all(
-      pensions.map((pension) => {
-        return Pension.create({
-          employerContribution: Number(pension.employerContribution),
-          employeeContribution: Number(pension.employeeContribution),
-          CompanyId: Number(company.id),
+    const pensiones = await Promise.all(
+      pensions.map((pension) =>
+        Pension.create({
+          employerContribution: pension.employerContribution,
+          employeeContribution: pension.employeeContribution,
           UserId: null,
-        });
-      })
+          CompanyId: company.id,
+        })
+      )
     );
 
-    return res.status(201).json(subscription);
+    return res.status(201).json({
+      message: "Created successfully",
+      taxes,
+      pensiones,
+      companyAccountInfo,
+    });
   } catch (error) {
-    let errors = {};
-
-    if (error.name === "SequelizeValidationError") {
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-      return res.status(400).json(errors);
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      error?.errors?.forEach((err) => {
-        errors[err.path] = [err.message];
-      });
+    if (
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
+    ) {
+      const errors = error.errors.reduce((acc, err) => {
+        acc[err.path] = [`${err.path} is required`];
+        return acc;
+      }, {});
       return res.status(400).json(errors);
     } else {
-      console.error("Error creating company:", error);
+      console.error(error);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -177,7 +200,7 @@ exports.createCompany = async (req, res) => {
 exports.getAllCompany = async (req, res) => {
   const companys = await Company.findAll({
     attributes: { exclude: ["password"] },
-    include: [Subscription, Taxslab],
+    include: [Subscription, Taxslab, Department],
   });
   return res.json(companys);
 };

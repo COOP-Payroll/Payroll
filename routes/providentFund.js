@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pensionController = require("../controllers/pension.js");
+const providentController = require("../controllers/providentFund.js");
 const middleware = require("../middleware/auth.js");
 
 // Define routes for handling User requests
@@ -8,22 +8,29 @@ router.get(
   "/",
   middleware.protectAll,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
-  pensionController.getAllPension
+  providentController.getAllProvidentFund
 );
 router.post(
   "/",
   middleware.protectAll,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
-  pensionController.createPension
+  providentController.createProvidentFund
 );
 
 router.put(
   "/:id",
   middleware.protectAll,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
-
-  pensionController.updatePension
+  providentController.updateProvidentFund
 );
-router.get("/:id", pensionController.getpensionById);
+router.delete(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+  providentController.deleteProvidentFund
+);
+
+
+// router.get("/:id", providentController.getpensionById);
 
 module.exports = router;

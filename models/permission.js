@@ -31,7 +31,6 @@ const Permission = sequelize.define("Permission", {
 Company.hasMany(Permission);
 Permission.belongsTo(Company);
 
-
 CustomRole.hasMany(Permission);
 Permission.belongsTo(CustomRole);
 

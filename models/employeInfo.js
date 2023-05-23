@@ -24,6 +24,12 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  employement_Type: {
+    type: DataTypes.ENUM("permanent", "contract", "hourly"),
+    allowNull: false,
+    defaultValue: "permanent",
+  },
+
   //Grade ID
   //CUSTOM ROLE
   //DEPARTMENT ID
@@ -35,8 +41,5 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
 
 //Company.hasMany(Department);
 // Department.belongsTo(Company);
-
-Employee.hasOne(EmployeeInfo);
-EmployeeInfo.belongsTo(Employee);
 
 module.exports = EmployeeInfo;

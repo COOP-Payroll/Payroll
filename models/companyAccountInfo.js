@@ -1,11 +1,10 @@
 const { Sequelize, DataTypes } = require("sequelize");
-const sequelize = require("../database/db.js");
+const sequelize = require("../database/db");
 const Company = require("./company.js");
-const Employee = require("./employee.js");
 
-const AccountInfo = sequelize.define("AccountInfo", {
+const CompanyAccountInfo = sequelize.define("CompanyAccountInfo", {
   accountNumber: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     allowNull: false,
   },
   image: {
@@ -22,7 +21,7 @@ const AccountInfo = sequelize.define("AccountInfo", {
   },
 });
 
-Employee.hasMany(AccountInfo);
-AccountInfo.belongsTo(Employee);
+Company.hasMany(CompanyAccountInfo);
+CompanyAccountInfo.belongsTo(Company);
 
-module.exports = AccountInfo;
+module.exports = CompanyAccountInfo;
