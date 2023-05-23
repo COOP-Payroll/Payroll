@@ -1,20 +1,21 @@
 const Allowance = require("../models/allowance");
 const AllowanceDefinition = require("../models/allowanceDefinition");
 const Grade = require("../models/grade");
-const Company=require("../models/company.js")
+const Company = require("../models/company.js");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
   try {
-console.log("got ")
+    console.log("got ");
     console.log("got  ", req.user.id);
-    const allowances = await Allowance.findAll({where:{companyId}});
+    const companyId = req.user.id;
+    const allowances = await Allowance.findAll({ where: { companyId } });
     res.status(200).json({
       count: allowances.length,
       allowances,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -70,7 +71,7 @@ exports.createAllowance = async (req, res, next) => {
     const allowanceDefinitionId = req.body.definitionId;
     console.log(amount, gradeId, allowanceDefinitionId);
     const allowance = await Allowance.create({ amount });
-      await allowance.setCompany(Number(req.user.id));
+    await allowance.setCompany(Number(req.user.id));
     //   await allowance.setAllowanceDefinition(allowanceDefinitionId);
 
     const grade = await Grade.findByPk(gradeId);
@@ -96,7 +97,7 @@ exports.createAllowance = async (req, res, next) => {
       allowance,
     });
   } catch (error) {
-    console.log("first",error)
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
