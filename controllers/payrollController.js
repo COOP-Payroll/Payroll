@@ -1,6 +1,7 @@
 const { Worker } = require("worker_threads");
 const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
+const Employee = require("../models/employee");
 
 let totalWorkers = 0;
 let completedWorkers = 0;
@@ -22,6 +23,7 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
     res.write(`data: ${data}\n\n`);
 
     if (completedWorkers === totalWorkers) {
+      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
       res.end();
     }
   };
@@ -46,6 +48,7 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
     res.status(status).write(`data: ${data}\n\n`);
 
     if (completedWorkers === totalWorkers) {
+      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
       res.end();
     }
   };
@@ -88,4 +91,30 @@ exports.getAllPayrollByCompanyId = async (req, res) => {
     where: { PayrollDefinitionId: Number(id) },
   });
   return res.status(200).json(payrolls);
+};
+
+exports.getNonPayrollEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payrollDef = await PayrollDefinition.findByPk(id);
+    if (!payrollDef)
+      return res.status(404).json({ error: "payroll not found" });
+    const employees = await Employee.findAll({
+      include: [
+        {
+          model: Payroll,
+          required: false,
+          where: {
+            PayrollDefinitionId: id, // Filter for payroll records of the specific month
+          },
+        },
+      ],
+      where: {
+        "$Payroll.id$": null, // Filter for records where the payroll ID is null
+      },
+    });
+    return res.status(200).json(employees);
+  } catch (error) {
+    res.json(error);
+  }
 };
