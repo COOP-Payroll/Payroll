@@ -11,11 +11,6 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-
-  employee_Code: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   basicSalary: {
     type: DataTypes.DOUBLE,
     allowNull: false,
