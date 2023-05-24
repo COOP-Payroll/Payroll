@@ -3,14 +3,13 @@ const Company = require("../models/company");
 const { getCompanyById } = require("./companyController");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllApprovalMethod = async (req, res) => {
-    const CompanyId = req.user.id;
-    console.log(CompanyId)
+  const CompanyId = req.user.id;
+  console.log(CompanyId);
   try {
-    
-    const criteria={
-      where: {companyId: req.user.id},
+    const criteria = {
+      where: { companyId: req.user.id },
     };
-    const approvalMethod = await ApprovalMethod.findAll({criteria})
+    const approvalMethod = await ApprovalMethod.findAll({ criteria });
     console.log(CompanyId);
     res.status(200).json({
       count: approvalMethod.length,
@@ -20,18 +19,25 @@ exports.getAllApprovalMethod = async (req, res) => {
     res.status(500).json("Something gonna wrong");
   }
 };
-//save approval method 
-async function saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated){
-  
+//save approval method
+async function saveApprovalMethod(
+  CompanyId,
+  minimumApprover,
+  approvalLevel,
+  isCompleted,
+  isThereMasterApprover,
+  approvalMethod,
+  lastUpdated
+) {
   const appMethod = await ApprovalMethod.create({
     minimumApprover,
     approvalLevel,
     approvalMethod,
     isCompleted,
     isThereMasterApprover,
-    lastUpdated
+    lastUpdated,
   });
-  
+
   const company = await Company.findByPk(Number(CompanyId));
 
   if (company) {
@@ -40,53 +46,70 @@ async function saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isComp
   } else {
     console.log("no such company");
   }
-  res.json({
+  return {
     success: true,
     Message: "Successfully defined approvel method",
-    created:appMethod
-  })
-
+    created: appMethod,
+  };
 }
 exports.createApprovalMethod = async (req, res) => {
   const CompanyId = req.user.id;
 
-  const minimumApprover = req.body.minimumApprover;
-  const approvalLevel = req.body.approvalLevel;
+  let minimumApprover = req.body.minimumApprover;
+  let approvalLevel = req.body.approvalLevel;
   const isCompleted = req.body.isCompleted;
   const isThereMasterApprover = req.body.isThereMasterApprover;
   const approvalMethod = req.body.approvalMethod;
   const lastUpdated = new Date();
-      try {
-        console.log(
-          isCompleted,
-          approvalLevel,
+  try {
+    console.log(
+      isCompleted,
+      approvalLevel,
+      minimumApprover,
+      isThereMasterApprover,
+      approvalMethod,
+      lastUpdated
+    );
+    const criteria = {
+      where: { companyId: req.user.id },
+    };
+    const isExist = await ApprovalMethod.count({ criteria });
+    console.log("exist", isExist);
+    if (isExist >= 1) {
+      res.json("this company setted approval method");
+    } else {
+      if (approvalMethod === "horizontal") {
+        approvalLevel = 0;
+        let response = saveApprovalMethod(
+          CompanyId,
           minimumApprover,
+          approvalLevel,
+          isCompleted,
           isThereMasterApprover,
           approvalMethod,
           lastUpdated
-
         );
-        const criteria={
-          where: {companyId: req.user.id},
-        };
-        const isExist = await ApprovalMethod.count({criteria})
-        console.log("exist",isExist)
-        if(isExist>=1){
-            res.json("this company setted approval method")
-        }else{
-          if(approvalMethod==='horizontal'){
-            approvalLevel=0;
-            saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
-          }else if(approvalMethod==='hierarchy'){
-            minimumApprover=approvalLevel;
-            saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
-          }else{
-            return req.json("please choose your approval method properly")
-          }
-        }
-      } catch (err) {
-        res.status(500).json("Something gonna wrong");
+        return res.json(response);
+      } else if (approvalMethod === "hierarchy") {
+        minimumApprover = approvalLevel;
+        let response = saveApprovalMethod(
+          CompanyId,
+          minimumApprover,
+          approvalLevel,
+          isCompleted,
+          isThereMasterApprover,
+          approvalMethod,
+          lastUpdated
+        );
+        return res.json(response);
+      } else {
+        return req.json("please choose your approval method properly");
       }
+    }
+  } catch (err) {
+    console.log("first", err);
+    res.status(500).json("Something gonna wrong");
+  }
 };
 
 exports.updateApprovalMethod = async (req, res, next) => {
@@ -118,13 +141,13 @@ exports.updateApprovalMethod = async (req, res, next) => {
     }
 
     if (appMethod) {
-        const result = await ApprovalMethod.update(updates, {
+      const result = await ApprovalMethod.update(updates, {
         where: { id: id },
       });
       res.json({
-        message:"success",
-        appMethod
-      })
+        message: "success",
+        appMethod,
+      });
     } else {
       console.log("no such approval method");
     }
