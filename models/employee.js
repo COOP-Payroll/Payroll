@@ -78,10 +78,7 @@ const Employee = sequelize.define("Employee", {
   joiningDate: {
     type: DataTypes.DATE,
   },
-  employeeCode: {
-    type: DataTypes.STRING,
-  },
-
+ 
   // accountNumber: {
   //   type: DataTypes.STRING,
   //   allowNull: false,
