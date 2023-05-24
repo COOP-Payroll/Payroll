@@ -88,17 +88,19 @@ exports.createPayroll = async (req, res) => {
 
         return res.json(newPayroll);
       } else {
-        latestDate = latestPayroll.endDate;
+        latestDate = new Date(latestPayroll.endDate);
+        let earlyDate = new Date(startDate);
+        let lastDate = new Date(endDate);
         // const dateTimeString = "2023-05-18T03:14:59.294Z";
         // const datePart = new Date(latestDate).toISOString().split('T')[0];
-        // console.log(datePart);
-        console.log("latestPayroll", latestDate);
+        console.log(latestDate);
 
         const interval = Math.round(
-          (startDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
+          (earlyDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
         );
+        console.log("interval", interval);
         const newInterval = Math.round(
-          (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+          (lastDate.getTime() - earlyDate.getTime()) / (1000 * 60 * 60 * 24)
         );
 
         if (newInterval < 20 || newInterval > 30) {
@@ -127,6 +129,7 @@ exports.createPayroll = async (req, res) => {
       }
     }
   } catch (err) {
+    console.log("first", err);
     return res.status(500).json("Something went wrong.");
   }
 };
