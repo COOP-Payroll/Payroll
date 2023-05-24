@@ -102,7 +102,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-sequelize.sync({}).then(() => console.log("db is ready"));
+sequelize.sync().then(() => console.log("db is ready"));
 
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
 
