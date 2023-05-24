@@ -22,6 +22,15 @@ const newWorker = async () => {
 
     const payrollDef = await PayrollDefinition.findByPk(payrollDefinitionId);
 
+    const oldPayroll = await Payroll.findOne({
+      where: {
+        PayrollDefinitionId: payrollDefinitionId,
+        EmployeeId: employeeId,
+      },
+    });
+
+    if (oldPayroll) await oldPayroll.destroy();
+
     const employee_pension = pension?.employeeContribution ?? 1;
     const employer_pension = pension?.employerContribution ?? 1;
 

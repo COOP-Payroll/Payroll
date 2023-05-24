@@ -25,7 +25,6 @@ router.put(
   pensionController.updatePension
 );
 
-
 router.delete(
   "/:id",
   middleware.protectAll,
