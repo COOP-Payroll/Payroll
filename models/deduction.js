@@ -18,7 +18,7 @@ Deduction.belongsTo(DeductionDefinition);
 DeductionDefinition.hasMany(Deduction);
 
 Deduction.belongsTo(Grade);
-Grade.hasOne(Deduction);
+Grade.hasMany(Deduction);
 
 Deduction.belongsTo(Company);
 Company.hasMany(Deduction);
