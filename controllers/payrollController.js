@@ -58,6 +58,9 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 };
 
 exports.createPayroll = async (req, res) => {
+    
+  
+      let progress = 0;
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
   totalWorkers = employeeIds.length;
@@ -118,3 +121,37 @@ exports.getNonPayrollEmployee = async (req, res) => {
     res.json(error);
   }
 };
+
+exports.getAllPayroll= async(req,res,next)=>{
+  try {
+
+const {payrollDefinitionId}=req.body;
+
+const getAllPayroll=await Payroll.findAll();
+
+res.status(200).json({
+  count:getAllPayroll.length,
+  getAllPayroll});
+
+  } catch (error) {
+    console.error("Error creating company account info:", error);
+
+    if (
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
+    ) {
+      const errors = error.errors.reduce((acc, err) => {
+        acc[err.path] = [`${err.path} is required`];
+        return acc;
+      }, {});
+      return res.status(400).json(errors);
+    } else {
+      // Handle other errors
+      res.status(500).json({ error: "Failed to create account info" });
+    }
+  }
+}
+
+
+
+
