@@ -3,18 +3,12 @@ const payroll = require("../controllers/payrollController");
 const middleware = require("../middleware/auth");
 const router = express.Router();
 
-router.get(
-  "/",
-
-  middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
-  payroll.getAllPayroll
-);
+router.get("/:id", payroll.getAllPayrollByCompanyId);
 router.post(
   "/",
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
   payroll.createPayroll
 );
-
+router.get("/nonPayrollEmployee/:id", payroll.getNonPayrollEmployee);
 module.exports = router;

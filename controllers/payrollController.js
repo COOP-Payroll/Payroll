@@ -1,31 +1,60 @@
-const { Worker, workerData } = require("worker_threads");
+const { Worker } = require("worker_threads");
 const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
+const Employee = require("../models/employee");
+
+let totalWorkers = 0;
+let completedWorkers = 0;
 
 const runWorker = (employeeId, req, payrollDefinitionId, res) => {
-
-  let user=req.user.id;
-    console.log("Employee Id", user);
-  return new Promise((resolve, reject) => {
-    const worker = new Worker("./controllers/newWorker.js", {
-      workerData: { employeeId, user, payrollDefinitionId },
-    });
-
-    worker.on("message", (message) => {
-      resolve(message);
-    });
-
-    worker.on("error", (error) => {
-      console.log("first", error);
-      reject(new Error("An error occurred while calculating payroll"));
-    });
-
-    worker.on("exit", (code) => {
-      if (code !== 0) {
-        reject(new Error("An error occurred while calculating payroll"));
-      }
-    });
+  const worker = new Worker("./controllers/newWorker.js", {
+    workerData: { employeeId, user: req.user.id, payrollDefinitionId },
   });
+
+  const handleProgress = (message) => {
+    completedWorkers++;
+    const progress = ((completedWorkers / totalWorkers) * 100).toFixed(2);
+    const data = JSON.stringify({
+      progress: progress,
+      type: "progress",
+      value: message.payroll,
+    });
+
+    res.write(`data: ${data}\n\n`);
+
+    if (completedWorkers === totalWorkers) {
+      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      res.end();
+    }
+  };
+
+  const handleError = (error) => {
+    completedWorkers++;
+    let status = 500;
+    let errorMessage = `An error occurred while calculating payroll for ${employeeId}`;
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      status = 404;
+      errorMessage = `${employeeId} employee does not exist!`;
+    }
+    const progress = ((completedWorkers / totalWorkers) * 100).toFixed(2);
+    const data = JSON.stringify({
+      progress: progress,
+      type: "failed",
+      error: errorMessage,
+      value: error.payroll,
+    });
+
+    res.status(status).write(`data: ${data}\n\n`);
+
+    if (completedWorkers === totalWorkers) {
+      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      res.end();
+    }
+  };
+
+  worker.on("message", handleProgress);
+  worker.on("error", handleError);
 };
 
 exports.createPayroll = async (req, res) => {
@@ -33,7 +62,7 @@ exports.createPayroll = async (req, res) => {
       let progress = 0;
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
-
+  totalWorkers = employeeIds.length;
   if (!payrolldef) {
     return res.status(404).json({ error: "payroll is not defined" });
   }
@@ -44,131 +73,51 @@ exports.createPayroll = async (req, res) => {
     Connection: "keep-alive",
   });
 
-  try {
-    const workerThreads = employeeIds?.map((employeeId) =>
-      runWorker(employeeId, req, payrollDefinitionId, res)
-    );
+  const workerThreads = employeeIds?.map((employeeId) =>
+    runWorker(employeeId, req, payrollDefinitionId, res)
+  );
 
-    const payrolls = await Promise.all(workerThreads);
-
-    payrolls.forEach((payroll) => {
-       progress++;
-      res.write(
-        `data: ${JSON.stringify({
-          type: "progress",
-          percentage: (progress / employeeIds.length) * 100,
-          value: payroll.payroll,
-        })}\n\n`
-      );
-    });
-
-    res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
-    res.end();
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .send({ error: "An error occurred while calculating payroll" });
+  if (completedWorkers === totalWorkers) {
+    if (completedWorkers === totalWorkers) {
+      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      res.end();
+    }
   }
-
-  // const workerThreads = employeeIds?.map((employeeId) => {
-  //   return new Promise((resolve, reject) => {
-  //     const worker = new Worker("./controllers/newWorker.js", {
-  //       workerData: { employeeId, user: req.user.id, payrollDefinitionId },
-  //     });
-  //     worker.on("message", (message) => {
-  //       res.write(
-  //         `data: ${JSON.stringify({
-  //           type: "progress",
-  //           value: message.payroll,
-  //         })}\n\n`
-  //       );
-  //     });
-
-  //     worker.on("error", (error) => {
-  //       console.error(error);
-  //       reject(new Error("An error occurred while calculating payroll"));
-  //     });
-
-  //     // Listen for the worker thread to exit
-  //     worker.on("exit", (code) => {
-  //       if (code !== 0) {
-  //         console.error(`Worker stopped with exit code ${code}`);
-  //         reject(new Error("An error occurred while calculating payroll"));
-  //       }
-  //       resolve();
-  //     });
-  //   });
-  // });
-
-  // Promise.all(workerThreads)
-  //   .then(() => {
-  //     completed = true;
-  //     // console.log("hey");
-  //   })
-  //   .catch((err) => {
-  //     console.error(err);
-  //     res.status(500).send({ error: err.message });
-  //   });
-
-  // // Check if all workers have completed every 100ms
-  // const interval = setInterval(() => {
-  //   if (completed) {
-  //     res.write(
-  //       `data: ${JSON.stringify({
-  //         type: "completed",
-  //       })}\n\n`
-  //     );
-  //     res.end();
-  //     clearInterval(interval);
-  //   }
-  // }, 100);
 };
 
 exports.getAllPayrollByCompanyId = async (req, res) => {
-  // return res.json("Not Implemented!");
- try {
+  const { id } = req.params;
+  const payrollDef = await PayrollDefinition.findByPk(id);
+  if (!payrollDef) return res.status(404).json({ error: "payroll not found" });
+  const payrolls = await Payroll.findAll({
+    where: { PayrollDefinitionId: Number(id) },
+  });
+  return res.status(200).json(payrolls);
+};
 
-  const {payrollId, employeeIds} =req.body;
-
-    const payroll = await Payroll.findByPk(payrollId);
-    if (!payroll) {
-      throw new Error("Payroll not found");
-    }
-    const selectedEmployees = await Employee.findAll({
+exports.getNonPayrollEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payrollDef = await PayrollDefinition.findByPk(id);
+    if (!payrollDef)
+      return res.status(404).json({ error: "payroll not found" });
+    const employees = await Employee.findAll({
+      include: [
+        {
+          model: Payroll,
+          required: false,
+          where: {
+            PayrollDefinitionId: id, // Filter for payroll records of the specific month
+          },
+        },
+      ],
       where: {
-        id: employeeIds,
+        "$Payroll.id$": null, // Filter for records where the payroll ID is null
       },
     });
-    for (const employee of selectedEmployees) {
-      try {
-        // Perform payroll calculations and processing for each selected employee
-        // Assume the payroll processing failed for this employee
-        employee.payrollStatus = "failed";
-        // Save the changes to the employee
-        await employee.save();
-      } catch (error) {
-        console.log(
-          `Error processing payroll for employee ${employee.id}: ${error.message}`
-        );
-      }
-    }
-    payroll.status = "completed"; // Update overall payroll status
-    await payroll.save();
-    // Retrieve employees not selected for payroll
-    const otherEmployees = await Employee.findAll({
-      where: {
-        id: { [Sequelize.Op.notIn]: employeeIds },
-      },
-    });
-    // Retrieve employees with failed payroll
-    const employeesWithFailedPayroll = selectedEmployees.filter(
-      (employee) => employee.payrollStatus === "failed"
-    );
-    // Perform additional actions if needed, such as generating reports or notifications
-    return { payroll, employeesWithFailedPayroll, otherEmployees };
+    return res.status(200).json(employees);
   } catch (error) {
-    throw new Error("Failed to run payroll");
+    res.json(error);
   }
 };
 

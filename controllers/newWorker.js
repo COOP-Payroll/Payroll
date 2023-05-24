@@ -6,14 +6,13 @@ const Loan = require("../models/loan");
 const Allowance = require("../models/allowance");
 const Deduction = require("../models/deduction");
 const AllowanceDefinition = require("../models/allowanceDefinition");
-const Payroll = require("../models/Payroll.js");
+const Payroll = require("../models/Payroll");
 const EmployeeInfo = require("../models/employeInfo");
+const PayrollDefinition = require("../models/payrollDefinition");
 
 const newWorker = async () => {
   try {
     const { user, employeeId, payrollDefinitionId } = workerData;
-    console.log("workerData", workerData);
-
     const pension = await Pension.findOne({
       where: {
         companyId: user,
@@ -21,10 +20,10 @@ const newWorker = async () => {
       },
     });
 
+    const payrollDef = await PayrollDefinition.findByPk(payrollDefinitionId);
+
     const employee_pension = pension?.employeeContribution ?? 1;
     const employer_pension = pension?.employerContribution ?? 1;
-    // console.log("first", employee_pension);
-    // console.log("first", employer_pension);
 
     const taxslab = await Taxslab.findAll({
       where: { companyId: user, isActive: true },
@@ -76,33 +75,13 @@ const newWorker = async () => {
         totalTaxable += Number(allowance.amount);
       }
     });
-    // console.log("total taxable", totalTaxable);
-    // Calculate total deductions
+
     deductions.forEach((deduction) => {
       totalDeduction += Number(deduction.amount);
     });
 
     totalTaxable += Number(employee.EmployeeInfo.basicSalary);
 
-    // for (const taxslabs of taxslab) {
-    //   if (
-    //     totalTaxable > taxslabs.from_Salary &&
-    //     totalTaxable < taxslabs.to_Salary
-    //   ) {
-    //     console.log("totalTaxableIncome", "totalTaxableIncome");
-    //     deductible_Fee = taxslabs.deductible_Fee;
-    //     income_tax_payable = taxslabs.income_tax_payable;
-    // totalTaxableIncome =
-    //   totalTaxable *
-    //     (income_tax_payable == 0 ? 1 : income_tax_payable / 100) -
-    //   deductible_Fee;
-    //   } else {
-    //     console.log("totalTaxableIncome");
-    //     deductible_Fee = 0;
-    //     income_tax_payable = 0;
-    //     totalTaxableIncome = 0;
-    //   }
-    // }
     const taxslabs = taxslab.find(
       (tax) => totalTaxable > tax.from_Salary && totalTaxable < tax.to_Salary
     );
@@ -116,9 +95,6 @@ const newWorker = async () => {
         deductible_Fee;
     }
 
-    console.log("first", taxslabs);
-    console.log("totalTaxableIncome", totalTaxableIncome);
-
     loans.forEach((loan) => (totalLoan += loan.amount));
     overallTotalDeduction =
       totalLoan +
@@ -127,7 +103,6 @@ const newWorker = async () => {
       employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100);
 
     const payrollData = {
-      PayrollDefinitionId: payrollDefinitionId,
       grossSalary: (
         totalAllowance +
         employee.EmployeeInfo.basicSalary +
@@ -153,15 +128,13 @@ const newWorker = async () => {
     };
 
     const payroll = await Payroll.create(payrollData);
+    await payroll.setPayrollDefinition(payrollDef);
     parentPort.postMessage({ employeeId, payroll });
-   }
-  
-  
-  catch (error) {
-    console.error("Error occurred:", error);
+  } catch (error) {
+    // console.error("Error occurred:", error.name);
+    // console.log("worker error", error);
     const { employeeId, payrollDefinitionId } = workerData;
     const errorPayrollData = {
-      PayrollDefinitionId: payrollDefinitionId,
       grossSalary: 0,
       taxableIncome: 0,
       incomeTax: 0,
@@ -171,16 +144,11 @@ const newWorker = async () => {
       employer_pension_amount: 0,
       NetSalary: 0,
       status: "failed",
-      EmployeeId: employeeId,
+      EmployeeId: 12,
     };
-    const errorPayroll = await Payroll.create({
-      PayrollDefinitionId:payrollDefinitionId,
-      ...errorPayrollData}
-    );
-
-  
-
-    parentPort.postMessage({ employeeId, payroll: errorPayroll });
+    const errorPayroll = await Payroll.create(errorPayrollData);
+    await errorPayroll.setPayrollDefinition(payrollDefinitionId);
+    parentPort.postMessage({ employeeId, errorPayroll });
   }
 };
 
