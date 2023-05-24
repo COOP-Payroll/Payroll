@@ -10,5 +10,5 @@ router.post(
   middleware.restrictTo("companyAdmin"),
   payroll.createPayroll
 );
-
+router.get("/nonPayrollEmployee/:id", payroll.getNonPayrollEmployee);
 module.exports = router;
