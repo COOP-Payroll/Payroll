@@ -59,6 +59,7 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 
 exports.createPayroll = async (req, res) => {
     
+  
       let progress = 0;
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);

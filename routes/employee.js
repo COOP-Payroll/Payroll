@@ -21,6 +21,14 @@ router.post(
 
   employeeController.createEmployee
 );
+
+
+router.get(
+  "/department/:departmentId",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  employeeController.findByDepartment
+);
 router.put("/:id", employeeController.updateEmployee);
 router.delete("/:id", employeeController.deleteEmployee);
 
