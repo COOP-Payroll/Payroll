@@ -1,10 +1,14 @@
 const { Worker, workerData } = require("worker_threads");
 const PayrollDefinition = require("../models/payrollDefinition");
+const Payroll = require("../models/Payroll");
 
 const runWorker = (employeeId, req, payrollDefinitionId, res) => {
+
+  let user=req.user.id;
+    console.log("Employee Id", user);
   return new Promise((resolve, reject) => {
     const worker = new Worker("./controllers/newWorker.js", {
-      workerData: { employeeId, user: req.user.id, payrollDefinitionId },
+      workerData: { employeeId, user, payrollDefinitionId },
     });
 
     worker.on("message", (message) => {
@@ -25,6 +29,8 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 };
 
 exports.createPayroll = async (req, res) => {
+    
+      let progress = 0;
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
 
@@ -46,9 +52,11 @@ exports.createPayroll = async (req, res) => {
     const payrolls = await Promise.all(workerThreads);
 
     payrolls.forEach((payroll) => {
+       progress++;
       res.write(
         `data: ${JSON.stringify({
           type: "progress",
+          percentage: (progress / employeeIds.length) * 100,
           value: payroll.payroll,
         })}\n\n`
       );
@@ -118,5 +126,82 @@ exports.createPayroll = async (req, res) => {
 };
 
 exports.getAllPayrollByCompanyId = async (req, res) => {
-  return res.json("Not Implemented!");
+  // return res.json("Not Implemented!");
+ try {
+
+  const {payrollId, employeeIds} =req.body;
+
+    const payroll = await Payroll.findByPk(payrollId);
+    if (!payroll) {
+      throw new Error("Payroll not found");
+    }
+    const selectedEmployees = await Employee.findAll({
+      where: {
+        id: employeeIds,
+      },
+    });
+    for (const employee of selectedEmployees) {
+      try {
+        // Perform payroll calculations and processing for each selected employee
+        // Assume the payroll processing failed for this employee
+        employee.payrollStatus = "failed";
+        // Save the changes to the employee
+        await employee.save();
+      } catch (error) {
+        console.log(
+          `Error processing payroll for employee ${employee.id}: ${error.message}`
+        );
+      }
+    }
+    payroll.status = "completed"; // Update overall payroll status
+    await payroll.save();
+    // Retrieve employees not selected for payroll
+    const otherEmployees = await Employee.findAll({
+      where: {
+        id: { [Sequelize.Op.notIn]: employeeIds },
+      },
+    });
+    // Retrieve employees with failed payroll
+    const employeesWithFailedPayroll = selectedEmployees.filter(
+      (employee) => employee.payrollStatus === "failed"
+    );
+    // Perform additional actions if needed, such as generating reports or notifications
+    return { payroll, employeesWithFailedPayroll, otherEmployees };
+  } catch (error) {
+    throw new Error("Failed to run payroll");
+  }
 };
+
+exports.getAllPayroll= async(req,res,next)=>{
+  try {
+
+const {payrollDefinitionId}=req.body;
+
+const getAllPayroll=await Payroll.findAll();
+
+res.status(200).json({
+  count:getAllPayroll.length,
+  getAllPayroll});
+
+  } catch (error) {
+    console.error("Error creating company account info:", error);
+
+    if (
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
+    ) {
+      const errors = error.errors.reduce((acc, err) => {
+        acc[err.path] = [`${err.path} is required`];
+        return acc;
+      }, {});
+      return res.status(400).json(errors);
+    } else {
+      // Handle other errors
+      res.status(500).json({ error: "Failed to create account info" });
+    }
+  }
+}
+
+
+
+

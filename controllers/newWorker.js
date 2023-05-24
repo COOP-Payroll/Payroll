@@ -12,6 +12,7 @@ const EmployeeInfo = require("../models/employeInfo");
 const newWorker = async () => {
   try {
     const { user, employeeId, payrollDefinitionId } = workerData;
+    console.log("workerData", workerData);
 
     const pension = await Pension.findOne({
       where: {
@@ -115,8 +116,8 @@ const newWorker = async () => {
         deductible_Fee;
     }
 
-    // console.log("first", taxslabs);
-    // console.log("totalTaxableIncome", totalTaxableIncome);
+    console.log("first", taxslabs);
+    console.log("totalTaxableIncome", totalTaxableIncome);
 
     loans.forEach((loan) => (totalLoan += loan.amount));
     overallTotalDeduction =
@@ -153,7 +154,10 @@ const newWorker = async () => {
 
     const payroll = await Payroll.create(payrollData);
     parentPort.postMessage({ employeeId, payroll });
-  } catch (error) {
+   }
+  
+  
+  catch (error) {
     console.error("Error occurred:", error);
     const { employeeId, payrollDefinitionId } = workerData;
     const errorPayrollData = {
@@ -169,7 +173,13 @@ const newWorker = async () => {
       status: "failed",
       EmployeeId: employeeId,
     };
-    const errorPayroll = await Payroll.create(errorPayrollData);
+    const errorPayroll = await Payroll.create({
+      PayrollDefinitionId:payrollDefinitionId,
+      ...errorPayrollData}
+    );
+
+  
+
     parentPort.postMessage({ employeeId, payroll: errorPayroll });
   }
 };
