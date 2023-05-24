@@ -8,6 +8,8 @@ const Company = require("../models/company.js");
 const AccountInfo = require("../models/accountInfo.js");
 const IdFormat = require("../models/companyIdFormat.js");
 const CustomRole = require("../models/customRole.js");
+const Allowance = require("../models/allowance.js");
+const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const multer = require("multer");
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
@@ -30,6 +32,7 @@ exports.getAllEmployee = async (req, res) => {
       Employees,
     });
   } catch (error) {
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -313,6 +316,7 @@ exports.deleteEmployee = async (req, res, next) => {
 
 //Import from Excel
 const xlsx = require("xlsx");
+const Deduction = require("../models/deduction.js");
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
 const upload4 = multer({ storage: storage4 }).single("file");
@@ -393,4 +397,60 @@ exports.createEmployeeFile = async (req, res, next) => {
       }
     }
   });
+};
+
+exports.findByDepartment = async (req, res, next) => {
+  try {
+    const departmentId = req.params.departmentId;
+
+    // const emps = await Employee.findAll({
+    //   where: { DepartmentId: departmentId },
+    // });
+    // // console.log("first", employees);
+
+    // const datas = await Promise.all(
+    //   emps.map((employee) => {
+    //     return Grade.findOne({
+    //       where: { id: employee.GradeId },
+    //       include: [Allowance, Deduction],
+    //     });
+    //   })
+    // );
+
+    const department = await Employee.findAll({
+      where: { DepartmentId: departmentId },
+      include: {
+        model: Grade,
+        include: {
+          model: Allowance,
+          /// Use the correct alias defined in the association
+          include: [AllowanceDefinition],
+        },
+      },
+    });
+
+    res.status(200).json({
+      count: department.length,
+      department,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
 };

@@ -24,6 +24,14 @@ router.put(
 
   pensionController.updatePension
 );
+
+router.delete(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+
+  pensionController.deletePension
+);
 router.get("/:id", pensionController.getpensionById);
 
 module.exports = router;

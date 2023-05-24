@@ -17,7 +17,7 @@ Allowance.belongsTo(AllowanceDefinition);
 AllowanceDefinition.hasMany(Allowance);
 
 Allowance.belongsTo(Grade);
-Grade.hasOne(Allowance);
+Grade.hasMany(Allowance);
 
 Allowance.belongsTo(Company);
 Company.hasMany(Allowance);
