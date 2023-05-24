@@ -401,7 +401,7 @@ exports.findByDepartment=async(req,res,next)=>{
   try {
 const departmentId=req.params.departmentId;
 
-const department = await Employee.findAll({ DepartmentId: departmentId });
+const department = await Employee.findAll({where:{ DepartmentId: departmentId} });
 
 res.status(200).json({
   count:department.length,
