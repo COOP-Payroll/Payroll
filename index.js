@@ -82,7 +82,7 @@ app.use("/PayrollApprovement", payrollApprovement);
 app.use("/customRole", customRoleRouter);
 app.use("/companyAccInfo", companyAccountInfoRouter);
 app.use("/employeeAccInfo", employeeAccountInfoRouter);
-
+ 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
   error.status = 404;
@@ -112,3 +112,4 @@ app.listen(process.env.PORT, () => {
   // });
   console.log(`connected to backend`);
 });
+    

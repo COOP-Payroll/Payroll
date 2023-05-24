@@ -40,16 +40,13 @@ async function saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isComp
   } else {
     console.log("no such company");
   }
-  res.json({
-    success: true,
-    Message: "Successfully defined approvel method",
-    created:appMethod
-  })
-
+  return 
+    Message: "Successfully defined approvel method"
+    
 }
 exports.createApprovalMethod = async (req, res) => {
   const CompanyId = req.user.id;
-
+  console.log("company",CompanyId)
   const minimumApprover = req.body.minimumApprover;
   const approvalLevel = req.body.approvalLevel;
   const isCompleted = req.body.isCompleted;
@@ -57,6 +54,7 @@ exports.createApprovalMethod = async (req, res) => {
   const approvalMethod = req.body.approvalMethod;
   const lastUpdated = new Date();
       try {
+
         console.log(
           isCompleted,
           approvalLevel,
@@ -72,18 +70,23 @@ exports.createApprovalMethod = async (req, res) => {
         const isExist = await ApprovalMethod.count({criteria})
         console.log("exist",isExist)
         if(isExist>=1){
-            res.json("this company setted approval method")
+            res.json("this company already  setted approval method")
         }else{
           if(approvalMethod==='horizontal'){
             approvalLevel=0;
+            console.log(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
             saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
+            console.log("success",isCompleted)
           }else if(approvalMethod==='hierarchy'){
-            minimumApprover=approvalLevel;
+            console.log(" hierarchy")
+            //minimumApprover=approvalLevel;
+            //console.log("herarch aa1",CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
             saveApprovalMethod(CompanyId,minimumApprover,approvalLevel,isCompleted,isThereMasterApprover,approvalMethod,lastUpdated)
+            
           }else{
             return req.json("please choose your approval method properly")
           }
-        }
+        }    
       } catch (err) {
         res.status(500).json("Something gonna wrong");
       }
