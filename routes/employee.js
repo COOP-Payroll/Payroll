@@ -28,13 +28,26 @@ router.get(
   middleware.restrictToAll("companyAdmin"),
   employeeController.findByDepartment
 );
-router.put("/:id", employeeController.updateEmployee);
+router.put(
+  "/:id",
+
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  employeeController.updateEmployee
+);
 router.delete(
   "/:id",
   middleware.protectAll,
   middleware.restrictToAll("companyAdmin"),
 
   employeeController.deleteEmployee
+);
+
+router.post(
+  "/excel",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  employeeController.createEmployeeFile
 );
 
 module.exports = router;

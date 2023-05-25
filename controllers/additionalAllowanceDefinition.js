@@ -131,15 +131,7 @@ console.log("allowanceDefinition", !allowanceDefinition);
         .status(404)
         .json({ error: "Allowance definition not exist" });
     } else {
-      const updatedInfo = await allowanceDefinition.update(
-        {
-          name,
-          isTaxable,
-          isExempted,
-          exemptedAmount,
-          startingAmount,
-        },
-            );
+      const updatedInfo = await allowanceDefinition.update(req.body,{returning: true},);
 
       res.status(201).json({
         msg: "updated successfully",
