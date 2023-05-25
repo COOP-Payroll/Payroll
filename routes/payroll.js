@@ -11,4 +11,5 @@ router.post(
   payroll.createPayroll
 );
 router.get("/nonPayrollEmployee/:id", payroll.getNonPayrollEmployee);
+router.get("/allEmployeePayroll/:id", payroll.getAllEmployeePayroll);
 module.exports = router;
