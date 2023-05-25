@@ -30,6 +30,8 @@ const customRoleRouter = require("./routes/customRole.js");
 const loanRoute = require("./routes/loan.js");
 const companyAccountInfoRouter = require("./routes/companyAccountInfo");
 const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
+const additionalDeductionDefinition=require("./routes/AdditionalDeductionDefinition.js")
+const additionalDeduction=require('./routes/additionalDeduction.js')
 
 const app = express();
 
@@ -82,6 +84,8 @@ app.use("/PayrollApprovement", payrollApprovement);
 app.use("/customRole", customRoleRouter);
 app.use("/companyAccInfo", companyAccountInfoRouter);
 app.use("/employeeAccInfo", employeeAccountInfoRouter);
+app.use("/additionalDeductionDefinition", additionalDeductionDefinition);
+app.use("/additionalDeduction", additionalDeduction);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
