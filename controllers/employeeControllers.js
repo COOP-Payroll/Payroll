@@ -10,6 +10,8 @@ const IdFormat = require("../models/companyIdFormat.js");
 const CustomRole = require("../models/customRole.js");
 const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition.js");
+const DeductionDefinition=require("../models/deductionDefinition.js");
+const Deduction=require("../models/deduction.js")
 const multer = require("multer");
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
@@ -17,14 +19,44 @@ exports.getAllEmployee = async (req, res) => {
     const Employees = await Employee.findAll({
       where: { companyId: req.user.id },
       include: [
-        Address,
-        EmployeeInfo,
-        EmergencyContact,
-        AccountInfo,
-        Department,
-        Grade,
-        // Company,
-        CustomRole,
+        {
+          model: Address,
+          required: false,
+        },
+        {
+          model: EmployeeInfo,
+          required: false,
+        },
+        {
+          model: Department,
+          required: false,
+        },
+        {
+          model: Grade,
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+          ],
+        },
+        {
+          model: EmergencyContact,
+          required: false,
+        },
+        //Address,
+        // EmployeeInfo,
+        // EmergencyContact,
+        // AccountInfo,
+        // Department,
+        // Grade,
+
+        // // Company,
+        // CustomRole,
       ],
     });
     res.status(200).json({
@@ -316,7 +348,7 @@ exports.deleteEmployee = async (req, res, next) => {
 
 //Import from Excel
 const xlsx = require("xlsx");
-const Deduction = require("../models/deduction.js");
+
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
 const upload4 = multer({ storage: storage4 }).single("file");
