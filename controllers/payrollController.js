@@ -2,7 +2,6 @@ const { Worker } = require("worker_threads");
 const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
-const { Sequelize } = require("sequelize");
 
 let totalWorkers = 0;
 let completedWorkers = 0;

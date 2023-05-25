@@ -34,7 +34,6 @@ const additionalDeductionDefinition = require("./routes/AdditionalDeductionDefin
 const additionalDeduction = require("./routes/additionalDeduction.js");
 const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefinition.js");
 const additionalAllowance = require("./routes/additionalAllowance.js");
-const wss = require("./webSocketServer");
 
 const app = express();
 
@@ -112,10 +111,6 @@ app.use((err, req, res, next) => {
 });
 
 sequelize.sync({}).then(() => console.log("db is ready"));
-
-wss.on("connection", (ws) => {
-  console.log("A client connected.");
-});
 
 // sequelize.sync({alter:true}).then(() => console.log("updated"));
 
