@@ -31,11 +31,11 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 
   const handleError = (error) => {
     completedWorkers++;
-    let status = 500;
+    // let status = 500;
     let errorMessage = `An error occurred while calculating payroll for ${employeeId}`;
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
-      status = 404;
+      // status = 404;
       errorMessage = `${employeeId} employee does not exist!`;
     }
     const progress = ((completedWorkers / totalWorkers) * 100).toFixed(2);
@@ -46,7 +46,7 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
       value: error.payroll,
     });
 
-    res.status(status).write(`data: ${data}\n\n`);
+    res.write(`data: ${data}\n\n`);
 
     if (completedWorkers === totalWorkers) {
       res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
