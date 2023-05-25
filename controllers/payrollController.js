@@ -167,17 +167,9 @@ exports.getAllEmployeePayroll = async (req, res) => {
           },
         },
       ],
-      // where: {
-      //   [Sequelize.literal(
-      //     "Payroll.id IS NULL OR Payroll.PayrollDefinitionId = :id"
-      //   )]: {
-      //     PayrollDefinitionId: Number(id), // Filter for records where the payroll ID is null or matches the specific month
-      //   },
-      // },
     });
     return res.json(employees);
   } catch (error) {
-    console.log("first", error);
     res.json(error);
   }
 };

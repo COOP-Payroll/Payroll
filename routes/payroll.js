@@ -10,6 +10,12 @@ router.post(
   middleware.restrictTo("companyAdmin"),
   payroll.createPayroll
 );
+router.get(
+  "/",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  payroll.createPayroll
+);
 router.get("/nonPayrollEmployee/:id", payroll.getNonPayrollEmployee);
 router.get("/allEmployeePayroll/:id", payroll.getAllEmployeePayroll);
 module.exports = router;
