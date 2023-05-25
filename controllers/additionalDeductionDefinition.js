@@ -1,22 +1,22 @@
-
-const AdditionalDeductionDefinition=require("../models/additionlDeductionDefinition");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
 
 const Company = require("../models/company");
 // Define controller methods for handling User requests
-exports.getAllAdditionalDeductionDefinition=  async (req, res) => {
+exports.getAllAdditionalDeductionDefinition = async (req, res) => {
   const Company = req.user.id;
 
   try {
     const criteria = {
       companyId: req.user.id,
     };
-    const AdditionalDeductionDefinitions= await AdditionalDeductionDefinition.findAll({ where:criteria});
+    const AdditionalDeductionDefinitions =
+      await AdditionalDeductionDefinition.findAll({ where: criteria });
     res.status(200).json({
       count: AdditionalDeductionDefinitions.length,
       AdditionalDeductionDefinitions,
     });
   } catch (error) {
-    console.log("first",error)
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -37,10 +37,11 @@ exports.getAllAdditionalDeductionDefinition=  async (req, res) => {
   }
 };
 
-exports.getAdditionalDeductionDefinition=ById = async (req, res) => {
+exports.getAdditionalDeductionDefinition = ById = async (req, res) => {
   try {
     const { id } = req.params;
-    const AdditionalDeductionDefinition=  await AdditionalDeductionDefinition.findByPk(id);
+    const AdditionalDeductionDefinition =
+      await AdditionalDeductionDefinition.findByPk(id);
     res.status(200).json({
       AdditionalDeductionDefinition,
     });
@@ -65,28 +66,29 @@ exports.getAdditionalDeductionDefinition=ById = async (req, res) => {
   }
 };
 
-exports.createAdditionalDeductionDefinition=  async (req, res, next) => {
+exports.createAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     //insert required field
     const Company = req.user.id;
     console.log(Company);
-    const { name } =
-      req.body;
+    const { name } = req.body;
 
     const criteria = {
       name: name,
       companyId: req.user.id,
     };
-    const checkAdditionalDeductionDefinition = await AdditionalDeductionDefinition.findOne({
-      where: criteria,
-    });
+    const checkAdditionalDeductionDefinition =
+      await AdditionalDeductionDefinition.findOne({
+        where: criteria,
+      });
 
     if (checkAdditionalDeductionDefinition) {
       res.status(409).json("Already defined");
     } else {
-      const AdditionalDeductionDefinitions= await AdditionalDeductionDefinition.create({
-        name,
-      });
+      const AdditionalDeductionDefinitions =
+        await AdditionalDeductionDefinition.create({
+          name,
+        });
       await AdditionalDeductionDefinitions.setCompany(req.user.id);
       res.status(200).json({
         message: "Successfully Registered",
@@ -94,7 +96,6 @@ exports.createAdditionalDeductionDefinition=  async (req, res, next) => {
       });
     }
   } catch (error) {
-
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -115,9 +116,8 @@ exports.createAdditionalDeductionDefinition=  async (req, res, next) => {
   }
 };
 
-exports.updateAdditionalDeductionDefinition= async (req, res, next) => {
+exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
   try {
-    
     const { name } = req.body;
     const updates = {};
     const { id } = req.params;
@@ -135,7 +135,7 @@ exports.updateAdditionalDeductionDefinition= async (req, res, next) => {
 
     res.status(200).json({
       message: "updated successfully",
-    //   result,
+      //   result,
     });
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
@@ -158,23 +158,24 @@ exports.updateAdditionalDeductionDefinition= async (req, res, next) => {
   }
 };
 
-exports.deleteAdditionalDeductionDefinition=  async (req, res, next) => {
+exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const AdditionalDeductionDefinitions=  await AdditionalDeductionDefinition.findOne({
-      where: { id: id ,companyId:req.user.id},
-    });
+    const AdditionalDeductionDefinitions =
+      await AdditionalDeductionDefinition.findOne({
+        where: { id: id, companyId: req.user.id },
+      });
     if (AdditionalDeductionDefinitions) {
-      await AdditionalDeductionDefinition.destroy({ where: { id ,companyId:req.user.id} });
+      await AdditionalDeductionDefinition.destroy({
+        where: { id, companyId: req.user.id },
+      });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res
-        .status(409)
-        .json({ message: "There is no such ID" });
+      res.status(409).json({ message: "There is no such ID" });
     }
   } catch (error) {
-        console.log("first", error);
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {

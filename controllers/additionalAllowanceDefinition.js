@@ -129,12 +129,8 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
     if (!allowanceDefinition) {
       return res.status(404).json({ error: "Allowance definition not exist" });
     } else {
-      const updatedInfo = await allowanceDefinition.update({
-        name,
-        isTaxable,
-        isExempted,
-        exemptedAmount,
-        startingAmount,
+      const updatedInfo = await allowanceDefinition.update(req.body, {
+        returning: true,
       });
 
       res.status(201).json({
@@ -176,11 +172,9 @@ exports.deleteAdditionalAllowanceDefinition = async (req, res, next) => {
       await AdditionalAllowanceDefinition.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res
-        .status(409)
-        .json({
-          message: "There is no AdditionalAllowanceDefinition with this ID",
-        });
+      res.status(409).json({
+        message: "There is no AdditionalAllowanceDefinition with this ID",
+      });
     }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
