@@ -2,11 +2,12 @@ const { Worker } = require("worker_threads");
 const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
+const WebSocket = require("ws");
 
 let totalWorkers = 0;
 let completedWorkers = 0;
 
-const runWorker = (employeeId, req, payrollDefinitionId, res) => {
+const runWorker = (employeeId, req, payrollDefinitionId, socket) => {
   const worker = new Worker("./controllers/newWorker.js", {
     workerData: { employeeId, user: req.user.id, payrollDefinitionId },
   });
@@ -20,22 +21,19 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
       value: message.payroll,
     });
 
-    res.write(`data: ${data}\n\n`);
+    socket.send(data);
 
     if (completedWorkers === totalWorkers) {
-      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      socket.send(JSON.stringify({ type: "completed" }));
       completedWorkers = 0;
-      res.end();
     }
   };
 
   const handleError = (error) => {
     completedWorkers++;
-    // let status = 500;
     let errorMessage = `An error occurred while calculating payroll for ${employeeId}`;
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
-      // status = 404;
       errorMessage = `${employeeId} employee does not exist!`;
     }
     const progress = ((completedWorkers / totalWorkers) * 100).toFixed(2);
@@ -46,12 +44,11 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
       value: error.payroll,
     });
 
-    res.write(`data: ${data}\n\n`);
+    socket.send(data);
 
     if (completedWorkers === totalWorkers) {
-      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      socket.send(JSON.stringify({ type: "completed" }));
       completedWorkers = 0;
-      res.end();
     }
   };
 
@@ -67,23 +64,18 @@ exports.createPayroll = async (req, res) => {
     return res.status(404).json({ error: "payroll is not defined" });
   }
 
-  res.set({
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
+  const wss = new WebSocket.Server({ noServer: true });
+
+  // Upgrade the HTTP request to a WebSocket connection
+  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (socket) => {
+    wss.emit("connection", socket);
   });
 
-  const workerThreads = employeeIds?.map((employeeId) =>
-    runWorker(employeeId, req, payrollDefinitionId, res)
-  );
-
-  if (completedWorkers === totalWorkers) {
-    if (completedWorkers === totalWorkers) {
-      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
-      completedWorkers = 0;
-      res.end();
-    }
-  }
+  wss.on("connection", (socket) => {
+    const workerThreads = employeeIds?.map((employeeId) =>
+      runWorker(employeeId, req, payrollDefinitionId, socket)
+    );
+  });
 };
 
 exports.getAllPayrollByCompanyId = async (req, res) => {
