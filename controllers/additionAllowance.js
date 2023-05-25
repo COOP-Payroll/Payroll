@@ -2,7 +2,7 @@ const Allowance = require("../models/additionalAllowance.js");
 const AllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const Grade = require("../models/grade");
 const Company = require("../models/company.js");
-const Employee=require("../models/employee.js")
+const Employee = require("../models/employee.js");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
@@ -71,8 +71,30 @@ exports.createAllowance = async (req, res, next) => {
     // console.log(amount, gradeId, allowanceDefinitionId);
     //   await allowance.setAllowanceDefinition(allowanceDefinitionId);
 
- 
     const employee = await Employee.findByPk(employeeId);
+    const emp2 = await Employee.findAll({
+      where: { id: employeeId },
+      include: {
+        model: Allowance,
+        // /// Use the correct alias defined in the association
+        // include: [AllowanceDefinition],
+      },
+    });
+
+const additionalAllowanceDefinition1 =
+  await AllowanceDefinition.findByPk(
+    allowanceDefinitionId,
+    {
+      include: [
+        {
+          model: Allowance,
+          where: { EmployeeId: employeeId },
+        },
+      ],
+    }
+  );
+
+
     const allDefinition = await AllowanceDefinition.findByPk(
       allowanceDefinitionId
     );
@@ -80,10 +102,24 @@ exports.createAllowance = async (req, res, next) => {
     if (!employee) {
       res.status(404).json("Employee is not defined");
     } else if (!allDefinition) {
-      res.status(404).json("Allowance definition is not defined");
+      res
+        .status(404)
+        .json({
+          error: "Allowance definition is not defined",
+          additionalAllowanceDefinition1,
+        });
 
       // await allowance.setCompany(Number(req.user.id))
-    } else {
+    }
+    
+    else if(additionalAllowanceDefinition1){
+         res.status(404).json({
+           error: "Allowance definition is already added",
+       
+         });
+
+    }
+    else {
       // Handle the case where the company with the given ID is not found
 
       const allowance = await Allowance.create({ amount });
@@ -93,6 +129,7 @@ exports.createAllowance = async (req, res, next) => {
       res.status(200).json({
         message: "Successfully Registered",
         allowance,
+        additionalAllowanceDefinition1,
       });
     }
   } catch (error) {
@@ -126,7 +163,7 @@ exports.updateAllowance = async (req, res, next) => {
       updates.amount = amount;
     }
 
-    const result = await Allowance.update({amount}, { where: { id: id } });
+    const result = await Allowance.update({ amount }, { where: { id: id } });
 
     res.status(200).json({
       message: "updated successfully",
