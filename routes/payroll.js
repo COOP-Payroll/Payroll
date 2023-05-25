@@ -14,7 +14,7 @@ router.post(
 //   "/",
 //   middleware.protectAll,
 //   middleware.restrictTo("companyAdmin"),
-//   payroll.createPayroll
+//   payroll.getActivePayroll
 // );
 router.get("/nonPayrollEmployee/:id", payroll.getNonPayrollEmployee);
 router.get("/allEmployeePayroll/:id", payroll.getAllEmployeePayroll);

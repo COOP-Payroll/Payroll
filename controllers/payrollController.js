@@ -25,6 +25,7 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 
     if (completedWorkers === totalWorkers) {
       res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      completedWorkers = 0;
       res.end();
     }
   };
@@ -50,6 +51,7 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 
     if (completedWorkers === totalWorkers) {
       res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      completedWorkers = 0;
       res.end();
     }
   };
@@ -59,7 +61,6 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 };
 
 exports.createPayroll = async (req, res) => {
-  let progress = 0;
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
   totalWorkers = employeeIds.length;
@@ -80,6 +81,7 @@ exports.createPayroll = async (req, res) => {
   if (completedWorkers === totalWorkers) {
     if (completedWorkers === totalWorkers) {
       res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
+      completedWorkers = 0;
       res.end();
     }
   }
