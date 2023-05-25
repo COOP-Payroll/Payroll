@@ -2,6 +2,7 @@ const { Worker } = require("worker_threads");
 const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
+const { Sequelize } = require("sequelize");
 
 let totalWorkers = 0;
 let completedWorkers = 0;
@@ -146,5 +147,29 @@ exports.getAllPayroll = async (req, res, next) => {
       // Handle other errors
       res.status(500).json({ error: "Failed to create account info" });
     }
+  }
+};
+
+exports.getAllEmployeePayroll = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payrollDef = await PayrollDefinition.findByPk(id);
+    if (!payrollDef)
+      return res.status(404).json({ error: "Payroll is not found" });
+    // Fetch employees with and without payroll information for the specific month
+    const employees = await Employee.findAll({
+      include: [
+        {
+          model: Payroll,
+          required: false,
+          where: {
+            PayrollDefinitionId: Number(id), // Filter for payroll records of the specific month
+          },
+        },
+      ],
+    });
+    return res.json(employees);
+  } catch (error) {
+    res.json(error);
   }
 };

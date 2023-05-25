@@ -30,10 +30,10 @@ const customRoleRouter = require("./routes/customRole.js");
 const loanRoute = require("./routes/loan.js");
 const companyAccountInfoRouter = require("./routes/companyAccountInfo");
 const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
-const additionalDeductionDefinition=require("./routes/AdditionalDeductionDefinition.js")
-const additionalDeduction=require('./routes/additionalDeduction.js');
-const additionalAllowanceDefinition=require('./routes/additionalAllowanceDefinition.js');
-const additionalAllowance=require('./routes/additionalAllowance.js')
+const additionalDeductionDefinition = require("./routes/AdditionalDeductionDefinition.js");
+const additionalDeduction = require("./routes/additionalDeduction.js");
+const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefinition.js");
+const additionalAllowance = require("./routes/additionalAllowance.js");
 
 const app = express();
 

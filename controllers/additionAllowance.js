@@ -2,7 +2,7 @@ const Allowance = require("../models/additionalAllowance.js");
 const AllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const Grade = require("../models/grade");
 const Company = require("../models/company.js");
-const Employee=require("../models/employee.js")
+const Employee = require("../models/employee.js");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
@@ -71,7 +71,6 @@ exports.createAllowance = async (req, res, next) => {
     // console.log(amount, gradeId, allowanceDefinitionId);
     //   await allowance.setAllowanceDefinition(allowanceDefinitionId);
 
- 
     const employee = await Employee.findByPk(employeeId);
     const allDefinition = await AllowanceDefinition.findByPk(
       allowanceDefinitionId
@@ -126,7 +125,7 @@ exports.updateAllowance = async (req, res, next) => {
       updates.amount = amount;
     }
 
-    const result = await Allowance.update({amount}, { where: { id: id } });
+    const result = await Allowance.update({ amount }, { where: { id: id } });
 
     res.status(200).json({
       message: "updated successfully",
