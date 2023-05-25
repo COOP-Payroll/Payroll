@@ -6,8 +6,9 @@ const WebSocket = require("ws");
 
 let totalWorkers = 0;
 let completedWorkers = 0;
+let clients = [];
 
-const runWorker = (employeeId, req, payrollDefinitionId, socket) => {
+const runWorker = (employeeId, req, payrollDefinitionId) => {
   const worker = new Worker("./controllers/newWorker.js", {
     workerData: { employeeId, user: req.user.id, payrollDefinitionId },
   });
@@ -21,10 +22,15 @@ const runWorker = (employeeId, req, payrollDefinitionId, socket) => {
       value: message.payroll,
     });
 
-    socket.send(data);
+    clients.forEach((client) => {
+      client.send(data);
+    });
 
     if (completedWorkers === totalWorkers) {
-      socket.send(JSON.stringify({ type: "completed" }));
+      const completedMessage = JSON.stringify({ type: "completed" });
+      clients.forEach((client) => {
+        client.send(completedMessage);
+      });
       completedWorkers = 0;
     }
   };
@@ -44,10 +50,15 @@ const runWorker = (employeeId, req, payrollDefinitionId, socket) => {
       value: error.payroll,
     });
 
-    socket.send(data);
+    clients.forEach((client) => {
+      client.send(data);
+    });
 
     if (completedWorkers === totalWorkers) {
-      socket.send(JSON.stringify({ type: "completed" }));
+      const completedMessage = JSON.stringify({ type: "completed" });
+      clients.forEach((client) => {
+        client.send(completedMessage);
+      });
       completedWorkers = 0;
     }
   };
@@ -64,18 +75,35 @@ exports.createPayroll = async (req, res) => {
     return res.status(404).json({ error: "payroll is not defined" });
   }
 
-  const wss = new WebSocket.Server({ noServer: true });
-
-  // Upgrade the HTTP request to a WebSocket connection
-  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (socket) => {
-    wss.emit("connection", socket);
+  res.writeHead(200, {
+    "Content-Type": "text/plain",
   });
 
-  wss.on("connection", (socket) => {
-    const workerThreads = employeeIds?.map((employeeId) =>
-      runWorker(employeeId, req, payrollDefinitionId, socket)
-    );
+  const ws = new WebSocket.Server({ port: 8080 });
+
+  ws.on("connection", (client) => {
+    console.log("hey");
+    clients.push(client);
+    client.on("close", () => {
+      clients = clients.filter((c) => c !== client);
+    });
   });
+
+  res.on("close", () => {
+    ws.close();
+  });
+
+  employeeIds.forEach((employeeId) =>
+    runWorker(employeeId, req, payrollDefinitionId)
+  );
+
+  if (completedWorkers === totalWorkers) {
+    const completedMessage = JSON.stringify({ type: "completed" });
+    clients.forEach((client) => {
+      client.send(completedMessage);
+    });
+    completedWorkers = 0;
+  }
 };
 
 exports.getAllPayrollByCompanyId = async (req, res) => {
