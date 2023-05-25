@@ -453,13 +453,11 @@ exports.findByDepartment = async (req, res, next) => {
       where: { DepartmentId: departmentId },
       include: {
         model: Grade,
-        include:
-          {
-            model: Allowance,
-           /// Use the correct alias defined in the association
-            include: [AllowanceDefinition],
-          },
-
+        include: {
+          model: Allowance,
+          /// Use the correct alias defined in the association
+          include: [AllowanceDefinition],
+        },
       },
     });
 

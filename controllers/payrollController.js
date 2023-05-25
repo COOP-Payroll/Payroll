@@ -58,9 +58,7 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 };
 
 exports.createPayroll = async (req, res) => {
-    
-  
-      let progress = 0;
+  let progress = 0;
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
   totalWorkers = employeeIds.length;
@@ -122,17 +120,16 @@ exports.getNonPayrollEmployee = async (req, res) => {
   }
 };
 
-exports.getAllPayroll= async(req,res,next)=>{
+exports.getAllPayroll = async (req, res, next) => {
   try {
+    const { payrollDefinitionId } = req.body;
 
-const {payrollDefinitionId}=req.body;
+    const getAllPayroll = await Payroll.findAll();
 
-const getAllPayroll=await Payroll.findAll();
-
-res.status(200).json({
-  count:getAllPayroll.length,
-  getAllPayroll});
-
+    res.status(200).json({
+      count: getAllPayroll.length,
+      getAllPayroll,
+    });
   } catch (error) {
     console.error("Error creating company account info:", error);
 
@@ -150,8 +147,4 @@ res.status(200).json({
       res.status(500).json({ error: "Failed to create account info" });
     }
   }
-}
-
-
-
-
+};

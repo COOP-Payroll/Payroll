@@ -22,7 +22,6 @@ router.post(
   employeeController.createEmployee
 );
 
-
 router.get(
   "/department/:departmentId",
   middleware.protectAll,
