@@ -1,4 +1,5 @@
 const express = require("express");
+const { Worker } = require("worker_threads");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
@@ -34,7 +35,10 @@ const additionalDeductionDefinition = require("./routes/AdditionalDeductionDefin
 const additionalDeduction = require("./routes/additionalDeduction.js");
 const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefinition.js");
 const additionalAllowance = require("./routes/additionalAllowance.js");
-const providentFund=require('./routes/providentFund.js');
+const providentFund = require("./routes/providentFund.js");
+const newPayroll = require("./routes/newPayroll.js");
+const Payroll = require("./models/Payroll");
+const PayrollDefinition = require("./models/payrollDefinition");
 
 const app = express();
 
@@ -92,6 +96,7 @@ app.use("/additionalDeduction", additionalDeduction);
 app.use("/additionalAllowanceDefinition", additionalAllowanceDefinition);
 app.use("/additionalAllowance", additionalAllowance);
 app.use("/providentFund", providentFund);
+app.use("/newPayroll", newPayroll);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
@@ -114,11 +119,36 @@ app.use((err, req, res, next) => {
 
 sequelize.sync({}).then(() => console.log("db is ready"));
 
-// sequelize.sync({alter:true}).then(() => console.log("updated"));
+const runWorker = (employeeId, payrollDefinitionId, user) => {
+  const worker = new Worker("./controllers/newWorker.js", {
+    workerData: { employeeId, user, payrollDefinitionId },
+  });
+};
+
+const runComputation = async (payrolls) => {
+  
+  payrolls.forEach((payroll) => {
+    const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
+    runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.id);
+  });
+};
+
+let isRunning = false;
 
 app.listen(process.env.PORT, () => {
-  // cron.schedule("* * *  * *  * * *", async () => {
-  //   run.run();
-  // });
+  cron.schedule("*/5 * * * * *", async () => {
+    if (!isRunning) {
+      isRunning = true;
+      const payrolls = await Payroll.findAll({
+        where: { status: "ordered" },
+        include: [PayrollDefinition],
+      });
+      // console.log("first", JSON.stringify(payrolls, null, 3))
+      if (payrolls.length > 0) {
+        await runComputation(payrolls);
+      }
+      isRunning = false;
+    }
+  });
   console.log(`connected to backend`);
 });
