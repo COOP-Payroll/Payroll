@@ -74,6 +74,7 @@ exports.updateCompanyIdFormat = async (req, res) => {
     // idFormat.isActive = false;
     try {
       await idFormat.update(data);
+        return res.status(200).json({ msg: "id format updated successfully" });
       // await idFormat.save();
       // const companyIdFormat = await IdFormat.create(req.body);
       // try {
