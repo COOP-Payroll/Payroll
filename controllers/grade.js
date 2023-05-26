@@ -59,16 +59,15 @@ exports.createGrade = async (req, res, next) => {
     console.log(name, minSalary, maxSalary);
     console.log("company id", req.user.id);
     const criteria = {
-      name: name,
-      minSalary: req.body.minSalary,
-      maxSalary: req.body.maxSalary,
+      name: name
+  
     };
     const sameGrade = await Grade.findOne({ where: criteria });
 
     if (sameGrade) {
       res.json("this grade is defined already ");
     } else {
-      const grade = await Grade.create({ name, minSalary, maxSalary });
+      const grade = await Grade.create({ name});
       await grade.setCompany(companyId);
 
       res.status(200).json({
@@ -77,6 +76,7 @@ exports.createGrade = async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log("first",error)
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
