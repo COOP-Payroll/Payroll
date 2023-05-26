@@ -15,6 +15,14 @@ router.post(
   middleware.restrictTo("companyAdmin"),
   payroll.createPayroll
 );
+
+router.get(
+  "/getAllEmployee/:id",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  payroll.getNonPayrollEmployee
+);
+
 // router.get(
 //   "/",
 //   middleware.protectAll,
