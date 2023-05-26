@@ -28,6 +28,10 @@ const Company = sequelize.define("Company", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  // color:{
+
+
+  // },
   phoneNumber: {
     type: DataTypes.STRING,
     allowNull: false,

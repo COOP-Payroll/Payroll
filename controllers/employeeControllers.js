@@ -418,15 +418,16 @@ exports.createEmployeeFile = async (req, res, next) => {
       next(err);
     } else {
       try {
-        const workbook = xlsx.read(req?.file?.buffer);
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const data = xlsx.utils.sheet_to_json(worksheet);
-        const numRecords = data.length;
+      const workbook = xlsx.read(req?.file?.buffer);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = xlsx.utils.sheet_to_json(worksheet);
+      const numRecords = data.length;
         const emails = [];
         let password = req.user.companyCode.substring(0, 4) + "0000";
+  console.log("numRecords", numRecords);
+        const employeeRecords = data.map((row) => {
 
-        const employeeRecords = employeeData.map((row) => {
           const address = {
             country: row["country"],
             state: row["state"],
@@ -480,7 +481,7 @@ exports.createEmployeeFile = async (req, res, next) => {
             accountInformation,
           };
         });
-
+console.log("address", employeeRecords[0].address);
         for (const record of employeeRecords) {
           const {
             address,
@@ -489,14 +490,17 @@ exports.createEmployeeFile = async (req, res, next) => {
             employeeInfo,
             accountInformation,
           } = record;
-
+console.log("address", employeeInfo);
           let password = req.user.companyCode.substring(0, 4) + "0000";
           const conflicts = [];
           const createdAccountInfos = [];
 
-          if (!basicInfo?.DepartmentId) {
-            return res.status(404).json("There is no department");
-          } else if (!basicInfo?.GradeId) {
+
+          console.log("first",basicInfo.GradeId)
+          // if (!basicInfo?.DepartmentId) {
+          //   return res.status(404).json("There is no department");
+          // } else
+           if (!basicInfo?.GradeId) {
             return res.status(404).json("There is no Grade");
           }
 
@@ -508,9 +512,11 @@ exports.createEmployeeFile = async (req, res, next) => {
             return res.status(400).json({ error: "Define Id Format first" });
           }
 
-          const gradeId = await Grade.findByPk(Number(basicInfo?.GradeId));
+          const gradeId = await Grade.findByPk(
+            Math.floor(Number(basicInfo?.GradeId))
+          );
           const departmentId = await Department.findByPk(
-            Number(basicInfo?.DepartmentId)
+           Math.floor(Number(basicInfo?.DepartmentId))
           );
 
           if (!gradeId) {

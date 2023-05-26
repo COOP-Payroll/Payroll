@@ -3,7 +3,7 @@ const sequelize = require("../database/db.js");
 
 const AdditionalAllowanceDefinition = require("./additionalAllowanceDefinition.js");
 const Grade = require("./grade.js");
- const Employee=require('./employee.js');
+const Employee = require("./employee.js");
 const Company = require("./company.js");
 const AdditionalAllowance = sequelize.define("AdditionalAllowance", {
   amount: {
