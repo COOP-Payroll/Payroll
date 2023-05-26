@@ -82,3 +82,29 @@ exports.getPayrollByPayrollDefId = async (req, res) => {
     return res.status(500).json(error);
   }
 };
+
+exports.getNonPayrollEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payrollDef = await PayrollDefinition.findByPk(id);
+    if (!payrollDef)
+      return res.status(404).json({ error: "payroll not found" });
+    const employees = await Employee.findAll({
+      include: [
+        {
+          model: Payroll,
+          required: false,
+          where: {
+            PayrollDefinitionId: id, // Filter for payroll records of the specific month
+          },
+        },
+      ],
+      where: {
+        "$Payroll.id$": null, // Filter for records where the payroll ID is null
+      },
+    });
+    return res.status(200).json(employees);
+  } catch (error) {
+    res.json(error);
+  }
+};
