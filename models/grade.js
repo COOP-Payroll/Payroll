@@ -4,7 +4,6 @@ const Company = require("./company.js");
 const Employee = require("./employee.js");
 
 const Grade = sequelize.define("Grade", {
-  
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -12,15 +11,11 @@ const Grade = sequelize.define("Grade", {
 
   minSalary: {
     type: DataTypes.FLOAT,
-   
   },
 
   maxSalary: {
     type: DataTypes.FLOAT,
-
   },
-
-
 });
 
 Grade.belongsTo(Company);

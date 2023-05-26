@@ -81,19 +81,17 @@ exports.createAllowance = async (req, res, next) => {
       },
     });
 
-const additionalAllowanceDefinition1 =
-  await AllowanceDefinition.findByPk(
-    allowanceDefinitionId,
-    {
-      include: [
-        {
-          model: Allowance,
-          where: { EmployeeId: employeeId },
-        },
-      ],
-    }
-  );
-
+    const additionalAllowanceDefinition1 = await AllowanceDefinition.findByPk(
+      allowanceDefinitionId,
+      {
+        include: [
+          {
+            model: Allowance,
+            where: { EmployeeId: employeeId },
+          },
+        ],
+      }
+    );
 
     const allDefinition = await AllowanceDefinition.findByPk(
       allowanceDefinitionId
@@ -102,24 +100,17 @@ const additionalAllowanceDefinition1 =
     if (!employee) {
       res.status(404).json("Employee is not defined");
     } else if (!allDefinition) {
-      res
-        .status(404)
-        .json({
-          error: "Allowance definition is not defined",
-          additionalAllowanceDefinition1,
-        });
+      res.status(404).json({
+        error: "Allowance definition is not defined",
+        additionalAllowanceDefinition1,
+      });
 
       // await allowance.setCompany(Number(req.user.id))
-    }
-    
-    else if(additionalAllowanceDefinition1){
-         res.status(404).json({
-           error: "Allowance definition is already added",
-       
-         });
-
-    }
-    else {
+    } else if (additionalAllowanceDefinition1) {
+      res.status(404).json({
+        error: "Allowance definition is already added",
+      });
+    } else {
       // Handle the case where the company with the given ID is not found
 
       const allowance = await Allowance.create({ amount });

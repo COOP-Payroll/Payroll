@@ -637,7 +637,7 @@ console.log("address", employeeInfo);
           console.log("Employee created:", createdEmployee);
         }
       } catch (error) {
-        console.log("first",error)
+        console.log("first", error);
         if (error.name === "SequelizeValidationError") {
           const errors = {};
           error.errors.forEach((err) => {

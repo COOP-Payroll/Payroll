@@ -34,6 +34,7 @@ const additionalDeductionDefinition = require("./routes/AdditionalDeductionDefin
 const additionalDeduction = require("./routes/additionalDeduction.js");
 const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefinition.js");
 const additionalAllowance = require("./routes/additionalAllowance.js");
+const providentFund=require('./routes/providentFund.js');
 
 const app = express();
 
@@ -90,6 +91,7 @@ app.use("/additionalDeductionDefinition", additionalDeductionDefinition);
 app.use("/additionalDeduction", additionalDeduction);
 app.use("/additionalAllowanceDefinition", additionalAllowanceDefinition);
 app.use("/additionalAllowance", additionalAllowance);
+app.use("/providentFund", providentFund);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");

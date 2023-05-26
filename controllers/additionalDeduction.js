@@ -73,29 +73,28 @@ exports.createAdditionalDeduction = async (req, res, next) => {
       req.body.AdditionalDeductionDefinitionId;
     console.log(amount, AdditionalDeductionDefinitionId, employeeId);
 
-   const employee = await Employee.findByPk(employeeId);
+    const employee = await Employee.findByPk(employeeId);
     const AdditionalDeductionDefinitions =
       await AdditionalDeductionDefinition.findByPk(
         AdditionalDeductionDefinitionId
       );
 
+    //       const checkAdditionalDeductionForEmployee = await Employee.findAll({where:{id:employeeId,
+    //           AdditionalDeduction:AdditionalDeductionDefinitionId}}
+    // );
 
-//       const checkAdditionalDeductionForEmployee = await Employee.findAll({where:{id:employeeId,
-//           AdditionalDeduction:AdditionalDeductionDefinitionId}}
-// );
-
-// console.log("first", checkAdditionalDeductionForEmployee.length);
+    // console.log("first", checkAdditionalDeductionForEmployee.length);
     if (!employee) {
       res.status(404).json("No Employee with this id");
       //   console.log("no Employee with this id");
     } else if (!AdditionalDeductionDefinitions) {
       res.status(404).json("No AdditionalDeduction Definition with this id");
-    } 
+    }
     // else if(checkAdditionalDeductionForEmployee.length !=0){
     //      res.status(404).json("AdditionalDeduction added for this employee update it ");
     // }
     else {
-      const AdditionalDeductions = await AdditionalDeduction.create({ amount, });
+      const AdditionalDeductions = await AdditionalDeduction.create({ amount });
       await AdditionalDeductions.setEmployee(employee);
       await AdditionalDeductions.setAdditionalDeductionDefinition(
         AdditionalDeductionDefinitions
@@ -190,11 +189,9 @@ exports.deleteAdditionalDeduction = async (req, res, next) => {
       await AdditionalDeduction.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res
-        .status(409)
-        .json({
-          message: "There is no AdditionalDeduction Definition with this ID",
-        });
+      res.status(409).json({
+        message: "There is no AdditionalDeduction Definition with this ID",
+      });
     }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
