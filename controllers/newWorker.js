@@ -8,7 +8,6 @@ const Deduction = require("../models/deduction");
 const AllowanceDefinition = require("../models/allowanceDefinition");
 const Payroll = require("../models/Payroll");
 const EmployeeInfo = require("../models/employeInfo");
-const PayrollDefinition = require("../models/payrollDefinition");
 
 const newWorker = async () => {
   try {
@@ -20,16 +19,12 @@ const newWorker = async () => {
       },
     });
 
-    const payrollDef = await PayrollDefinition.findByPk(payrollDefinitionId);
-
     const oldPayroll = await Payroll.findOne({
       where: {
         PayrollDefinitionId: payrollDefinitionId,
         EmployeeId: employeeId,
       },
     });
-
-    if (oldPayroll) await oldPayroll.destroy();
 
     const employee_pension = pension?.employeeContribution ?? 1;
     const employer_pension = pension?.employerContribution ?? 1;
@@ -132,17 +127,19 @@ const newWorker = async () => {
       NetSalary: (totalTaxable - overallTotalDeduction + totalExempted).toFixed(
         2
       ),
-      status: "ordered",
-      EmployeeId: employeeId,
+      status: "processed",
     };
 
-    const payroll = await Payroll.create(payrollData);
-    await payroll.setPayrollDefinition(payrollDef);
-    parentPort.postMessage({ employeeId, payroll });
+    const payroll = await oldPayroll.update(payrollData);
+    // parentPort.postMessage({ employeeId, payroll });
   } catch (error) {
-    // console.error("Error occurred:", error.name);
-    // console.log("worker error", error);
     const { employeeId, payrollDefinitionId } = workerData;
+    const oldPayroll = await Payroll.findOne({
+      where: {
+        PayrollDefinitionId: payrollDefinitionId,
+        EmployeeId: employeeId,
+      },
+    });
     const errorPayrollData = {
       grossSalary: 0,
       taxableIncome: 0,
@@ -153,11 +150,10 @@ const newWorker = async () => {
       employer_pension_amount: 0,
       NetSalary: 0,
       status: "failed",
-      EmployeeId: 12,
     };
-    const errorPayroll = await Payroll.create(errorPayrollData);
-    await errorPayroll.setPayrollDefinition(payrollDefinitionId);
-    parentPort.postMessage({ employeeId, errorPayroll });
+
+    const errorPayroll = await oldPayroll.update(errorPayrollData);
+    // parentPort.postMessage({ employeeId, errorPayroll });
   }
 };
 
