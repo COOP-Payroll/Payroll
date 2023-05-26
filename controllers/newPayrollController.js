@@ -76,6 +76,7 @@ exports.getPayrollByPayrollDefId = async (req, res) => {
       return res.status(404).json({ error: "Payroll not found" });
     const payrolls = await Payroll.findAll({
       where: { PayrollDefinitionId: id },
+      include: [Employee, PayrollDefinition],
     });
     return res.json({ count: payrolls.length, payrolls });
   } catch (error) {
