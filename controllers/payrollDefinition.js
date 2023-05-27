@@ -73,9 +73,24 @@ exports.createPayroll = async (req, res) => {
       const latestPayroll = await Payroll.findOne({
         order: [["createdAt", "DESC"]],
       });
+      const lastEndDate = latestPayroll.endDate.toISOString().substring(0, 10);;
+      console.log({
+        payroll:latestPayroll,
+        endDate:lastEndDate
+      })
 
-      let latestDate;
-      if (!latestPayroll) {
+       //Calculate the interval
+      const intervalInMilliseconds = new Date(startDate) - new Date(lastEndDate);
+      const intervalInDays = Math.ceil(intervalInMilliseconds / (1000 * 60 * 60 * 24));
+      console.log(intervalInDays)
+      if(intervalInDays>1){
+        console.log("your new start date should be one day after "+ lastEndDate);
+        return res.json("your new start date should be one day after "+ lastEndDate);
+      }else if(intervalInDays<1){
+        console.log(" this day was included in yoour last payrol")
+        return res.json(" this day was included in yoour last payrol")
+      }else{
+        //test month and year
         const newPayroll = await Payroll.create({
           payrollName: req.body.payrollName,
           startDate: req.body.startDate,
@@ -85,47 +100,7 @@ exports.createPayroll = async (req, res) => {
           isPaid: false,
         });
         await newPayroll.setCompany(CompanyId);
-
-        return res.json(newPayroll);
-      } else {
-        latestDate = new Date(latestPayroll.endDate);
-        let earlyDate = new Date(startDate);
-        let lastDate = new Date(endDate);
-        // const dateTimeString = "2023-05-18T03:14:59.294Z";
-        // const datePart = new Date(latestDate).toISOString().split('T')[0];
-        console.log(latestDate);
-
-        const interval = Math.round(
-          (earlyDate.getTime() - latestDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        console.log("interval", interval);
-        const newInterval = Math.round(
-          (lastDate.getTime() - earlyDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        if (newInterval < 20 || newInterval > 30) {
-          return res.json(
-            "The payroll duration should be between 20 and 30 days."
-          );
-        } else {
-          if (interval !== 1) {
-            return res.json(
-              "The payroll should be defined one day after the last month payroll."
-            );
-          } else {
-            const newPayroll = await Payroll.create({
-              payrollName: req.body.payrollName,
-              startDate: req.body.startDate,
-              endDate: req.body.endDate,
-              status: "created",
-              isRollBacked: false,
-              isPaid: false,
-            });
-            await newPayroll.setCompany(CompanyId);
-
-            return res.status(201).json(newPayroll);
-          }
-        }
+        return res.status(201).json("Successfully defined your  payroll.");
       }
     }
   } catch (err) {
@@ -179,3 +154,4 @@ exports.deletePayrollDefinition = async (req, res, next) => {
     return res.status(500).json("Something gonna wrong");
   }
 };
+

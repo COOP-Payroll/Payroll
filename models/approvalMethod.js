@@ -31,6 +31,11 @@ const ApprovalMethod = sequelize.define("ApprovalMethod", {
     type: DataTypes.BOOLEAN,
     default: false,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    default: true,
+    allowNull:false
+  },
 });
 
 ApprovalMethod.belongsTo(Company);

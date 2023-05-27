@@ -2,7 +2,7 @@ const Allowance = require("../models/allowance");
 const AllowanceDefinition = require("../models/allowanceDefinition");
 const Grade = require("../models/grade");
 const Company = require("../models/company.js");
-
+  
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
   try {
