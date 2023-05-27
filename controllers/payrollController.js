@@ -111,9 +111,14 @@ exports.getAllPayrollByCompanyId = async (req, res) => {
   const payrollDef = await PayrollDefinition.findByPk(id);
   if (!payrollDef) return res.status(404).json({ error: "payroll not found" });
   const payrolls = await Payroll.findAll({
-    where: { PayrollDefinitionId: Number(id) },
+    where: { PayrollDefinitionId: Number(id) },include:[Employee,
+      PayrollDefinition
+    ]
   });
-  return res.status(200).json(payrolls);
+  return res.status(200).json({
+    count :payrolls.length,
+    payrolls
+  });
 };
 
 exports.getNonPayrollEmployee = async (req, res) => {
@@ -189,7 +194,10 @@ exports.getAllEmployeePayroll = async (req, res) => {
         },
       ],
     });
-    return res.json(employees);
+    return res.json({
+      
+      count:employees.length,
+      employees});
   } catch (error) {
     res.json(error);
   }
