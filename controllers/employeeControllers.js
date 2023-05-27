@@ -13,6 +13,8 @@ const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const DeductionDefinition = require("../models/deductionDefinition.js");
 const Deduction = require("../models/deduction.js");
 const multer = require("multer");
+const bcrypt=require('bcrypt');
+const jwt=require("jsonwebtoken")
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
   try {
@@ -658,4 +660,89 @@ console.log("address", employeeInfo);
       }
     }
   });
+};
+
+
+
+
+// const signToken = (id) => {
+//   try {
+//     console.log("signToken",id)
+//     return jwt.sign({ id }, "secret", {
+//       expiresIn: process.env.JWT_EXPIRES_IN,
+//     });
+//   } catch (err) {
+//     res.status(404).json({
+//       status: "fail",
+//       message: err,
+//     });
+//   }
+// };
+const signToken = (id, role) => {
+  try {
+    return jwt.sign({ id, role }, "secret", {
+      expiresIn: "90d",
+    });
+  } catch (err) {
+    // res.json(err);
+    return err;
+  }
+};
+
+const createSendToken = (user, statusCode, res) => {
+  console.log("user id",user.id)
+  const token = signToken(user.id,user.role);
+   console.log("first")
+
+  // const patientID = patient._id;
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    httpOnly: true,
+  };
+
+  //remove password from the output
+  user.password = undefined;
+  res.cookie("jwt", token, cookieOptions);
+  res.status(statusCode).json({
+    message: "successful",
+    token,
+
+    data: {
+      user,
+    },
+  });
+};
+///super admin login
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    //check if email and password exist company code
+    if (!email || !password) {
+      return res.status(404).json({ error: "please provide email, password" });
+    }
+    //check if user exists and password is correct
+    const user = await Employee.findOne({ where: { email } });
+    if ( !user ||
+      !(await bcrypt.compare(password, user.password))
+    ) {
+      return res.status(401).json({ error: "Incorrect email, password" });
+      //next(createError.createError(401,'Incorrect email, password or company Code'))
+    } else {
+      // console.log("first",res)
+      return createSendToken(user, 200,res);
+    }
+
+
+  } catch (err) {
+    console.log("first",err)
+    res.status(404).json({
+      status: "error occour",
+      message: err,
+    });
+  }
 };

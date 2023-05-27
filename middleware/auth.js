@@ -28,15 +28,15 @@ exports.protectAll = async (req, res, next) => {
 
     if (decoded.role === "superAdmin") {
       currentUser = await User.findByPk(Number(decoded.id));
-    } else {
+    } else if(decoded.role === 'companyAdmin') {
       currentUser = await Company.findByPk(Number(decoded.id));
     }
-
+console.log("first",currentUser)
     // console.log(JSON.stringify(currentUser), null, 4);
-    if (!currentUser) {
+    if (!currentUser ) {
       return res
         .status(401)
-        .json({ error: `${currentUser.role} does not longer exists` });
+        .json({ error: `current User does not longer exists` });
     }
     //check if user change password after jwt was issued
     // if (currentUser.changedPasswordAfter(decoded.iat)) {
@@ -45,9 +45,10 @@ exports.protectAll = async (req, res, next) => {
     //   });
     // }
     //grant access to protected route
+    else{
     req.user = currentUser;
     //console.log(currentUser);
-    next();
+    next();}
   } catch (err) {
     // console.log("first", err);
     return res.status(404).json({
@@ -100,5 +101,26 @@ exports.restrictToAll = (...roles) => {
       });
     }
     next();
+  };
+};
+
+///////
+//Restricted to
+exports.restrictAll = (...roles) => {
+  return async (req, res, next) => {
+    if (roles.includes(req.user?.roles)) {
+      next();
+    } else {
+      const permissions = req.user.customRole[0].permissions.find(
+        (per) => per.module === Object.keys(roles).toString()
+      );
+      if (permissions[Object.values(roles)]) {
+        next();
+      } else {
+        return res.status(403).json({
+          message: "You do not have permission to perform this action",
+        });
+      }
+    }
   };
 };
