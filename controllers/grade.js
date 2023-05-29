@@ -1,15 +1,27 @@
 const Grade = require("../models/grade");
 const Company = require("../models/company");
+const Allowance=require("../models/allowance.js")
+const AllowanceDefinition=require("../models/allowanceDefinition.js")
 
 // Define controller methods for handling User requests
 
 exports.getAllGrade = async (req, res) => {
   const companyId = req.user.id;
   try {
+console.log(req.user.id)
+
     const criteria = {
       companyId: req.user.id,
     };
-    const companyGrade = await Grade.findAll({ where: criteria });
+    const companyGrade = await Grade.findAll({
+      where: criteria,
+      include: [
+        {
+          model: Allowance, // Use the correct alias defined in the association
+          include: [AllowanceDefinition],
+        },
+      ],
+    });
 
     if(!companyGrade){
 res.status(200).json('There no Grade')
@@ -59,15 +71,15 @@ exports.createGrade = async (req, res, next) => {
     console.log(name, minSalary, maxSalary);
     console.log("company id", req.user.id);
     const criteria = {
-      name: name
-  
+      name: name,
+      
     };
     const sameGrade = await Grade.findOne({ where: criteria });
 
     if (sameGrade) {
       res.json("this grade is defined already ");
     } else {
-      const grade = await Grade.create({ name});
+      const grade = await Grade.create({ name,minSalary,maxSalary});
       await grade.setCompany(companyId);
 
       res.status(200).json({

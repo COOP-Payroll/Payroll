@@ -4,8 +4,7 @@ const middleware = require("../middleware/auth");
 const router = express.Router();
 
 router.get("/:id", payroll.getAllPayrollByCompanyId);
-router.post(
-  "/",
+router.post("/par",
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
   payroll.createPayroll
