@@ -71,15 +71,15 @@ exports.createGrade = async (req, res, next) => {
     console.log(name, minSalary, maxSalary);
     console.log("company id", req.user.id);
     const criteria = {
-      name: name
-  
+      name: name,
+      
     };
     const sameGrade = await Grade.findOne({ where: criteria });
 
     if (sameGrade) {
       res.json("this grade is defined already ");
     } else {
-      const grade = await Grade.create({ name});
+      const grade = await Grade.create({ name,minSalary,maxSalary});
       await grade.setCompany(companyId);
 
       res.status(200).json({
