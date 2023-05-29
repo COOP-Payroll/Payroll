@@ -68,13 +68,17 @@ exports.updateCompanyIdFormat = async (req, res) => {
   try {
     const { id } = req.params;
     const { data } = req.body;
+    console.log("first",req.body)
     const idFormat = await IdFormat.findByPk(id);
     if (!idFormat)
       return res.status(404).json({ error: "Id format not found" });
     // idFormat.isActive = false;
     try {
-      await idFormat.update(data);
-        return res.status(200).json({ msg: "id format updated successfully" });
+  const updatedIdFormat=    await idFormat.update(req.body);
+
+        return res.status(200).json({ msg: "id format updated successfully" ,
+        updatedIdFormat
+      });
       // await idFormat.save();
       // const companyIdFormat = await IdFormat.create(req.body);
       // try {
@@ -85,7 +89,7 @@ exports.updateCompanyIdFormat = async (req, res) => {
       //   await companyIdFormat.destroy(); // Rollback the created companyIdFormat if association fails
       //   return res
       //     .status(500)
-      //     .json({ error: "Error associating id format with company" });
+      //     .json({ error: "Error associating id format with companyf" });
       // }
     } catch (error) {
       return res.status(500).json(error);
