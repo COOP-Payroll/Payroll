@@ -9,6 +9,10 @@ middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 approverController.getAllApprovers);
 
+router.get('/active', 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approverController.getAllActiveApprovers);
 // // GET /approvers/:id - Get a single Approver by ID
 router.get('/:id', approverController.getApproverById);
 

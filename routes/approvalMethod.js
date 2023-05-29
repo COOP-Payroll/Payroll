@@ -8,11 +8,22 @@ middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 approvalMethod.getAllApprovalMethod);
 
+//get only active 
+router.get("/active", 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approvalMethod.getAllActiveApprovalMethod);
 //add new approval method 
 router.post("/", 
 middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
-approvalMethod.createApprovalMethod);
+approvalMethod.createApprovalMethod);  
+
+//add additional  approval method 
+router.post("/recreate", 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approvalMethod.reCreateApprovalMethod);  
 
 //update single approval method
 router.put("/:id", 

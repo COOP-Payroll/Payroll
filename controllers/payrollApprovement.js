@@ -95,7 +95,7 @@ async function handleHierarchicalApprove(payrollId, approverId,companyApprovalLe
             return  "it is already approved"
         }else if(payrollStatus==='ordered'){
             // console.log("ordered ");
-             const appLevel=Number(approverLevel);
+            const appLevel=Number(approverLevel);
             if(appLevel !==1){
                 
                 const whoseTurn = await Approver.findOne({ where: { level: 1 } });
@@ -194,7 +194,7 @@ const createPayrollApprovement = async (req, res) => {
         console.log(CompanyIdPayroll,payrollStatus,"payroll")
         //approval method 
         const approvalMethod = await ApprovalMethod.findOne({
-            where: { id: payrollId },
+            where: { CompanyId: CompanyIdPayroll },
         });
         const minimumApprover          = approvalMethod.minimumApprover;
         const isThereMasterApprover     = approvalMethod.isThereMasterApprover
@@ -214,14 +214,14 @@ const createPayrollApprovement = async (req, res) => {
         console.log("approver", isApproverActive,approverLevel)
         
         if(!isApprovalMethodCompleted){
-            res.json(
+            return res.json(
                 {
                     Message:"approval method set app is not completed! your admin should complete once ",
                 }
             );
         }else{
             if(!isApproverActive){
-                res.json("this account is not active to approve contact your admin");
+                return res.json("this account is not active to approve contact your admin");
             }else{
                 if(!isThereMasterApprover){
                     //if no master approver 
