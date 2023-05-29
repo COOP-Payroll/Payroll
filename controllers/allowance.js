@@ -74,13 +74,22 @@ exports.createAllowance = async (req, res, next) => {
     const allDefinition = await AllowanceDefinition.findByPk(
       allowanceDefinitionId
     );
-    // console.log("first",allowanceDefinitionId)
+
+    const allowancedefnCheck = await Allowance.findOne({
+      where: {
+        GradeId: gradeId,
+        AllowanceDefinitionId: allowanceDefinitionId,
+      },
+    });
     if (!grade) {
       res.status(404).json("Grade is not defined");
     } else if (!allDefinition) {
       res.status(404).json("Allowance definition is not defined");
 
       // await allowance.setCompany(Number(req.user.id))
+    }
+    else if (allowancedefnCheck) {
+      res.status(404).json("Allowance definition is already added");
     } else {
       // Handle the case where the company with the given ID is not found
 

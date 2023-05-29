@@ -242,10 +242,10 @@ exports.updateCompany = async (req, res) => {
 
       // Validate the updated data against the model
       await company.validate();
-      await company.update(body);
+ const updatedData=     await company.update(body);
 
       // Return the updated company object
-      return res.json(company);
+      return res.json(updatedData);
     }
   } catch (error) {
     // Handle validation errors

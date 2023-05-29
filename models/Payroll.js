@@ -37,7 +37,7 @@ const Payroll = sequelize.define("Payroll", {
   },
   status: {
     type: DataTypes.ENUM,
-    values: ["ordered", "processed", "failed"],
+    values: ["ordered", "processed", "failed", "approved"],
     defaultValue: "ordered",
   },
   isPaid: {
