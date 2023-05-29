@@ -79,7 +79,6 @@ const newWorker = async () => {
         totalTaxable += Number(allowance.amount);
       }
     });
-
     deductions.forEach((deduction) => {
       totalDeduction += Number(deduction.amount);
     });

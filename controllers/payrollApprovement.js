@@ -2,6 +2,8 @@ const PayrollApprovement = require('../models/payrollApprovement');
 const Approver = require('../models/approver')
 const ApprovalMethod = require("../models/approvalMethod");
 const PayrollDefinition = require('../models/payrollDefinition');
+const Payroll = require("../models/Payroll");
+
 //reusable function for payroll approvement
 async function handlePayrollApproval(payrollId, approverId, level, status,payrollStatus) {
     try {
@@ -15,8 +17,8 @@ async function handlePayrollApproval(payrollId, approverId, level, status,payrol
       if (!payroll) {
         throw new Error("Payroll not defined");
       }
-      payroll.status = payrollStatus;
-      await payroll.save();
+      PayrollDefinition.status = payrollStatus;
+      await PayrollDefinition.save();
       //await approve1.save();
       await approve1.setPayrollDefinition(PayrollDefinitionId);
       await approve1.setApprover(ApproverId);
@@ -56,6 +58,10 @@ async function handleHorizontalApprove(payrollId, approverId,minimumApprover,app
             const level=0;
             const payrollStatus='approved'
             console.log("sent to last approver")
+            const criteria = { PayrollDefinitionId: payrollId, status:'processed' };
+            const newData = { status: 'approved' };
+            const employeePayroll = await Payroll.update(criteria,newData);
+            console("employeePayroll approved", employeePayroll)
             const result = await handlePayrollApproval(payrollId, approverId, level, status,payrollStatus)
             console.log(result)
       } else {
@@ -127,7 +133,7 @@ async function handleHierarchicalApprove(payrollId, approverId,companyApprovalLe
             if(payrollApprovalCount<1){
                 if(Number(approverLevel)!==2){
                     if(approverLevel===1){
-                        return {message:"payroll alraldy approved at your level "}
+                        return {message:"payroll already approved at your level "}
                     }else if(Number(approverLevel)===3){
                         return {message: `${whoseTurn.role} should approve before you`,}
                     }else{
@@ -145,6 +151,10 @@ async function handleHierarchicalApprove(payrollId, approverId,companyApprovalLe
                         const result = await handlePayrollApproval(payrollId, approverId, level, status,payrollStatus)
                     }else if(companyApprovalLevel===2){
                         const payrollStatus='approved'
+                        const criteria = { PayrollDefinitionId: payrollId, status:'processed' };
+                        const newData = { status: 'approved' };
+                        const employeePayroll = await Payroll.update(criteria,newData);
+                        console("employeePayroll approved", employeePayroll)
                         const result = await handlePayrollApproval(payrollId, approverId, level, status,payrollStatus)
                     }else{
                         console.log("approval level of company is out of scope")
@@ -157,6 +167,10 @@ async function handleHierarchicalApprove(payrollId, approverId,companyApprovalLe
                 const level=3;
                 const payrollStatus='approved'
                 console.log("sent to approve 3")
+                const criteria = { PayrollDefinitionId: payrollId, status:'processed' };
+                const newData = { status: 'approved' };
+                const employeePayroll = await Payroll.update(criteria,newData);
+                console("employeePayroll approved", employeePayroll)
                 const result = await handlePayrollApproval(payrollId, approverId, level, status,payrollStatus)
                 console.log(result) 
 
@@ -188,8 +202,8 @@ const createPayrollApprovement = async (req, res) => {
         const payroll = await PayrollDefinition.findOne({
             where: { id: payrollId },
         });
-        const CompanyIdPayroll = payroll.CompanyId;
-        const payrollStatus    = payroll.status;
+        const CompanyIdPayroll = PayrollDefinition.CompanyId; 
+        const payrollStatus    = PayrollDefinition.status;
 
         console.log(CompanyIdPayroll,payrollStatus,"payroll")
         //approval method 
