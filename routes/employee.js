@@ -28,6 +28,13 @@ router.get(
   middleware.restrictToAll("companyAdmin"),
   employeeController.findByDepartment
 );
+
+router.put(
+  "/additionalPay/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  employeeController.addAddionalPay
+);
 router.put(
   "/:id",
 

@@ -12,9 +12,10 @@ const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const DeductionDefinition = require("../models/deductionDefinition.js");
 const Deduction = require("../models/deduction.js");
+
 const multer = require("multer");
-const bcrypt=require('bcrypt');
-const jwt=require("jsonwebtoken")
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 // Define controller methods for handling User requests
 exports.getAllEmployee = async (req, res) => {
   try {
@@ -26,6 +27,10 @@ exports.getAllEmployee = async (req, res) => {
           required: false,
         },
         {
+          model: Company,
+          required: false,
+        },
+        {
           model: EmployeeInfo,
           required: false,
         },
@@ -34,7 +39,7 @@ exports.getAllEmployee = async (req, res) => {
           required: false,
         },
         {
-          model: CustomRole,        
+          model: CustomRole,
           required: false,
         },
         {
@@ -358,37 +363,53 @@ exports.deleteEmployee = async (req, res, next) => {
 exports.findByDepartment = async (req, res, next) => {
   try {
     const departmentId = req.params.departmentId;
-
-    // const emps = await Employee.findAll({
-    //   where: { DepartmentId: departmentId },
-    // });
-    // // console.log("first", employees);
-
-    // const datas = await Promise.all(
-    //   emps.map((employee) => {
-    //     return Grade.findOne({
-    //       where: { id: employee.GradeId },
-    //       include: [Allowance, Deduction],
-    //     });
-    //   })
-    // );
-
-    const department = await Employee.findAll({
-      where: { DepartmentId: departmentId },
-      include: {
-        model: Grade,
+    console.log("departmentId", departmentId);
+    if (departmentId != 0) {
+      const department = await Employee.findAll({
+        where: { companyId: req.user.id, DepartmentId: departmentId },
         include: {
-          model: Allowance,
-          /// Use the correct alias defined in the association
-          include: [AllowanceDefinition],
+          model: Grade,
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+          ],
         },
-      },
-    });
+      });
 
-    res.status(200).json({
-      count: department.length,
-      department,
-    });
+      res.status(200).json({
+        count: department.length,
+        department,
+      });
+    } else if (departmentId == 0) {
+      const Employees = await Employee.findAll({
+        where: { companyId: req.user.id },
+        include: [
+          {
+            model: Grade,
+            include: [
+              {
+                model: Allowance, // Use the correct alias defined in the association
+                include: [AllowanceDefinition],
+              },
+              {
+                model: Deduction, // Use the correct alias defined in the association
+                include: [DeductionDefinition],
+              },
+            ],
+          },
+        ],
+      });
+      res.status(200).json({
+        count: Employees.length,
+        Employees,
+      });
+    }
   } catch (error) {
     console.log("first", error);
     if (error.name === "SequelizeValidationError") {
@@ -425,16 +446,15 @@ exports.createEmployeeFile = async (req, res, next) => {
       next(err);
     } else {
       try {
-      const workbook = xlsx.read(req?.file?.buffer);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const data = xlsx.utils.sheet_to_json(worksheet);
-      const numRecords = data.length;
+        const workbook = xlsx.read(req?.file?.buffer);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = xlsx.utils.sheet_to_json(worksheet);
+        const numRecords = data.length;
         const emails = [];
         let password = req.user.companyCode.substring(0, 4) + "0000";
-  console.log("numRecords", numRecords);
+        console.log("numRecords", numRecords);
         const employeeRecords = data.map((row) => {
-
           const address = {
             country: row["country"],
             state: row["state"],
@@ -488,7 +508,7 @@ exports.createEmployeeFile = async (req, res, next) => {
             accountInformation,
           };
         });
-console.log("address", employeeRecords[0].address);
+        console.log("address", employeeRecords[0].address);
         for (const record of employeeRecords) {
           const {
             address,
@@ -497,17 +517,16 @@ console.log("address", employeeRecords[0].address);
             employeeInfo,
             accountInformation,
           } = record;
-console.log("address", employeeInfo);
+          console.log("address", employeeInfo);
           let password = req.user.companyCode.substring(0, 4) + "0000";
           const conflicts = [];
           const createdAccountInfos = [];
 
-
-          console.log("first",basicInfo.GradeId)
+          console.log("first", basicInfo.GradeId);
           // if (!basicInfo?.DepartmentId) {
           //   return res.status(404).json("There is no department");
           // } else
-           if (!basicInfo?.GradeId) {
+          if (!basicInfo?.GradeId) {
             return res.status(404).json("There is no Grade");
           }
 
@@ -523,7 +542,7 @@ console.log("address", employeeInfo);
             Math.floor(Number(basicInfo?.GradeId))
           );
           const departmentId = await Department.findByPk(
-           Math.floor(Number(basicInfo?.DepartmentId))
+            Math.floor(Number(basicInfo?.DepartmentId))
           );
 
           if (!gradeId) {
@@ -667,9 +686,6 @@ console.log("address", employeeInfo);
   });
 };
 
-
-
-
 // const signToken = (id) => {
 //   try {
 //     console.log("signToken",id)
@@ -695,9 +711,9 @@ const signToken = (id, role) => {
 };
 
 const createSendToken = (user, statusCode, res) => {
-  console.log("user id",user.id)
-  const token = signToken(user.id,user.role);
-   console.log("first")
+  console.log("user id", user.id);
+  const token = signToken(user.id, user.role);
+  console.log("first");
 
   // const patientID = patient._id;
   const cookieOptions = {
@@ -724,30 +740,55 @@ const createSendToken = (user, statusCode, res) => {
 ///super admin login
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, companyCode } = req.body;
 
     //check if email and password exist company code
-    if (!email || !password) {
-      return res.status(404).json({ error: "please provide email, password" });
+    if (!email || !password || !companyCode) {
+      return res
+        .status(404)
+        .json({ error: "please provide email, password or companycode" });
     }
     //check if user exists and password is correct
-    const user = await Employee.findOne({ where: { email } });
-    if ( !user ||
-      !(await bcrypt.compare(password, user.password))
-    ) {
+    const user = await Employee.findOne({
+      where: { email: email },
+      include: { model: Company, where: { companyCode: companyCode } },
+    });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
     } else {
       // console.log("first",res)
-      return createSendToken(user, 200,res);
+      return createSendToken(user, 200, res);
     }
-
-
   } catch (err) {
-    console.log("first",err)
+    console.log("first", err);
     res.status(404).json({
       status: "error occour",
       message: err,
     });
   }
+};
+exports.addAddionalPay = async (req, res, next) => {
+  try {
+    const updates = req.body;
+    const { id } = req.params.id;
+    console.log("first",updates)
+
+      const employee = await Employee.findAll({where:{id:req.params.id,companyId:req.user.id}});
+
+    //  console.log("first", employee);
+    if (employee) {
+    // /  const result = await employee.update({acting:100},);
+
+      res.status(200).json({
+        message: "updated successfully",
+        // result,
+      });
+    } else {
+      res.status(404).json({
+        error: "there is no such Employee",
+      });
+    }
+  } catch (error) {}
 };
