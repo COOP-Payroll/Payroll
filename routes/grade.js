@@ -8,14 +8,14 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName:"deduction", permissionType:"read" }),
+  // middleware.checkPermissions({ name: 'payroll', value:'approve' }),
   grade.getAllGrade
 );
 
 //get specific grade of company
 router.get(
   "/:id",
-
   middleware.protectAll,
   middleware.restrictToAll("companyAdmin"),
   grade.getGradeById

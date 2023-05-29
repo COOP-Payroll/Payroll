@@ -171,8 +171,6 @@ for (const permissionData of permissionsData) {
 
 
 
-
-
     // const re
 
     res.status(200).json({
