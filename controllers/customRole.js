@@ -114,25 +114,69 @@ else{
 };
 exports.updateCustomRole = async (req, res, next) => {
   try {
-    //insert required field
-    const data = req.body;
-    // const updates = {};
-    const { id } = req.params;
-    // if (amount) {
-    //   updates.amount = amount;
-    // }
-     const { name, permission } = req.body;
-     const checkPermission=await Permission.update({permission:permission},{where:{customRoleId:id}});
-     console.log("first",checkPermission)
+const customRoleName = req.body.name;
 
-    const result = await CustomRole.update({name:req.body.name.name}, { where: { id: id } });
+const {id}=req.params.id;
+let customRole = await CustomRole.findOne({ where: { id: req.params.id } });
+
+if (!customRole) {
+  res.status(404).json("There is no customRole ")
+  // customRole = await CustomRole.create({ name: customRoleName });
+}
+else {
+  customRole.name = customRoleName;
+ const updatedRole= await customRole.save();
+}
+
+
+const permissionsData = req.body.permission;
+
+for (const permissionData of permissionsData) {
+  const {
+    module,
+    read,
+    write,
+    update,
+    delete: deletePermission,
+  } = permissionData;
+
+  let permission = await Permission.findOne({
+    where: { module, CustomRoleId: customRole.id },
+  });
+
+
+
+  if (!permission)
+   {
+    console.log("first", "no permission");
+    permission = await Permission.create({
+      module,
+      read,
+      write,
+      update,
+      delete: deletePermission,
+      CustomRoleId: customRole.id,
+    });
+  } else {
+        console.log("first", "there is permission");
+    permission.read = read;
+    permission.write = write;
+    permission.update = update;
+    permission.delete = deletePermission;
+
+    await permission.save();
+  }
+ }
+//  const updatedRole=await customRole.save();
+
+
+
 
 
     // const re
 
     res.status(200).json({
       message: "updated successfully",
-      result
     });
   } catch (error) {
     console.log(error)

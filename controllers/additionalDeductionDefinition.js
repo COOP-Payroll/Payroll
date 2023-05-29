@@ -1,124 +1,49 @@
-const Grade = require("../models/grade");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
+
 const Company = require("../models/company");
-
 // Define controller methods for handling User requests
+exports.getAllAdditionalDeductionDefinition = async (req, res) => {
+  const Company = req.user.id;
 
-exports.getAllGrade = async (req, res) => {
-  const companyId = req.user.id;
   try {
     const criteria = {
       companyId: req.user.id,
     };
-    const companyGrade = await Grade.findAll({ where: criteria });
-
-    if(!companyGrade){
-res.status(200).json('There no Grade')
-    }
-    else{
-     res.status(200).json({
-        count: companyGrade.length,
-      companyGrade,
-    });}
-  } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(400).json(errors);
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(400).json(errors);
-    } else {
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-};
-
-exports.getGradeById = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const grade = await Grade.findByPk(id);
-    res.json(grade);
-  } catch (er) {
-    res.status(500).json("Something gonna wrong");
-  }
-};
-
-exports.createGrade = async (req, res, next) => {
-  try {
-    //insert required field
-
-    const { name, minSalary, maxSalary } = req.body;
-    const companyId = req.user.id;
-    console.log(name, minSalary, maxSalary);
-    console.log("company id", req.user.id);
-    const criteria = {
-      name: name
-  
-    };
-    const sameGrade = await Grade.findOne({ where: criteria });
-
-    if (sameGrade) {
-      res.json("this grade is defined already ");
-    } else {
-      const grade = await Grade.create({ name});
-      await grade.setCompany(companyId);
-
-      res.status(200).json({
-        message: "Successfully Registered",
-        grade,
-      });
-    }
-  } catch (error) {
-    console.log("first",error)
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(400).json(errors);
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(400).json(errors);
-    } else {
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-};
-
-exports.updateGrade = async (req, res, next) => {
-  try {
-    //insert required field
-    const { name, minSalary, maxSalary } = req.body;
-    const updates = {};
-    const { id } = req.params;
-
-    if (name) {
-      updates.name = name;
-    }
-    if (minSalary) {
-      updates.minSalary = minSalary;
-    }
-    if (maxSalary) {
-      updates.maxSalary = maxSalary;
-    }
-
-    const result = await Grade.update(updates, { where: { id: id } });
-
+    const AdditionalDeductionDefinitions =
+      await AdditionalDeductionDefinition.findAll({ where: criteria });
     res.status(200).json({
-      message: "updated successfully",
-      result,
+      count: AdditionalDeductionDefinitions.length,
+      AdditionalDeductionDefinitions,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+exports.getAdditionalDeductionDefinition = ById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const AdditionalDeductionDefinition =
+      await AdditionalDeductionDefinition.findByPk(id);
+    res.status(200).json({
+      AdditionalDeductionDefinition,
     });
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
@@ -141,16 +66,34 @@ exports.updateGrade = async (req, res, next) => {
   }
 };
 
-exports.deleteGrade = async (req, res, next) => {
+exports.createAdditionalDeductionDefinition = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    //insert required field
+    const Company = req.user.id;
+    console.log(Company);
+    const { name } = req.body;
 
-    const grade = await Grade.findOne({ where: { id: id } });
-    if (grade) {
-      await grade.destroy({ where: { id } });
-      res.status(200).json({ message: "Deleted successfully" });
+    const criteria = {
+      name: name,
+      companyId: req.user.id,
+    };
+    const checkAdditionalDeductionDefinition =
+      await AdditionalDeductionDefinition.findOne({
+        where: criteria,
+      });
+
+    if (checkAdditionalDeductionDefinition) {
+      res.status(409).json("Already defined");
     } else {
-      res.status(409).json({ message: "There is no grade with this ID" });
+      const AdditionalDeductionDefinitions =
+        await AdditionalDeductionDefinition.create({
+          name,
+        });
+      await AdditionalDeductionDefinitions.setCompany(req.user.id);
+      res.status(200).json({
+        message: "Successfully Registered",
+        AdditionalDeductionDefinitions,
+      });
     }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
@@ -172,3 +115,85 @@ exports.deleteGrade = async (req, res, next) => {
     }
   }
 };
+
+exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    const updates = {};
+    const { id } = req.params;
+
+    if (name) {
+      updates.name = name;
+    }
+    console.log("name", req.body.name);
+    const result = await AdditionalDeductionDefinition.update(
+      { name: req.body.name },
+      {
+        where: { id: id },
+      }
+    );
+
+    res.status(200).json({
+      message: "updated successfully",
+      //   result,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const AdditionalDeductionDefinitions =
+      await AdditionalDeductionDefinition.findOne({
+        where: { id: id, companyId: req.user.id },
+      });
+    if (AdditionalDeductionDefinitions) {
+      await AdditionalDeductionDefinition.destroy({
+        where: { id, companyId: req.user.id },
+      });
+      res.status(200).json({ message: "Deleted successfully" });
+    } else {
+      res.status(409).json({ message: "There is no such ID" });
+    }
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+//name,isTaxable,isExempted,exemptedAmount,startingAmount

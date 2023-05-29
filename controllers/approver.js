@@ -33,6 +33,35 @@ exports.getAllApprovers = async (req, res) => {
 
 };
 
+exports.getAllActiveApprovers = async (req, res) => {
+  const CompanyId = req.user.id;
+  console.log(CompanyId);
+  const criteria = {
+    where: { CompanyId: CompanyId, isActive: true },
+  };
+  try {
+    const approvers = await Approver.findAll({
+      ...criteria,
+      include: 'Employee',
+    });
+
+    let employeeNames = [];
+    if (approvers && approvers.length > 0) {
+      employeeNames = approvers.map(approver => approver.Employee.fullname);
+    }
+
+    res.json({
+      count: approvers.length,
+      approvers: approvers,
+      Names: employeeNames,
+    });
+
+  } catch (error) {
+    console.error("Error retrieving Approvers:", error);
+    res.status(500).json({ error: "Failed to retrieve Approvers" });
+  }
+
+};
 // Get a single Approver by ID
 exports.getApproverById = async (req, res) => {
   const approverId = req.params.id;
@@ -55,12 +84,14 @@ async function saveApprover(
   isActive,
   isMaster,
   role,
-  level
+  level,
+  ApprovalMethodId
 ) {
   const approver = new Approver({ isActive, isMaster, role, level });
   await approver.save();
   await approver.setCompany(CompanyId);
   await approver.setEmployee(EmployeeId);
+  await approver.setApprovalMethod(ApprovalMethodId)
   console.log("saved success fully")
   return {
     approver:approver,
@@ -71,19 +102,22 @@ async function saveApprover(
 // Create a new Approver
 exports.createApprover = async (req, res) => {
   const CompanyId = req.user.id;
+
   const { level, role, isActive, isMaster, EmployeeId } = req.body;
   try {
     console.log(level, role, isActive, isMaster, EmployeeId);
     const approvalMethod = await ApprovalMethod.findOne({
       where: { CompanyId: req.user.id, isActive: true},
     });
+
     //set each value of approval method to variable
-    const companyId = approvalMethod.CompanyId;
-    const appMethod = approvalMethod.approvalMethod;
-    const appLevel = approvalMethod.approvalLevel;
-    const minimumApp = approvalMethod.minimumApprover;
-    const ifMaster = approvalMethod.isThereMasterApprover;
-    const approvalMethodId = approvalMethod.id;
+    console.log(req.user.id)
+    const companyId    = approvalMethod.CompanyId;
+    const appMethod    = approvalMethod.approvalMethod;
+    const appLevel     = approvalMethod.approvalLevel;
+    const minimumApp   = approvalMethod.minimumApprover;
+    const ifMaster     = approvalMethod.isThereMasterApprover;
+    const ApprovalMethodId = approvalMethod.id;
 
     const approvalMethodCount = await ApprovalMethod.count({
       where: { CompanyId: req.user.id,isActive: true},
@@ -97,7 +131,7 @@ exports.createApprover = async (req, res) => {
     console.log("this employee is", employeeCount);
 
     const isSaved = await Approver.count({
-      where: { CompanyId: req.user.id, EmployeeId: req.body.EmployeeId },
+      where: { CompanyId: req.user.id, EmployeeId: req.body.EmployeeId,isActive: true},
     });
 
     const settedApprover = await Approver.count({
@@ -125,8 +159,7 @@ exports.createApprover = async (req, res) => {
         });
         console.log("master number", masterApproverCount);
         if (masterApproverCount >= 1 && req.body.isMaster === true) {
-          return req.json("master approver is seeted already");
-          console.log("master approver is setted already");
+          return res.json("master approver is seeted already");
           console.log("master approver is setted already");
         } else if (masterApproverCount < 1 && req.body.isMaster === true) {
           //setapproval here
@@ -136,6 +169,7 @@ exports.createApprover = async (req, res) => {
             isMaster: true,
             isActive: true,
           });
+          await setMaster.setApprovalMethod(ApprovalMethodId);
           await setMaster.setCompany(CompanyId);
           await setMaster.setEmployee(EmployeeId);
           return res.status(201).json("master approval successfully setted");
@@ -155,11 +189,12 @@ exports.createApprover = async (req, res) => {
                   isMaster: false,
                   isActive: true,
                 });
+                await saveHApprover.setApprovalMethod(ApprovalMethodId)
                 await saveHApprover.setCompany(req.user.id);
                 await saveHApprover.setEmployee(req.body.EmployeeId);
                 //update approval mehod 
                 const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                  where: {id: approvalMethodId},
+                  where: {id: ApprovalMethodId},
                 });
                 console.log(updateResult)
                 return res.json(
@@ -172,11 +207,12 @@ exports.createApprover = async (req, res) => {
                   isMaster: false,
                   isActive: true,
                 });
+                await saveHApprover.setApprovalMethod(ApprovalMethodId)
                 await saveHApprover.setCompany(req.user.id);
                 await saveHApprover.setEmployee(req.body.EmployeeId);
                 //update approval method
                 const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                  where: {id: approvalMethodId},
+                  where: {id: ApprovalMethodId},
                 });
                 console.log(updateResult)
                 return res.json(
@@ -189,6 +225,7 @@ exports.createApprover = async (req, res) => {
                   isMaster: false,
                   isActive: true,
                 });
+                await saveHApprover.setApprovalMethod(ApprovalMethodId)
                 await saveHApprover.setCompany(req.user.id);
                 await saveHApprover.setEmployee(req.body.EmployeeId);
                 return res.json("add more appprover ");
@@ -219,7 +256,8 @@ exports.createApprover = async (req, res) => {
                     isActive,
                     isMaster,
                     role,
-                    level
+                    level,
+                    ApprovalMethodId
                   )
                     .then(async () => {
                       const appOne = await Approver.count({
@@ -236,7 +274,7 @@ exports.createApprover = async (req, res) => {
                       if (appOne >= 1 && appTwo >= 1 && appThree >= 1) {
                         //update the complete in approval method
                         const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                          where: {id: approvalMethodId},
+                          where: {id: ApprovalMethodId},
                         });
                         console.log(updateResult)
                         return res.json(
@@ -271,7 +309,8 @@ exports.createApprover = async (req, res) => {
                     isActive,
                     isMaster,
                     role,
-                    level
+                    level,
+                    ApprovalMethodId
                   )
                     .then(async () => {
                       const appOne = await Approver.count({
@@ -286,7 +325,7 @@ exports.createApprover = async (req, res) => {
                       if (appOne >= 1 && appTwo >= 1) {
                         //update approval method
                         const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                          where: {id: approvalMethodId},
+                          where: {id: ApprovalMethodId},
                         });
                         console.log(updateResult)
                         res.json(
@@ -337,8 +376,9 @@ exports.createApprover = async (req, res) => {
             });
             await savehApp.setEmployee(req.body.EmployeeId);
             await savehApp.setCompany(req.user.id);
+            await savehApp.setApprovalMethod(ApprovalMethodId);
             const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-              where: {id: approvalMethodId},
+              where: {id: ApprovalMethodId},
             });
             console.log(updateResult)
             return res
@@ -353,9 +393,10 @@ exports.createApprover = async (req, res) => {
             });
             await savehApp.setEmployee(req.body.EmployeeId);
             await savehApp.setCompany(req.user.id);
+            await savehApp.setApprovalMethod(ApprovalMethodId)
             //update here
             const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-              where: {id: approvalMethodId},
+              where: {id: ApprovalMethodId},
             });
             console.log(updateResult)
             return res.json(" successfully passed minimum amount of approver ");
@@ -368,6 +409,7 @@ exports.createApprover = async (req, res) => {
             });
             await savehApp.setEmployee(req.body.EmployeeId);
             await savehApp.setCompany(req.user.id);
+            await savehApp.setApprovalMethod(ApprovalMethodId)
             return res.json(" add more approver and meet you minimum approver");
           } else {
             return res.json("something is wrong");
@@ -392,7 +434,8 @@ exports.createApprover = async (req, res) => {
                   isActive,
                   isMaster,
                   role,
-                  level
+                  level,
+                  ApprovalMethodId
                 )
                   .then(async () => {
                     const appOne = await Approver.count({
@@ -407,7 +450,7 @@ exports.createApprover = async (req, res) => {
                     if (appOne >= 1 && appTwo >= 1 && appThree >= 1) {
                       //update  approval status
                       const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                        where: {id: approvalMethodId},
+                        where: {id: ApprovalMethodId},
                       });
                       console.log(updateResult)
                       return res.json(
@@ -439,7 +482,8 @@ exports.createApprover = async (req, res) => {
                   isActive,
                   isMaster,
                   role,
-                  level
+                  level,
+                  ApprovalMethodId
                 )
                   .then(async () => {
                     const appOne = await Approver.count({
@@ -454,7 +498,7 @@ exports.createApprover = async (req, res) => {
                     if (appOne >= 1 && appTwo >= 1) {
                       
                       const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                        where: {id: approvalMethodId},
+                        where: {id: ApprovalMethodId},
                       });
                       console.log(updateResult)
                       res.json("you are all done now you can approve payroll");

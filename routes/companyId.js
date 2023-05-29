@@ -18,7 +18,7 @@ router.post(
 router.get("/", companyIdRouter.getAllCompanyIdFormat);
 // router.get("/:id", companyController.getCompanyById);
 router.put(
-  "/",
+  "/:id",
   middleware.protectAll,
   middleware.restrictToAll("companyAdmin"),
   companyIdRouter.updateCompanyIdFormat

@@ -2,11 +2,13 @@ const { Worker } = require("worker_threads");
 const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
+const WebSocket = require("ws");
 
 let totalWorkers = 0;
 let completedWorkers = 0;
+let clients = [];
 
-const runWorker = (employeeId, req, payrollDefinitionId, res) => {
+const runWorker = (employeeId, req, payrollDefinitionId) => {
   const worker = new Worker("./controllers/newWorker.js", {
     workerData: { employeeId, user: req.user.id, payrollDefinitionId },
   });
@@ -20,21 +22,24 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
       value: message.payroll,
     });
 
-    res.write(`data: ${data}\n\n`);
+    clients.forEach((client) => {
+      client.send(data);
+    });
 
     if (completedWorkers === totalWorkers) {
-      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
-      res.end();
+      const completedMessage = JSON.stringify({ type: "completed" });
+      clients.forEach((client) => {
+        client.send(completedMessage);
+      });
+      completedWorkers = 0;
     }
   };
 
   const handleError = (error) => {
     completedWorkers++;
-    let status = 500;
     let errorMessage = `An error occurred while calculating payroll for ${employeeId}`;
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
-      status = 404;
       errorMessage = `${employeeId} employee does not exist!`;
     }
     const progress = ((completedWorkers / totalWorkers) * 100).toFixed(2);
@@ -45,11 +50,16 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
       value: error.payroll,
     });
 
-    res.status(status).write(`data: ${data}\n\n`);
+    clients.forEach((client) => {
+      client.send(data);
+    });
 
     if (completedWorkers === totalWorkers) {
-      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
-      res.end();
+      const completedMessage = JSON.stringify({ type: "completed" });
+      clients.forEach((client) => {
+        client.send(completedMessage);
+      });
+      completedWorkers = 0;
     }
   };
 
@@ -58,7 +68,6 @@ const runWorker = (employeeId, req, payrollDefinitionId, res) => {
 };
 
 exports.createPayroll = async (req, res) => {
-  let progress = 0;
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
   totalWorkers = employeeIds.length;
@@ -66,21 +75,34 @@ exports.createPayroll = async (req, res) => {
     return res.status(404).json({ error: "payroll is not defined" });
   }
 
-  res.set({
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
+  res.writeHead(200, {
+    "Content-Type": "text/plain",
   });
 
-  const workerThreads = employeeIds?.map((employeeId) =>
-    runWorker(employeeId, req, payrollDefinitionId, res)
+  const ws = new WebSocket.Server({ port: 8080 });
+
+  ws.on("connection", (client) => {
+    console.log("hey");
+    clients.push(client);
+    client.on("close", () => {
+      clients = clients.filter((c) => c !== client);
+    });
+  });
+
+  res.on("close", () => {
+    ws.close();
+  });
+
+  employeeIds.forEach((employeeId) =>
+    runWorker(employeeId, req, payrollDefinitionId)
   );
 
   if (completedWorkers === totalWorkers) {
-    if (completedWorkers === totalWorkers) {
-      res.write(`data: ${JSON.stringify({ type: "completed" })}\n\n`);
-      res.end();
-    }
+    const completedMessage = JSON.stringify({ type: "completed" });
+    clients.forEach((client) => {
+      client.send(completedMessage);
+    });
+    completedWorkers = 0;
   }
 };
 
@@ -89,9 +111,14 @@ exports.getAllPayrollByCompanyId = async (req, res) => {
   const payrollDef = await PayrollDefinition.findByPk(id);
   if (!payrollDef) return res.status(404).json({ error: "payroll not found" });
   const payrolls = await Payroll.findAll({
-    where: { PayrollDefinitionId: Number(id) },
+    where: { PayrollDefinitionId: Number(id) },include:[Employee,
+      PayrollDefinition
+    ]
   });
-  return res.status(200).json(payrolls);
+  return res.status(200).json({
+    count :payrolls.length,
+    payrolls
+  });
 };
 
 exports.getNonPayrollEmployee = async (req, res) => {
@@ -146,5 +173,32 @@ exports.getAllPayroll = async (req, res, next) => {
       // Handle other errors
       res.status(500).json({ error: "Failed to create account info" });
     }
+  }
+};
+
+exports.getAllEmployeePayroll = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payrollDef = await PayrollDefinition.findByPk(id);
+    if (!payrollDef)
+      return res.status(404).json({ error: "Payroll is not found" });
+    // Fetch employees with and without payroll information for the specific month
+    const employees = await Employee.findAll({
+      include: [
+        {
+          model: Payroll,
+          required: false,
+          where: {
+            PayrollDefinitionId: Number(id), // Filter for payroll records of the specific month
+          },
+        },
+      ],
+    });
+    return res.json({
+      
+      count:employees.length,
+      employees});
+  } catch (error) {
+    res.json(error);
   }
 };

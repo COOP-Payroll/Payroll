@@ -1,6 +1,8 @@
 const ApprovalMethod = require("../models/approvalMethod");
 const Company = require("../models/company");
-const { getCompanyById } = require("./companyController");
+const Approver = require("../models/approver");
+
+
 // Define controller methods for handling User requests for deduction definition
 exports.getAllApprovalMethod = async (req, res) => {
   const CompanyId = req.user.id;
@@ -10,6 +12,23 @@ exports.getAllApprovalMethod = async (req, res) => {
       where: { companyId: req.user.id },
     };
     const approvalMethod = await ApprovalMethod.findAll({ criteria });
+    console.log(CompanyId);
+    res.status(200).json({
+      count: approvalMethod.length,
+      approvalMethod,
+    });
+  } catch (err) {
+    res.status(500).json("Something gonna wrong");
+  }
+};
+exports.getAllActiveApprovalMethod = async (req, res) => {
+  const CompanyId = req.user.id;
+  console.log(CompanyId);
+  try {
+    const criteria = {
+      where: { companyId: req.user.id, isActive: true },
+    };
+    const approvalMethod = await ApprovalMethod.findAll(criteria );
     console.log(CompanyId);
     res.status(200).json({
       count: approvalMethod.length,
@@ -155,6 +174,9 @@ async function reSaveApprovalMethod(
     console.log("no such company");
     return "no such company";
   }
+  const approver = await Approver.update({isActive:false},{
+    where: {ApprovalMethodId:oldId}
+  });
   const result = await ApprovalMethod.update({isActive:false}, {
     where: { id: oldId },
   });
@@ -225,6 +247,7 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                 isActive,
                 oldId
               );
+              console.log(response);
               return res.json(response);
             }else if(oldApprovalMethod==='hierarchy' && approvalMethod==='hierarchy'){
               minimumApprover = approvalLevel;
@@ -239,6 +262,7 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                 isActive,
                 oldId
               );
+              console.log(response);
               return res.json(response);
 
             }else if((oldApprovalMethod==='horizontal' && approvalMethod==='hierarchy')||(oldApprovalMethod==='hierarchy' && approvalMethod==='horizontal')){
@@ -256,6 +280,7 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                 isActive,
                 oldId
               );
+              console.log(response);
               return res.json(response);
 
               }else if(oldApprovalMethod==='hierarchy' && approvalMethod==='horizontal'){
@@ -299,6 +324,7 @@ exports.updateApprovalMethod = async (req, res, next) => {
     const isCompleted = req.body.isCompleted;
     const isThereMasterApprover = req.body.isThereMasterApprover;
     const approvalMethod = req.body.approvalMethod;
+    const isActive = req.body.isActive;
 
     if (minimumApprover) {
       updates.minimumApprover = minimumApprover;
@@ -315,9 +341,12 @@ exports.updateApprovalMethod = async (req, res, next) => {
     if (approvalMethod) {
       updates.approvalMethod = approvalMethod;
     }
-
+    if(approvalMethod){
+      updates.isActive=isActive;
+    }
+    
     if (appMethod) {
-      const result = await ApprovalMethod.update(updates, {
+      const result = await ApprovalMethod.update({minimumApprover:minimumApprover,approvalLevel:approvalLevel,isCompleted:isCompleted,isThereMasterApprover:isThereMasterApprover,isActive:isActive}, {
         where: { id: id },
       });
       res.json({
