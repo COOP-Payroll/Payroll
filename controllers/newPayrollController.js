@@ -1,6 +1,11 @@
 const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
+const Grade = require("../models/grade.js");
+const Allowance = require("../models/allowance.js");
+const AllowanceDefinition = require("../models/allowanceDefinition.js");
+const Deduction = require("../models/deduction.js");
+const DeductionDefinition = require("../models/deductionDefinition.js");
 
 exports.createPayroll = async (req, res) => {
   try {
@@ -48,7 +53,7 @@ exports.createPayroll = async (req, res) => {
           EmployeeId: employeeId,
         };
 
-     await Payroll.create(payrollData);
+        await Payroll.create(payrollData);
       } catch (error) {
         errors.push(error);
       }
@@ -60,9 +65,7 @@ exports.createPayroll = async (req, res) => {
         .json({ msg: "There is a problem creating payroll", errors });
     }
 
-    return res
-      .status(201)
-      .json({ msg: "Payroll created successfully!" });
+    return res.status(201).json({ msg: "Payroll created successfully!" });
   } catch (error) {
     return res
       .status(500)
@@ -93,13 +96,26 @@ exports.getNonPayrollEmployee = async (req, res) => {
     if (!payrollDef)
       return res.status(404).json({ error: "payroll not found" });
     const employees = await Employee.findAll({
+      where: {
+        PayrollDefinitionId: id, // Filter for payroll records of the specific month
+      },
       include: [
         {
           model: Payroll,
           required: false,
-          where: {
-            PayrollDefinitionId: id, // Filter for payroll records of the specific month
-          },
+        },
+        {
+          model: Grade,
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+          ],
         },
       ],
       where: {
@@ -109,5 +125,41 @@ exports.getNonPayrollEmployee = async (req, res) => {
     return res.status(200).json(employees);
   } catch (error) {
     res.json(error);
+  }
+};
+//update payroll data
+
+exports.updatePayrollData = async (req, res, next) => {
+  try {
+    const payrollId = req.params.payrollId;
+    const employeeData = req.body;
+    const payroll = await Payroll.findByPk(Number(payrollId));
+    if (!payroll) {
+      return res.status(404).json({ error: "payroll does not exist" });
+    } else {
+      await payroll.update(employeeData);
+
+      // Return the updated company object
+      return res.json(payroll);
+    }
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };

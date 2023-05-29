@@ -23,6 +23,13 @@ router.get(
   payroll.getNonPayrollEmployee
 );
 
+router.put(
+  "/update/:payrollId",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  payroll.updatePayrollData
+);
+
 // router.get(
 //   "/",
 //   middleware.protectAll,
