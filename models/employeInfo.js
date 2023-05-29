@@ -25,6 +25,9 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     defaultValue: "permanent",
   },
 
+  //ADDITIONAL Payment
+
+ 
   //Grade ID
   //CUSTOM ROLE
   //DEPARTMENT ID
