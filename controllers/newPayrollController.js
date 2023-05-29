@@ -48,7 +48,7 @@ exports.createPayroll = async (req, res) => {
           EmployeeId: employeeId,
         };
 
-        await Payroll.create(payrollData);
+     await Payroll.create(payrollData);
       } catch (error) {
         errors.push(error);
       }
@@ -60,7 +60,9 @@ exports.createPayroll = async (req, res) => {
         .json({ msg: "There is a problem creating payroll", errors });
     }
 
-    return res.status(201).json({ msg: "Payroll created successfully!" });
+    return res
+      .status(201)
+      .json({ msg: "Payroll created successfully!" });
   } catch (error) {
     return res
       .status(500)

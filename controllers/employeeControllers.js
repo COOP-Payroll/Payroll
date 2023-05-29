@@ -34,6 +34,10 @@ exports.getAllEmployee = async (req, res) => {
           required: false,
         },
         {
+          model: CustomRole,        
+          required: false,
+        },
+        {
           model: Grade,
           include: [
             {
@@ -409,6 +413,7 @@ exports.findByDepartment = async (req, res, next) => {
 
 //Import from Excel
 const xlsx = require("xlsx");
+const Permission = require("../models/permission.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
