@@ -3,6 +3,7 @@ const Approver = require('../models/approver')
 const ApprovalMethod = require("../models/approvalMethod");
 const PayrollDefinition = require('../models/payrollDefinition');
 const Payroll = require("../models/Payroll");
+const e = require('express');
 
 //reusable function for payroll approvement
 async function handlePayrollApproval(payrollId, approverId, level, status,payrollStatus) {
@@ -17,13 +18,13 @@ async function handlePayrollApproval(payrollId, approverId, level, status,payrol
       if (!payroll) {
         throw new Error("Payroll not defined");
       }
-      PayrollDefinition.status = payrollStatus;
-      await PayrollDefinition.save();
+      payroll.status = payrollStatus;
+      await payroll.save();
       //await approve1.save();
       await approve1.setPayrollDefinition(PayrollDefinitionId);
       await approve1.setApprover(ApproverId);
       console.log("approved sucessfully", approve1);
-      return {
+      return  {
         message:"successfully approved",
         change:approve1,
         ApprovedPayrollId:payroll,
@@ -42,35 +43,44 @@ async function handleHorizontalApprove(payrollId, approverId,minimumApprover,app
     const approvedBy = await PayrollApprovement.count({
       where: { PayrollDefinitionId: payrollId },
     });
+    console.log("approved by",approvedBy )
     const leftApprover = minimumApprover - approvedBy;
+    console.log("left approver",leftApprover)
 
     if (minimumApprover > approvedBy) {
       const isLastApprover = leftApprover - 1;
-
+      console.log("isLastApprover",isLastApprover )
       if (isLastApprover === 0) {
-        const payroll = await PayrollDefinition.findByPk(payrollId);
+        const payroll = await PayrollDefinition.count({where:{id:payrollId}});
         if (!payroll) {
           return { message: "Payroll not found" }
+        }else{
+          //approve for last 
+          console.log("approve now  to last approver")
+          const status= "approved";
+          const level=0;
+          const payrollStatus='approved'
+          console.log("this is last approver")
+          
+          const criteria = { where:{PayrollDefinitionId: payrollId, status:'processed'} };
+          console.log(criteria)
+          const newData = { status: 'approved' };
+          
+          const employeePayroll = await Payroll.update(newData,criteria);
+          console.log("employeePayroll approved", employeePayroll)
+          const result = await handlePayrollApproval(payrollId, approverId, level, status,payrollStatus)
+          //console.log(result)
+          
         }
-            //approve for last 
-            console.log("approve now  to last approver")
-            const status= "approved";
-            const level=0;
-            const payrollStatus='approved'
-            console.log("sent to last approver")
-            const criteria = { PayrollDefinitionId: payrollId, status:'processed' };
-            const newData = { status: 'approved' };
-            const employeePayroll = await Payroll.update(criteria,newData);
-            console("employeePayroll approved", employeePayroll)
-            const result = await handlePayrollApproval(payrollId, approverId, level, status,payrollStatus)
-            console.log(result)
+            
       } else {
-        const payroll = await PayrollApprovement.findByPk(payrollId);
+        console.log("not last")
+        const payroll = await PayrollDefinition.findByPk(payrollId);
+        console.log(payroll, "to handle hrw")
         if (!payroll) {
           return {message: "Payroll not found"} 
-        }
-
-        //approve for other 
+        }else{
+          //approve for other 
         console.log("approve now  to last approver")
         const status= "approved";
         const level=0;
@@ -78,6 +88,8 @@ async function handleHorizontalApprove(payrollId, approverId,minimumApprover,app
         console.log("sent to last approver")
         const result = await handlePayrollApproval(payrollId, approverId, level, status,payrollStatus)
         console.log(result)
+        }
+        
       }
     } else {
       return "it is already approved";
@@ -196,14 +208,15 @@ async function handleHierarchicalApprove(payrollId, approverId,companyApprovalLe
 const createPayrollApprovement = async (req, res) => {
         const payrollId = req.body.payrollId;
         const approverId = req.body.approverId;
-
+          console.log(req.body.payrollId,req.body.approverId)
     try {
         //grap required information 1 approval method of company  2 appreover info 3 payroll information
-        const payroll = await PayrollDefinition.findOne({
+        const payrollDefinition = await PayrollDefinition.findOne({
             where: { id: payrollId },
         });
-        const CompanyIdPayroll = PayrollDefinition.CompanyId; 
-        const payrollStatus    = PayrollDefinition.status;
+
+        const CompanyIdPayroll = payrollDefinition.CompanyId; 
+        const payrollStatus    = payrollDefinition.status;
 
         console.log(CompanyIdPayroll,payrollStatus,"payroll")
         //approval method 
@@ -221,7 +234,7 @@ const createPayrollApprovement = async (req, res) => {
             where: { id: approverId },
         });
         
-        const approverLevel = approver?.level;
+        const approverLevel = approver.level;
         const approverRole   = approver.role;
         const isApproverActive = approver.isActive;
         const isApproverMaster  = approver.isMaster;
@@ -363,6 +376,25 @@ const updatePayrollApprovement = async (req, res) => {
   }
 };
 
+const rejectPayrollApprovement = async (req, res) => {
+  console.log("update id PayrollApprovement")
+//reject for all if laast approver or master approver ject the payrol;
+const  PayrollDefinitionId = req.body.payrollDefinitionId;
+
+try {
+  const payrollApprovement = await PayrollApprovement.findOne({where: {PayrollDefinitionId: PayrollDefinitionId}});
+  if (payrollApprovement) {
+    await payrollApprovement.update({status: 'rejected'});
+    res.json(payrollApprovement);
+  } else {
+    res.status(404).json({ error: 'this payroll not found not found' });
+  }
+} catch (error) {
+  console.error('Error rejeting payrollApprovement:', error);
+  res.status(500).json({ error: 'Internal server error' });
+}
+};
+
 // Delete a specific payrollApprovement by ID
 const deletePayrollApprovement = async (req, res) => {
     console.log("delete id PayrollApprovement")
@@ -387,4 +419,5 @@ module.exports = {
   getPayrollApprovementById,
   updatePayrollApprovement,
   deletePayrollApprovement,
+  rejectPayrollApprovement
 };

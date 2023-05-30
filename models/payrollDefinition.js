@@ -19,7 +19,7 @@ const PayrollDefinition = sequelize.define("PayrollDefinition", {
   },
   status: {
     type: DataTypes.STRING,
-    enum: ["created", "ordered", "pending", "approved", "active", "paid"],
+    enum: ["created", "ordered", "pending", "approved", "active", "paid","rejected"],
     default: "created",
   },
   isRollBacked: {

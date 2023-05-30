@@ -109,7 +109,11 @@ exports.createApprover = async (req, res) => {
     const approvalMethod = await ApprovalMethod.findOne({
       where: { CompanyId: req.user.id, isActive: true},
     });
-
+    if(approvalMethod===null){
+      console.log("company has no active approval method ")
+      return res.json("company has no active approval method ")
+    } else{
+      
     //set each value of approval method to variable
     console.log(req.user.id)
     const companyId    = approvalMethod.CompanyId;
@@ -520,6 +524,7 @@ exports.createApprover = async (req, res) => {
         }
       }
     }
+  }
   } catch (error) {
     console.error("Error creating Approver:", error);
     res.status(500).json({ error: "Failed to create Approver" });

@@ -11,10 +11,12 @@ const Grade = sequelize.define("Grade", {
 
   minSalary: {
     type: DataTypes.FLOAT,
+    allowNull: false,
   },
 
   maxSalary: {
     type: DataTypes.FLOAT,
+    allowNull: false,
   },
 });
 
