@@ -89,18 +89,23 @@ const Employee = sequelize.define("Employee", {
 
   arrears: {
     type: DataTypes.NUMBER,
+    defaultValue: 0,
   },
   dayDeductions: {
     type: DataTypes.NUMBER,
+    defaultValue: 0,
   },
   dayDeductions: {
     type: DataTypes.NUMBER,
+    defaultValue: 0,
   },
   lateSittingOverTime: {
     type: DataTypes.NUMBER,
+    defaultValue: 0,
   },
   acting: {
     type: DataTypes.NUMBER,
+    defaultValue: 0,
   },
   // passwordChangedAt: Date,
   // passwordResetToken: String,

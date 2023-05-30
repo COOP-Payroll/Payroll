@@ -17,4 +17,12 @@ router.post("/par",
 // );
 router.get("/nonPayrollEmployee/:id", payroll.getNonPayrollEmployee);
 router.get("/allEmployeePayroll/:id", payroll.getAllEmployeePayroll);
+router.get(
+  "/payslip/:id",
+  middleware.protectAll,
+  middleware.restrictTo("employee"),
+  payroll.employeePaySlip
+);
+
+
 module.exports = router;
