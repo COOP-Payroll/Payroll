@@ -219,7 +219,7 @@ exports.createEmployee = async (req, res, next) => {
       ...basicInfo,
       password,
       employee_id_number: employeeId,
-      companyId: Number(req.user.id),
+      CompanyId: Number(req.user.id),
       DepartmentId: Number(basicInfo.DepartmentId),
       GradeId: Number(basicInfo.GradeId),
       AddressId: Number(address1.id),
