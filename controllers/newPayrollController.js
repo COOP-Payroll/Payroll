@@ -122,7 +122,9 @@ exports.getNonPayrollEmployee = async (req, res) => {
         "$Payroll.id$": null, // Filter for records where the payroll ID is null
       },
     });
-    return res.status(200).json(employees);
+    return res.status(200).json({
+      count:employees.length,      
+      employees});
   } catch (error) {
     res.json(error);
   }
