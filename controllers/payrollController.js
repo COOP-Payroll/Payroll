@@ -230,7 +230,7 @@ exports.employeePaySlip=async(req,res,next)=>{
   //  include: [Employee, PayrollDefinition],
  });
  if(payrolls.length ===0){
- return res.status(404).json("there is no payroll ")
+ return res.status(404).json("there is no payroll for the employee ");
  }
  else{
     // const payslip= await Payroll.
