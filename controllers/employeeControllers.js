@@ -753,7 +753,7 @@ exports.login = async (req, res, next) => {
       where: { email: email },
       include: { model: Company, where: { companyCode: companyCode } },
     });
-
+    console.log("user", user);
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
@@ -761,12 +761,25 @@ exports.login = async (req, res, next) => {
       // console.log("first",res)
       return createSendToken(user, 200, res);
     }
-  } catch (err) {
-    console.log("first", err);
-    res.status(404).json({
-      status: "error occour",
-      message: err,
-    });
+  } catch (error) {
+    console.log("Error",error)
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 exports.addAddionalPay = async (req, res, next) => {
