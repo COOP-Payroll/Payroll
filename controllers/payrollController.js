@@ -3,7 +3,12 @@ const PayrollDefinition = require("../models/payrollDefinition");
 const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
 const WebSocket = require("ws");
-
+const moment = require("moment");
+const Grade=require("../models/grade.js")
+const Allowance=require("../models/allowance.js");
+const AllowanceDefinition=require("../models/allowanceDefinition")
+const Deduction=require("../models/deduction");
+const DeductionDefinition=require("../models/deductionDefinition.js")
 let totalWorkers = 0;
 let completedWorkers = 0;
 let clients = [];
@@ -136,12 +141,27 @@ exports.getNonPayrollEmployee = async (req, res) => {
             PayrollDefinitionId: id, // Filter for payroll records of the specific month
           },
         },
+        {
+          model: Grade,
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+          ],
+        },
       ],
       where: {
         "$Payroll.id$": null, // Filter for records where the payroll ID is null
       },
     });
-    return res.status(200).json(employees);
+    return res.status(200).json(
+      {count:employees.length,
+      employees});
   } catch (error) {
     res.json(error);
   }
@@ -194,8 +214,7 @@ exports.getAllEmployeePayroll = async (req, res) => {
         },
       ],
     });
-    return res.json({
-      
+    return res.json({      
       count:employees.length,
       employees});
   } catch (error) {
@@ -213,7 +232,7 @@ exports.employeePaySlip=async(req,res,next)=>{
     // const payslip= await Payroll.
     res.status(200).json({
       ...payrolls,
-      date: payrolls[0].createdAt,
+      createdDate:  moment(payrolls[0].createdAt).format('YYYY-MM-DD'),
     });
   } catch (error) {
     

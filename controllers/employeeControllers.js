@@ -710,32 +710,58 @@ const signToken = (id, role) => {
   }
 };
 
-const createSendToken = (user, statusCode, res) => {
-  console.log("user id", user.id);
-  const token = signToken(user.id, user.role);
-  console.log("first");
+// const createSendToken = (user, statusCode, res) => {
+//   console.log("user id", user.id);
+//   const token = signToken(user.id, user.role);
+//   console.log("first");
 
-  // const patientID = patient._id;
-  const cookieOptions = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-    ),
+//   // const patientID = patient._id;
+//   const cookieOptions = {
+//     expires: new Date(
+//       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+//     ),
 
-    secure: process.env.NODE_ENV === "production" ? true : false,
-    httpOnly: true,
-  };
+//     secure: process.env.NODE_ENV === "production" ? true : false,
+//     httpOnly: true,
+//   };
 
-  //remove password from the output
-  user.password = undefined;
-  res.cookie("jwt", token, cookieOptions);
-  res.status(statusCode).json({
-    message: "successful",
-    token,
+//   //remove password from the output
+//   user.password = undefined;
+//   res.cookie("jwt", token, cookieOptions);
+//   res.status(statusCode).json({
+//     message: "successful",
+//     token,
 
-    data: {
-      user,
-    },
-  });
+//     data: {
+//       user,
+//     },
+//   });
+// };
+
+
+
+const createSendToken = async (user, statusCode, res) => {
+  try {
+    const token = signToken(user.id, user.role);
+    const cookieOptions = {
+      expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
+
+      secure: "production" ? true : false,
+      httpOnly: true,
+    };
+    user.password = undefined;
+    res.cookie("jwt", token, cookieOptions);
+    res.status(statusCode).json({
+      message: "successful",
+      token,
+
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    return res.json(error);
+  }
 };
 ///super admin login
 exports.login = async (req, res, next) => {
@@ -779,7 +805,8 @@ exports.login = async (req, res, next) => {
       return res.status(400).json(errors);
     } else {
       return res.status(500).json({ error: "Internal server error" ,
-          error});
+          user:user
+        });
     }
   }
 };
