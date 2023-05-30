@@ -229,11 +229,16 @@ exports.employeePaySlip=async(req,res,next)=>{
    where: { EmployeeId: id },
   //  include: [Employee, PayrollDefinition],
  });
+ if(payrolls.length ===0){
+ return res.status(404).json("there is no payroll ")
+ }
+ else{
     // const payslip= await Payroll.
     res.status(200).json({
-      ...payrolls,
+      count:payrolls.length,
+      payrolls,
       createdDate:  moment(payrolls[0].createdAt).format('YYYY-MM-DD'),
-    });
+    });}
   } catch (error) {
     
   }
