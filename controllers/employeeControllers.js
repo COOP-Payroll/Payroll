@@ -365,7 +365,7 @@ exports.findByDepartment = async (req, res, next) => {
     const departmentId = req.params.departmentId;
     console.log("departmentId", departmentId);
     if (departmentId != 0) {
-      const department = await Employee.findAll({
+      const Employees = await Employee.findAll({
         where: { companyId: req.user.id, DepartmentId: departmentId },
         include: {
           model: Grade,
@@ -383,8 +383,8 @@ exports.findByDepartment = async (req, res, next) => {
       });
 
       res.status(200).json({
-        count: department.length,
-        department,
+        count: Employees.length,
+        Employees,
       });
     } else if (departmentId == 0) {
       const Employees = await Employee.findAll({
