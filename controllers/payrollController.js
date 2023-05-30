@@ -202,3 +202,20 @@ exports.getAllEmployeePayroll = async (req, res) => {
     res.json(error);
   }
 };
+
+exports.employeePaySlip=async(req,res,next)=>{
+  try {
+    const id=req.params.id;
+ const payrolls = await Payroll.findAll({
+   where: { EmployeeId: id },
+  //  include: [Employee, PayrollDefinition],
+ });
+    // const payslip= await Payroll.
+    res.status(200).json({
+      ...payrolls,
+      date: payrolls[0].createdAt,
+    });
+  } catch (error) {
+    
+  }
+}

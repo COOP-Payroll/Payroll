@@ -100,8 +100,8 @@ exports.getAllEmployee = async (req, res) => {
 exports.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
-    const Employee = await Employee.findByPk(id);
-    res.json({ Employee });
+    const employee = await Employee.findByPk(id);
+    res.json({ employee });
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -779,7 +779,7 @@ exports.addAddionalPay = async (req, res, next) => {
 
     //  console.log("first", employee);
     if (employee) {
-    // /  const result = await employee.update({acting:100},);
+  const result = await employee.update({acting:100});
 
       res.status(200).json({
         message: "updated successfully",
