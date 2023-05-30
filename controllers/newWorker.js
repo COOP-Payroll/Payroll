@@ -6,8 +6,12 @@ const Loan = require("../models/loan");
 const Allowance = require("../models/allowance");
 const Deduction = require("../models/deduction");
 const AllowanceDefinition = require("../models/allowanceDefinition");
+const AdditionalAllowances = require("../models/additionalAllowance");
 const Payroll = require("../models/Payroll");
 const EmployeeInfo = require("../models/employeInfo");
+const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition");
+const AdditionalDeduction = require("../models/additionalDeduction");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
 
 const newWorker = async () => {
   try {
@@ -48,6 +52,16 @@ const newWorker = async () => {
       where: { CompanyId: user, GradeId: employee.GradeId },
     });
 
+    const additionalAllowances = await AdditionalAllowances.findAll({
+      where: { CompanyId: user, EmployeeId: employee.id },
+      include: [AdditionalAllowanceDefinition],
+    });
+
+    const additionalDeduction = await AdditionalDeduction.findAll({
+      where: { CompanyId: user, EmployeeId: employee.id },
+      include: [AdditionalDeductionDefinition],
+    });
+
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -79,9 +93,40 @@ const newWorker = async () => {
         totalTaxable += Number(allowance.amount);
       }
     });
+
+    // Calculate total additional allowances
+    if (additionalAllowances.length > 0) {
+      additionalAllowances.forEach((allowance) => {
+        totalAllowance += Number(allowance.amount);
+
+        if (allowance.AllowanceDefinition.isExempted) {
+          totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
+
+          if (
+            Number(allowance.amount) >
+            Number(allowance.AllowanceDefinition.startingAmount)
+          ) {
+            totalTaxable +=
+              Number(allowance.amount) -
+              Number(allowance.AllowanceDefinition.exemptedAmount);
+          } else {
+            totalTaxable += Number(allowance.amount);
+          }
+        } else {
+          totalTaxable += Number(allowance.amount);
+        }
+      });
+    }
+
     deductions.forEach((deduction) => {
       totalDeduction += Number(deduction.amount);
     });
+
+    if (additionalDeduction.length > 0) {
+      additionalDeduction.forEach((deduction) => {
+        totalDeduction += Number(deduction.amount);
+      });
+    }
 
     totalTaxable += Number(employee.EmployeeInfo.basicSalary);
 

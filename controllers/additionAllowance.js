@@ -120,7 +120,7 @@ exports.createAllowance = async (req, res, next) => {
       res.status(200).json({
         message: "Successfully Registered",
         allowance,
-        additionalAllowanceDefinition1,
+        // additionalAllowanceDefinition1,
       });
     }
   } catch (error) {

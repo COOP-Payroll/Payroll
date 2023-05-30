@@ -95,10 +95,10 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.NUMBER,
     defaultValue: 0,
   },
-  dayDeductions: {
-    type: DataTypes.NUMBER,
-    defaultValue: 0,
-  },
+  // dayDeductions: {
+  //   type: DataTypes.NUMBER,
+  //   defaultValue: 0,
+  // },
   lateSittingOverTime: {
     type: DataTypes.NUMBER,
     defaultValue: 0,
