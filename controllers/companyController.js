@@ -277,3 +277,141 @@ exports.deleteCompany = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
+
+exports.getAllActiveCompany = async (req, res, next) => {
+  try {
+
+    const activeCompany = await Company.findAll({ where:{status:"active"}});
+    res.status(200).json({
+      count: activeCompany.length,
+      activeCompany,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      // console.log("first", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+//ALL PENDING COMPANY
+exports.getAllPendingCompany = async (req, res, next) => {
+  try {
+    const pendingCompany = await Company.findAll({
+      where: { status: "pending" },
+    });
+
+    res.status(200).json({
+      count: pendingCompany.length,
+      pendingCompany,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      // console.log("first", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+
+
+//ALL PENDING COMPANY
+exports.getAllBlockedCompany = async (req, res, next) => {
+  try {
+    const blockedCompany = await Company.findAll({
+      where: { status: "blocked" },
+    });
+
+    res.status(200).json({
+      count: blockedCompany.length,
+      blockedCompany,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      // console.log("first", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+
+//ALL PENDING COMPANY
+exports.getAllDeniedCompany = async (req, res, next) => {
+  try {
+    const deniedCompany = await Company.findAll({
+      where: { status: "denied" },
+    });
+
+    res.status(200).json({
+      count: deniedCompany.length,
+      deniedCompany,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      // console.log("first", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
