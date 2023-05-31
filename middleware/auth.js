@@ -31,13 +31,15 @@ exports.protectAll = async (req, res, next) => {
 
     if (decoded.role === "superAdmin") {
       currentUser = await User.findByPk(Number(decoded.id));
-    } else if(decoded.role === 'companyAdmin') {
+    } else if (decoded.role === "companyAdmin") {
       currentUser = await Company.findByPk(Number(decoded.id));
-    }else if(decoded.role === 'employee'){
-        currentUser = await Employee.findByPk(Number(decoded.id));
+    } else if (decoded.role === "employee") {
+      currentUser = await Employee.findByPk(Number(decoded.id));
+    } else if (decoded.role === "approver") {
+      currentUser = await Employee.findByPk(Number(decoded.id));
     }
 
-    // console.log(JSON.stringify(currentUser), null, 4);
+    console.log(JSON.stringify(currentUser), null, 4);
     if (!currentUser ) {
       return res
         .status(401)
@@ -99,6 +101,7 @@ exports.restrictToAdmin = (role) => {
 //Restricted to
 exports.restrictToAll = (...roles) => {
   return (req, res, next) => {
+    console.log("roles",roles)
 
     if (!roles.includes(req.user?.role)) {
       return res.status(403).json({

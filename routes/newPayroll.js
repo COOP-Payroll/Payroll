@@ -6,27 +6,27 @@ const router = express.Router();
 router.get(
   "/:id",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictToAll("companyAdmin","approver"),
   payroll.getPayrollByPayrollDefId
 );
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictToAll("companyAdmin", "approver"),
   payroll.createPayroll
 );
 
 router.get(
   "/getAllEmployee/:id",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictToAll("companyAdmin", "approver"),
   payroll.getNonPayrollEmployee
 );
 
 router.put(
   "/update/:payrollId",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictToAll("companyAdmin", "approver"),
   payroll.updatePayrollData
 );
 
