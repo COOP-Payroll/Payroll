@@ -25,7 +25,7 @@ exports.protectAll = async (req, res, next) => {
     }
     //verification token
     const decoded = await promisify(jwt.verify)(token, "secret");
-    // console.log(decoded.id);
+
     //check if user still exists
     let currentUser;
 
@@ -39,7 +39,7 @@ exports.protectAll = async (req, res, next) => {
       currentUser = await Employee.findByPk(Number(decoded.id));
     }
 
-    console.log(JSON.stringify(currentUser), null, 4);
+    // console.log(JSON.stringify(currentUser), null, 4);
     if (!currentUser ) {
       return res
         .status(401)
@@ -54,10 +54,10 @@ exports.protectAll = async (req, res, next) => {
     //grant access to protected route
     else{
     req.user = currentUser;
-    //console.log(currentUser);
+ 
     next();}
   } catch (err) {
-    // console.log("first", err);
+
     return res.status(404).json({
       status: "Error occured",
       message: err,
@@ -67,7 +67,7 @@ exports.protectAll = async (req, res, next) => {
 
 //Restricted to
 exports.restrictTo = (role) => {
-  return async (req, res, next) => {
+ return async (req, res, next) => {
     if (req.user.role === role) {
       next();
       // } else {
@@ -101,7 +101,7 @@ exports.restrictToAdmin = (role) => {
 //Restricted to
 exports.restrictToAll = (...roles) => {
   return (req, res, next) => {
-    console.log("roles",roles)
+   
 
     if (!roles.includes(req.user?.role)) {
       return res.status(403).json({
@@ -115,9 +115,9 @@ exports.restrictToAll = (...roles) => {
 
 exports.restrictALL = ({moduleName,permissionType}) => {
   return async (req, res, next) => {  
-    console.log("user",req.user.role)
+ 
     if (req.user.role === "companyAdmin" || req.user.role === "superAdmin") {
-      console.log("here");
+     
       next();
     } else 
     {
@@ -135,14 +135,14 @@ exports.restrictALL = ({moduleName,permissionType}) => {
        if (!employee) {
          return res.status(404).json({ message: "Employee not found." });
        }
-       console.log("module name and permission", moduleName,permissionType)
+
     const hasPermission =
       employee.CustomRole &&
       employee.CustomRole.Permissions.some(
         (permission) =>
           permission.module === moduleName && permission[permissionType] === true
       );
-console.log("one", hasPermission);
+
     //return res.json({ hasPermission });
 
       
