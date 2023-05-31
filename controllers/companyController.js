@@ -1,3 +1,5 @@
+const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 const Company = require("../models/company.js");
 const CompanyAccountInfo = require("../models/companyAccountInfo.js");
 const Department = require("../models/department.js");
@@ -9,96 +11,16 @@ const User = require("../models/user.js");
 const { calculateNextPayment } = require("../utils/helper.js");
 const moment = require("moment");
 
-// create Company
-// exports.createCompany = async (req, res) => {
-//   const data = Object.keys(req.body)
-//     .filter((key) => key !== "duration" && key !== "packageId")
-//     .reduce((acc, key) => {
-//       acc[key] = req.body[key];
-//       return acc;
-//     }, {});
-
-//   const packageId = Number(req.body.packageId);
-//   const duration = Number(req.body.duration);
-//   try {
-//     const company = await Company.create(data);
-
-//     const package = await Package.findByPk(Number(packageId));
-//     if (!package) {
-//       return res.status(404).json({ error: "package does not exist!" });
-//     } else {
-//       const currentDate = moment();
-//       const subscription = await Subscription.create({ duration });
-//       await subscription.setPackage(packageId);
-//       await subscription.setCompany(company.id);
-//       const nextPaymentDate = await calculateNextPayment({
-//         chargeType: package.packageName,
-//         duration,
-//         normalDate: Date.now(),
-//       });
-//       const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
-//       await subscription.update({ nextPaymentDate, leftPaymentDate });
-//       const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
-//       const taxslabs = await Taxslab.findAll({
-//         where: { userId: Number(superAdmin.id), isActive: true },
-//       });
-//       const pensions = await Pension.findAll({
-//         where: { userId: Number(superAdmin.id), isActive: true },
-//       });
-
-//       const tax = await Promise.all(
-//         taxslabs.map((taxslab) => {
-//           Taxslab.create({
-//             from_Salary: Number(taxslab.from_Salary),
-//             to_Salary: Number(taxslab.to_Salary),
-//             income_tax_payable: Number(taxslab.income_tax_payable),
-//             deductible_Fee: Number(taxslab.deductible_Fee),
-//             CompanyId: Number(company.id),
-//             UserId: null,
-//           });
-//         })
-//       );
-
-//       await Promise.all(
-//         pensions.map((pension) => {
-//           Pension.create({
-//             employerContribution: Number(pension.employerContribution),
-//             employeeContribution: Number(pension.employeeContribution),
-//             CompanyId: Number(company.id),
-//             UserId: null,
-//           });
-//         })
-//       );
-
-//       return res.status(201).json(subscription);
-//     }
-//   } catch (error) {
-//     let errors = {};
-//     if (error.name === "SequelizeValidationError") {
-//       error.errors.forEach((err) => {
-//         errors[err.path] = [`${err.path} is required`];
-//       });
-//       return res.status(400).json(errors);
-//     } else if (error.name === "SequelizeUniqueConstraintError") {
-//       error?.errors?.forEach((err) => {
-//         errors[err.path] = [err.message];
-//       });
-//       return res.status(400).json(errors);
-//     } else {
-//       return res.status(500).json(error);
-//     }
-//   }
-// };
-
-// get AllCompany
-
+//CREATE Company
 exports.createCompany = async (req, res) => {
   try {
+
+
     const { packageId, duration, accountNumber, isVerified, ...companyData } =
       req.body;
 
+    const { file } = req;
 
-      console.log("first", accountNumber);
     const getCompany = await Company.findOne({
       where: { email: companyData.email },
     });
@@ -121,12 +43,23 @@ exports.createCompany = async (req, res) => {
       return res.status(404).json({ error: "Package does not exist!" });
     }
 
-    const company = await Company.create(companyData);
+    // Access the uploaded image file
+
+    let company;
+
+    if (file) {
+      const { path } = file;
+      company = await Company.create({ ...companyData, companyLogo: path });
+    } else {
+      company = await Company.create({ ...companyData });
+    }
     const companyAccountInfo = await CompanyAccountInfo.create({
       accountNumber,
       isVerified,
       CompanyId: company.id,
     });
+
+
 
     const currentDate = moment();
     const subscription = await Subscription.create({ duration });
@@ -142,16 +75,19 @@ exports.createCompany = async (req, res) => {
     await subscription.update({ nextPaymentDate, leftPaymentDate });
 
     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
-    // console.log("superAdmin", superAdmin);
-    const [taxslabs, pensions] = await Promise.all([
+
+    const [
+      taxslabs,
+      pensions,
+      additionalAllowanceDefinition,
+      additionalDeductionDefinition,
+    ] = await Promise.all([
       Taxslab.findAll({ where: { userId: superAdmin.id, isActive: true } }),
       Pension.findAll({ where: { userId: superAdmin.id, isActive: true } }),
+      AdditionalAllowanceDefinition.findAll({ where: { CompanyId: null } }),
+      AdditionalDeductionDefinition.findAll({ where: { CompanyId: null } }),
     ]);
-
-    // console.log("first", taxslabs);
-    // console.log("taxslabs", taxslabs[0].from_Salary);
-
-    // const tax = await Promise.all(
+    console.log("first", additionalAllowanceDefinition)
     const taxes = await Promise.all(
       taxslabs.map((taxslab) =>
         Taxslab.create({
@@ -176,11 +112,36 @@ exports.createCompany = async (req, res) => {
       )
     );
 
+
+        const additionalAllowance = await Promise.all(
+          additionalAllowanceDefinition.map((allowance) =>
+            AdditionalAllowanceDefinition.create({
+              name: allowance.name,
+              isTaxable: allowance.isTaxable,
+              isExempted:allowance.isExempted,
+              exemptedAmount:allowance.exemptedAmount,
+              startingAmount:allowance.startingAmount,
+              CompanyId: company.id,
+            })
+          )
+        );
+
+        const additionalDeduction = await Promise.all(
+          additionalDeductionDefinition.map((allowance) =>
+            AdditionalDeductionDefinition.create({
+              name: allowance.name,  
+              CompanyId: company.id,
+            })
+          )
+        );
+
     return res.status(201).json({
       message: "Created successfully",
       taxes,
       pensiones,
       companyAccountInfo,
+      additionalDeduction,
+      additionalAllowance
     });
   } catch (error) {
     if (
@@ -204,8 +165,30 @@ exports.getAllCompany = async (req, res) => {
     attributes: { exclude: ["password"] },
     include: [Subscription, Taxslab, Department],
   });
-  return res.json(companys);
+
+  // const baseUrl = "https://localhost:6000/";
+  const baseUrl = "https://payroll-production.up.railway.app/";
+  const companies = companys.map((company) => {
+    if (company.companyLogo) {
+      const imageUrl = `${baseUrl}${company.companyLogo.replace(/\\/g, "/")}`;
+      company.companyLogo = imageUrl;
+    }
+    return company;
+  });
+  console.log("company", companies);
+  return res.json({
+    count:companies.length,
+    
+    companies});
 };
+
+// exports.getAllCompany = async (req, res) => {
+//   const companys = await Company.findAll({
+//     attributes: { exclude: ["password"] },
+//     include: [Subscription, Taxslab, Department],
+//   });
+//   return res.json(companys);
+// };
 
 // get only one company
 exports.getCompanyById = async (req, res) => {
@@ -226,6 +209,8 @@ exports.getCompanyById = async (req, res) => {
 };
 
 // update Company
+
+// update Company
 exports.updateCompany = async (req, res) => {
   const { id } = req.params;
   const body = req.body;
@@ -239,11 +224,22 @@ exports.updateCompany = async (req, res) => {
       if (body.password) {
         delete body.password;
       }
-
-      // Validate the updated data against the model
-      await company.validate();
- const updatedData=     await company.update(body);
-
+      
+      const { file } = req;
+      // Access the uploaded image file
+let updatedData;
+    
+   if(file){
+     const { path } = file;
+     // Validate the updated data against the model
+     await company.validate();
+      updatedData = await company.update({ ...body, companyLogo: path });
+   }else{
+     // Validate the updated data against the model
+     await company.validate();
+      updatedData = await company.update(body);
+   }
+     
       // Return the updated company object
       return res.json(updatedData);
     }
@@ -278,12 +274,11 @@ exports.deleteCompany = async (req, res) => {
   }
 };
 
-
-
 exports.getAllActiveCompany = async (req, res, next) => {
   try {
-
-    const activeCompany = await Company.findAll({ where:{status:"active"}});
+    const activeCompany = await Company.findAll({
+      where: { status: "active" },
+    });
     res.status(200).json({
       count: activeCompany.length,
       activeCompany,
@@ -345,8 +340,6 @@ exports.getAllPendingCompany = async (req, res, next) => {
   }
 };
 
-
-
 //ALL PENDING COMPANY
 exports.getAllBlockedCompany = async (req, res, next) => {
   try {
@@ -380,7 +373,6 @@ exports.getAllBlockedCompany = async (req, res, next) => {
     }
   }
 };
-
 
 //ALL PENDING COMPANY
 exports.getAllDeniedCompany = async (req, res, next) => {

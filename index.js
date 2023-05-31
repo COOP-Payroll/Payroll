@@ -117,7 +117,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-sequelize.sync({}).then(() => console.log("db is ready"));
+sequelize.sync({ }).then(() => console.log("db is ready"));
 
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
@@ -126,7 +126,6 @@ const runWorker = (employeeId, payrollDefinitionId, user) => {
 };
 
 const runComputation = async (payrolls) => {
-  
   payrolls.forEach((payroll) => {
     const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
     runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.id);
