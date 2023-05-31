@@ -24,6 +24,12 @@ router.get('/:id', approverController.getApproverById);
    approverController.createApprover
  );
 
+ router.post(
+  "/deActive",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  approverController.createApprover
+);
 // // PUT /approvers/:id - Update an existing Approver
  router.put('/:id', approverController.updateApprover);
 

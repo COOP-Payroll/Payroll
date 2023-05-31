@@ -6,7 +6,7 @@ exports.getAllPayroll = async (req, res, next) => {
     const CompanyId = req.user.id;
     //console.log(CompanyId)
     const criteria = {
-      CompanyId,
+     where: {CompanyId:CompanyId}
     };
     const payroll = await Payroll.findAll(criteria);
 

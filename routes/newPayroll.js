@@ -22,7 +22,7 @@ router.get(
   middleware.restrictToAll("companyAdmin", "approver"),
   payroll.getNonPayrollEmployee
 );
-
+//UPDATE 
 router.put(
   "/update/:payrollId",
   middleware.protectAll,

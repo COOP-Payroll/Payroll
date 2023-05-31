@@ -4,7 +4,7 @@ const Allowance=require("../models/allowance.js")
 const AllowanceDefinition=require("../models/allowanceDefinition.js")
 
 // Define controller methods for handling User requests
-
+//CREATE GRADE 
 exports.getAllGrade = async (req, res) => {
   const companyId = req.user.id;
   try {

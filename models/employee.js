@@ -144,7 +144,7 @@ Employee.beforeUpdate((employee, options) => {
 // Company.hasMany(Employee);
 // Employee.belongsTo(Company);
 Company.hasMany(Employee);
-Employee.belongsTo(Company);
+Employee.belongsTo(Company)
 
 EmployeeInfo.hasOne(Employee);
 Employee.belongsTo(EmployeeInfo);
