@@ -133,9 +133,58 @@ exports.createEmployee = async (req, res, next) => {
       accountInformation,
     } = req.body;
 
+
+     const { file } = req;
+ 
+
     let password = req.user.companyCode.substring(0, 4) + "0000";
     const conflicts = [];
     const createdAccountInfos = [];
+
+ const existingEmail = await Employee.findOne({
+   where: {
+     email: basicInfo.email,
+   },
+ });
+ 
+const accountData=[];
+
+ for(const ai of accountInformation){
+accountData.push(ai)
+ }
+
+
+ for (const account of accountData) {
+  
+   const existingAccount = await AccountInfo.findOne({
+     where: { accountNumber: account.accountNumber },
+   });
+   if (!existingAccount) {
+ 
+   }
+   else{
+      return res.status(400).json({
+        error: `Account number already exists: ${account.accountNumber}`,
+      });
+   }
+ }
+
+
+
+
+    // if (existingAccount) {
+    //   return res.status(409).json({ error: "Account Info already exists" });
+    // }
+
+ if (existingEmail) {
+   return res.status(409).json({ error: "Email already exists" });
+ }
+
+//  if (existingAccount) {
+//    return res.status(409).json({ error: "Account Number already exists" });
+//  }
+
+
 
     if (!basicInfo?.DepartmentId) {
       return res.status(404).json("There is no department");
@@ -214,17 +263,38 @@ exports.createEmployee = async (req, res, next) => {
     }
 
     employeeId += idFormat.separator + paddedEmployeeCode;
+let basicInfo1;
+ if (file) {
+   const { path } = file;
+  //  company = await Company.create({ ...companyData, companyLogo: path });
 
-    const basicInfo1 = await Employee.create({
-      ...basicInfo,
-      password,
-      employee_id_number: employeeId,
-      CompanyId: Number(req.user.id),
-      DepartmentId: Number(basicInfo.DepartmentId),
-      GradeId: Number(basicInfo.GradeId),
-      AddressId: Number(address1.id),
-      EmployeeInfoId: Number(employeeInfo1.id),
-    });
+       basicInfo1 = await Employee.create({
+        ...basicInfo,
+        password,
+        images:path,
+        employee_id_number: employeeId,
+        CompanyId: Number(req.user.id),
+        DepartmentId: Number(basicInfo.DepartmentId),
+        GradeId: Number(basicInfo.GradeId),
+        AddressId: Number(address1.id),
+        EmployeeInfoId: Number(employeeInfo1.id),
+      });
+ } else {
+  
+
+   basicInfo1 = await Employee.create({
+     ...basicInfo,
+     password,
+     employee_id_number: employeeId,
+     CompanyId: Number(req.user.id),
+     DepartmentId: Number(basicInfo.DepartmentId),
+     GradeId: Number(basicInfo.GradeId),
+     AddressId: Number(address1.id),
+     EmployeeInfoId: Number(employeeInfo1.id),
+   });
+ }
+
+  
 
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
