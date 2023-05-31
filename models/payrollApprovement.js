@@ -10,6 +10,14 @@ const PayrollApprovement = sequelize.define("PayrollApprovement", {
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
+  remark:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  rejectedBy:{
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   level: {
     type: DataTypes.INTEGER,
     allowNull: false,

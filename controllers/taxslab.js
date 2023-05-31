@@ -4,12 +4,14 @@ const User = require("../models/user.js");
 
 // Define controller methods for handling User requests
 exports.getAllTaxslabs = async (req, res) => {
+
   try {
+    
     if (req.user.role === "superAdmin") {
       const taxslab = await Taxslab.findAll({
         where: { userId: req.user.id, isActive: true },
         include: [
-          {
+          {//company
             model: Company,
             attributes: { exclude: ["password"] },
           },
