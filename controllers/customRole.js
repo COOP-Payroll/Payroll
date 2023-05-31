@@ -115,6 +115,7 @@ else{
 exports.updateCustomRole = async (req, res, next) => {
   try {
 const customRoleName = req.body.name;
+let updatedRole;
 
 const {id}=req.params.id;
 let customRole = await CustomRole.findOne({ where: { id: req.params.id } });
@@ -125,12 +126,14 @@ if (!customRole) {
 }
 else {
   customRole.name = customRoleName;
- const updatedRole= await customRole.save();
+  updatedRole= await customRole.save();
 }
 
 
 const permissionsData = req.body.permission;
 
+// console.log("permissionData",!permissionsData)
+if(permissionsData){
 for (const permissionData of permissionsData) {
   const {
     module,
@@ -156,6 +159,7 @@ for (const permissionData of permissionsData) {
       update,
       delete: deletePermission,
       CustomRoleId: customRole.id,
+      CompanyId:req.user.id,
     });
   } else {
         console.log("first", "there is permission");
@@ -175,7 +179,10 @@ for (const permissionData of permissionsData) {
 
     res.status(200).json({
       message: "updated successfully",
-    });
+    });}
+    else{
+      return res.status(404).json(updatedRole)
+    }
   } catch (error) {
     console.log(error)
     if (error.name === "SequelizeValidationError") {
