@@ -31,6 +31,9 @@ router.put(
   middleware.restrictToAll("companyAdmin"),
   customRoleControllers.assignToEmployee
 );
-// router.delete("/:id", CustomRole.deleteAllowance);
-
+ router.delete("/:id",
+ middleware.protectAll,
+ middleware.restrictToAll("companyAdmin"),
+ 
+ customRoleControllers.deleteCustomRole)
 module.exports = router;

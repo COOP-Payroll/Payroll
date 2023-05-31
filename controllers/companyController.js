@@ -224,13 +224,6 @@ exports.updateCompany = async (req, res) => {
       if (body.password) {
         delete body.password;
       }
-<<<<<<< HEAD
-
-      // Validate the updated data against the model
-      await company.validate();
- const updatedData=     await company.update(body);
-
-=======
       
       const { file } = req;
       // Access the uploaded image file
@@ -247,7 +240,6 @@ let updatedData;
       updatedData = await company.update(body);
    }
      
->>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
       // Return the updated company object
       return res.json(updatedData);
     }

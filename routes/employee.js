@@ -2,6 +2,7 @@ const express = require("express");
 const employeeController = require("../controllers/employeeControllers.js");
 const router = express.Router();
 const middleware = require("../middleware/auth.js");
+const upload = require("../middleware/multer");
 router.get(
   "/",
 
@@ -16,6 +17,7 @@ router.get(
 );
 router.post(
   "/",
+  upload.single("images"),
   middleware.protectAll,
   middleware.restrictToAll("companyAdmin"),
 
