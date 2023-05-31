@@ -3,7 +3,10 @@ const payroll = require("../controllers/payrollController");
 const middleware = require("../middleware/auth");
 const router = express.Router();
 
-router.get("/:id", payroll.getAllPayrollByCompanyId);
+router.get("/:id",
+
+
+payroll.getAllPayrollByCompanyId);
 router.post("/par",
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),

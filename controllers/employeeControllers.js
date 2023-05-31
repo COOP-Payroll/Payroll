@@ -7,11 +7,15 @@ const Grade = require("../models/grade.js");
 const Company = require("../models/company.js");
 const AccountInfo = require("../models/accountInfo.js");
 const IdFormat = require("../models/companyIdFormat.js");
-const CustomRole = require("../models/customRole.js");
 const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const DeductionDefinition = require("../models/deductionDefinition.js");
 const Deduction = require("../models/deduction.js");
+<<<<<<< HEAD
+=======
+const CustomRole = require("../models/customRole.js");
+const Permission = require("../models/permission.js");
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
 
 const multer = require("multer");
 const bcrypt = require("bcrypt");
@@ -58,6 +62,18 @@ exports.getAllEmployee = async (req, res) => {
         {
           model: EmergencyContact,
           required: false,
+        },
+        {
+          model: CustomRole,
+          include: [Permission],
+        },
+        {
+          model: AdditionalAllowance,
+          include: [AdditionalAllowanceDefinition],
+        },
+        {
+          model: AdditionalDeduction,
+          include: [AdditionalDeductionDefinition],
         },
         //Address,
         // EmployeeInfo,
@@ -133,9 +149,47 @@ exports.createEmployee = async (req, res, next) => {
       accountInformation,
     } = req.body;
 
+    const { file } = req;
+
     let password = req.user.companyCode.substring(0, 4) + "0000";
     const conflicts = [];
     const createdAccountInfos = [];
+
+    const existingEmail = await Employee.findOne({
+      where: {
+        email: basicInfo.email,
+      },
+    });
+
+    const accountData = [];
+
+    for (const ai of accountInformation) {
+      accountData.push(ai);
+    }
+
+    for (const account of accountData) {
+      const existingAccount = await AccountInfo.findOne({
+        where: { accountNumber: account.accountNumber },
+      });
+      if (!existingAccount) {
+      } else {
+        return res.status(400).json({
+          error: `Account number already exists: ${account.accountNumber}`,
+        });
+      }
+    }
+
+    // if (existingAccount) {
+    //   return res.status(409).json({ error: "Account Info already exists" });
+    // }
+
+    if (existingEmail) {
+      return res.status(409).json({ error: "Email already exists" });
+    }
+
+    //  if (existingAccount) {
+    //    return res.status(409).json({ error: "Account Number already exists" });
+    //  }
 
     if (!basicInfo?.DepartmentId) {
       return res.status(404).json("There is no department");
@@ -214,7 +268,12 @@ exports.createEmployee = async (req, res, next) => {
     }
 
     employeeId += idFormat.separator + paddedEmployeeCode;
+    let basicInfo1;
+    if (file) {
+      const { path } = file;
+      //  company = await Company.create({ ...companyData, companyLogo: path });
 
+<<<<<<< HEAD
     const basicInfo1 = await Employee.create({
       ...basicInfo,
       password,
@@ -225,6 +284,31 @@ exports.createEmployee = async (req, res, next) => {
       AddressId: Number(address1.id),
       EmployeeInfoId: Number(employeeInfo1.id),
     });
+=======
+      basicInfo1 = await Employee.create({
+        ...basicInfo,
+        password,
+        images: path,
+        employee_id_number: employeeId,
+        CompanyId: Number(req.user.id),
+        DepartmentId: Number(basicInfo.DepartmentId),
+        GradeId: Number(basicInfo.GradeId),
+        AddressId: Number(address1.id),
+        EmployeeInfoId: Number(employeeInfo1.id),
+      });
+    } else {
+      basicInfo1 = await Employee.create({
+        ...basicInfo,
+        password,
+        employee_id_number: employeeId,
+        CompanyId: Number(req.user.id),
+        DepartmentId: Number(basicInfo.DepartmentId),
+        GradeId: Number(basicInfo.GradeId),
+        AddressId: Number(address1.id),
+        EmployeeInfoId: Number(employeeInfo1.id),
+      });
+    }
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
 
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
@@ -365,7 +449,11 @@ exports.findByDepartment = async (req, res, next) => {
     const departmentId = req.params.departmentId;
     console.log("departmentId", departmentId);
     if (departmentId != 0) {
+<<<<<<< HEAD
       const department = await Employee.findAll({
+=======
+      const Employees = await Employee.findAll({
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
         where: { companyId: req.user.id, DepartmentId: departmentId },
         include: {
           model: Grade,
@@ -383,8 +471,13 @@ exports.findByDepartment = async (req, res, next) => {
       });
 
       res.status(200).json({
+<<<<<<< HEAD
         count: department.length,
         department,
+=======
+        count: Employees.length,
+        Employees,
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
       });
     } else if (departmentId == 0) {
       const Employees = await Employee.findAll({
@@ -434,7 +527,10 @@ exports.findByDepartment = async (req, res, next) => {
 
 //Import from Excel
 const xlsx = require("xlsx");
-const Permission = require("../models/permission.js");
+const AdditionalAllowance = require("../models/additionalAllowance.js");
+const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
+const AdditionalDeduction = require("../models/additionalDeduction.js");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -738,8 +834,11 @@ const signToken = (id, role) => {
 //   });
 // };
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
 const createSendToken = async (user, statusCode, res) => {
   try {
     const token = signToken(user.id, user.role);
@@ -777,7 +876,20 @@ exports.login = async (req, res, next) => {
     //check if user exists and password is correct
     const user = await Employee.findOne({
       where: { email: email },
+<<<<<<< HEAD
       include: { model: Company, where: { companyCode: companyCode } },
+=======
+      include: [
+        {
+          model: Company,
+          where: { companyCode: companyCode },
+        },
+        {
+          model: CustomRole,
+         include:[Permission]
+        },
+      ],
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
     });
     console.log("user", user);
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -788,7 +900,11 @@ exports.login = async (req, res, next) => {
       return createSendToken(user, 200, res);
     }
   } catch (error) {
+<<<<<<< HEAD
     console.log("Error",error)
+=======
+    console.log("Error", error);
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -804,9 +920,15 @@ exports.login = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
+<<<<<<< HEAD
       return res.status(500).json({ error: "Internal server error" ,
           user:user
         });
+=======
+      return res
+        .status(500)
+        .json({ error: "Internal server error", user: user });
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
     }
   }
 };
@@ -814,6 +936,7 @@ exports.addAddionalPay = async (req, res, next) => {
   try {
     const updates = req.body;
     const { id } = req.params.id;
+<<<<<<< HEAD
     console.log("first",updates)
 
       const employee = await Employee.findAll({where:{id:req.params.id,companyId:req.user.id}});
@@ -821,6 +944,17 @@ exports.addAddionalPay = async (req, res, next) => {
     //  console.log("first", employee);
     if (employee) {
   const result = await employee.update({acting:100});
+=======
+    console.log("first", updates);
+
+    const employee = await Employee.findAll({
+      where: { id: req.params.id, companyId: req.user.id },
+    });
+
+    //  console.log("first", employee);
+    if (employee) {
+      const result = await employee.update({ acting: 100 });
+>>>>>>> a4d081f819f514c9a9230842e91494a824f149e8
 
       res.status(200).json({
         message: "updated successfully",

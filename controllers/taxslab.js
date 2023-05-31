@@ -11,7 +11,7 @@ exports.getAllTaxslabs = async (req, res) => {
       const taxslab = await Taxslab.findAll({
         where: { userId: req.user.id, isActive: true },
         include: [
-          {
+          {//company
             model: Company,
             attributes: { exclude: ["password"] },
           },
