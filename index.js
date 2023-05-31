@@ -123,7 +123,7 @@ const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
     workerData: { employeeId, user, payrollDefinitionId },
   });
-};
+}; 
 
 const runComputation = async (payrolls) => {
   

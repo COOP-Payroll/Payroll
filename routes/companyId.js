@@ -15,7 +15,8 @@ router.post(
   companyIdRouter.createCompanyIdFormat
 );
 
-router.get("/", companyIdRouter.getAllCompanyIdFormat);
+router.get("/",
+ companyIdRouter.getAllCompanyIdFormat);
 // router.get("/:id", companyController.getCompanyById);
 router.put(
   "/:id",

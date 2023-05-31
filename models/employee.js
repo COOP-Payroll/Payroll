@@ -87,6 +87,26 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.STRING,
   },
 
+  arrears: {
+    type: DataTypes.NUMBER,
+    defaultValue: 0,
+  },
+  dayDeductions: {
+    type: DataTypes.NUMBER,
+    defaultValue: 0,
+  },
+  // dayDeductions: {
+  //   type: DataTypes.NUMBER,
+  //   defaultValue: 0,
+  // },
+  lateSittingOverTime: {
+    type: DataTypes.NUMBER,
+    defaultValue: 0,
+  },
+  acting: {
+    type: DataTypes.NUMBER,
+    defaultValue: 0,
+  },
   // passwordChangedAt: Date,
   // passwordResetToken: String,
   // passwordResetExpires: Date,
@@ -123,7 +143,8 @@ Employee.beforeUpdate((employee, options) => {
 
 // Company.hasMany(Employee);
 // Employee.belongsTo(Company);
-Company.hasMany(Employee, { foreignKey: "companyId" });
+Company.hasMany(Employee);
+Employee.belongsTo(Company)
 
 EmployeeInfo.hasOne(Employee);
 Employee.belongsTo(EmployeeInfo);

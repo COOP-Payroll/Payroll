@@ -8,6 +8,16 @@ middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 payrollApprovement.createPayrollApprovement);
 
+router.post('/reject', 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+payrollApprovement.rejectPayrollApprovement);
+
+router.post('/reApprove', 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+payrollApprovement.reCreatePayrollApprovement);
+
 router.get('/', 
 middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
