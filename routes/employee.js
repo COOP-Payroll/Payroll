@@ -7,19 +7,23 @@ router.get(
   "/",
 
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getAllEmployee
 );
 router.get(
   "/:id",
-
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getEmployeeById
 );
 router.post(
   "/",
   upload.single("images"),
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({
+    moduleName: "EmployeeInformation",
+    isAccessible: true,
+  }),
 
   employeeController.createEmployee
 );
@@ -27,27 +31,36 @@ router.post(
 router.get(
   "/department/:departmentId",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.findByDepartment
 );
 
 router.put(
   "/additionalPay/:id",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({
+    moduleName: "EmployeeInformation",
+    isAccessible: true,
+  }),
   employeeController.addAddionalPay
 );
 router.put(
   "/:id",
 
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({
+    moduleName: "EmployeeInformation",
+    isAccessible: true,
+  }),
   employeeController.updateEmployee
 );
 router.delete(
   "/:id",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({
+    moduleName: "EmployeeInformation",
+    isAccessible: true,
+  }),
 
   employeeController.deleteEmployee
 );
@@ -59,10 +72,6 @@ router.post(
   employeeController.createEmployeeFile
 );
 
-
-router.post(
-  "/login",
-  employeeController.login
-);
+router.post("/login", employeeController.login);
 
 module.exports = router;

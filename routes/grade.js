@@ -2,13 +2,21 @@ const express = require("express");
 const grade = require("../controllers/grade");
 const middleware = require("../middleware/auth");
 
+// generalsetup;
+// payrollsetup;
+// payrollpublish;
+// PayrollPublishedReport;
+// EmployeeInfornation;
+// EmployeeList;
+// reports;
+
 const router = express.Router();
 //
 //get all grade of the same company
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "grade", isAccessible: true }),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   // middleware.checkPermissions({ name: 'payroll', value:'approve' }),
   grade.getAllGrade
 );
@@ -17,7 +25,7 @@ router.get(
 router.get(
   "/:id",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   grade.getGradeById
 );
 
@@ -25,7 +33,7 @@ router.get(
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   grade.createGrade
 );
 
@@ -33,7 +41,7 @@ router.post(
 router.put(
   "/:id",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   grade.updateGrade
 );
 
@@ -42,7 +50,7 @@ router.delete(
   "/:id",
 
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
 
   grade.deleteGrade
 );

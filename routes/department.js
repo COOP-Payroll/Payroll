@@ -7,17 +7,32 @@ const departmentController = require("../controllers/department.js");
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   departmentController.getAllDepartment
 );
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   departmentController.createDepartment
 );
-router.delete("/:id", departmentController.deleteDepartment);
-router.put("/:id", departmentController.updateDepartment);
-router.get("/:id", departmentController.getDepartmentById);
+router.delete(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+  departmentController.deleteDepartment
+);
+router.put(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+  departmentController.updateDepartment
+);
+router.get(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+  departmentController.getDepartmentById
+);
 
 module.exports = router;
