@@ -11,10 +11,10 @@ const IdFormat = sequelize.define("IdFormat", {
     type: DataTypes.STRING,
   },
   year: {
-    type: DataTypes.STRING,
+    type: DataTypes.BOOLEAN,
   },
   department: {
-    type: DataTypes.STRING,
+    type: DataTypes.BOOLEAN,
   },
   separator: {
     type: DataTypes.ENUM,

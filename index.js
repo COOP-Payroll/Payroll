@@ -39,7 +39,7 @@ const providentFund = require("./routes/providentFund.js");
 const newPayroll = require("./routes/newPayroll.js");
 const Payroll = require("./models/Payroll");
 const PayrollDefinition = require("./models/payrollDefinition");
-
+const moduleRoute=require("./routes/moduleRoutes.js")
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -60,7 +60,7 @@ app.use(
 
       "http://localhost:3001",
       "http://localhost:3002",
-      "http://localhost:*",
+      "http://localhost:****",
       "http://10.2.125.124:4000",
       "*",
     ],
@@ -103,6 +103,7 @@ app.use("/additionalAllowanceDefinition", additionalAllowanceDefinition);
 app.use("/additionalAllowance", additionalAllowance);
 app.use("/providentFund", providentFund);
 app.use("/newPayroll", newPayroll);
+app.use("/module", moduleRoute);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");

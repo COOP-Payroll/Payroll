@@ -8,23 +8,27 @@ const Permission = sequelize.define("Permission", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  read: {
+  isAccessible: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  // read: {
+  //   type: DataTypes.BOOLEAN,
+  //   defaultValue: false,
+  // },
 
-  write: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  },
-  update: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  },
-  delete: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  },
+  // write: {
+  //   type: DataTypes.BOOLEAN,
+  //   defaultValue: false,
+  // },
+  // update: {
+  //   type: DataTypes.BOOLEAN,
+  //   defaultValue: false,
+  // },
+  // delete: {
+  //   type: DataTypes.BOOLEAN,
+  //   defaultValue: false,
+  // },
   ///Employee ID
 });
 

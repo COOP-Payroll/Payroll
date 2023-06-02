@@ -2,6 +2,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Company = require("../models/company");
 const User = require("../models/user");
+const Employee = require("../models/employee");
+const CustomRole = require("../models/customRole");
+const Permission = require("../models/permission");
 
 const signToken = (id, role) => {
   try {
@@ -40,6 +43,7 @@ const createSendToken = async (company, statusCode, res) => {
 
 exports.login = async (req, res, next) => {
   try {
+    let company;
     const { email, password, companyCode } = req.body;
 
     //check if email and password exist company code
@@ -50,41 +54,57 @@ exports.login = async (req, res, next) => {
     }
 
     //check if user exists and password is correct
-    const company = await Company.findOne({ where: { email } });
-    if (
-      !company ||
-      company.companyCode != companyCode ||
-      !(await bcrypt.compare(password, company.password))
-    ) {
+    company = await Company.findOne({ where: { email } });
+    // console.log("company", company)
+    //console.log("company", company === null);
+    if (company === null) {
+      console.log("here we got no company");
+      company = await Employee.findOne({
+        where: { email },
+        include: [
+          {
+            model: CustomRole,
+            include: [Permission],
+          },
+        ],
+      });
+    }
+
+    if (!company || !(await bcrypt.compare(password, company.password))) {
       return res
         .status(401)
         .json({ message: "Incorrect email, password or company Code" });
-    } else if (company.status === "active") {
+    }
+    if (company.role === "employee" || company.role === "approver") {
       createSendToken(company, 200, res);
     } else {
-      switch (company.status) {
-        case "pending":
-          return res.status(401).json({
-            error: "your request is being processed please stay tune",
-          });
-        case "blocked":
-          return res.status(401).json({
-            error: "Your account has been blocked",
-          });
-        case "denied":
-          return res.status(401).json({
-            error: "Your account has been denied",
-          });
-        default:
-          return res.status(401).json({
-            error: "Unknown status",
-          });
+      if (company.status === "active") {
+        createSendToken(company, 200, res);
+      } else {
+        switch (company.status) {
+          case "pending":
+            return res.status(401).json({
+              error: "your request is being processed please stay tune",
+            });
+          case "blocked":
+            return res.status(401).json({
+              error: "Your account has been blocked",
+            });
+          case "denied":
+            return res.status(401).json({
+              error: "Your account has been denied",
+            });
+          default:
+            return res.status(401).json({
+              error: "Unknown status",
+            });
+        }
       }
     }
   } catch (err) {
     //next(createError.createError(404, 'failed'));
     res.status(404).json({
-      status: "fail123",
+      status: "failed to login",
       message: err,
     });
   }
@@ -120,4 +140,3 @@ exports.superAdminLogin = async (req, res, next) => {
     });
   }
 };
-
