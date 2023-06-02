@@ -4,7 +4,7 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const Employee = require("../models/employee");
 const CustomRole = require("../models/customRole");
-const Permission=require('../models/permission.js')
+const Permission = require("../models/permission.js");
 
 exports.protectAll = async (req, res, next) => {
   try {
@@ -40,7 +40,7 @@ exports.protectAll = async (req, res, next) => {
     }
 
     // console.log(JSON.stringify(currentUser), null, 4);
-    if (!currentUser ) {
+    if (!currentUser) {
       return res
         .status(401)
         .json({ error: `${currentUser.role} does not longer exists ` });
@@ -52,12 +52,12 @@ exports.protectAll = async (req, res, next) => {
     //   });
     // }
     //grant access to protected route
-    else{
-    req.user = currentUser;
- 
-    next();}
-  } catch (err) {
+    else {
+      req.user = currentUser;
 
+      next();
+    }
+  } catch (err) {
     return res.status(404).json({
       status: "Error occured",
       message: err,
@@ -67,7 +67,7 @@ exports.protectAll = async (req, res, next) => {
 
 //Restricted to
 exports.restrictTo = (role) => {
- return async (req, res, next) => {
+  return async (req, res, next) => {
     if (req.user.role === role) {
       next();
       // } else {
@@ -101,8 +101,6 @@ exports.restrictToAdmin = (role) => {
 //Restricted to
 exports.restrictToAll = (...roles) => {
   return (req, res, next) => {
-   
-
     if (!roles.includes(req.user?.role)) {
       return res.status(403).json({
         message: "You do not have permission to perform this action",
@@ -112,40 +110,36 @@ exports.restrictToAll = (...roles) => {
   };
 };
 
-
-exports.restrictALL = ({moduleName,permissionType}) => {
-  return async (req, res, next) => {  
- 
+exports.restrictALL = ({ moduleName, isAccessible }) => {
+  return async (req, res, next) => {
     if (req.user.role === "companyAdmin" || req.user.role === "superAdmin") {
-     
       next();
-    } else 
-    {
+    } else {
       //const { moduleName, employeeId } = req.body;
-       const employee = await Employee.findOne({
-         where: { id: req.user.id },
-         include: [
-           {
-             model: CustomRole,
-             include: [{ model: Permission }],
-           },
-         ],
-       });
+      const employee = await Employee.findOne({
+        where: { id: req.user.id },
+        include: [
+          {
+            model: CustomRole,
+            include: [{ model: Permission }],
+          },
+        ],
+      });
 
-       if (!employee) {
-         return res.status(404).json({ message: "Employee not found." });
-       }
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found." });
+      }
 
-    const hasPermission =
-      employee.CustomRole &&
-      employee.CustomRole.Permissions.some(
-        (permission) =>
-          permission.module === moduleName && permission[permissionType] === true
-      );
+      const hasPermission =
+        employee.CustomRole &&
+        employee.CustomRole.Permissions.some(
+          (permission) =>
+            permission.module === moduleName &&
+            permission.isAccessible === true
+        );
 
-    //return res.json({ hasPermission });
-
-      
+        console.log("haspermission", hasPermission);
+      //return res.json({ hasPermission });
 
       if (hasPermission) {
         next();

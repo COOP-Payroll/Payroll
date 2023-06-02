@@ -23,6 +23,7 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+
       {
         name: "Over Time",
         isTaxable: true,
@@ -34,8 +35,7 @@ module.exports = {
       },
     ], {});
   },
-
-  async down (queryInterface, Sequelize) {
+   async down (queryInterface, Sequelize) {
     /**
      * Add commands to revert seed here.
      *

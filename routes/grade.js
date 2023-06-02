@@ -8,7 +8,7 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName:"deduction", permissionType:"read" }),
+  middleware.restrictALL({ moduleName: "grade", isAccessible: true }),
   // middleware.checkPermissions({ name: 'payroll', value:'approve' }),
   grade.getAllGrade
 );
