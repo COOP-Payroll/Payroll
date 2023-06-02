@@ -1,31 +1,32 @@
 const express = require("express");
 const loanControllers = require("../controllers/loan.js");
-const middleware=require('../middleware/auth.js')
+const middleware = require("../middleware/auth.js");
 const router = express.Router();
 
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+
   loanControllers.getAllLoan
 );
 // router.get("/:id", allowance.getAllowanceById);
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   loanControllers.createAllowance
 );
 router.put(
   "/:id",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   loanControllers.updateLoan
 );
 router.delete(
   "/:id",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   loanControllers.deleteLoan
 );
 

@@ -6,7 +6,7 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   AdditionalDeductionDefinition.getAllAdditionalDeductionDefinition
 );
 
@@ -17,7 +17,7 @@ router.get(
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   AdditionalDeductionDefinition.createAdditionalDeductionDefinition
 );
 
@@ -25,7 +25,7 @@ router.post(
 router.put(
   "/:id",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   AdditionalDeductionDefinition.updateAdditionalDeductionDefinition
 );
 

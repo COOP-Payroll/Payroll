@@ -2,6 +2,7 @@ const express = require("express");
 const { Worker } = require("worker_threads");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
+
 require("dotenv").config();
 const sequelize = require("./database/db");
 const cron = require("node-cron");
@@ -39,7 +40,7 @@ const providentFund = require("./routes/providentFund.js");
 const newPayroll = require("./routes/newPayroll.js");
 const Payroll = require("./models/Payroll");
 const PayrollDefinition = require("./models/payrollDefinition");
-const moduleRoute=require("./routes/moduleRoutes.js")
+const moduleRoute = require("./routes/moduleRoutes.js");
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -124,13 +125,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-sequelize.sync({ force:true}).then(() => console.log("db is ready"));
+sequelize.sync({}).then(() => console.log("db is ready"));
 
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
     workerData: { employeeId, user, payrollDefinitionId },
   });
-}; 
+};
 
 const runComputation = async (payrolls) => {
   payrolls.forEach((payroll) => {
