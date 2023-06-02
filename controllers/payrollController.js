@@ -141,6 +141,7 @@ exports.getNonPayrollEmployee = async (req, res) => {
             PayrollDefinitionId: id, // Filter for payroll records of the specific month
           },
         },
+        
         {
           model: Grade,
           include: [

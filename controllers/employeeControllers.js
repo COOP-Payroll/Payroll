@@ -13,6 +13,7 @@ const DeductionDefinition = require("../models/deductionDefinition.js");
 const Deduction = require("../models/deduction.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
+const Loan = require("../models/loan.js");
 
 const multer = require("multer");
 const bcrypt = require("bcrypt");
@@ -41,6 +42,10 @@ exports.getAllEmployee = async (req, res) => {
         },
         {
           model: CustomRole,
+          required: false,
+        },
+        {
+          model: Loan,
           required: false,
         },
         {
@@ -436,6 +441,7 @@ exports.findByDepartment = async (req, res, next) => {
       const Employees = await Employee.findAll({
         where: { companyId: req.user.id, DepartmentId: departmentId },
         include: {
+          
           model: Grade,
           include: [
             {
