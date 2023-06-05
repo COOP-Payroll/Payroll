@@ -286,7 +286,8 @@ exports.createEmployee = async (req, res, next) => {
 
     if (!gradeId) {
       return res.status(404).json("There is no Grade with this ID");
-    } else if (!departmentId) {
+    } 
+    else if (!departmentId) {
       return res.status(404).json("There is no Department with this ID");
     } else if (
       employeeInfo.basicSalary < gradeId.minSalary ||
