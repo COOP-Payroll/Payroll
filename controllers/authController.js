@@ -69,7 +69,7 @@ exports.login = async (req, res, next) => {
         ],
       });
     }
-
+console.log("first")
     if (!company || !(await bcrypt.compare(password, company.password))) {
       return res
         .status(401)
