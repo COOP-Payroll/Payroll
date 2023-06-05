@@ -3,7 +3,14 @@ const companyController = require("../controllers/companyController.js");
 const upload = require("../middleware/multer");
 const router = express.Router();
 
-router.post("/", upload.single("companyLogo"), companyController.createCompany);
+router.post(
+  "/",
+  upload.fields([
+    { name: "companyLogo", maxCount: 1 },
+    { name: "acctImage", maxCount: 1 },
+  ]),
+  companyController.createCompany
+);
 router.get("/", companyController.getAllCompany);
 router.get("/:id", companyController.getCompanyById);
 router.post("/", companyController.createCompany);

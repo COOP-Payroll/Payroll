@@ -118,8 +118,79 @@ exports.getAllEmployee = async (req, res) => {
 exports.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
-    const employee = await Employee.findByPk(id);
-    res.json({ employee });
+ 
+
+   const employees = await Employee.findOne({
+     where: { id: id },
+     include: [
+       {
+         model: Address,
+         required: false,
+       },
+       {
+         model: Company,
+         required: false,
+       },
+       {
+         model: EmployeeInfo,
+         required: false,
+       },
+       {
+         model: Department,
+         required: false,
+       },
+       {
+         model: CustomRole,
+         required: false,
+       },
+       {
+         model: Loan,
+         required: false,
+       },
+       {
+         model: Grade,
+         include: [
+           {
+             model: Allowance, // Use the correct alias defined in the association
+             include: [AllowanceDefinition],
+           },
+           {
+             model: Deduction, // Use the correct alias defined in the association
+             include: [DeductionDefinition],
+           },
+         ],
+       },
+       {
+         model: EmergencyContact,
+         required: false,
+       },
+       {
+         model: CustomRole,
+         include: [Permission],
+       },
+       {
+         model: AdditionalAllowance,
+         include: [AdditionalAllowanceDefinition],
+       },
+       {
+         model: AdditionalDeduction,
+         include: [AdditionalDeductionDefinition],
+       },
+       //Address,
+       // EmployeeInfo,
+       // EmergencyContact,
+       // AccountInfo,
+       // Department,
+       // Grade,
+
+       // // Company,
+       // CustomRole,
+     ],
+   });
+
+
+
+    res.json({ employees });
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};

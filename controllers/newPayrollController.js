@@ -34,6 +34,7 @@ exports.createPayroll = async (req, res) => {
     }
 
     const errors = [];
+    let payrollCount = 0;
 
     for (const employeeId of employeeIds) {
       try {
@@ -46,6 +47,8 @@ exports.createPayroll = async (req, res) => {
 
         if (payroll) {
           await payroll.destroy();
+          payrolldef.totalNoOfEmployee -= 1;
+          await payrolldef.save();
         }
 
         const payrollData = {
@@ -54,6 +57,7 @@ exports.createPayroll = async (req, res) => {
         };
 
         await Payroll.create(payrollData);
+        payrollCount++;
       } catch (error) {
         errors.push(error);
       }
@@ -64,6 +68,10 @@ exports.createPayroll = async (req, res) => {
         .status(500)
         .json({ msg: "There is a problem creating payroll", errors });
     }
+
+    // Update total payroll count in the database
+    payrolldef.totalNoOfEmployee += payrollCount;
+    await payrolldef.save();
 
     return res.status(201).json({ msg: "Payroll created successfully!" });
   } catch (error) {
@@ -123,8 +131,9 @@ exports.getNonPayrollEmployee = async (req, res) => {
       },
     });
     return res.status(200).json({
-      count:employees.length,      
-      employees});
+      count: employees.length,
+      employees,
+    });
   } catch (error) {
     res.json(error);
   }

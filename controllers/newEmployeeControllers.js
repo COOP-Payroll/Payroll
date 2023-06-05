@@ -1,0 +1,369 @@
+const sequelize = require("../database/db");
+const AccountInfo = require("../models/accountInfo");
+const IdFormat = require("../models/companyIdFormat");
+const Department = require("../models/department");
+const Employee = require("../models/employee");
+const Grade = require("../models/grade");
+const Address = require("../models/address");
+const EmployeeInfo = require("../models/employeInfo");
+const EmergencyContact = require("../models/emergency_Contact");
+
+exports.createEmployee = async (req, res) => {
+  const {
+    address,
+    employeeInfo,
+    emergencyInfo,
+    basicInfo,
+    accountInformation,
+  } = req.body;
+
+  if (!accountInformation) {
+    return res.status(400).json({ message: "Please provide account number" });
+  }
+
+  const accountNumbers = accountInformation?.map((acct) => acct.accountNumber);
+
+  try {
+    const [grade, department, employee, accountInfos, idformat] =
+      await Promise.all([
+        Grade.findByPk(Number(basicInfo?.GradeId)),
+        Department.findByPk(Number(basicInfo?.DepartmentId)),
+        Employee.findOne({ where: { email: basicInfo?.email } }),
+        AccountInfo.findAll({ where: { accountNumber: accountNumbers } }),
+        IdFormat.findOne({
+          where: { CompanyId: Number(req.user.id), isActive: true },
+        }),
+      ]);
+
+    const errors = [];
+
+    if (!grade) {
+      errors.push({ error: "Grade does not exist." });
+    }
+
+    if (!department) {
+      errors.push({ error: "Department does not exist." });
+    }
+
+    if (employee) {
+      errors.push({
+        error: `Employee already exists with ${basicInfo?.email} email.`,
+      });
+    }
+
+    if (accountInfos.length > 0) {
+      errors.push({ error: "Account infos already exist." });
+    }
+
+    if (!idformat) {
+      errors.push({ error: "ID format does not exist." });
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json(errors);
+    }
+
+    await sequelize.transaction(async (t) => {
+      const imagePath = req?.files?.["basicInfo[image]"]?.[0]?.path || null;
+      const idImagePath =
+        req?.files?.["basicInfo[id_image]"]?.[0]?.path || null;
+
+      const formatElements = idformat.order.split(",");
+      const lastEmployee = await Employee.findOne({
+        order: [["createdAt", "DESC"]],
+      });
+      let paddedEmployeeCode = "00001";
+
+      if (lastEmployee) {
+        const lastEmployeeId = lastEmployee.employee_id_number;
+        const lastEmployeeCode = lastEmployeeId.split(idformat.separator).pop();
+        const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1;
+        paddedEmployeeCode = incrementedEmployeeCode
+          .toString()
+          .padStart(idformat.digitLength, "0");
+      }
+
+      let employeeId = "";
+      for (let i = 0; i < formatElements.length; i++) {
+        const element = formatElements[i];
+        switch (element) {
+          case "companyCode":
+            employeeId += idformat.companyCode;
+            break;
+          case "year":
+            employeeId += employeeInfo.hireDate.split("-")[0];
+            break;
+          case "department":
+            employeeId += department.shorthandRepresentation;
+            break;
+        }
+
+        if (i !== formatElements.length - 1) {
+          employeeId += idformat.separator;
+        }
+      }
+
+      employeeId += idformat.separator + paddedEmployeeCode;
+      const createEmployee = await Employee.create(
+        {
+          ...basicInfo,
+          image: imagePath,
+          id_image: idImagePath,
+          CompanyId: Number(req.user.id),
+          GradeId: basicInfo.GradeId,
+          DepartmentId: basicInfo.DepartmentId,
+          employee_id_number: employeeId,
+        },
+        { transaction: t }
+      );
+
+      const createAddress = await Address.create(
+        { ...address, EmployeeId: createEmployee.id, isActive: true },
+        { transaction: t }
+      );
+
+      const createEmployeeInfo = await EmployeeInfo.create(
+        { ...employeeInfo, isActive: true, EmployeeId: createEmployee.id },
+        { transaction: t }
+      );
+
+      const createdEmergencyInfos = await EmergencyContact.bulkCreate(
+        emergencyInfo.map((info) => ({
+          ...info,
+          isActive: true,
+          EmployeeId: createEmployee.id,
+        })),
+        { transaction: t }
+      );
+
+      const accountImages = accountInformation.map((info, index) => {
+        const key = `accountInformation[${index}][image]`;
+        return req?.files?.[key]?.[0]?.path || null;
+      });
+
+      const createdAccountInformations = await AccountInfo.bulkCreate(
+        accountInformation.map((info, index) => ({
+          ...info,
+          EmployeeId: createEmployee.id,
+          isActive: info.isActive || false,
+          image: accountImages[index],
+        })),
+        { transaction: t }
+      );
+
+      return res.status(201).json({
+        basicInfo: createEmployee,
+        address: createAddress,
+        employeeInfo: createEmployeeInfo,
+        emergencyInfo: createdEmergencyInfos,
+        accountInformation: createdAccountInformations,
+      });
+    });
+  } catch (error) {
+    console.error("Error creating records:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating the records." });
+  }
+};
+
+exports.updateEmployee = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const {
+      role,
+      nationality,
+      marriageStatus,
+      email,
+      phoneNumber,
+      optionalNumber,
+      id_type,
+      id_Number,
+      DepartmentId,
+      GradeId,
+      date_of_birth,
+    } = req.body;
+
+    const employee = await Employee.findByPk(Number(req.params.id), {
+      transaction,
+    });
+    if (!employee) {
+      await transaction.rollback();
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    const [department, grade] = await Promise.all([
+      Grade.findByPk(Number(employee.GradeId)),
+      Department.findByPk(Number(employee.DepartmentId)),
+    ]);
+
+    const errors = [];
+
+    if (!grade) {
+      errors.push("Grade does not exist.");
+    }
+
+    if (!department) {
+      errors.push("Department does not exist.");
+    }
+
+    if (errors.length > 0) {
+      await transaction.rollback();
+      return res.status(400).json({ errors });
+    }
+
+    const imagePath = req.files?.["image"]?.[0]?.path || employee.image;
+    const idImagePath = req.files?.["id_image"]?.[0]?.path || employee.id_image;
+
+    const updatedEmployee = await employee.update(
+      { isActive: false },
+      { transaction }
+    );
+
+    const [address, employeeInfo, accountInfos, emergencyInfos] =
+      await Promise.all([
+        Address.findOne(
+          { where: { isActive: true, EmployeeId: employee.id } },
+          { transaction }
+        ),
+        EmployeeInfo.findOne(
+          { where: { isActive: true, EmployeeId: employee.id } },
+          { transaction }
+        ),
+        AccountInfo.findAll(
+          { where: { EmployeeId: employee.id } },
+          { transaction }
+        ),
+        EmergencyContact.findAll(
+          { where: { EmployeeId: employee.id } },
+          { transaction }
+        ),
+      ]);
+
+    const newEmployee = await Employee.create(
+      {
+        isActive: true,
+        image: imagePath,
+        id_image: idImagePath,
+        role: role || employee.role,
+        nationality: nationality || employee.nationality,
+        marriageStatus: marriageStatus || employee.marriageStatus,
+        email: email || employee.email,
+        phoneNumber: phoneNumber || employee.phoneNumber,
+        optionalNumber: optionalNumber || employee.optionalNumber,
+        id_type: id_type || employee.id_type,
+        id_Number: id_Number || employee.id_Number,
+        DepartmentId: Number(DepartmentId) || employee.DepartmentId,
+        GradeId: Number(GradeId) || employee.GradeId,
+        CompanyId: Number(employee.CompanyId),
+        date_of_birth: date_of_birth || employee.date_of_birth,
+        sex: employee.sex,
+        fullname: employee.fullname,
+        employee_id_number: employee.employee_id_number,
+        password: employee.password,
+      },
+      { transaction }
+    );
+
+    if (address) {
+      await address.update({ isActive: false }, { transaction });
+      await Address.create(
+        {
+          isActive: true,
+          EmployeeId: newEmployee.id,
+          country: address.country,
+          state: address.state,
+          zone_or_city: address.zone_or_city,
+          woreda: address.woreda,
+          kebele: address.kebele,
+          houseNumber: address.houseNumber,
+        },
+        { transaction }
+      );
+    }
+    if (employeeInfo) {
+      await employeeInfo.update({ isActive: false }, { transaction });
+      await EmployeeInfo.create(
+        {
+          isActive: true,
+          EmployeeId: newEmployee.id,
+          employeeTIN: employeeInfo.employeeTIN,
+          hireDate: employeeInfo.hireDate,
+          basicSalary: employeeInfo.basicSalary,
+          position: employeeInfo.position,
+          employement_Type: employeeInfo.employement_Type,
+        },
+        { transaction }
+      );
+    }
+    if (accountInfos.length > 0) {
+      await Promise.all(
+        accountInfos.map((accountInfo) =>
+          AccountInfo.create(
+            {
+              EmployeeId: newEmployee.id,
+              accountNumber: accountInfo.accountNumber,
+              image: accountInfo.image,
+              isActive: accountInfo.isActive,
+              isVerified: accountInfo.isVerified,
+            },
+            { transaction }
+          )
+        )
+      );
+    }
+    if (emergencyInfos.length > 0) {
+      await Promise.all(
+        emergencyInfos.map((emergencyInfo) =>
+          EmergencyContact.create(
+            {
+              EmployeeId: newEmployee.id,
+              relation: emergencyInfo.relation,
+              fullname: emergencyInfo.fullname,
+              phoneNumber: emergencyInfo.phoneNumber,
+              isActive: emergencyInfo.isActive,
+            },
+            { transaction }
+          )
+        )
+      );
+    }
+
+    await transaction.commit();
+
+    return res.status(200).json({
+      message: "Employee fields updated successfully.",
+      data: newEmployee,
+      oldEmployee: updatedEmployee,
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    if (
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
+    ) {
+      const errors = error.errors.reduce((acc, err) => {
+        acc[err.path] = [`${err.path} is required`];
+        return acc;
+      }, {});
+      return res.status(400).json(errors);
+    }
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.getAllEmployee = async (req, res) => {
+  try {
+    const employees = await Employee.findAll({
+      where: { CompanyId: Number(req.user.id) },
+      exclude: ["password"],
+    });
+    return res.status(200).json({ count: employees.length, employees });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "there is a problem fetching employees" });
+  }
+};

@@ -1,10 +1,7 @@
-const { Sequelize, DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-const Package = require("../models/package.js");
 const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
-const Address = require("./address.js");
-const EmployeeInfo = require("./employeInfo.js");
 const Department = require("./department");
 
 const Employee = sequelize.define("Employee", {
@@ -12,11 +9,9 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-
-  images: {
+  image: {
     type: DataTypes.STRING,
   },
-
   sex: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -25,25 +20,21 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.DATE,
     allowNull: false,
   },
-
   role: {
     type: DataTypes.ENUM("employee", "approver"),
-    allowNull: false,
     defaultValue: "employee",
   },
   nationality: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "Ethiopia",
   },
   marriageStatus: {
     type: DataTypes.ENUM("Single", "Married", "Divorced"),
-    defaultValue: true,
     defaultValue: "Single",
   },
   employee_id_number: {
     type: DataTypes.STRING,
   },
-
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -55,13 +46,11 @@ const Employee = sequelize.define("Employee", {
   optionalNumber: {
     type: DataTypes.STRING,
   },
-
   id_image: {
     type: DataTypes.STRING,
   },
   id_type: {
     type: DataTypes.ENUM("kebele", "passport", "driving _License"),
-    allowNull: false,
     defaultValue: "kebele",
   },
   id_Number: {
@@ -78,38 +67,13 @@ const Employee = sequelize.define("Employee", {
   joiningDate: {
     type: DataTypes.DATE,
   },
-  // accountNumber: {
-  //   type: DataTypes.STRING,
-  //   allowNull: false,
-  // },
-
   password: {
     type: DataTypes.STRING,
   },
-
-  arrears: {
-    type: DataTypes.NUMBER,
-    defaultValue: 0,
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
-  dayDeductions: {
-    type: DataTypes.NUMBER,
-    defaultValue: 0,
-  },
-  // dayDeductions: {
-  //   type: DataTypes.NUMBER,
-  //   defaultValue: 0,
-  // },
-  lateSittingOverTime: {
-    type: DataTypes.NUMBER,
-    defaultValue: 0,
-  },
-  acting: {
-    type: DataTypes.NUMBER,
-    defaultValue: 0,
-  },
-  // passwordChangedAt: Date,
-  // passwordResetToken: String,
-  // passwordResetExpires: Date,
 });
 
 Employee.beforeCreate((employee, options) => {
@@ -138,28 +102,16 @@ Employee.beforeUpdate((employee, options) => {
   }
 });
 
-// Subscription.belongsTo(Package);
-// Package.hasOne(Subscription);
-
-// Company.hasMany(Employee);
-// Employee.belongsTo(Company);
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
 
-EmployeeInfo.hasOne(Employee);
-Employee.belongsTo(EmployeeInfo);
+Department.hasMany(Employee);
+Employee.belongsTo(Department);
 
-Address.hasOne(Employee);
-Employee.belongsTo(Address);
+// EmployeeInfo.hasOne(Employee);
+// Employee.belongsTo(EmployeeInfo);
 
-// Set up the one-to-one relationship
-Department.hasMany(Employee); // A department has one employee
-Employee.belongsTo(Department); // An employee belongs to a department
-
-// Department.hasOne(Employee); // User has one Profile
-// Employee.belongsTo(Department);
-
-// Department.hasMany(Employee);
-// Employee.belongsTo(Department);
+// Address.hasOne(Employee);
+// Employee.belongsTo(Address);
 
 module.exports = Employee;
