@@ -27,7 +27,7 @@ exports.getAllTaxslabs = async (req, res) => {
       });
     } else {
       const taxslab = await Taxslab.findAll({
-        where: { companyId: req.user.id, isActive: true },
+        where: { CompanyId: req.user.id, isActive: true },
         include: [
           {
             model: Company,

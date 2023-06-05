@@ -144,7 +144,7 @@ Employee.beforeUpdate((employee, options) => {
 // Company.hasMany(Employee);
 // Employee.belongsTo(Company);
 Company.hasMany(Employee);
-Employee.belongsTo(Company)
+Employee.belongsTo(Company);
 
 EmployeeInfo.hasOne(Employee);
 Employee.belongsTo(EmployeeInfo);
@@ -153,7 +153,7 @@ Address.hasOne(Employee);
 Employee.belongsTo(Address);
 
 // Set up the one-to-one relationship
-Department.hasOne(Employee); // A department has one employee
+Department.hasMany(Employee); // A department has one employee
 Employee.belongsTo(Department); // An employee belongs to a department
 
 // Department.hasOne(Employee); // User has one Profile
