@@ -1,6 +1,5 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-const Company = require("./company.js");
 const Employee = require("./employee.js");
 
 const EmployeeInfo = sequelize.define("EmployeeInfo", {
@@ -24,20 +23,13 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     allowNull: false,
     defaultValue: "permanent",
   },
-
-  //ADDITIONAL Payment
-
- 
-  //Grade ID
-  //CUSTOM ROLE
-  //DEPARTMENT ID
-  // houseNumber: {
-  //     type: DataTypes.STRING,
-  //     allowNull: false,
-  // },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 });
 
-//Company.hasMany(Department);
-// Department.belongsTo(Company);
+Employee.hasOne(EmployeeInfo);
+EmployeeInfo.belongsTo(Employee);
 
 module.exports = EmployeeInfo;

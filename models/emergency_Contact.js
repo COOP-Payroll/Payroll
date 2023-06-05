@@ -16,6 +16,10 @@ const EmergencyContact = sequelize.define("EmergencyContact", {
   fullname: {
     type: DataTypes.STRING,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 
   ///Employee ID
 });

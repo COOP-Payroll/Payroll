@@ -19,7 +19,15 @@ const PayrollDefinition = sequelize.define("PayrollDefinition", {
   },
   status: {
     type: DataTypes.STRING,
-    enum: ["created", "ordered", "pending", "approved", "active", "paid","rejected"],
+    enum: [
+      "created",
+      "ordered",
+      "pending",
+      "approved",
+      "active",
+      "paid",
+      "rejected",
+    ],
     default: "created",
   },
   isRollBacked: {
@@ -29,6 +37,18 @@ const PayrollDefinition = sequelize.define("PayrollDefinition", {
   isPaid: {
     type: DataTypes.BOOLEAN,
     default: false,
+  },
+  totalNoOfEmployee: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  totalNoOfprocessedEmployee: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  processedInPercent: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
   },
 });
 

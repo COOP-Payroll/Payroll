@@ -1,6 +1,5 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-const Company = require("./company.js");
 const Employee = require("./employee.js");
 
 const Address = sequelize.define("Address", {
@@ -25,6 +24,13 @@ const Address = sequelize.define("Address", {
   houseNumber: {
     type: DataTypes.STRING,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 });
+
+Employee.hasOne(Address);
+Address.belongsTo(Employee);
 
 module.exports = Address;

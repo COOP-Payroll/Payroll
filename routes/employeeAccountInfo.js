@@ -13,9 +13,9 @@ router.get(
 );
 router.post(
   "/",
+  upload.fields([{ name: "image", maxCount: 1 }]),
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
-  upload.single("image"),
   employeeAccountController.createEmployeeAccountInfo
 );
 router.delete(
@@ -26,6 +26,7 @@ router.delete(
 );
 router.put(
   "/:id",
+  upload.fields([{ name: "image", maxCount: 1 }]),
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
   employeeAccountController.updateEmployeeAccountInfo

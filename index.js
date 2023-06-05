@@ -41,6 +41,8 @@ const newPayroll = require("./routes/newPayroll.js");
 const Payroll = require("./models/Payroll");
 const PayrollDefinition = require("./models/payrollDefinition");
 const moduleRoute = require("./routes/moduleRoutes.js");
+const addressRouter = require("./routes/address");
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -105,6 +107,7 @@ app.use("/additionalAllowance", additionalAllowance);
 app.use("/providentFund", providentFund);
 app.use("/newPayroll", newPayroll);
 app.use("/module", moduleRoute);
+app.use("/address", addressRouter);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
@@ -121,11 +124,11 @@ app.use((err, req, res, next) => {
     success: false,
     status: errorStatus,
     message: errorMessage,
-    // stack: err.stack,
+    stack: err.stack,
   });
 });
 
-sequelize.sync({}).then(() => console.log("db is ready"));
+sequelize.sync().then(() => console.log("db is ready"));
 
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
@@ -142,7 +145,7 @@ const runComputation = async (payrolls) => {
 
 let isRunning = false;
 
-app.listen(process.env.PORT, () => {
+app.listen(6000, () => {
   cron.schedule("*/5 * * * * *", async () => {
     if (!isRunning) {
       isRunning = true;

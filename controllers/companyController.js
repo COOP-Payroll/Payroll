@@ -10,61 +10,69 @@ const Taxslab = require("../models/taxslab.js");
 const User = require("../models/user.js");
 const { calculateNextPayment } = require("../utils/helper.js");
 const moment = require("moment");
+const sequelize = require("../database/db.js");
 
-//CREATE Company
 exports.createCompany = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
+    const { packageId, duration, accountNumber, ...companyData } = req.body;
 
-
-    const { packageId, duration, accountNumber, isVerified, ...companyData } =
-      req.body;
-
-    const { file } = req;
-
-    const getCompany = await Company.findOne({
+    const existingCompany = await Company.findOne({
       where: { email: companyData.email },
+      transaction,
     });
 
-    if (getCompany)
-      return res.status(409).json({ error: "email already exist" });
+    if (existingCompany) {
+      await transaction.rollback();
+      return res.status(409).json({ error: "Email already exists" });
+    }
 
     const existingAccount = await CompanyAccountInfo.findOne({
-      where: {
-        accountNumber,
-      },
+      where: { accountNumber },
+      transaction,
     });
 
     if (existingAccount) {
+      await transaction.rollback();
       return res.status(409).json({ error: "Account Info already exists" });
     }
 
-    const package = await Package.findByPk(packageId);
+    const package = await Package.findByPk(packageId, { transaction });
+
     if (!package) {
-      return res.status(404).json({ error: "Package does not exist!" });
+      await transaction.rollback();
+      return res.status(404).json({ error: "Package does not exist" });
     }
 
-    // Access the uploaded image file
+    const imagePath = req?.files?.companyLogo?.[0]?.path || null;
+    const acctImagePath = req?.files?.acctImage?.[0]?.path || null;
 
-    let company;
+    const company = await Company.create(
+      {
+        ...companyData,
+        companyLogo: imagePath,
+      },
+      { transaction }
+    );
 
-    if (file) {
-      const { path } = file;
-      company = await Company.create({ ...companyData, companyLogo: path });
-    } else {
-      company = await Company.create({ ...companyData });
-    }
-    const companyAccountInfo = await CompanyAccountInfo.create({
-      accountNumber,
-      isVerified,
-      CompanyId: company.id,
-    });
-
-
+    const companyAccountInfo = await CompanyAccountInfo.create(
+      {
+        accountNumber,
+        image: acctImagePath,
+        CompanyId: company.id,
+        isActive: true,
+      },
+      { transaction }
+    );
 
     const currentDate = moment();
-    const subscription = await Subscription.create({ duration });
-    await subscription.setPackage(packageId);
-    await subscription.setCompany(company.id);
+    const subscription = await Subscription.create(
+      { duration },
+      { transaction }
+    );
+    await subscription.setPackage(packageId, { transaction });
+    await subscription.setCompany(company.id, { transaction });
 
     const nextPaymentDate = await calculateNextPayment({
       chargeType: package.packageName,
@@ -72,78 +80,122 @@ exports.createCompany = async (req, res) => {
       normalDate: Date.now(),
     });
     const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
-    await subscription.update({ nextPaymentDate, leftPaymentDate });
+    await subscription.update(
+      { nextPaymentDate, leftPaymentDate },
+      { transaction }
+    );
 
-    const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+    const superAdmin = await User.findOne(
+      {
+        where: { role: "superAdmin" },
+      },
+      { transaction }
+    );
 
     const [
-      taxslabs,
+      taxSlabs,
       pensions,
-      additionalAllowanceDefinition,
-      additionalDeductionDefinition,
+      additionalAllowanceDefinitions,
+      additionalDeductionDefinitions,
     ] = await Promise.all([
-      Taxslab.findAll({ where: { userId: superAdmin.id, isActive: true } }),
-      Pension.findAll({ where: { userId: superAdmin.id, isActive: true } }),
-      AdditionalAllowanceDefinition.findAll({ where: { CompanyId: null } }),
-      AdditionalDeductionDefinition.findAll({ where: { CompanyId: null } }),
+      Taxslab.findAll(
+        {
+          where: { userId: superAdmin.id, isActive: true },
+        },
+        { transaction }
+      ),
+      Pension.findAll(
+        {
+          where: { userId: superAdmin.id, isActive: true },
+        },
+        { transaction }
+      ),
+      AdditionalAllowanceDefinition.findAll(
+        {
+          where: { CompanyId: null },
+        },
+        { transaction }
+      ),
+      AdditionalDeductionDefinition.findAll(
+        {
+          where: { CompanyId: null },
+        },
+        { transaction }
+      ),
     ]);
-    console.log("first", additionalAllowanceDefinition)
+
     const taxes = await Promise.all(
-      taxslabs.map((taxslab) =>
-        Taxslab.create({
-          from_Salary: Number(taxslab.from_Salary),
-          to_Salary: Number(taxslab.to_Salary),
-          income_tax_payable: Number(taxslab.income_tax_payable),
-          deductible_Fee: Number(taxslab.deductible_Fee),
-          CompanyId: company.id,
-          UserId: null,
-        })
+      taxSlabs.map((taxSlab) =>
+        Taxslab.create(
+          {
+            from_Salary: Number(taxSlab.from_Salary),
+            to_Salary: Number(taxSlab.to_Salary),
+            income_tax_payable: Number(taxSlab.income_tax_payable),
+            deductible_Fee: Number(taxSlab.deductible_Fee),
+            CompanyId: company.id,
+            UserId: null,
+          },
+          { transaction }
+        )
       )
     );
 
     const pensiones = await Promise.all(
       pensions.map((pension) =>
-        Pension.create({
-          employerContribution: pension.employerContribution,
-          employeeContribution: pension.employeeContribution,
-          UserId: null,
-          CompanyId: company.id,
-        })
+        Pension.create(
+          {
+            employerContribution: pension.employerContribution,
+            employeeContribution: pension.employeeContribution,
+            UserId: null,
+            CompanyId: company.id,
+          },
+          { transaction }
+        )
       )
     );
 
+    const additionalAllowances = await Promise.all(
+      additionalAllowanceDefinitions.map((allowance) =>
+        AdditionalAllowanceDefinition.create(
+          {
+            name: allowance.name,
+            isTaxable: allowance.isTaxable,
+            isExempted: allowance.isExempted,
+            exemptedAmount: allowance.exemptedAmount,
+            startingAmount: allowance.startingAmount,
+            CompanyId: company.id,
+          },
+          { transaction }
+        )
+      )
+    );
 
-        const additionalAllowance = await Promise.all(
-          additionalAllowanceDefinition.map((allowance) =>
-            AdditionalAllowanceDefinition.create({
-              name: allowance.name,
-              isTaxable: allowance.isTaxable,
-              isExempted:allowance.isExempted,
-              exemptedAmount:allowance.exemptedAmount,
-              startingAmount:allowance.startingAmount,
-              CompanyId: company.id,
-            })
-          )
-        );
+    const additionalDeductions = await Promise.all(
+      additionalDeductionDefinitions.map((deduction) =>
+        AdditionalDeductionDefinition.create(
+          {
+            name: deduction.name,
+            CompanyId: company.id,
+          },
+          { transaction }
+        )
+      )
+    );
 
-        const additionalDeduction = await Promise.all(
-          additionalDeductionDefinition.map((allowance) =>
-            AdditionalDeductionDefinition.create({
-              name: allowance.name,  
-              CompanyId: company.id,
-            })
-          )
-        );
+    await transaction.commit();
 
     return res.status(201).json({
       message: "Created successfully",
       taxes,
-      pensiones,
+      pensions: pensiones,
       companyAccountInfo,
-      additionalDeduction,
-      additionalAllowance
+      additionalDeduction: additionalDeductions,
+      additionalAllowance: additionalAllowances,
     });
   } catch (error) {
+    console.error(error);
+    await transaction.rollback();
+
     if (
       error.name === "SequelizeValidationError" ||
       error.name === "SequelizeUniqueConstraintError"
@@ -153,10 +205,9 @@ exports.createCompany = async (req, res) => {
         return acc;
       }, {});
       return res.status(400).json(errors);
-    } else {
-      console.error(error);
-      return res.status(500).json({ error: "Internal server error" });
     }
+
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -175,22 +226,13 @@ exports.getAllCompany = async (req, res) => {
     }
     return company;
   });
-  console.log("company", companies);
   return res.json({
-    count:companies.length,
-    
-    companies});
+    count: companies.length,
+
+    companies,
+  });
 };
 
-// exports.getAllCompany = async (req, res) => {
-//   const companys = await Company.findAll({
-//     attributes: { exclude: ["password"] },
-//     include: [Subscription, Taxslab, Department],
-//   });
-//   return res.json(companys);
-// };
-
-// get only one company
 exports.getCompanyById = async (req, res) => {
   const { id } = req.params;
 
@@ -208,9 +250,6 @@ exports.getCompanyById = async (req, res) => {
   }
 };
 
-// update Company
-
-// update Company
 exports.updateCompany = async (req, res) => {
   const { id } = req.params;
   const body = req.body;
@@ -220,31 +259,25 @@ exports.updateCompany = async (req, res) => {
     if (!company) {
       return res.status(404).json({ error: "Company does not exist" });
     } else {
-      // Disallow updating password field
       if (body.password) {
         delete body.password;
       }
-      
+
       const { file } = req;
-      // Access the uploaded image file
-let updatedData;
-    
-   if(file){
-     const { path } = file;
-     // Validate the updated data against the model
-     await company.validate();
-      updatedData = await company.update({ ...body, companyLogo: path });
-   }else{
-     // Validate the updated data against the model
-     await company.validate();
-      updatedData = await company.update(body);
-   }
-     
-      // Return the updated company object
+      let updatedData;
+
+      if (file) {
+        const { path } = file;
+        await company.validate();
+        updatedData = await company.update({ ...body, companyLogo: path });
+      } else {
+        await company.validate();
+        updatedData = await company.update(body);
+      }
       return res.json(updatedData);
     }
   } catch (error) {
-    // Handle validation errors
+    console.log("error", error);
     if (error.name === "SequelizeValidationError") {
       const validationErrors = error.errors.map((error) => ({
         field: error.path,
@@ -252,8 +285,6 @@ let updatedData;
       }));
       return res.status(400).json(validationErrors);
     }
-
-    // Handle other errors
     return res.status(500).json({ error: "Internal server error" });
   }
 };
