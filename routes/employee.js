@@ -3,6 +3,9 @@ const employeeController = require("../controllers/employeeControllers.js");
 const router = express.Router();
 const middleware = require("../middleware/auth.js");
 const upload = require("../middleware/multer");
+// const { accountInfoMulter, upload } = require("../middleware/multer.js");
+const newEmployeeController = require("../controllers/newEmployeeControllers.js");
+
 router.get(
   "/",
 
@@ -18,14 +21,27 @@ router.get(
 );
 router.post(
   "/",
-  upload.single("images"),
+  upload.fields([
+    { name: "basicInfo[image]", maxCount: 1 },
+    { name: "basicInfo[id_image]", maxCount: 1 },
+    { name: "accountInformation[0][image]", maxCount: 1 },
+    { name: "accountInformation[1][image]", maxCount: 1 },
+    { name: "accountInformation[2][image]", maxCount: 1 },
+  ]),
   middleware.protectAll,
   middleware.restrictALL({
     moduleName: "EmployeeInformation",
     isAccessible: true,
   }),
+  // employeeController.createEmployee
+  newEmployeeController.createEmployee
+);
 
-  employeeController.createEmployee
+router.get(
+  "/company/employees",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  newEmployeeController.getAllEmployee
 );
 
 router.get(
@@ -46,13 +62,16 @@ router.put(
 );
 router.put(
   "/:id",
-
+  upload.fields([
+    { name: "basicInfo[image]", maxCount: 1 },
+    { name: "basicInfo[id_image]", maxCount: 1 },
+  ]),
   middleware.protectAll,
   middleware.restrictALL({
     moduleName: "EmployeeInformation",
     isAccessible: true,
   }),
-  employeeController.updateEmployee
+  newEmployeeController.updateEmployee
 );
 router.delete(
   "/:id",

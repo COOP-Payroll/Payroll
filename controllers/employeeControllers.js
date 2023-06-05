@@ -441,7 +441,6 @@ exports.findByDepartment = async (req, res, next) => {
       const Employees = await Employee.findAll({
         where: { companyId: req.user.id, DepartmentId: departmentId },
         include: {
-          
           model: Grade,
           include: [
             {
@@ -859,7 +858,7 @@ exports.login = async (req, res, next) => {
         },
         {
           model: CustomRole,
-         include:[Permission]
+          include: [Permission],
         },
       ],
     });

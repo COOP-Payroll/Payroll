@@ -1,49 +1,29 @@
 const AccountInfo = require("../models/accountInfo");
+const Employee = require("../models/employee");
 
 exports.createEmployeeAccountInfo = async (req, res) => {
   try {
-    const { employeeId, isVerified, accountNumber } = req.body;
-    const { file } = req;
-    //  const { name, hireDate, username, password } = req.body;
-
-    if (!file) {
-      return res.status(400).json({ error: "No image file provided" });
+    const { employeeId, accountNumber } = req.body;
+    const [employee, account] = await Promise.all([
+      Employee.findByPk(Number(employeeId)),
+      AccountInfo.findOne({ where: { accountNumber } }),
+    ]);
+    if (!employee) {
+      return res.status(404).json({ error: "employee not found" });
+    }
+    if (account) {
+      return res.status(409).json({ error: "account exist" });
     }
 
-    const existingAccount = await AccountInfo.findOne({
-      where: {
-        accountNumber: req.body.accountNumber,
-      },
-    });
-
-    if (existingAccount) {
-      return res.status(409).json({ error: "Account Info already exists" });
-    }
-
-    const activeAccount = await AccountInfo.findOne({
-      where: {
-        EmployeeId: employeeId,
-        isActive: true,
-      },
-    });
-
-    if (activeAccount) {
-      await activeAccount.update({ isActive: false });
-    }
-
-    // Access the uploaded image file
-    const { path } = file;
-
-    const newAccountInfo = await AccountInfo.create({
+    const imagePath = req?.files?.image[0].path || null;
+    const newAccount = await AccountInfo.create({
       accountNumber,
-      isVerified,
-      EmployeeId: employeeId,
-      image: path,
+      image: imagePath,
+      EmployeeId: Number(employeeId),
     });
-
-    res.status(201).json({
+    return res.status(201).json({
       msg: "Account Info created successfully",
-      accountInfo: newAccountInfo,
+      accountInfo: newAccount,
     });
   } catch (error) {
     console.error("Error creating company account info:", error);
@@ -58,7 +38,6 @@ exports.createEmployeeAccountInfo = async (req, res) => {
       }, {});
       return res.status(400).json(errors);
     } else {
-      // Handle other errors
       res.status(500).json({ error: "Failed to create account info" });
     }
   }
@@ -71,7 +50,7 @@ exports.getAllEmployeeAccountInfo = async (req, res) => {
       where: { EmployeeId: id, isActive: true },
     });
     let employeeAccountInfo = employeeeAccountInfos[0];
-    const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your base URL
+    const baseUrl = "https://payroll-production.up.railway.app/";
     const imageUrl = `${baseUrl}${employeeAccountInfo.image.replace(
       /\\/g,
       "/"
@@ -102,29 +81,34 @@ exports.deleteEmployeeAccountInfo = async (req, res) => {
 
 exports.updateEmployeeAccountInfo = async (req, res) => {
   try {
-    const { isVerified, accountNumber } = req.body;
-    const { id } = req.params;
-
-    const accountInfo = await AccountInfo.findOne({
-      where: { id },
+    const account = await AccountInfo.findByPk(Number(req.params.id));
+    if (!account) return res.status(404).json({ error: "Account not found" });
+    const { accountNumber } = req.body;
+    const imagePath = req?.files?.path || account.image;
+    await account.update({ isActive: false });
+    const updatedAccount = await AccountInfo.create({
+      accountNumber: accountNumber || account.accountNumber,
+      image: imagePath || account.image,
+      isActive: false,
+      isVerified: false,
+      EmployeeId: account.EmployeeId,
     });
-
-    if (!accountInfo) {
-      return res
-        .status(404)
-        .json({ error: "employee Account Info does not exist" });
-    } else {
-      const updatedAccountInfo = await accountInfo.update({
-        isVerified,
-        accountNumber,
-      });
-      res.status(201).json({
-        msg: "Account Info updated successfully",
-        accountInfo: updatedAccountInfo,
-      });
-    }
+    return res
+      .status(200)
+      .json({ message: "account updated successfully", data: updatedAccount });
   } catch (error) {
-    res.json(error);
+    console.error(error);
+    if (
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
+    ) {
+      const errors = error.errors.reduce((acc, err) => {
+        acc[err.path] = [`${err.path} is required`];
+        return acc;
+      }, {});
+      return res.status(400).json(errors);
+    }
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

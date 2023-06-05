@@ -4,11 +4,11 @@ const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
 const WebSocket = require("ws");
 const moment = require("moment");
-const Grade=require("../models/grade.js")
-const Allowance=require("../models/allowance.js");
-const AllowanceDefinition=require("../models/allowanceDefinition")
-const Deduction=require("../models/deduction");
-const DeductionDefinition=require("../models/deductionDefinition.js")
+const Grade = require("../models/grade.js");
+const Allowance = require("../models/allowance.js");
+const AllowanceDefinition = require("../models/allowanceDefinition");
+const Deduction = require("../models/deduction");
+const DeductionDefinition = require("../models/deductionDefinition.js");
 let totalWorkers = 0;
 let completedWorkers = 0;
 let clients = [];
@@ -116,13 +116,12 @@ exports.getAllPayrollByCompanyId = async (req, res) => {
   const payrollDef = await PayrollDefinition.findByPk(id);
   if (!payrollDef) return res.status(404).json({ error: "payroll not found" });
   const payrolls = await Payroll.findAll({
-    where: { PayrollDefinitionId: Number(id) },include:[Employee,
-      PayrollDefinition
-    ]
+    where: { PayrollDefinitionId: Number(id) },
+    include: [Employee, PayrollDefinition],
   });
   return res.status(200).json({
-    count :payrolls.length,
-    payrolls
+    count: payrolls.length,
+    payrolls,
   });
 };
 
@@ -141,7 +140,6 @@ exports.getNonPayrollEmployee = async (req, res) => {
             PayrollDefinitionId: id, // Filter for payroll records of the specific month
           },
         },
-        
         {
           model: Grade,
           include: [
@@ -160,9 +158,7 @@ exports.getNonPayrollEmployee = async (req, res) => {
         "$Payroll.id$": null, // Filter for records where the payroll ID is null
       },
     });
-    return res.status(200).json(
-      {count:employees.length,
-      employees});
+    return res.status(200).json({ count: employees.length, employees });
   } catch (error) {
     res.json(error);
   }
@@ -215,32 +211,31 @@ exports.getAllEmployeePayroll = async (req, res) => {
         },
       ],
     });
-    return res.json({      
-      count:employees.length,
-      employees});
+    return res.json({
+      count: employees.length,
+      employees,
+    });
   } catch (error) {
     res.json(error);
   }
 };
 
-exports.employeePaySlip=async(req,res,next)=>{
+exports.employeePaySlip = async (req, res, next) => {
   try {
-    const id=req.params.id;
- const payrolls = await Payroll.findAll({
-   where: { EmployeeId: id },
-  //  include: [Employee, PayrollDefinition],
- });
- if(payrolls.length ===0){
- return res.status(404).json("there is no payroll ")
- }
- else{
-    // const payslip= await Payroll.
-    res.status(200).json({
-      count:payrolls.length,
-      payrolls,
-      createdDate:  moment(payrolls[0].createdAt).format('YYYY-MM-DD'),
-    });}
-  } catch (error) {
-    
-  }
-}
+    const id = req.params.id;
+    const payrolls = await Payroll.findAll({
+      where: { EmployeeId: id },
+      //  include: [Employee, PayrollDefinition],
+    });
+    if (payrolls.length === 0) {
+      return res.status(404).json("there is no payroll ");
+    } else {
+      // const payslip= await Payroll.
+      res.status(200).json({
+        count: payrolls.length,
+        payrolls,
+        createdDate: moment(payrolls[0].createdAt).format("YYYY-MM-DD"),
+      });
+    }
+  } catch (error) {}
+};
