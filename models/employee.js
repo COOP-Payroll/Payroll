@@ -2,7 +2,6 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
-const Department = require("./department");
 
 const Employee = sequelize.define("Employee", {
   fullname: {
@@ -105,8 +104,8 @@ Employee.beforeUpdate((employee, options) => {
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
 
-Department.hasMany(Employee);
-Employee.belongsTo(Department);
+// Department.hasMany(Employee);
+// Employee.belongsTo(Department);
 
 // EmployeeInfo.hasOne(Employee);
 // Employee.belongsTo(EmployeeInfo);

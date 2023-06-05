@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 const Company = require("../models/company.js");
@@ -19,13 +20,20 @@ exports.createCompany = async (req, res) => {
     const { packageId, duration, accountNumber, ...companyData } = req.body;
 
     const existingCompany = await Company.findOne({
-      where: { email: companyData.email },
+      where: {
+        [Op.or]: [
+          { email: companyData.email },
+          { companyCode: companyData.companyCode },
+        ],
+      },
       transaction,
     });
 
     if (existingCompany) {
       await transaction.rollback();
-      return res.status(409).json({ error: "Email already exists" });
+      return res
+        .status(409)
+        .json({ error: "Email or companyCode already exists" });
     }
 
     const existingAccount = await CompanyAccountInfo.findOne({
