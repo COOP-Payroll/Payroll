@@ -34,7 +34,6 @@ exports.createEmployee = async (req, res) => {
           where: { CompanyId: Number(req.user.id), isActive: true },
         }),
       ]);
-
     const errors = [];
 
     if (!grade) {
@@ -75,7 +74,8 @@ exports.createEmployee = async (req, res) => {
     if (errors.length > 0) {
       return res.status(400).json(errors);
     }
-    let password = req.user.companyCode.substring(0, 4) + "0000";
+
+    let password = req?.user?.companyCode?.substring(0, 4) + "0000";
     await sequelize.transaction(async (t) => {
       const imagePath = req?.files?.["basicInfo[image]"]?.[0]?.path || null;
       const idImagePath =
