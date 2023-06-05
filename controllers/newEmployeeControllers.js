@@ -362,6 +362,8 @@ exports.getAllEmployee = async (req, res) => {
     });
     return res.status(200).json({ count: employees.length, employees });
   } catch (error) {
-    return res.status(500).json({ error: error });
+    return res
+      .status(500)
+      .json({ error: "there is a problem fetching employees" });
   }
 };
