@@ -66,7 +66,7 @@ exports.protectAll = async (req, res, next) => {
 };
 
 //Restricted to
-exports.restrictTo = (role) => {
+exports.restrictTo = (...role) => {
   return async (req, res, next) => {
     if (req.user.role === role) {
       next();
@@ -109,7 +109,6 @@ exports.restrictToAll = (...roles) => {
     next();
   };
 };
-
 exports.restrictALL = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
     if (req.user.role === "companyAdmin" || req.user.role === "superAdmin") {
