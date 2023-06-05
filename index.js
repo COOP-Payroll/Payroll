@@ -145,7 +145,7 @@ const runComputation = async (payrolls) => {
 
 let isRunning = false;
 
-app.listen(6000, () => {
+app.listen(process.env.PORT, () => {
   cron.schedule("*/5 * * * * *", async () => {
     if (!isRunning) {
       isRunning = true;
@@ -153,6 +153,7 @@ app.listen(6000, () => {
         where: { status: "ordered" },
         include: [PayrollDefinition],
       });
+      // console.log("first", JSON.stringify(payrolls, null, 3))
       if (payrolls.length > 0) {
         await runComputation(payrolls);
       }
