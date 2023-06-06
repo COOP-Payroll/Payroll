@@ -16,7 +16,11 @@ router.get("/:id", companyController.getCompanyById);
 router.post("/", companyController.createCompany);
 router.put(
   "/:id",
-  upload.single("companyLogo"),
+  upload.fields([
+    { name: "companyLogo", maxCount: 1 },
+    { name: "header", maxCount: 1 },
+    { name: "footer", maxCount: 1 },
+  ]),
   companyController.updateCompany
 );
 router.delete("/:id", companyController.deleteCompany);

@@ -55,6 +55,12 @@ const Company = sequelize.define("Company", {
     type: DataTypes.STRING,
     defaultValue: "Ethiopia",
   },
+  header: {
+    type: DataTypes.STRING,
+  },
+  footer: {
+    type: DataTypes.STRING,
+  },
 });
 
 Company.beforeCreate((company, options) => {
