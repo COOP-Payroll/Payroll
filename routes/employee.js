@@ -63,8 +63,8 @@ router.put(
 router.put(
   "/:id",
   upload.fields([
-    { name: "basicInfo[image]", maxCount: 1 },
-    { name: "basicInfo[id_image]", maxCount: 1 },
+    { name: "image", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
   ]),
   middleware.protectAll,
   middleware.restrictALL({

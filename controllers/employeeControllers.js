@@ -39,6 +39,12 @@ exports.getAllEmployee = async (req, res) => {
         {
           model: Department,
           required: false,
+          through: {
+            model: EmployeeDepartment,
+            where: {
+              active: true,
+            },
+          },
         },
         {
           model: CustomRole,
@@ -50,6 +56,14 @@ exports.getAllEmployee = async (req, res) => {
         },
         {
           model: Grade,
+
+          through: {
+            model: EmployeeGrade,
+            where: {
+              active: true,
+            },
+          },
+
           include: [
             {
               model: Allowance, // Use the correct alias defined in the association
@@ -59,8 +73,13 @@ exports.getAllEmployee = async (req, res) => {
               model: Deduction, // Use the correct alias defined in the association
               include: [DeductionDefinition],
             },
+            // { model: EmployeeGrade, where: { active: true } },
           ],
         },
+        // {
+        //   model: EmployeeGrade,
+        //   where: { active: true },
+        // },
         {
           model: EmergencyContact,
           required: false,
@@ -118,77 +137,74 @@ exports.getAllEmployee = async (req, res) => {
 exports.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
- 
 
-   const employees = await Employee.findOne({
-     where: { id: id },
-     include: [
-       {
-         model: Address,
-         required: false,
-       },
-       {
-         model: Company,
-         required: false,
-       },
-       {
-         model: EmployeeInfo,
-         required: false,
-       },
-       {
-         model: Department,
-         required: false,
-       },
-       {
-         model: CustomRole,
-         required: false,
-       },
-       {
-         model: Loan,
-         required: false,
-       },
-       {
-         model: Grade,
-         include: [
-           {
-             model: Allowance, // Use the correct alias defined in the association
-             include: [AllowanceDefinition],
-           },
-           {
-             model: Deduction, // Use the correct alias defined in the association
-             include: [DeductionDefinition],
-           },
-         ],
-       },
-       {
-         model: EmergencyContact,
-         required: false,
-       },
-       {
-         model: CustomRole,
-         include: [Permission],
-       },
-       {
-         model: AdditionalAllowance,
-         include: [AdditionalAllowanceDefinition],
-       },
-       {
-         model: AdditionalDeduction,
-         include: [AdditionalDeductionDefinition],
-       },
-       //Address,
-       // EmployeeInfo,
-       // EmergencyContact,
-       // AccountInfo,
-       // Department,
-       // Grade,
+    const employees = await Employee.findOne({
+      where: { id: id },
+      include: [
+        {
+          model: Address,
+          required: false,
+        },
+        {
+          model: Company,
+          required: false,
+        },
+        {
+          model: EmployeeInfo,
+          required: false,
+        },
+        {
+          model: Department,
+          required: false,
+        },
+        {
+          model: CustomRole,
+          required: false,
+        },
+        {
+          model: Loan,
+          required: false,
+        },
+        {
+          model: Grade,
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+          ],
+        },
+        {
+          model: EmergencyContact,
+          required: false,
+        },
+        {
+          model: CustomRole,
+          include: [Permission],
+        },
+        {
+          model: AdditionalAllowance,
+          include: [AdditionalAllowanceDefinition],
+        },
+        {
+          model: AdditionalDeduction,
+          include: [AdditionalDeductionDefinition],
+        },
+        //Address,
+        // EmployeeInfo,
+        // EmergencyContact,
+        // AccountInfo,
+        // Department,
+        // Grade,
 
-       // // Company,
-       // CustomRole,
-     ],
-   });
-
-
+        // // Company,
+        // CustomRole,
+      ],
+    });
 
     res.json({ employees });
   } catch (error) {
@@ -286,8 +302,7 @@ exports.createEmployee = async (req, res, next) => {
 
     if (!gradeId) {
       return res.status(404).json("There is no Grade with this ID");
-    } 
-    else if (!departmentId) {
+    } else if (!departmentId) {
       return res.status(404).json("There is no Department with this ID");
     } else if (
       employeeInfo.basicSalary < gradeId.minSalary ||
@@ -584,6 +599,8 @@ const AdditionalAllowance = require("../models/additionalAllowance.js");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const AdditionalDeduction = require("../models/additionalDeduction.js");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
+const EmployeeGrade = require("../models/EmployeeGrade.js");
+const EmployeeDepartment = require("../models/EmployeeDepartment.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine

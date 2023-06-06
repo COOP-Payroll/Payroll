@@ -48,6 +48,7 @@ exports.createPayroll = async (req, res) => {
         if (payroll) {
           await payroll.destroy();
           payrolldef.totalNoOfEmployee -= 1;
+          payrolldef.totalNoOfprocessedEmployee -= 1;
           await payrolldef.save();
         }
 
