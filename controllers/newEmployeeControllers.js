@@ -121,17 +121,6 @@ exports.createEmployee = async (req, res) => {
           image: imagePath,
           id_image: idImagePath,
           CompanyId: Number(req.user.id),
-          // GradeId: basicInfo.GradeId,
-
-          // department: [
-          //   {
-          //     deptName: department.deptName,
-          //     location: department.location,
-          //     shorthandRepresentation: department.shorthandRepresentation,
-          //     EmployeeDepartment: { active: true },
-          //   },
-          // ],
-          // DepartmentId: basicInfo.DepartmentId,
           employee_id_number: employeeId,
         },
         { transaction: t }
@@ -155,11 +144,6 @@ exports.createEmployee = async (req, res) => {
         { transaction: t }
       );
 
-      // const associatedEmployee = await createEmployee.addDepartment(
-      //   department,
-      //   { through: { active: true } }
-      // );
-      // console.log("many", junctionCreate);
       const createAddress = await Address.create(
         { ...address, EmployeeId: createEmployee.id, isActive: true },
         { transaction: t }
@@ -174,7 +158,6 @@ exports.createEmployee = async (req, res) => {
         emergencyInfo.map((info) => ({
           ...info,
           isActive: true,
-          EmployeeId: createEmployee.id,
         })),
         { transaction: t }
       );
@@ -214,23 +197,25 @@ exports.updateEmployee = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const {
-      role,
-      nationality,
-      marriageStatus,
-      email,
-      phoneNumber,
-      optionalNumber,
-      id_type,
-      id_Number,
-      DepartmentId,
-      GradeId,
-      date_of_birth,
-    } = req.body;
+    const { basicSalary, position, DepartmentId, GradeId, employement_Type } =
+      req.body;
 
     const employee = await Employee.findByPk(
       Number(req.params.id),
-
+      {
+        include: [
+          {
+            model: Grade,
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: true,
+              },
+              attributes: [],
+            },
+          },
+        ],
+      },
       {
         transaction,
       }
@@ -242,6 +227,57 @@ exports.updateEmployee = async (req, res) => {
 
     const errors = [];
     let department, grade;
+
+    if (basicSalary) {
+      if (
+        basicSalary < employee.Grades[0]?.minSalary ||
+        basicSalary > employee.Grades[0]?.maxSalary
+      ) {
+        errors.push({
+          error: `Basic salary must be between ${employee.Grades[0]?.minSalary} and ${employee.Grades[0]?.maxSalary}`,
+        });
+      } else {
+        const employeeInfo = await EmployeeInfo.findOne({
+          where: { EmployeeId: Number(employee.id), isActive: true },
+        });
+        if (employeeInfo) {
+          await employeeInfo.update({ isActive: false }, { transaction });
+        }
+
+        const newEmployeeInfo = await EmployeeInfo.create(
+          {
+            isActive: true,
+            EmployeeId: Number(employee.id),
+            basicSalary,
+            position: employeeInfo.position,
+            employement_Type: employeeInfo.employement_Type,
+            employeeTIN: employeeInfo.employeeTIN,
+            hireDate: employeeInfo.hireDate,
+          },
+          { transaction }
+        );
+      }
+    }
+
+    if (position) {
+      const employeeInfo = await EmployeeInfo.findOne({
+        where: { EmployeeId: Number(employee.id), isActive: true },
+      });
+      if (employeeInfo) {
+        await employeeInfo.update({ isActive: false }, { transaction });
+      }
+      const newEmployeeInfo = await EmployeeInfo.create(
+        {
+          isActive: true,
+          EmployeeId: Number(employee.id),
+          position,
+          employement_Type: employee.employement_Type,
+          employeeTIN: employee.employeeTIN,
+          basicSalary: employee.basicSalary,
+        },
+        { transaction }
+      );
+    }
 
     if (DepartmentId) {
       department = await Department.findByPk(Number(DepartmentId));
@@ -256,9 +292,6 @@ exports.updateEmployee = async (req, res) => {
         errors.push("Grade does not exist.");
       }
     }
-
-    // console.log("grade", grade.id);
-    // console.log("dept", department.id);
 
     if (errors.length > 0) {
       await transaction.rollback();
@@ -285,8 +318,6 @@ exports.updateEmployee = async (req, res) => {
           transaction,
         }
       );
-      // await createdJointData.setDepartment(department.id);
-      // await createdJointData.setEmployee(employee.id);
     }
 
     if (grade) {
@@ -306,8 +337,6 @@ exports.updateEmployee = async (req, res) => {
           transaction,
         }
       );
-      // await createdJointData.setGrade(grade.id);
-      // await createdJointData.setEmployee(employee.id);
     }
 
     const updateEmployee = await employee.update(
