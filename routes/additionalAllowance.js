@@ -6,7 +6,7 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
+  middleware.restrictToAll("companyAdmin"),
   allowance.getAllAllowance
 );
 router.get(
