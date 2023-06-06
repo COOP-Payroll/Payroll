@@ -232,6 +232,14 @@ exports.getAllCompany = async (req, res) => {
       const imageUrl = `${baseUrl}${company.companyLogo.replace(/\\/g, "/")}`;
       company.companyLogo = imageUrl;
     }
+    if (company.footer) {
+      const imageUrl = `${baseUrl}${company.footer.replace(/\\/g, "/")}`;
+      company.footer = imageUrl;
+    }
+    if (company.header) {
+      const imageUrl = `${baseUrl}${company.header.replace(/\\/g, "/")}`;
+      company.header = imageUrl;
+    }
     return company;
   });
   return res.json({
@@ -270,18 +278,16 @@ exports.updateCompany = async (req, res) => {
       if (body.password) {
         delete body.password;
       }
-
-      const { file } = req;
-      let updatedData;
-
-      if (file) {
-        const { path } = file;
-        await company.validate();
-        updatedData = await company.update({ ...body, companyLogo: path });
-      } else {
-        await company.validate();
-        updatedData = await company.update(body);
-      }
+      const logoPath =
+        req?.files?.["companyLogo"]?.[0]?.path || company.companyLogo;
+      const headerPath = req?.files?.["header"][0]?.path || company.header;
+      const footerPath = req?.files?.["footer"][0]?.path || company.footer;
+      const updatedData = await company.update({
+        ...body,
+        companyLogo: logoPath,
+        header: headerPath,
+        footer: footerPath,
+      });
       return res.json(updatedData);
     }
   } catch (error) {
