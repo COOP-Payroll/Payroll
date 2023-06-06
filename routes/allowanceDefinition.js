@@ -5,7 +5,7 @@ const router = express.Router();
 //get allowance defined by this company
 router.get("/", 
 middleware.protectAll,
-middleware.restrictTo('companyAdmin'),
+middleware.restrictToAll('companyAdmin'),
 allowanceDefinition.getAllAllowanceDefinition);
 
 //get allowance by its id 
@@ -15,15 +15,23 @@ allowanceDefinition.getAllowanceDefinitionById);
 //allowance definition for this company 
 router.post("/", 
 middleware.protectAll,
-middleware.restrictTo('companyAdmin'),
+middleware.restrictToAll('companyAdmin'),
 allowanceDefinition.createAllowanceDefinition);
 
 //update allowance definition
-router.put("/:id", 
-allowanceDefinition.updateAllowanceDefinition);
+router.put(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  allowanceDefinition.updateAllowanceDefinition
+);
 
 //delete allowance definition
-router.delete("/:id", 
-allowanceDefinition.deleteAllowanceDefinition);
+router.delete(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  allowanceDefinition.deleteAllowanceDefinition
+);
 
 module.exports = router;

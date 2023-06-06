@@ -952,7 +952,8 @@ exports.login = async (req, res, next) => {
         },
       ],
     });
-    console.log("user", user);
+    // console.log("user", user);
+    console.log("password", await bcrypt.compare(password, user.password));
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
