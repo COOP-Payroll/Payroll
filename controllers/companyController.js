@@ -279,7 +279,7 @@ exports.updateCompany = async (req, res) => {
         delete body.password;
       }
       const logoPath =
-        req?.files?.["companyLogo"]?.[0]?.path || company.companyLogo;
+        req?.files?.["companyLogo"][0]?.path || company.companyLogo;
       const headerPath = req?.files?.["header"][0]?.path || company.header;
       const footerPath = req?.files?.["footer"][0]?.path || company.footer;
       const updatedData = await company.update({
