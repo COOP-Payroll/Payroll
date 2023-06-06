@@ -298,8 +298,12 @@ exports.updateEmployee = async (req, res) => {
       return res.status(400).json({ errors });
     }
 
-    const imagePath = req.files?.["image"]?.[0]?.path || employee.image;
-    const idImagePath = req.files?.["id_image"]?.[0]?.path || employee.id_image;
+    const imagePath = req.files?.["image"]
+      ? req.files?.["image"]?.[0]?.path
+      : employee.image;
+    const idImagePath = req.files?.["id_image"]
+      ? req.files?.["id_image"]?.[0]?.path
+      : employee.id_image;
 
     if (department) {
       const jointData = await EmployeeDepartment.findOne({
