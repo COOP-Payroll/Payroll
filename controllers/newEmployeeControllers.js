@@ -298,6 +298,8 @@ exports.updateEmployee = async (req, res) => {
       return res.status(400).json({ errors });
     }
 
+    console.log("employee files", req.files);
+
     const imagePath = req.files?.["image"]
       ? req.files?.["image"]?.[0]?.path
       : employee.image;
