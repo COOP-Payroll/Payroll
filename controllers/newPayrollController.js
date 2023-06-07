@@ -47,8 +47,10 @@ exports.createPayroll = async (req, res) => {
 
         if (payroll) {
           await payroll.destroy();
-          payrolldef.totalNoOfEmployee -= 1;
-          payrolldef.totalNoOfprocessedEmployee -= 1;
+          payrolldef.totalNoOfEmployee =
+            Number(payrolldef.totalNoOfEmployee) - 1;
+          payrolldef.totalNoOfprocessedEmployee =
+            Number(payrolldef.totalNoOfprocessedEmployee) - 1;
           await payrolldef.save();
         }
 
@@ -71,11 +73,13 @@ exports.createPayroll = async (req, res) => {
     }
 
     // Update total payroll count in the database
-    payrolldef.totalNoOfEmployee += payrollCount;
+    payrolldef.totalNoOfEmployee =
+      Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
     await payrolldef.save();
 
     return res.status(201).json({ msg: "Payroll created successfully!" });
   } catch (error) {
+    console.log("err", error);
     return res
       .status(500)
       .json({ msg: "Error occurred while creating payroll:", error });

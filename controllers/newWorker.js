@@ -13,10 +13,15 @@ const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefi
 const AdditionalDeduction = require("../models/additionalDeduction");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
 const PayrollDefinition = require("../models/payrollDefinition");
+const EmployeeGrade = require("../models/EmployeeGrade");
 
 const newWorker = async () => {
   try {
     const { user, employeeId, payrollDefinitionId } = workerData;
+
+    const employeeGrade = await EmployeeGrade.findOne({
+      where: { EmployeeId: employeeId, active: true },
+    });
 
     const [
       pension,
@@ -44,20 +49,13 @@ const newWorker = async () => {
       }),
       Employee.findByPk(Number(employeeId), {
         include: [
-          Loan,
-          EmployeeInfo,
-          {
-            model: Allowance,
-            include: [AllowanceDefinition],
-            where: { CompanyId: user },
-          },
-          {
-            model: Deduction,
-            where: { CompanyId: user },
-          },
+          { model: Loan },
+          { model: EmployeeInfo, where: { isActive: true } },
         ],
       }),
       Loan.findAll({ where: { EmployeeId: employeeId } }),
+      Allowance.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
+      Deduction.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
       AdditionalAllowances.findAll({
         where: { CompanyId: user, EmployeeId: employeeId },
         include: [AdditionalAllowanceDefinition],
@@ -67,6 +65,8 @@ const newWorker = async () => {
         include: [AdditionalDeductionDefinition],
       }),
     ]);
+
+    // console.log("employGrade", JSON.stringify(employee.EmployeeInfos));
 
     const employee_pension = pension?.employeeContribution ?? 1;
     const employer_pension = pension?.employerContribution ?? 1;
@@ -137,7 +137,7 @@ const newWorker = async () => {
       totalDeduction += Number(deduction.amount);
     });
 
-    totalTaxable += Number(employee.EmployeeInfo.basicSalary);
+    totalTaxable += Number(employee.EmployeeInfos[0]?.basicSalary);
 
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax.from_Salary && totalTaxable < tax.to_Salary
@@ -157,23 +157,23 @@ const newWorker = async () => {
       totalLoan +
       totalTaxableIncome +
       totalDeduction +
-      employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100);
+      employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100);
 
     const payrollData = {
       grossSalary: (
         totalAllowance +
-        employee.EmployeeInfo.basicSalary +
-        employee.EmployeeInfo.basicSalary * ((employer_pension * 1) / 100)
+        employee.EmployeeInfos[0]?.basicSalary +
+        employee.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100)
       ).toFixed(2),
       taxableIncome: totalTaxable.toFixed(2),
       incomeTax: totalTaxableIncome.toFixed(2),
       totalDeduction: overallTotalDeduction.toFixed(2),
       totalAllowance,
       employee_pension_amount: Number(
-        employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100)
+        employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100)
       ).toFixed(2),
       employer_pension_amount: (
-        employee.EmployeeInfo.basicSalary *
+        employee.EmployeeInfos[0]?.basicSalary *
         ((employer_pension * 1) / 100)
       ).toFixed(2),
       NetSalary: (totalTaxable - overallTotalDeduction + totalExempted).toFixed(
@@ -183,15 +183,18 @@ const newWorker = async () => {
     };
 
     const payroll = await oldPayroll.update(payrollData);
+    console.log("before", payrollDefinition.totalNoOfprocessedEmployee);
     await payrollDefinition.increment("totalNoOfprocessedEmployee");
+    console.log("after", payrollDefinition.totalNoOfprocessedEmployee);
     if (payrollDefinition.totalNoOfEmployee !== 0) {
       const percent =
-        (payrollDefinition.totalNoOfprocessedEmployee /
-          payrollDefinition.totalNoOfEmployee) *
+        (Number(payrollDefinition.totalNoOfprocessedEmployee) /
+          Number(payrollDefinition.totalNoOfEmployee)) *
         100;
       await payrollDefinition.update({ processedInPercent: percent });
     }
   } catch (error) {
+    console.log("fail", error);
     const { employeeId, payrollDefinitionId } = workerData;
     const oldPayroll = await Payroll.findOne({
       where: {

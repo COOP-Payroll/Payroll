@@ -19,6 +19,7 @@ const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 // Define controller methods for handling User requests
+
 exports.getAllEmployee = async (req, res) => {
   try {
     const Employees = await Employee.findAll({
@@ -521,79 +522,65 @@ exports.deleteEmployee = async (req, res, next) => {
     }
   }
 };
-///
 
+//GET EMPLOYEE BY DEPARTMENT ID
 exports.findByDepartment = async (req, res, next) => {
   try {
     const departmentId = req.params.departmentId;
-    console.log("departmentId", departmentId);
     if (departmentId != 0) {
       const Employees = await Employee.findAll({
-        // where: { companyId: req.user.id, DepartmentId: departmentId },
         include: [
           {
             model: Department,
             through: {
-              EmployeeDepartment,
               where: {
-                DepartmentId: departmentId,
-
+                active: true,
               },
             },
-          },
-          
-             {
-          model: Address,
-          required: false,
-        },
-        {
-          model: Company,
-          required: false,
-        },
-        {
-          model: EmployeeInfo,
-          required: false,
-        },
-        {
-          model: Department,
-          required: false,
-          through: {
-            model: EmployeeDepartment,
             where: {
-              active: true,
+              id: departmentId,
             },
           },
-        },
-        {
-          model: CustomRole,
-          required: false,
-        },
-        {
-          model: Loan,
-          required: false,
-        },
-        {
-          model: Grade,
+          {
+            model: Grade,
 
-          through: {
-            model: EmployeeGrade,
-            where: {
-              active: true,
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: true,
+              },
             },
+
+            include: [
+              {
+                model: Allowance, // Use the correct alias defined in the association
+                include: [AllowanceDefinition],
+              },
+              {
+                model: Deduction, // Use the correct alias defined in the association
+                include: [DeductionDefinition],
+              },
+              // { model: EmployeeGrade, where: { active: true } },
+            ],
           },
-
-          include: [
-            {
-              model: Allowance, // Use the correct alias defined in the association
-              include: [AllowanceDefinition],
-            },
-            {
-              model: Deduction, // Use the correct alias defined in the association
-              include: [DeductionDefinition],
-            },
-            // { model: EmployeeGrade, where: { active: true } },
-          ],
-        
+          {
+            model: Loan,
+            required: false,
+          },
+          {
+            model: EmployeeInfo,
+            required: false,
+            attributes: ["basicSalary"],
+          },
+          {
+            model: AdditionalAllowance,
+            include: [AdditionalAllowanceDefinition],
+            required: false,
+          },
+          {
+            model: AdditionalDeduction,
+            include: [AdditionalDeductionDefinition],
+            required: false,
           },
         ],
       });
@@ -604,10 +591,25 @@ exports.findByDepartment = async (req, res, next) => {
       });
     } else if (departmentId == 0) {
       const Employees = await Employee.findAll({
-        where: { companyId: req.user.id },
         include: [
           {
+            model: Department,
+            through: {
+              where: {
+                active: true,
+              },
+            },
+          },
+          {
             model: Grade,
+
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: true,
+              },
+            },
+
             include: [
               {
                 model: Allowance, // Use the correct alias defined in the association
@@ -617,7 +619,27 @@ exports.findByDepartment = async (req, res, next) => {
                 model: Deduction, // Use the correct alias defined in the association
                 include: [DeductionDefinition],
               },
+              // { model: EmployeeGrade, where: { active: true } },
             ],
+          },
+          {
+            model: Loan,
+            required: false,
+          },
+          {
+            model: EmployeeInfo,
+            required: false,
+            attributes: ["basicSalary"],
+          },
+          {
+            model: AdditionalAllowance,
+            include: [AdditionalAllowanceDefinition],
+            required: false,
+          },
+          {
+            model: AdditionalDeduction,
+            include: [AdditionalDeductionDefinition],
+            required: false,
           },
         ],
       });
