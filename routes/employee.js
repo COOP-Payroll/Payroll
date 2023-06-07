@@ -10,13 +10,13 @@ router.get(
   "/",
 
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.getAllEmployee
 );
 router.get(
   "/:id",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.getEmployeeById
 );
 router.post(
@@ -30,7 +30,7 @@ router.post(
   ]),
   middleware.protectAll,
   middleware.restrictALL({
-    moduleName: "EmployeeInformation",
+    moduleName: "employeeinfo",
     isAccessible: true,
   }),
   // employeeController.createEmployee
@@ -40,14 +40,14 @@ router.post(
 router.get(
   "/company/employees",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   newEmployeeController.getAllEmployee
 );
 
 router.get(
   "/department/:departmentId",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.findByDepartment
 );
 
@@ -55,7 +55,7 @@ router.put(
   "/additionalPay/:id",
   middleware.protectAll,
   middleware.restrictALL({
-    moduleName: "EmployeeInformation",
+    moduleName: "employeeinfo",
     isAccessible: true,
   }),
   employeeController.addAddionalPay
@@ -68,7 +68,7 @@ router.put(
   ]),
   middleware.protectAll,
   middleware.restrictALL({
-    moduleName: "EmployeeInformation",
+    moduleName: "employeeinfo",
     isAccessible: true,
   }),
   newEmployeeController.updateEmployee
@@ -77,13 +77,15 @@ router.delete(
   "/:id",
   middleware.protectAll,
   middleware.restrictALL({
-    moduleName: "EmployeeInformation",
+    moduleName: "employeeinfo",
     isAccessible: true,
   }),
 
   employeeController.deleteEmployee
 );
-
+//payrollpublish
+//payrollpublishedreport
+//reports
 router.post(
   "/excel",
   middleware.protectAll,

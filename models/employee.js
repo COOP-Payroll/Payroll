@@ -73,6 +73,19 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  rejectionCode: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  acceptanceCode: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  isConfirmed: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 });
 
 Employee.beforeCreate((employee, options) => {

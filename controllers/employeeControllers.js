@@ -14,7 +14,7 @@ const Deduction = require("../models/deduction.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const Loan = require("../models/loan.js");
-
+const nodemailer = require("nodemailer");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -387,6 +387,8 @@ exports.createEmployee = async (req, res, next) => {
       });
     }
 
+    await sendConfirmationEmail(basicInfo1);
+
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
       const accountExists = await AccountInfo.findOne({
@@ -527,9 +529,59 @@ exports.findByDepartment = async (req, res, next) => {
     console.log("departmentId", departmentId);
     if (departmentId != 0) {
       const Employees = await Employee.findAll({
-        where: { companyId: req.user.id, DepartmentId: departmentId },
-        include: {
+        // where: { companyId: req.user.id, DepartmentId: departmentId },
+        include: [
+          {
+            model: Department,
+            through: {
+              EmployeeDepartment,
+              where: {
+                DepartmentId: departmentId,
+
+              },
+            },
+          },
+          
+             {
+          model: Address,
+          required: false,
+        },
+        {
+          model: Company,
+          required: false,
+        },
+        {
+          model: EmployeeInfo,
+          required: false,
+        },
+        {
+          model: Department,
+          required: false,
+          through: {
+            model: EmployeeDepartment,
+            where: {
+              active: true,
+            },
+          },
+        },
+        {
+          model: CustomRole,
+          required: false,
+        },
+        {
+          model: Loan,
+          required: false,
+        },
+        {
           model: Grade,
+
+          through: {
+            model: EmployeeGrade,
+            where: {
+              active: true,
+            },
+          },
+
           include: [
             {
               model: Allowance, // Use the correct alias defined in the association
@@ -539,8 +591,11 @@ exports.findByDepartment = async (req, res, next) => {
               model: Deduction, // Use the correct alias defined in the association
               include: [DeductionDefinition],
             },
+            // { model: EmployeeGrade, where: { active: true } },
           ],
-        },
+        
+          },
+        ],
       });
 
       res.status(200).json({
@@ -945,19 +1000,18 @@ exports.login = async (req, res, next) => {
         {
           model: Company,
           where: { companyCode: companyCode },
-         
         },
         {
           model: CustomRole,
           include: [Permission],
         },
         {
-          model:Address
-        }
+          model: Address,
+        },
       ],
     });
     // console.log("user", user);
-   // console.log("password", await bcrypt.compare(password, user.password));
+    // console.log("password", await bcrypt.compare(password, user.password));
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
@@ -1013,3 +1067,67 @@ exports.addAddionalPay = async (req, res, next) => {
     }
   } catch (error) {}
 };
+
+// Send confirmation email function
+const sendConfirmationEmail = async (employee) => {
+  console.log(employee);
+  console.log(employee);
+
+  // return new Promise(async (resolve, reject) => {
+  //   try {
+  //     // Create a nodemailer transporter
+  //     const transporter = nodemailer.createTransport({
+  //       // Configure your email provider's SMTP settings here
+  //       // For example, for Gmail:
+  //       service: 'Gmail',
+  //       auth: {
+  //         user: 'your-email@gmail.com',
+  //         pass: 'your-password',
+  //       },
+  //     });
+
+  //     // Calculate the expiration date (e.g., 7 days from the current date)
+  //     const expirationDate = new Date();
+  //     expirationDate.setDate(expirationDate.getDate() + 7);
+
+  //     // Format the expiration date as a string
+  //     const formattedExpirationDate = expirationDate.toDateString();
+
+  //     // Generate unique acceptance and rejection codes
+  //     const acceptanceCode = generateUniqueCode();
+  //     const rejectionCode = generateUniqueCode();
+
+  //     // Compose the email message
+  //     const message = {
+  //       from: 'your-email@gmail.com',
+  //       to: employee.email,
+  //       subject: 'Employee Registration Confirmation',
+  //       html: `<p>Dear ${employee.firstName},</p>
+  //       <p>Thank you for registering as an employee.</p>
+  //       <p>Your registration is valid until ${formattedExpirationDate}.</p>
+  //       <p>Please click one of the following links to accept or reject your registration:</p>
+  //       <ul>
+  //         <li><a href="${process.env.BASE_URL}/accept/${acceptanceCode}">Accept</a></li>
+  //         <li><a href="${process.env.BASE_URL}/reject/${rejectionCode}">Reject</a></li>
+  //       </ul>`,
+  //     };
+
+  //     // Save the acceptance and rejection codes to the Employee record
+  //     await employee.update({ acceptanceCode, rejectionCode });
+
+  //     // Send the email
+  //     await transporter.sendMail(message);
+
+  //     resolve(); // Resolve the promise when the email is sent successfully
+  //   } catch (error) {
+  //     reject(error); // Reject the promise if there's an error sending the email
+  //   }
+  // });
+};
+
+// Generate a unique code
+function generateUniqueCode() {
+  // Implement your own logic to generate a unique code
+  // For example, you can use a UUID library
+  return uuidv4();
+}
