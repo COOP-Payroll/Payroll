@@ -46,8 +46,8 @@ exports.createEmployee = async (req, res) => {
       errors.push({ error: "Department does not exist." });
     }
     if (
-      employeeInfo.basicSalary < grade.minSalary ||
-      employeeInfo.basicSalary > grade.maxSalary
+      employeeInfo.basicSalary < grade?.minSalary ||
+      employeeInfo.basicSalary > grade?.maxSalary
     ) {
       errors.push({
         error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`,
@@ -67,7 +67,6 @@ exports.createEmployee = async (req, res) => {
     if (!idformat) {
       errors.push({ error: "ID format does not exist." });
     }
-
     if (errors.length > 0) {
       return res.status(400).json(errors);
     }
