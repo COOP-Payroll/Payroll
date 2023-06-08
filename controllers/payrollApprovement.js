@@ -243,32 +243,45 @@ async function handleHierarchicalApprove(payrollId, approverId,companyApprovalLe
 const createPayrollApprovement = async (req, res) => {
         const payrollId = req.body.payrollId;
         const approverId = req.body.approverId;
-          console.log(req.body.payrollId,req.body.approverId)
+          // console.log(req.body.payrollId,req.body.approverId)
     try {
         //grap required information 1 approval method of company  2 appreover info 3 payroll information
         const payrollDefinition = await PayrollDefinition.findOne({
             where: { id: payrollId },
         });
+        if(!payrollDefinition){
+          return res.status(404).json("Payroll definition is not defined");
+        }
 
-        const CompanyIdPayroll = payrollDefinition.CompanyId; 
+        const CompanyIdPayroll = payrollDefinition?.CompanyId; 
         const payrollStatus    = payrollDefinition.status;
 
-        console.log(CompanyIdPayroll,payrollStatus,"payroll")
+        // console.log(CompanyIdPayroll,payrollStatus,"payroll")
         //approval method 
         const approvalMethod = await ApprovalMethod.findOne({
             where: { CompanyId: CompanyIdPayroll, isActive:true },
         });
-        const minimumApprover          = approvalMethod.minimumApprover;
-        const isThereMasterApprover     = approvalMethod.isThereMasterApprover
-        const companyApprovalMethod     = approvalMethod.approvalMethod;
-        const isApprovalMethodCompleted = approvalMethod.isCompleted;
-        const companyApprovalLevel      = approvalMethod.approvalLevel;
-        console.log(companyApprovalLevel,companyApprovalMethod,isApprovalMethodCompleted,"approval method");
+        if(!approvalMethod){
+          return res.status(404).json("please define approval method");
+        }
+
+        // console.log("minimum approver",approvalMethod)
+        const minimumApprover          = approvalMethod?.minimumApprover;
+        const isThereMasterApprover     = approvalMethod?.isThereMasterApprover
+        const companyApprovalMethod     = approvalMethod?.approvalMethod;
+        const isApprovalMethodCompleted = approvalMethod?.isCompleted;
+        const companyApprovalLevel      = approvalMethod?.approvalLevel;
+        // console.log(companyApprovalLevel,companyApprovalMethod,isApprovalMethodCompleted,"approval method");
         //approver 
         const approver = await Approver.findOne({
             where: { id: approverId, isActive:true},
         });
-        
+        if(!approver){
+          return res.status(404).json({
+            "message": "Please assign employee to approver"
+          })
+        }
+        console.log("approver",approver)
         const approverLevel = approver.level;
         const approverRole   = approver.role;
         const isApproverActive = approver.isActive;
