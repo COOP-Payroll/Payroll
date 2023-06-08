@@ -128,7 +128,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-sequelize.sync({ force: true }).then(() => console.log("db is ready"));
+sequelize.sync({ force: false }).then(() => console.log("db is ready"));
 
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
@@ -145,7 +145,7 @@ const runComputation = async (payrolls) => {
 
 let isRunning = false;
 
-app.listen(6000, () => {
+app.listen(process.env.PORT, () => {
   cron.schedule("*/5 * * * * *", async () => {
     if (!isRunning) {
       isRunning = true;
