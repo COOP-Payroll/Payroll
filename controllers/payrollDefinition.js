@@ -1,3 +1,4 @@
+const { DATEONLY } = require("sequelize");
 const Payroll = require("../models/payrollDefinition");
 
 // Define controller methods for handling User requests for deduction definition
@@ -33,9 +34,28 @@ exports.getPayrollDefinitionById = async (req, res) => {
     return res.json(error);
   }
 };
+exports.getLatestPayroll = async (req, res) => {
+  try{
+    console.log("Getting latest payroll");
+    const latestPayroll = await Payroll.findOne({
+      order: [["createdAt", "DESC"]],
+    });
+    const lastEndDate = latestPayroll.endDate.toISOString().substring(0, 10);
+    const lat="latest"
+    console.log({
+      payroll:latestPayroll,
+      endDate:lastEndDate,
+      lat:lat
+    })
+    res.json(latestPayroll);
+  }catch(err){
 
+  }
+};
 exports.createPayroll = async (req, res) => {
   try {
+    
+    
     const startDate = req.body.startDate;
     const endDate = req.body.endDate;
     const CompanyId = req.user.id;
@@ -54,10 +74,17 @@ exports.createPayroll = async (req, res) => {
       where: criteria,
     });
     console.log(ifPayroll, "exists");
-
-    if (ifPayroll >= 1) {
+    //calculate payroll duration
+    const payrollIntervalInMilliseconds = new Date(endDate) - new Date(startDate);
+    const duration= Math.ceil(payrollIntervalInMilliseconds / (1000 * 60 * 60 * 24));
+    if(duration>32) {
+      return res.json("day of payroll should not be more than 32 day . divide the into two payroll");
+    }else if(duration<=0) {
+      return res.json("day of payroll should be more than 1.");
+    } else if (ifPayroll >= 1) {
       return res.json("You have already defined the payroll for this month.");
     } else if (newPayroll === 0) {
+
       const newPayroll = await Payroll.create({
         payrollName: req.body.payrollName,
         startDate: req.body.startDate,
@@ -67,19 +94,20 @@ exports.createPayroll = async (req, res) => {
         isPaid: false,
       });
       await newPayroll.setCompany(CompanyId);
-
       return res.status(201).json("Successfully defined your first payroll.");
+
     } else {
       const latestPayroll = await Payroll.findOne({
         order: [["createdAt", "DESC"]],
       });
-      const lastEndDate = latestPayroll.endDate.toISOString().substring(0, 10);;
+      const lastEndDate = latestPayroll.endDate.toISOString().substring(0, 10);
+      
       console.log({
         payroll:latestPayroll,
         endDate:lastEndDate
       })
-
-       //Calculate the interval
+      
+      //Calculate the interval
       const intervalInMilliseconds = new Date(startDate) - new Date(lastEndDate);
       const intervalInDays = Math.ceil(intervalInMilliseconds / (1000 * 60 * 60 * 24));
       console.log(intervalInDays)

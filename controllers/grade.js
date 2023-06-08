@@ -2,7 +2,7 @@ const Grade = require("../models/grade");
 const Company = require("../models/company");
 const Allowance=require("../models/allowance.js")
 const AllowanceDefinition=require("../models/allowanceDefinition.js")
-
+const { Op } = require('sequelize');
 // Define controller methods for handling User requests
 //CREATE GRADE 
 exports.getAllGrade = async (req, res) => {
@@ -70,22 +70,34 @@ exports.createGrade = async (req, res, next) => {
     const companyId = req.user.id;
     console.log(name, minSalary, maxSalary);
     console.log("company id", req.user.id);
-    const criteria = {
-      name: name,
-      
-    };
+    
+
+      const criteria = {
+        [Op.or]: [
+          { name: name },
+          { minSalary: minSalary },
+          { minSalary: maxSalary },
+          { maxSalary: maxSalary },
+          { maxSalary: minSalary },
+        ],
+      };
+
     const sameGrade = await Grade.findOne({ where: criteria });
 
     if (sameGrade) {
-      res.json("this grade is defined already ");
+      return res.json("this grade is defined already  check if data provided is not the same with the inserted grade");
     } else {
-      const grade = await Grade.create({ name,minSalary,maxSalary});
-      await grade.setCompany(companyId);
+      if(minSalary>=maxSalary) {
+        return res.json("check the amount of the salary inserted");
+      }else{
+        const grade = await Grade.create({ name,minSalary,maxSalary});
+        await grade.setCompany(companyId);
 
-      res.status(200).json({
-        message: "Successfully Registered",
-        grade,
-      });
+        return res.status(200).json({
+          message: "Successfully Registered",
+          grade,
+        });
+      }
     }
   } catch (error) {
     console.log("first",error)
