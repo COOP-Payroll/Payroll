@@ -29,7 +29,7 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
   },
 });
 
-Employee.hasOne(EmployeeInfo);
+Employee.hasMany(EmployeeInfo);
 EmployeeInfo.belongsTo(Employee);
 
 module.exports = EmployeeInfo;

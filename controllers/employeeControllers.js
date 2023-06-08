@@ -14,15 +14,133 @@ const Deduction = require("../models/deduction.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const Loan = require("../models/loan.js");
-
+const nodemailer = require("nodemailer");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 // Define controller methods for handling User requests
+
 exports.getAllEmployee = async (req, res) => {
   try {
     const Employees = await Employee.findAll({
       where: { companyId: req.user.id },
+      include: [
+        {
+          model: Address,
+          required: false,
+        },
+        {
+          model: Company,
+          required: false,
+        },
+        {
+          model: EmployeeInfo,
+          required: false,
+        },
+        {
+          model: Department,
+          required: false,
+          through: {
+            model: EmployeeDepartment,
+            where: {
+              active: true,
+            },
+          },
+        },
+        {
+          model: CustomRole,
+          required: false,
+        },
+        {
+          model: Loan,
+          required: false,
+        },
+        {
+          model: Grade,
+
+          through: {
+            model: EmployeeGrade,
+            where: {
+              active: true,
+            },
+          },
+
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+            // { model: EmployeeGrade, where: { active: true } },
+          ],
+        },
+        // {
+        //   model: EmployeeGrade,
+        //   where: { active: true },
+        // },
+        {
+          model: EmergencyContact,
+          required: false,
+        },
+        {
+          model: CustomRole,
+          include: [Permission],
+        },
+        {
+          model: AdditionalAllowance,
+          include: [AdditionalAllowanceDefinition],
+        },
+        {
+          model: AdditionalDeduction,
+          include: [AdditionalDeductionDefinition],
+        },
+        //Address,
+        // EmployeeInfo,
+        // EmergencyContact,
+        // AccountInfo,
+        // Department,
+        // Grade,
+
+        // // Company,
+        // CustomRole,
+      ],
+    });
+    res.status(200).json({
+      count: Employees.length,
+      Employees,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      // console.log("first", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+exports.getEmployeeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const employees = await Employee.findOne({
+      where: { id: id },
       include: [
         {
           model: Address,
@@ -88,107 +206,6 @@ exports.getAllEmployee = async (req, res) => {
         // CustomRole,
       ],
     });
-    res.status(200).json({
-      count: Employees.length,
-      Employees,
-    });
-  } catch (error) {
-    console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(400).json(errors);
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(400).json(errors);
-    } else {
-      // console.log("first", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-};
-
-exports.getEmployeeById = async (req, res) => {
-  try {
-    const { id } = req.params;
- 
-
-   const employees = await Employee.findOne({
-     where: { id: id },
-     include: [
-       {
-         model: Address,
-         required: false,
-       },
-       {
-         model: Company,
-         required: false,
-       },
-       {
-         model: EmployeeInfo,
-         required: false,
-       },
-       {
-         model: Department,
-         required: false,
-       },
-       {
-         model: CustomRole,
-         required: false,
-       },
-       {
-         model: Loan,
-         required: false,
-       },
-       {
-         model: Grade,
-         include: [
-           {
-             model: Allowance, // Use the correct alias defined in the association
-             include: [AllowanceDefinition],
-           },
-           {
-             model: Deduction, // Use the correct alias defined in the association
-             include: [DeductionDefinition],
-           },
-         ],
-       },
-       {
-         model: EmergencyContact,
-         required: false,
-       },
-       {
-         model: CustomRole,
-         include: [Permission],
-       },
-       {
-         model: AdditionalAllowance,
-         include: [AdditionalAllowanceDefinition],
-       },
-       {
-         model: AdditionalDeduction,
-         include: [AdditionalDeductionDefinition],
-       },
-       //Address,
-       // EmployeeInfo,
-       // EmergencyContact,
-       // AccountInfo,
-       // Department,
-       // Grade,
-
-       // // Company,
-       // CustomRole,
-     ],
-   });
-
-
 
     res.json({ employees });
   } catch (error) {
@@ -371,6 +388,8 @@ exports.createEmployee = async (req, res, next) => {
       });
     }
 
+    await sendConfirmationEmail(basicInfo1);
+
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
       const accountExists = await AccountInfo.findOne({
@@ -503,40 +522,35 @@ exports.deleteEmployee = async (req, res, next) => {
     }
   }
 };
-///
 
+//GET EMPLOYEE BY DEPARTMENT ID
 exports.findByDepartment = async (req, res, next) => {
   try {
     const departmentId = req.params.departmentId;
-    console.log("departmentId", departmentId);
     if (departmentId != 0) {
       const Employees = await Employee.findAll({
-        where: { companyId: req.user.id, DepartmentId: departmentId },
-        include: {
-          model: Grade,
-          include: [
-            {
-              model: Allowance, // Use the correct alias defined in the association
-              include: [AllowanceDefinition],
-            },
-            {
-              model: Deduction, // Use the correct alias defined in the association
-              include: [DeductionDefinition],
-            },
-          ],
-        },
-      });
-
-      res.status(200).json({
-        count: Employees.length,
-        Employees,
-      });
-    } else if (departmentId == 0) {
-      const Employees = await Employee.findAll({
-        where: { companyId: req.user.id },
         include: [
           {
+            model: Department,
+            through: {
+              where: {
+                active: true,
+              },
+            },
+            where: {
+              id: departmentId,
+            },
+          },
+          {
             model: Grade,
+
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: true,
+              },
+            },
+
             include: [
               {
                 model: Allowance, // Use the correct alias defined in the association
@@ -546,7 +560,86 @@ exports.findByDepartment = async (req, res, next) => {
                 model: Deduction, // Use the correct alias defined in the association
                 include: [DeductionDefinition],
               },
+              // { model: EmployeeGrade, where: { active: true } },
             ],
+          },
+          {
+            model: Loan,
+            required: false,
+          },
+          {
+            model: EmployeeInfo,
+            required: false,
+            attributes: ["basicSalary"],
+          },
+          {
+            model: AdditionalAllowance,
+            include: [AdditionalAllowanceDefinition],
+            required: false,
+          },
+          {
+            model: AdditionalDeduction,
+            include: [AdditionalDeductionDefinition],
+            required: false,
+          },
+        ],
+      });
+
+      res.status(200).json({
+        count: Employees.length,
+        Employees,
+      });
+    } else if (departmentId == 0) {
+      const Employees = await Employee.findAll({
+        include: [
+          {
+            model: Department,
+            through: {
+              where: {
+                active: true,
+              },
+            },
+          },
+          {
+            model: Grade,
+
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: true,
+              },
+            },
+
+            include: [
+              {
+                model: Allowance, // Use the correct alias defined in the association
+                include: [AllowanceDefinition],
+              },
+              {
+                model: Deduction, // Use the correct alias defined in the association
+                include: [DeductionDefinition],
+              },
+              // { model: EmployeeGrade, where: { active: true } },
+            ],
+          },
+          {
+            model: Loan,
+            required: false,
+          },
+          {
+            model: EmployeeInfo,
+            required: false,
+            attributes: ["basicSalary"],
+          },
+          {
+            model: AdditionalAllowance,
+            include: [AdditionalAllowanceDefinition],
+            required: false,
+          },
+          {
+            model: AdditionalDeduction,
+            include: [AdditionalDeductionDefinition],
+            required: false,
           },
         ],
       });
@@ -583,6 +676,8 @@ const AdditionalAllowance = require("../models/additionalAllowance.js");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const AdditionalDeduction = require("../models/additionalDeduction.js");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
+const EmployeeGrade = require("../models/EmployeeGrade.js");
+const EmployeeDepartment = require("../models/EmployeeDepartment.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -932,9 +1027,13 @@ exports.login = async (req, res, next) => {
           model: CustomRole,
           include: [Permission],
         },
+        {
+          model: Address,
+        },
       ],
     });
-    console.log("user", user);
+    // console.log("user", user);
+    // console.log("password", await bcrypt.compare(password, user.password));
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
@@ -990,3 +1089,67 @@ exports.addAddionalPay = async (req, res, next) => {
     }
   } catch (error) {}
 };
+
+// Send confirmation email function
+const sendConfirmationEmail = async (employee) => {
+  console.log(employee);
+  console.log(employee);
+
+  // return new Promise(async (resolve, reject) => {
+  //   try {
+  //     // Create a nodemailer transporter
+  //     const transporter = nodemailer.createTransport({
+  //       // Configure your email provider's SMTP settings here
+  //       // For example, for Gmail:
+  //       service: 'Gmail',
+  //       auth: {
+  //         user: 'your-email@gmail.com',
+  //         pass: 'your-password',
+  //       },
+  //     });
+
+  //     // Calculate the expiration date (e.g., 7 days from the current date)
+  //     const expirationDate = new Date();
+  //     expirationDate.setDate(expirationDate.getDate() + 7);
+
+  //     // Format the expiration date as a string
+  //     const formattedExpirationDate = expirationDate.toDateString();
+
+  //     // Generate unique acceptance and rejection codes
+  //     const acceptanceCode = generateUniqueCode();
+  //     const rejectionCode = generateUniqueCode();
+
+  //     // Compose the email message
+  //     const message = {
+  //       from: 'your-email@gmail.com',
+  //       to: employee.email,
+  //       subject: 'Employee Registration Confirmation',
+  //       html: `<p>Dear ${employee.firstName},</p>
+  //       <p>Thank you for registering as an employee.</p>
+  //       <p>Your registration is valid until ${formattedExpirationDate}.</p>
+  //       <p>Please click one of the following links to accept or reject your registration:</p>
+  //       <ul>
+  //         <li><a href="${process.env.BASE_URL}/accept/${acceptanceCode}">Accept</a></li>
+  //         <li><a href="${process.env.BASE_URL}/reject/${rejectionCode}">Reject</a></li>
+  //       </ul>`,
+  //     };
+
+  //     // Save the acceptance and rejection codes to the Employee record
+  //     await employee.update({ acceptanceCode, rejectionCode });
+
+  //     // Send the email
+  //     await transporter.sendMail(message);
+
+  //     resolve(); // Resolve the promise when the email is sent successfully
+  //   } catch (error) {
+  //     reject(error); // Reject the promise if there's an error sending the email
+  //   }
+  // });
+};
+
+// Generate a unique code
+function generateUniqueCode() {
+  // Implement your own logic to generate a unique code
+  // For example, you can use a UUID library
+  return uuidv4();
+}

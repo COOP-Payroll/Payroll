@@ -109,9 +109,9 @@ exports.restrictToAll = (...roles) => {
     next();
   };
 };
-
 exports.restrictALL = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
+    console.log("first", moduleName)
     if (req.user.role === "companyAdmin" || req.user.role === "superAdmin") {
       next();
     } else {
@@ -130,9 +130,11 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
         return res.status(404).json({ message: "Employee not found." });
       }
 
+// console.log("first", employee.CustomRole.Permissions);
       const hasPermission =
         employee.CustomRole &&
-        employee.CustomRole.Permissions.some(
+        
+        employee.CustomRole.Permissions.find(
           (permission) =>
             permission.module === moduleName &&
             permission.isAccessible === true

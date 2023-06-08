@@ -54,6 +54,7 @@ app.use("/uploads", express.static("./uploads/"));
 app.use(
   cors({
     origin: [
+      "*",
       "http://localhost:3000",
       "http://localhost:5173",
       "http://localhost:5172",
@@ -65,7 +66,6 @@ app.use(
       "http://localhost:3002",
       "http://localhost:****",
       "http://10.2.125.124:4000",
-      "*",
     ],
     credentials: true,
   })
@@ -128,7 +128,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-sequelize.sync({}).then(() => console.log("db is ready"));
+sequelize.sync({ force: false }).then(() => console.log("db is ready"));
 
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {

@@ -12,54 +12,67 @@ const EmployeeInfo = require("../models/employeInfo");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition");
 const AdditionalDeduction = require("../models/additionalDeduction");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
+const PayrollDefinition = require("../models/payrollDefinition");
+const EmployeeGrade = require("../models/EmployeeGrade");
 
 const newWorker = async () => {
   try {
     const { user, employeeId, payrollDefinitionId } = workerData;
-    const pension = await Pension.findOne({
-      where: {
-        companyId: user,
-        isActive: true,
-      },
+
+    const employeeGrade = await EmployeeGrade.findOne({
+      where: { EmployeeId: employeeId, active: true },
     });
 
-    const oldPayroll = await Payroll.findOne({
-      where: {
-        PayrollDefinitionId: payrollDefinitionId,
-        EmployeeId: employeeId,
-      },
-    });
+    const [
+      pension,
+      payrollDefinition,
+      oldPayroll,
+      employee,
+      loans,
+      allowances,
+      deductions,
+      additionalAllowances,
+      additionalDeductions,
+    ] = await Promise.all([
+      Pension.findOne({
+        where: {
+          companyId: user,
+          isActive: true,
+        },
+      }),
+      PayrollDefinition.findByPk(Number(payrollDefinitionId)),
+      Payroll.findOne({
+        where: {
+          PayrollDefinitionId: payrollDefinitionId,
+          EmployeeId: employeeId,
+        },
+      }),
+      Employee.findByPk(Number(employeeId), {
+        include: [
+          { model: Loan },
+          { model: EmployeeInfo, where: { isActive: true } },
+        ],
+      }),
+      Loan.findAll({ where: { EmployeeId: employeeId } }),
+      Allowance.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
+      Deduction.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
+      AdditionalAllowances.findAll({
+        where: { CompanyId: user, EmployeeId: employeeId },
+        include: [AdditionalAllowanceDefinition],
+      }),
+      AdditionalDeduction.findAll({
+        where: { CompanyId: user, EmployeeId: employeeId },
+        include: [AdditionalDeductionDefinition],
+      }),
+    ]);
+
+    // console.log("employGrade", JSON.stringify(employee.EmployeeInfos));
 
     const employee_pension = pension?.employeeContribution ?? 1;
     const employer_pension = pension?.employerContribution ?? 1;
 
-    const taxslab = await Taxslab.findAll({
+    const taxslabs = await Taxslab.findAll({
       where: { companyId: user, isActive: true },
-    });
-
-    const employee = await Employee.findByPk(Number(employeeId), {
-      include: [Loan, EmployeeInfo],
-    });
-
-    const loans = await Loan.findAll({ where: { EmployeeId: employee.id } });
-
-    const allowances = await Allowance.findAll({
-      where: { CompanyId: user, GradeId: employee.GradeId },
-      include: [AllowanceDefinition],
-    });
-
-    const deductions = await Deduction.findAll({
-      where: { CompanyId: user, GradeId: employee.GradeId },
-    });
-
-    const additionalAllowances = await AdditionalAllowances.findAll({
-      where: { CompanyId: user, EmployeeId: employee.id },
-      include: [AdditionalAllowanceDefinition],
-    });
-
-    const additionalDeduction = await AdditionalDeduction.findAll({
-      where: { CompanyId: user, EmployeeId: employee.id },
-      include: [AdditionalDeductionDefinition],
     });
 
     let totalDeduction = 0;
@@ -95,77 +108,76 @@ const newWorker = async () => {
     });
 
     // Calculate total additional allowances
-    if (additionalAllowances.length > 0) {
-      additionalAllowances.forEach((allowance) => {
-        totalAllowance += Number(allowance.amount);
+    additionalAllowances.forEach((allowance) => {
+      totalAllowance += Number(allowance.amount);
 
-        if (allowance.AllowanceDefinition.isExempted) {
-          totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
+      if (allowance.AllowanceDefinition.isExempted) {
+        totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
 
-          if (
-            Number(allowance.amount) >
-            Number(allowance.AllowanceDefinition.startingAmount)
-          ) {
-            totalTaxable +=
-              Number(allowance.amount) -
-              Number(allowance.AllowanceDefinition.exemptedAmount);
-          } else {
-            totalTaxable += Number(allowance.amount);
-          }
+        if (
+          Number(allowance.amount) >
+          Number(allowance.AllowanceDefinition.startingAmount)
+        ) {
+          totalTaxable +=
+            Number(allowance.amount) -
+            Number(allowance.AllowanceDefinition.exemptedAmount);
         } else {
           totalTaxable += Number(allowance.amount);
         }
-      });
-    }
+      } else {
+        totalTaxable += Number(allowance.amount);
+      }
+    });
 
     deductions.forEach((deduction) => {
       totalDeduction += Number(deduction.amount);
     });
 
-    if (additionalDeduction.length > 0) {
-      additionalDeduction.forEach((deduction) => {
-        totalDeduction += Number(deduction.amount);
-      });
-    }
+    additionalDeductions.forEach((deduction) => {
+      totalDeduction += Number(deduction.amount);
+    });
 
-    totalTaxable += Number(employee.EmployeeInfo.basicSalary);
+    totalTaxable += Number(employee.EmployeeInfos[0]?.basicSalary);
 
-    const taxslabs = taxslab.find(
+    const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax.from_Salary && totalTaxable < tax.to_Salary
     );
 
-    if (taxslabs) {
-      deductible_Fee = taxslabs.deductible_Fee;
-      income_tax_payable = taxslabs.income_tax_payable;
+    if (taxslab) {
+      deductible_Fee = taxslab.deductible_Fee;
+      income_tax_payable = taxslab.income_tax_payable;
       totalTaxableIncome =
         totalTaxable *
-          (income_tax_payable == 0 ? 1 : income_tax_payable / 100) -
+          (income_tax_payable === 0 ? 1 : income_tax_payable / 100) -
         deductible_Fee;
+    } else {
+      totalTaxableIncome = totalTaxable;
     }
 
+    console.log("totalTaxableIncome", totalTaxableIncome);
+    console.log("totalTaxable", totalTaxable);
     loans.forEach((loan) => (totalLoan += loan.amount));
     overallTotalDeduction =
       totalLoan +
       totalTaxableIncome +
       totalDeduction +
-      employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100);
+      employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100);
 
     const payrollData = {
       grossSalary: (
         totalAllowance +
-        employee.EmployeeInfo.basicSalary +
-        employee.EmployeeInfo.basicSalary * ((employer_pension * 1) / 100)
+        employee.EmployeeInfos[0]?.basicSalary +
+        employee.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100)
       ).toFixed(2),
       taxableIncome: totalTaxable.toFixed(2),
       incomeTax: totalTaxableIncome.toFixed(2),
       totalDeduction: overallTotalDeduction.toFixed(2),
       totalAllowance,
       employee_pension_amount: Number(
-        employee.EmployeeInfo.basicSalary * ((employee_pension * 1) / 100)
+        employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100)
       ).toFixed(2),
-
       employer_pension_amount: (
-        employee.EmployeeInfo.basicSalary *
+        employee.EmployeeInfos[0]?.basicSalary *
         ((employer_pension * 1) / 100)
       ).toFixed(2),
       NetSalary: (totalTaxable - overallTotalDeduction + totalExempted).toFixed(
@@ -175,8 +187,18 @@ const newWorker = async () => {
     };
 
     const payroll = await oldPayroll.update(payrollData);
-    // parentPort.postMessage({ employeeId, payroll });
+    console.log("before", payrollDefinition.totalNoOfprocessedEmployee);
+    await payrollDefinition.increment("totalNoOfprocessedEmployee");
+    console.log("after", payrollDefinition.totalNoOfprocessedEmployee);
+    if (payrollDefinition.totalNoOfEmployee !== 0) {
+      const percent =
+        (Number(payrollDefinition.totalNoOfprocessedEmployee) /
+          Number(payrollDefinition.totalNoOfEmployee)) *
+        100;
+      await payrollDefinition.update({ processedInPercent: percent });
+    }
   } catch (error) {
+    console.log("fail", error);
     const { employeeId, payrollDefinitionId } = workerData;
     const oldPayroll = await Payroll.findOne({
       where: {
@@ -184,6 +206,11 @@ const newWorker = async () => {
         EmployeeId: employeeId,
       },
     });
+
+    const payrollDefinition = await PayrollDefinition.findByPk(
+      Number(payrollDefinitionId)
+    );
+
     const errorPayrollData = {
       grossSalary: 0,
       taxableIncome: 0,
@@ -197,7 +224,13 @@ const newWorker = async () => {
     };
 
     const errorPayroll = await oldPayroll.update(errorPayrollData);
-    // parentPort.postMessage({ employeeId, errorPayroll });
+    if (payrollDefinition.totalNoOfEmployee !== 0) {
+      const percent =
+        (payrollDefinition.totalNoOfprocessedEmployee /
+          payrollDefinition.totalNoOfEmployee) *
+        100;
+      await payrollDefinition.update({ processedInPercent: percent });
+    }
   }
 };
 

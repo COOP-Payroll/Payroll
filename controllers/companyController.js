@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 const Company = require("../models/company.js");
@@ -19,13 +20,20 @@ exports.createCompany = async (req, res) => {
     const { packageId, duration, accountNumber, ...companyData } = req.body;
 
     const existingCompany = await Company.findOne({
-      where: { email: companyData.email },
+      where: {
+        [Op.or]: [
+          { email: companyData.email },
+          { companyCode: companyData.companyCode },
+        ],
+      },
       transaction,
     });
 
     if (existingCompany) {
       await transaction.rollback();
-      return res.status(409).json({ error: "Email already exists" });
+      return res
+        .status(409)
+        .json({ error: "Email or companyCode already exists" });
     }
 
     const existingAccount = await CompanyAccountInfo.findOne({
@@ -224,6 +232,14 @@ exports.getAllCompany = async (req, res) => {
       const imageUrl = `${baseUrl}${company.companyLogo.replace(/\\/g, "/")}`;
       company.companyLogo = imageUrl;
     }
+    if (company.footer) {
+      const imageUrl = `${baseUrl}${company.footer.replace(/\\/g, "/")}`;
+      company.footer = imageUrl;
+    }
+    if (company.header) {
+      const imageUrl = `${baseUrl}${company.header.replace(/\\/g, "/")}`;
+      company.header = imageUrl;
+    }
     return company;
   });
   return res.json({
@@ -263,17 +279,20 @@ exports.updateCompany = async (req, res) => {
         delete body.password;
       }
 
-      const { file } = req;
-      let updatedData;
-
-      if (file) {
-        const { path } = file;
-        await company.validate();
-        updatedData = await company.update({ ...body, companyLogo: path });
-      } else {
-        await company.validate();
-        updatedData = await company.update(body);
-      }
+      const logoPath =
+        req?.files?.["companyLogo"][0]?.path || company.companyLogo;
+      const headerPath = req?.files?.["header"]
+        ? req?.files?.["header"][0]?.path
+        : company.header;
+      const footerPath = req?.files?.["footer"]
+        ? req?.files?.["footer"][0]?.path
+        : company.footer;
+      const updatedData = await company.update({
+        ...body,
+        companyLogo: logoPath,
+        header: headerPath,
+        footer: footerPath,
+      });
       return res.json(updatedData);
     }
   } catch (error) {

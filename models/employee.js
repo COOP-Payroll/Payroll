@@ -2,7 +2,6 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
-const Department = require("./department");
 
 const Employee = sequelize.define("Employee", {
   fullname: {
@@ -74,6 +73,19 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  rejectionCode: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  acceptanceCode: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  isConfirmed: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 });
 
 Employee.beforeCreate((employee, options) => {
@@ -105,8 +117,8 @@ Employee.beforeUpdate((employee, options) => {
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
 
-Department.hasMany(Employee);
-Employee.belongsTo(Department);
+// Department.hasMany(Employee);
+// Employee.belongsTo(Department);
 
 // EmployeeInfo.hasOne(Employee);
 // Employee.belongsTo(EmployeeInfo);
