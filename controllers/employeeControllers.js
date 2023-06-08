@@ -527,16 +527,6 @@ exports.deleteEmployee = async (req, res, next) => {
 exports.findByDepartment = async (req, res, next) => {
   try {
     const departmentId = req.params.departmentId;
-<<<<<<< HEAD
-    console.log("departmentId", departmentId);
-
-    if (departmentId != 0) {
-      const dept = await EmployeeDepartment.findAll({
-        where: { DepartmentId: departmentId },
-        include: [
-          {
-            model: Employee,
-=======
     if (departmentId != 0) {
       const Employees = await Employee.findAll({
         include: [
@@ -591,7 +581,6 @@ exports.findByDepartment = async (req, res, next) => {
             model: AdditionalDeduction,
             include: [AdditionalDeductionDefinition],
             required: false,
->>>>>>> f481b0d34acd2bb2857604edab418159faa90f1a
           },
         ],
       });
@@ -672,10 +661,6 @@ exports.findByDepartment = async (req, res, next) => {
     } else if (departmentId == 0) {
       console.log("first", 0);
       const Employees = await Employee.findAll({
-<<<<<<< HEAD
-        where: { CompanyId: req.user.id },
-=======
->>>>>>> f481b0d34acd2bb2857604edab418159faa90f1a
         include: [
           {
             model: Department,
