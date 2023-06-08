@@ -19,6 +19,7 @@ const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 // Define controller methods for handling User requests
+
 exports.getAllEmployee = async (req, res) => {
   try {
     const Employees = await Employee.findAll({
@@ -521,11 +522,12 @@ exports.deleteEmployee = async (req, res, next) => {
     }
   }
 };
-///
 
+//GET EMPLOYEE BY DEPARTMENT ID
 exports.findByDepartment = async (req, res, next) => {
   try {
     const departmentId = req.params.departmentId;
+<<<<<<< HEAD
     console.log("departmentId", departmentId);
 
     if (departmentId != 0) {
@@ -534,6 +536,62 @@ exports.findByDepartment = async (req, res, next) => {
         include: [
           {
             model: Employee,
+=======
+    if (departmentId != 0) {
+      const Employees = await Employee.findAll({
+        include: [
+          {
+            model: Department,
+            through: {
+              where: {
+                active: true,
+              },
+            },
+            where: {
+              id: departmentId,
+            },
+          },
+          {
+            model: Grade,
+
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: true,
+              },
+            },
+
+            include: [
+              {
+                model: Allowance, // Use the correct alias defined in the association
+                include: [AllowanceDefinition],
+              },
+              {
+                model: Deduction, // Use the correct alias defined in the association
+                include: [DeductionDefinition],
+              },
+              // { model: EmployeeGrade, where: { active: true } },
+            ],
+          },
+          {
+            model: Loan,
+            required: false,
+          },
+          {
+            model: EmployeeInfo,
+            required: false,
+            attributes: ["basicSalary"],
+          },
+          {
+            model: AdditionalAllowance,
+            include: [AdditionalAllowanceDefinition],
+            required: false,
+          },
+          {
+            model: AdditionalDeduction,
+            include: [AdditionalDeductionDefinition],
+            required: false,
+>>>>>>> f481b0d34acd2bb2857604edab418159faa90f1a
           },
         ],
       });
@@ -614,10 +672,29 @@ exports.findByDepartment = async (req, res, next) => {
     } else if (departmentId == 0) {
       console.log("first", 0);
       const Employees = await Employee.findAll({
+<<<<<<< HEAD
         where: { CompanyId: req.user.id },
+=======
+>>>>>>> f481b0d34acd2bb2857604edab418159faa90f1a
         include: [
           {
+            model: Department,
+            through: {
+              where: {
+                active: true,
+              },
+            },
+          },
+          {
             model: Grade,
+
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: true,
+              },
+            },
+
             include: [
               {
                 model: Allowance, // Use the correct alias defined in the association
@@ -627,7 +704,27 @@ exports.findByDepartment = async (req, res, next) => {
                 model: Deduction, // Use the correct alias defined in the association
                 include: [DeductionDefinition],
               },
+              // { model: EmployeeGrade, where: { active: true } },
             ],
+          },
+          {
+            model: Loan,
+            required: false,
+          },
+          {
+            model: EmployeeInfo,
+            required: false,
+            attributes: ["basicSalary"],
+          },
+          {
+            model: AdditionalAllowance,
+            include: [AdditionalAllowanceDefinition],
+            required: false,
+          },
+          {
+            model: AdditionalDeduction,
+            include: [AdditionalDeductionDefinition],
+            required: false,
           },
         ],
       });
