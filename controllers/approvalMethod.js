@@ -119,7 +119,11 @@ exports.createApprovalMethod = async (req, res) => {
               lastUpdated,
               isActive
             );
-            return res.json(response);
+            return res.status(200).json({
+              "message":"approval method created successfully",
+              response
+
+            });
           } else if (approvalMethod === "hierarchy") {
             minimumApprover = approvalLevel;
             let response = saveApprovalMethod(
@@ -131,8 +135,11 @@ exports.createApprovalMethod = async (req, res) => {
               approvalMethod,
               lastUpdated,
               isActive
-            );
-            return res.json(response);
+            ); return res.status(200).json({
+              "message":"approval method created successfully",
+              response
+
+            });
           } else {
             return res.json("please choose your approval method properly");
           }
