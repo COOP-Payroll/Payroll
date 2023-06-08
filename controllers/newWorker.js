@@ -150,8 +150,12 @@ const newWorker = async () => {
         totalTaxable *
           (income_tax_payable === 0 ? 1 : income_tax_payable / 100) -
         deductible_Fee;
+    } else {
+      totalTaxableIncome = totalTaxable;
     }
 
+    console.log("totalTaxableIncome", totalTaxableIncome);
+    console.log("totalTaxable", totalTaxable);
     loans.forEach((loan) => (totalLoan += loan.amount));
     overallTotalDeduction =
       totalLoan +

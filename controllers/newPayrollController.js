@@ -36,6 +36,7 @@ exports.createPayroll = async (req, res) => {
     const errors = [];
     let payrollCount = 0;
 
+    await payrolldef.update({ status: "ordered" });
     for (const employeeId of employeeIds) {
       try {
         const payroll = await Payroll.findOne({
