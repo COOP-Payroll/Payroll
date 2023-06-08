@@ -14,6 +14,7 @@ middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 approvalMethod.getAllActiveApprovalMethod);
 //add new approval method 
+
 router.post("/", 
 middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
