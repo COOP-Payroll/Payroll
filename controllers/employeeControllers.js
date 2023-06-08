@@ -585,11 +585,81 @@ exports.findByDepartment = async (req, res, next) => {
         ],
       });
 
+      // console.log("not zero", 0);
+      // const Employees = await Employee.findAll({
+      //   // where: { companyId: req.user.id, DepartmentId: departmentId },
+      //   include: [
+      //     {
+      //       model: Department,
+      //       through: {
+      //         EmployeeDepartment,
+      //         where: {
+      //           DepartmentId: departmentId,
+      //         },
+      //       },
+      //     },
+
+      //     {
+      //       model: Address,
+      //       required: false,
+      //     },
+      //     {
+      //       model: Company,
+      //       required: false,
+      //     },
+      //     {
+      //       model: EmployeeInfo,
+      //       required: false,
+      //     },
+      //     {
+      //       model: Department,
+      //       required: false,
+      //       through: {
+      //         model: EmployeeDepartment,
+      //         where: {
+      //           active: true,
+      //         },
+      //       },
+      //     },
+      //     {
+      //       model: CustomRole,
+      //       required: false,
+      //     },
+      //     {
+      //       model: Loan,
+      //       required: false,
+      //     },
+      //     {
+      //       model: Grade,
+
+      //       through: {
+      //         model: EmployeeGrade,
+      //         where: {
+      //           active: true,
+      //         },
+      //       },
+
+      //       include: [
+      //         {
+      //           model: Allowance, // Use the correct alias defined in the association
+      //           include: [AllowanceDefinition],
+      //         },
+      //         {
+      //           model: Deduction, // Use the correct alias defined in the association
+      //           include: [DeductionDefinition],
+      //         },
+      //         // { model: EmployeeGrade, where: { active: true } },
+      //       ],
+      //     },
+      //   ],
+      // });
+
       res.status(200).json({
-        count: Employees.length,
-        Employees,
+        count: dept.length,
+        dept,
       });
     } else if (departmentId == 0) {
+      console.log("first", 0);
       const Employees = await Employee.findAll({
         include: [
           {
