@@ -2,7 +2,6 @@ const ApprovalMethod = require("../models/approvalMethod");
 const Company = require("../models/company");
 const Approver = require("../models/approver");
 
-
 // Define controller methods for handling User requests for deduction definition
 exports.getAllApprovalMethod = async (req, res) => {
   const CompanyId = req.user.id;
