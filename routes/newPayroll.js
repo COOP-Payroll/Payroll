@@ -6,9 +6,13 @@ const router = express.Router();
 router.get(
   "/:id",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
   payroll.getPayrollByPayrollDefId
 );
+
 router.post(
   "/",
   middleware.protectAll,
@@ -22,7 +26,7 @@ router.get(
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
   payroll.getNonPayrollEmployee
 );
-//UPDATE 
+//UPDATE
 router.put(
   "/update/:payrollId",
   middleware.protectAll,
