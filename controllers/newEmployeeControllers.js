@@ -25,6 +25,8 @@ exports.createEmployee = async (req, res) => {
 
   const accountNumbers = accountInformation?.map((acct) => acct.accountNumber);
 
+  console.log("employee", req.files);
+
   try {
     const [grade, department, employee, accountInfos, idformat] =
       await Promise.all([

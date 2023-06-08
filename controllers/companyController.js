@@ -18,7 +18,6 @@ exports.createCompany = async (req, res) => {
 
   try {
     const { packageId, duration, accountNumber, ...companyData } = req.body;
-
     const existingCompany = await Company.findOne({
       where: {
         [Op.or]: [
@@ -52,9 +51,11 @@ exports.createCompany = async (req, res) => {
       await transaction.rollback();
       return res.status(404).json({ error: "Package does not exist" });
     }
-
-    const imagePath = req?.files?.companyLogo?.[0]?.path || null;
-    const acctImagePath = req?.files?.acctImage?.[0]?.path || null;
+    // console.log(req.files.companyLogo)
+    const imagePath =
+      (req?.files?.companyLogo && req?.files?.companyLogo[0]?.path) || null;
+    const acctImagePath =
+      (req?.files?.acctImage && req?.files?.acctImage[0]?.path) || null;
 
     const company = await Company.create(
       {
