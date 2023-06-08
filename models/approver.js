@@ -29,7 +29,7 @@ Company.hasMany(Approver);
 Approver.belongsTo(ApprovalMethod,{ as: 'ApprovalMethod', foreignKey: 'ApprovalMethodId' });
 ApprovalMethod.hasMany(Approver);
 
-Approver.belongsTo(Employee,{ as: 'Employee', foreignKey: 'EmployeeId' });
+Approver.belongsTo(Employee);
 Employee.hasOne(Approver);
 
 module.exports = Approver;

@@ -599,6 +599,7 @@ exports.deleteApprover = async (req, res) => {
     res.status(500).json({ error: "Failed to delete Approver" });
   }
 };
+
 exports.deactiveApprover = async (req, res) => {
 
   const approverId =  req.body.approverId;
@@ -625,3 +626,21 @@ exports.deactiveApprover = async (req, res) => {
 
   return res.json({ status:201,message:"approver deActivated successfully", updateEmployee:updateEmployee, updateApprover:updateApprover})
 }
+
+exports.getApproverByEmployeeId = async (req, res) => {
+  const approverEmployeeId = req.params.id;
+  try {
+    const approver = await Approver.findOne({
+      where: { EmployeeId: approverEmployeeId },
+      include: [{ model: Employee }]
+    });
+    
+    if (!approver) {
+      return res.status(404).json({ error: "Approver not found" });
+    }
+    res.status(200).json(approver);
+  } catch (error) {
+    console.error("Error retrieving Approver:", error);
+    res.status(500).json({ error: "Failed to retrieve Approver" });
+  }
+};
