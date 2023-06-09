@@ -288,6 +288,17 @@ const createPayrollApprovement = async (req, res) => {
         const isApproverMaster  = approver.isMaster;
         console.log("approver", isApproverActive,approverLevel)
         
+        const isApprovedByMe = await PayrollApprovement.findOne({
+          where: { ApproverId: approverId,  PayrollDefinitionId:payrollId,status:'approved'},
+        }); 
+
+        if(isApprovedByMe!==null){
+          return res.json(
+            {
+                Message:"you already approved this payroll",
+            })
+        }
+
         if(!isApprovalMethodCompleted){
             return res.json(
                 {
@@ -382,6 +393,9 @@ const reCreatePayrollApprovement = async (req, res,next) => {
       const payrollDefinition = await PayrollDefinition.findOne({
           where: { id: payrollId, },
       });
+      if(!payrollDefinition){
+        res.status(404).json("payroll not defined")
+      }
       console.log(payrollDefinition)
       const CompanyIdPayroll = payrollDefinition.CompanyId; 
       const payrollStatus    = payrollDefinition.status;
@@ -391,6 +405,9 @@ const reCreatePayrollApprovement = async (req, res,next) => {
       const approvalMethod = await ApprovalMethod.findOne({
           where: { CompanyId: CompanyIdPayroll, isActive:true },
       });
+      if(!approvalMethod){
+          res.status(404).json("approvalMethod not defined ")
+      }
       const minimumApprover          = approvalMethod.minimumApprover;
       const isThereMasterApprover     = approvalMethod.isThereMasterApprover
       const companyApprovalMethod     = approvalMethod.approvalMethod;
@@ -401,7 +418,9 @@ const reCreatePayrollApprovement = async (req, res,next) => {
       const approver = await Approver.findOne({
           where: { id: approverId, isActive:true},
       });
-      
+      if(!approver){
+        res.status(404).json("approver not setted ")
+      }
       const approverLevel = approver.level;
       const approverRole   = approver.role;
       const isApproverActive = approver.isActive;
@@ -499,10 +518,10 @@ const getAllPayrollApprovements = async (req, res) => {
     const CompanyId= req.user.id;
     //console.log(CompanyId);
     try {
-        const criteria = {
-            where: { CompanyId:CompanyId },
-          };
-        const payrollApprovements = await PayrollApprovement.findAll();
+      const criteria = {
+        where: { CompanyId: CompanyId },
+      };
+      const payrollApprovements = await PayrollApprovement.findAll(criteria);
 
         res.json({
             count:payrollApprovements.length,

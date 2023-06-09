@@ -187,7 +187,12 @@ exports.createApprover = async (req, res) => {
           const updateEmployeeRole = await Employee.update({role:"approver"}, {
             where: {id: EmployeeId},
           });
-          return res.status(201).json("master approval successfully setted");
+          return res
+            .status(201)
+            .json({
+              updateEmployeeRole: updateEmployeeRole,
+              messag: "master approval successfully setted",
+            });
         } else if (req.body.isMaster === false) {
           console.log("wow its not master");
           if (appMethod === "horizontal") {
