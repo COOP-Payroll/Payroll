@@ -1,35 +1,83 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const payrollApprovement = require('../controllers/payrollApprovement');
-const middleware = require("../middleware/auth")
+const payrollApprovement = require("../controllers/payrollApprovement");
+const middleware = require("../middleware/auth");
 
-router.post('/', 
-middleware.protectAll,
-middleware.restrictTo('companyAdmin'),
-payrollApprovement.createPayrollApprovement);
+router.post(
+  "/",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  payrollApprovement.createPayrollApprovement
+);
 
-router.post('/reject', 
-middleware.protectAll,
-middleware.restrictTo('companyAdmin'),
-payrollApprovement.rejectPayrollApprovement);
+router.post(
+  "/reject",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  payrollApprovement.rejectPayrollApprovement
+);
 
-router.post('/reApprove', 
-middleware.protectAll,
-middleware.restrictTo('companyAdmin'),
-payrollApprovement.reCreatePayrollApprovement);
+router.post(
+  "/reApprove",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  payrollApprovement.reCreatePayrollApprovement
+);
 
-router.get('/', 
-middleware.protectAll,
-middleware.restrictTo('companyAdmin'),
-payrollApprovement.getAllPayrollApprovements);
+router.get(
+  "/",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  payrollApprovement.getAllPayrollApprovements
+);
 
-router.get('/:id', 
-payrollApprovement.getPayrollApprovementById);
+router.get(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  payrollApprovement.getPayrollApprovementById
+);
 
-router.put('/:id', 
-payrollApprovement.updatePayrollApprovement);
+router.put(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  payrollApprovement.updatePayrollApprovement
+);
 
-router.delete('/:id', 
-payrollApprovement.deletePayrollApprovement);
+router.delete(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  payrollApprovement.deletePayrollApprovement
+);
 
 module.exports = router;
