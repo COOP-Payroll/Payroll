@@ -169,6 +169,7 @@ const newWorker = async () => {
         employee.EmployeeInfos[0]?.basicSalary +
         employee.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100)
       ).toFixed(2),
+      basicSalary:employee.EmployeeInfos[0]?.basicSalary,
       taxableIncome: totalTaxable.toFixed(2),
       incomeTax: totalTaxableIncome.toFixed(2),
       totalDeduction: overallTotalDeduction.toFixed(2),
@@ -185,7 +186,7 @@ const newWorker = async () => {
       ),
       status: "processed",
     };
-
+console.log("payroll data",payrollData)
     const payroll = await oldPayroll.update(payrollData);
     console.log("before", payrollDefinition.totalNoOfprocessedEmployee);
     await payrollDefinition.increment("totalNoOfprocessedEmployee");
