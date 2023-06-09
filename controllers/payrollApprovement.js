@@ -246,7 +246,7 @@ const createPayrollApprovement = async (req, res) => {
           // console.log(req.body.payrollId,req.body.approverId)
     try {
         //grap required information 1 approval method of company  2 appreover info 3 payroll information
-        
+
         const payrollDefinition = await PayrollDefinition.findOne({
             where: { id: payrollId },
         });
@@ -521,7 +521,7 @@ const getAllPayrollApprovements = async (req, res) => {
       const criteria = {
         where: { CompanyId: CompanyId },
       };
-      const payrollApprovements = await PayrollApprovement.findAll(criteria);
+      const payrollApprovements = await PayrollApprovement.findAll({where:{CompanyId:req.user.id}});
 
         res.json({
             count:payrollApprovements.length,
