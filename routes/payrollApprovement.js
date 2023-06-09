@@ -6,10 +6,11 @@ const middleware = require("../middleware/auth");
 router.post(
   "/",
   middleware.protectAll,
-   middleware.restrictApprover({
+  middleware.restrictALL({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
   }),
+
   payrollApprovement.createPayrollApprovement
 );
 
