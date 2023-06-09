@@ -6,7 +6,7 @@ const router = express.Router();
 router.get(
   "/:id",
   middleware.protectAll,
-  middleware.restrictALL({
+  middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
   }),
