@@ -3,6 +3,7 @@ const sequelize = require("../database/db.js");
 
 const Approver = require("./approver.js");
 const PayrollDefinition = require("./payrollDefinition");
+const Company = require("./company.js");
 
 const PayrollApprovement = sequelize.define("PayrollApprovement", {
   status: {
@@ -34,5 +35,9 @@ PayrollDefinition.hasMany(PayrollApprovement);
 
 PayrollApprovement.belongsTo(Approver);
 Approver.hasOne(PayrollApprovement);
+
+
+PayrollApprovement.belongsTo(Company);
+Company.hasMany(PayrollApprovement);
 
 module.exports = PayrollApprovement;
