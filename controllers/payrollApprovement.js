@@ -246,13 +246,13 @@ const createPayrollApprovement = async (req, res) => {
           // console.log(req.body.payrollId,req.body.approverId)
     try {
         //grap required information 1 approval method of company  2 appreover info 3 payroll information
+        
         const payrollDefinition = await PayrollDefinition.findOne({
             where: { id: payrollId },
         });
         if(!payrollDefinition){
           return res.status(404).json("Payroll definition is not defined");
         }
-
         const CompanyIdPayroll = payrollDefinition?.CompanyId; 
         const payrollStatus    = payrollDefinition.status;
 
