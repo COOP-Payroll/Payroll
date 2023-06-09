@@ -83,7 +83,6 @@ const Employee = sequelize.define("Employee", {
   },
   isConfirmed: {
     type: DataTypes.BOOLEAN,
-    allowNull: false,
     defaultValue: false,
   },
 });

@@ -109,6 +109,7 @@ exports.restrictToAll = (...roles) => {
     next();
   };
 };
+
 exports.restrictALL = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
     console.log("first", moduleName)
@@ -141,6 +142,52 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
         );
 
         console.log("haspermission", hasPermission);
+      //return res.json({ hasPermission });
+
+      if (hasPermission) {
+        next();
+      } else {
+        return res.status(403).json({
+          message: "You do not have permission to perform this action",
+        });
+      }
+    }
+  };
+};
+
+
+//Restricted to
+
+exports.restrictApprover = ({ moduleName, isAccessible }) => {
+  return async (req, res, next) => {
+    console.log("first", moduleName);
+    if (req.user.role === "companyAdmin" || req.user.role === "superAdmin" || req.user.role === "approver") {
+      next();
+    } else {
+      //const { moduleName, employeeId } = req.body;
+      const employee = await Employee.findOne({
+        where: { id: req.user.id },
+        include: [
+          {
+            model: CustomRole,
+            include: [{ model: Permission }],
+          },
+        ],
+      });
+
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found." });
+      }
+
+      // console.log("first", employee.CustomRole.Permissions);
+      const hasPermission =
+        employee.CustomRole &&
+        employee.CustomRole.Permissions.find(
+          (permission) =>
+            permission.module === moduleName && permission.isAccessible === true
+        );
+
+      console.log("haspermission", hasPermission);
       //return res.json({ hasPermission });
 
       if (hasPermission) {

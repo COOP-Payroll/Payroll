@@ -95,4 +95,6 @@ router.post(
 
 router.post("/login", employeeController.login);
 
+router.get("/confirm/:id", newEmployeeController.confirmaRegistration);
+
 module.exports = router;
