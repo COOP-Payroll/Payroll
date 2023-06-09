@@ -10,6 +10,12 @@ router.get(
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.getAllPayroll
 );
+router.get(
+  "/latest",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
+  payroll.getLatestPayroll
+);
 
 
 router.post(

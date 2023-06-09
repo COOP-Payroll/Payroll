@@ -9,6 +9,8 @@ middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 approverController.getAllApprovers);
 
+
+
 router.get('/active', 
 middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
@@ -16,6 +18,11 @@ approverController.getAllActiveApprovers);
 // // GET /approvers/:id - Get a single Approver by ID
 router.get('/:id', approverController.getApproverById);
 
+//approver by employee 
+router.get('/employeeId/:id', approverController.getApproverByEmployeeId);
+
+//deactive approver  
+router.put('/:id', approverController.deactiveApprover);
  // POST /approvers - Create a new Approver
  router.post(
    "/",
@@ -31,9 +38,9 @@ router.get('/:id', approverController.getApproverById);
   approverController.createApprover
 );
 // // PUT /approvers/:id - Update an existing Approver
- router.put('/:id', approverController.updateApprover);
+router.put('/:id', approverController.updateApprover);
 
 // // DELETE /approvers/:id - Delete an Approver
- router.delete('/:id', approverController.deleteApprover);
+router.delete('/:id', approverController.deleteApprover);
 
 module.exports = router;
