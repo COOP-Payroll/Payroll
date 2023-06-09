@@ -9,6 +9,9 @@ const EmployeeInfo = require("../models/employeInfo");
 const EmergencyContact = require("../models/emergency_Contact");
 const EmployeeDepartment = require("../models/EmployeeDepartment");
 const EmployeeGrade = require("../models/EmployeeGrade");
+const sendEmail = require("../utils/sendEmail.js");
+const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
 
 exports.createEmployee = async (req, res) => {
   const {
@@ -177,6 +180,48 @@ exports.createEmployee = async (req, res) => {
         })),
         { transaction: t }
       );
+
+      const generateConfirmationToken = () => {
+        return crypto.randomBytes(20).toString("hex");
+      };
+      const token = generateConfirmationToken();
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 7);
+
+      // Format the expiration date as a string
+      const formattedExpirationDate = expirationDate.toDateString();
+
+      // Generate unique acceptance and rejection codes
+      const acceptanceCode = token;
+      const rejectionCode = expirationDate;
+      console.log("generateUniqueCode", acceptanceCode);
+      console.log("rejection code", rejectionCode);
+
+      const URL = "https://payroll-production.up.railway.app";
+      createEmployee.acceptanceCode = acceptanceCode;
+      createEmployee.rejectionCode = rejectionCode;
+      // createEmployee.save();
+      const message1 = {
+        from: "your-email@gmail.com",
+        to: createEmployee.email,
+        subject: "Employee Registration Confirmation",
+        html: `
+             
+      <p>Dear ${createEmployee.fullname},</p>
+      <p>Thank you for registering as an employee.</p>
+      <p>Your registration is valid until ${formattedExpirationDate}.</p>
+      <p>Please click one of the following links to accept or reject your registration:</p>
+      <a href="${URL}/confirm/${
+          createEmployee.id
+        }?token=${token}&expiry=${expirationDate.toISOString()}">Confirm Registration</a>
+      <p>This link will expire on ${expirationDate.toLocaleDateString()}.</p>
+      <p>Click this link to reject the registration</p>
+       <p>If you wish to reject the confirmation, click the following button:</p>
+     
+    `,
+      };
+
+      sendEmail({ message1 });
 
       return res.status(201).json({
         basicInfo: createEmployee,
@@ -388,3 +433,52 @@ exports.getAllEmployee = async (req, res) => {
       .json({ error: "there is a problem fetching employees" });
   }
 };
+
+function generateUniqueCode() {
+  // Implement your own logic to generate a unique code
+  // For example, you can use a UUID library
+  return uuidv4();
+}
+
+exports.confirmaRegistration = async (req, res, next) => {
+  try {
+    const employeeId = req.params.employeeId;
+    const token = req.query.token;
+    const expirationDate = new Date(req.query.expiry);
+    const employee = await Employee.findByPk(employeeId);
+
+    if (!employee) {
+      return res.status(404).send("Employee not found");
+    }
+
+    //  // Check if the confirmation token is valid and not expired
+    //  if (employee.confirmationToken === token && expirationDate <= new Date()) {
+    //    // Update the employee's confirmation status in the database
+    //    employee.isConfirmed = true;
+    //    employee.confirmationToken = null; // Clear the confirmation token
+    //    employee.confirmationTokenExpiry = null; // Clear the confirmation token expiry
+    //    await employee.save();
+
+    //    res.send("Email confirmed successfully");
+    //  }
+
+    //  else {
+    //    res.status(400).send("Invalid or expired confirmation link");
+    //  }
+    res.status(200).json("employee", employee);
+  } catch (error) {
+    console.log("error", error);
+  }
+};
+
+//   <p>Dear ${createEmployee.fullname},</p>
+// <p>Thank you for registering as an employee.</p>
+// <p>Your registration is valid until ${formattedExpirationDate}.</p>
+// <p>Please click one of the following links to accept or reject your registration:</p>
+// <ul>
+//   <li><a href="${URL}/accept/${acceptanceCode}">Accept</a></li>
+//   <li><a href="${URL}/reject/${rejectionCode}">Reject</a></li>
+// </ul>
+//   <form action="http://yourwebsite.com/reject/" method="POST">
+//   <button type="submit">Reject</button>
+// </form>

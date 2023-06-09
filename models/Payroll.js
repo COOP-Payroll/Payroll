@@ -7,6 +7,10 @@ const Payroll = sequelize.define("Payroll", {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
   },
+  basicSalary: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+  },
   taxableIncome: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,

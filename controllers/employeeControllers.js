@@ -18,6 +18,7 @@ const nodemailer = require("nodemailer");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail.js");
 // Define controller methods for handling User requests
 
 exports.getAllEmployee = async (req, res) => {
@@ -231,7 +232,7 @@ exports.getEmployeeById = async (req, res) => {
 
 exports.createEmployee = async (req, res, next) => {
   try {
-    console.log("first", req.body);
+    console.log("first", req.body.employeeinfo);
     const {
       address,
       employeeInfo,
@@ -239,7 +240,7 @@ exports.createEmployee = async (req, res, next) => {
       basicInfo,
       accountInformation,
     } = req.body;
-
+console.log("basic INfo",basicInfo)
     const { file } = req;
 
     let password = req.user.companyCode.substring(0, 4) + "0000";
@@ -357,7 +358,9 @@ exports.createEmployee = async (req, res, next) => {
         employeeId += idFormat.separator;
       }
     }
+    console.log("basic info");
 
+console.log("basic info", basicInfo)
     employeeId += idFormat.separator + paddedEmployeeCode;
     let basicInfo1;
     if (file) {
@@ -387,8 +390,21 @@ exports.createEmployee = async (req, res, next) => {
         EmployeeInfoId: Number(employeeInfo1.id),
       });
     }
+const URL='https://payroll-production.up.railway.app/'
+ const message1 = {
+   from: "your-email@gmail.com",
+   to: basicInfo1.email,
+   subject: "Employee Registration Confirmation",
+   html: `<p>Dear ${basicInfo1.firstName},</p>
+  <p>Thank you for registering as an employee.</p>
+  <p>Your registration is valid until {formattedExpirationDate}.</p>
+  <p>Please click the following link to confirm your registration:</p>
+  <p><a href="${URL}/confirm/{token}">${URL}/confirm/{token}</a></p>`,
+ };
+console.log("email",message1);
+    await sendEmail({message1});
 
-    await sendConfirmationEmail(basicInfo1);
+//
 
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
@@ -1223,3 +1239,37 @@ function generateUniqueCode() {
   // For example, you can use a UUID library
   return uuidv4();
 }
+
+// exports.sendEmail = async (req, res, next) => {
+//   try {
+//     let email = "gemechubulti11@gmail.com";
+//     let text = "hello";
+//     const message = {
+//       from: "your-email@gmail.com",
+//       to: email,
+//       subject: "Employee Registration Confirmation",
+//       html: `<p>Dear {employee.firstName},</p>
+//   <p>Thank you for registering as an employee.</p>
+//   <p>Your registration is valid until {formattedExpirationDate}.</p>
+//   <p>Please click the following link to confirm your registration:</p>
+//   <p><a href="{process.env.BASE_URL}/confirm/{token}">{process.env.BASE_URL}/confirm/{token}</a></p>`,
+//     };
+
+//     try {
+//       await sendEmail({
+//         message,
+//       });
+//       res.status(200).json({
+//         status: "success",
+//         message: "Message  sent to email",
+//       });
+//     } catch (error) {
+//       console.log(error);
+//     }
+
+//     // res.status(200).json("updated");
+//   } catch (error) {
+//     console.log("error", error);
+//     res.status(404).json("error");
+//   }
+// };
