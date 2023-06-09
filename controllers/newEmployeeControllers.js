@@ -221,7 +221,7 @@ exports.createEmployee = async (req, res) => {
     `,
       };
 
-      // sendEmail({ message1 });
+  //  await sendEmail({ message1 });
 
       return res.status(201).json({
         basicInfo: createEmployee,

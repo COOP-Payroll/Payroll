@@ -6,8 +6,7 @@ const middleware = require("../middleware/auth");
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin", "approver"),
-  middleware.restrictALL({
+   middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
   }),
@@ -16,9 +15,8 @@ router.post(
 
 router.post(
   "/reject",
-  middleware.protectAll,
-  middleware.restrictToAll("companyAdmin", "approver"),
-  middleware.restrictALL({
+  middleware.protectAll, 
+  middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
   }),
@@ -28,8 +26,7 @@ router.post(
 router.post(
   "/reApprove",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin", "approver"),
-  middleware.restrictALL({
+  middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
   }),
@@ -39,8 +36,7 @@ router.post(
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin", "approver"),
-  middleware.restrictALL({
+  middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
   }),
