@@ -1,15 +1,13 @@
 const Grade = require("../models/grade");
 const Company = require("../models/company");
-const Allowance=require("../models/allowance.js")
-const AllowanceDefinition=require("../models/allowanceDefinition.js")
-const { Op } = require('sequelize');
-// Define controller methods for handling User requests
-//CREATE GRADE 
+const Allowance = require("../models/allowance.js");
+const AllowanceDefinition = require("../models/allowanceDefinition.js");
+const { Op } = require("sequelize");
+
+//CREATE GRADE
 exports.getAllGrade = async (req, res) => {
   const companyId = req.user.id;
   try {
-console.log(req.user.id)
-
     const criteria = {
       companyId: req.user.id,
     };
@@ -23,14 +21,14 @@ console.log(req.user.id)
       ],
     });
 
-    if(!companyGrade){
-res.status(200).json('There no Grade')
-    }
-    else{
-     res.status(200).json({
+    if (!companyGrade) {
+      res.status(200).json("There no Grade");
+    } else {
+      res.status(200).json({
         count: companyGrade.length,
-      companyGrade,
-    });}
+        companyGrade,
+      });
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -68,29 +66,27 @@ exports.createGrade = async (req, res, next) => {
 
     const { name, minSalary, maxSalary } = req.body;
     const companyId = req.user.id;
-    console.log(name, minSalary, maxSalary);
-    console.log("company id", req.user.id);
-    
-
-      const criteria = {
-        [Op.or]: [
-          { name: name },
-          { minSalary: minSalary },
-          { minSalary: maxSalary },
-          { maxSalary: maxSalary },
-          { maxSalary: minSalary },
-        ],
-      };
+    const criteria = {
+      [Op.or]: [
+        { name: name },
+        { minSalary: minSalary },
+        { minSalary: maxSalary },
+        { maxSalary: maxSalary },
+        { maxSalary: minSalary },
+      ],
+    };
 
     const sameGrade = await Grade.findOne({ where: criteria });
 
     if (sameGrade) {
-      return res.json("this grade is defined already  check if data provided is not the same with the inserted grade");
+      return res.json(
+        "this grade is defined already  check if data provided is not the same with the inserted grade"
+      );
     } else {
-      if(minSalary>=maxSalary) {
+      if (minSalary >= maxSalary) {
         return res.json("check the amount of the salary inserted");
-      }else{
-        const grade = await Grade.create({ name,minSalary,maxSalary});
+      } else {
+        const grade = await Grade.create({ name, minSalary, maxSalary });
         await grade.setCompany(companyId);
 
         return res.status(200).json({
@@ -100,7 +96,7 @@ exports.createGrade = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log("first",error)
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
