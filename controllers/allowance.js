@@ -2,7 +2,7 @@ const Allowance = require("../models/allowance");
 const AllowanceDefinition = require("../models/allowanceDefinition");
 const Grade = require("../models/grade");
 const Company = require("../models/company.js");
-  
+
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
   try {
@@ -87,8 +87,7 @@ exports.createAllowance = async (req, res, next) => {
       res.status(404).json("Allowance definition is not defined");
 
       // await allowance.setCompany(Number(req.user.id))
-    }
-    else if (allowancedefnCheck) {
+    } else if (allowancedefnCheck) {
       res.status(404).json("Allowance definition is already added");
     } else {
       // Handle the case where the company with the given ID is not found

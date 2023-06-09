@@ -66,8 +66,6 @@ const newWorker = async () => {
       }),
     ]);
 
-    // console.log("employGrade", JSON.stringify(employee.EmployeeInfos));
-
     const employee_pension = pension?.employeeContribution ?? 1;
     const employer_pension = pension?.employerContribution ?? 1;
 
@@ -89,63 +87,63 @@ const newWorker = async () => {
     allowances.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
 
-      if (allowance.AllowanceDefinition.isExempted) {
+      if (allowance?.AllowanceDefinition?.isExempted) {
         totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
 
         if (
-          Number(allowance.amount) >
-          Number(allowance.AllowanceDefinition.startingAmount)
+          Number(allowance?.amount) >
+          Number(allowance?.AllowanceDefinition?.startingAmount)
         ) {
           totalTaxable +=
-            Number(allowance.amount) -
-            Number(allowance.AllowanceDefinition.exemptedAmount);
+            Number(allowance?.amount) -
+            Number(allowance?.AllowanceDefinition?.exemptedAmount);
         } else {
           totalTaxable += Number(allowance.amount);
         }
       } else {
-        totalTaxable += Number(allowance.amount);
+        totalTaxable += Number(allowance?.amount);
       }
     });
 
     // Calculate total additional allowances
     additionalAllowances.forEach((allowance) => {
-      totalAllowance += Number(allowance.amount);
+      totalAllowance += Number(allowance?.amount);
 
-      if (allowance.AllowanceDefinition.isExempted) {
-        totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
+      if (allowance?.AllowanceDefinition?.isExempted) {
+        totalExempted += Number(allowance?.AllowanceDefinition?.exemptedAmount);
 
         if (
-          Number(allowance.amount) >
-          Number(allowance.AllowanceDefinition.startingAmount)
+          Number(allowance?.amount) >
+          Number(allowance?.AllowanceDefinition?.startingAmount)
         ) {
           totalTaxable +=
-            Number(allowance.amount) -
-            Number(allowance.AllowanceDefinition.exemptedAmount);
+            Number(allowance?.amount) -
+            Number(allowance?.AllowanceDefinition?.exemptedAmount);
         } else {
-          totalTaxable += Number(allowance.amount);
+          totalTaxable += Number(allowance?.amount);
         }
       } else {
-        totalTaxable += Number(allowance.amount);
+        totalTaxable += Number(allowance?.amount);
       }
     });
 
     deductions.forEach((deduction) => {
-      totalDeduction += Number(deduction.amount);
+      totalDeduction += Number(deduction?.amount);
     });
 
     additionalDeductions.forEach((deduction) => {
-      totalDeduction += Number(deduction.amount);
+      totalDeduction += Number(deduction?.amount);
     });
 
-    totalTaxable += Number(employee.EmployeeInfos[0]?.basicSalary);
+    totalTaxable += Number(employee?.EmployeeInfos[0]?.basicSalary);
 
     const taxslab = taxslabs.find(
-      (tax) => totalTaxable > tax.from_Salary && totalTaxable < tax.to_Salary
+      (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
 
     if (taxslab) {
-      deductible_Fee = taxslab.deductible_Fee;
-      income_tax_payable = taxslab.income_tax_payable;
+      deductible_Fee = taxslab?.deductible_Fee;
+      income_tax_payable = taxslab?.income_tax_payable;
       totalTaxableIncome =
         totalTaxable *
           (income_tax_payable === 0 ? 1 : income_tax_payable / 100) -
@@ -154,9 +152,7 @@ const newWorker = async () => {
       totalTaxableIncome = totalTaxable;
     }
 
-    console.log("totalTaxableIncome", totalTaxableIncome);
-    console.log("totalTaxable", totalTaxable);
-    loans.forEach((loan) => (totalLoan += loan.amount));
+    loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
       totalTaxableIncome +
@@ -169,9 +165,9 @@ const newWorker = async () => {
         employee.EmployeeInfos[0]?.basicSalary +
         employee.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100)
       ).toFixed(2),
-      taxableIncome: totalTaxable.toFixed(2),
-      incomeTax: totalTaxableIncome.toFixed(2),
-      totalDeduction: overallTotalDeduction.toFixed(2),
+      taxableIncome: totalTaxable?.toFixed(2),
+      incomeTax: totalTaxableIncome?.toFixed(2),
+      totalDeduction: overallTotalDeduction?.toFixed(2),
       totalAllowance,
       employee_pension_amount: Number(
         employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100)
@@ -187,9 +183,9 @@ const newWorker = async () => {
     };
 
     const payroll = await oldPayroll.update(payrollData);
-    console.log("before", payrollDefinition.totalNoOfprocessedEmployee);
+
     await payrollDefinition.increment("totalNoOfprocessedEmployee");
-    console.log("after", payrollDefinition.totalNoOfprocessedEmployee);
+
     if (payrollDefinition.totalNoOfEmployee !== 0) {
       const percent =
         (Number(payrollDefinition.totalNoOfprocessedEmployee) /
