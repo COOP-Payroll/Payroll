@@ -21,6 +21,9 @@ router.get(
 moduleController.getAllowanceById
 );
 
+
+
+
 // //add module of company
 router.post(
   "/",
@@ -28,6 +31,7 @@ router.post(
   middleware.restrictToAll("companyAdmin"),
  moduleController.createModules
 );
+
 
 // //update module of company
 // router.put(
