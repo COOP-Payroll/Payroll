@@ -155,6 +155,10 @@ exports.updateModules = async (req, res, next) => {
   }
 };
 
+
+
+
+
 exports.deleteModules = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -189,3 +193,28 @@ exports.deleteModules = async (req, res, next) => {
     }
   }
 };
+
+
+
+exports.detlete= async(req,res,next)=>{
+  try {
+
+    const {id}=req.params.id;
+
+    const module = await Modules.findOne({
+      where: { id: id, companyId: req.user.id },
+    });
+    if (module) {
+      await module.destroy({ where: { id } });
+      res.status(200).json({ message: "Deleted successfully" });
+    } else {
+      res.status(409).json({
+        message: "There is no Modules  with this ID",
+      });
+    }
+    
+  } catch (error) {
+    console.log("error ", error)
+    
+  }
+}
