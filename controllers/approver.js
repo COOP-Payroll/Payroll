@@ -85,7 +85,7 @@ async function saveApprover(
   isMaster,
   role,
   level,
-  ApprovalMethodId
+  ApprovalMethodId  
 ) {
   const approver = new Approver({ isActive, isMaster, role, level });
   await approver.save();
@@ -145,7 +145,7 @@ exports.createApprover = async (req, res) => {
     });
 
     const settedApprover = await Approver.count({
-      where: { CompanyId: req.user.id,isMaster:false },
+      where: { CompanyId: req.user.id,isMaster:false, },
     });
 
     console.log("already setted", isSaved);
@@ -216,15 +216,19 @@ exports.createApprover = async (req, res) => {
                 const updateEmployeeRole = await Employee.update({role:"approver"}, {
                   where: {id: EmployeeId},
                 });
+                
                 //update approval mehod 
                 const updateResult = await ApprovalMethod.update({isCompleted:true}, {
                   where: {id: ApprovalMethodId},
                 });
                 
                 console.log(updateResult)
-                return res.json(
-                  "successfully saved you can approve your payroll"
-                );
+                return res.json({
+                  success:true,
+                  approvalMethodId:updateResult,
+                  updateEmployeeRole:updateEmployeeRole,
+                  message:"successfully saved you can approve your payroll"
+                  });
               } else if (minimumApp === settedApprover + 1) {
                 const saveHApprover = await Approver.create({
                   level: 0,
@@ -244,9 +248,11 @@ exports.createApprover = async (req, res) => {
                   where: {id: ApprovalMethodId},
                 });
                 console.log(updateResult)
-                return res.json(
-                  "successfully saved you have passed minimum number of approver"
-                );
+                return res.json({
+                  approvalmethod:updateResult,
+                  updateEmployeeRole: updateEmployeeRole,
+                  message: "successfully saved you have passed minimum number of approver",
+              });
               } else if (minimumApp > settedApprover + 1) {
                 const saveHApprover = await Approver.create({
                   level: 0,
@@ -261,7 +267,10 @@ exports.createApprover = async (req, res) => {
                 const updateEmployeeRole = await Employee.update({role:"approver"}, {
                   where: {id: EmployeeId},
                 });
-                return res.json("add more appprover ");
+                return res.json({
+                  updateEmployeeRole: updateEmployeeRole,
+                  message:"add more appprover "
+                });
               } else {
                 return res.json("something is wrong");
               }
@@ -414,15 +423,21 @@ exports.createApprover = async (req, res) => {
             await savehApp.setEmployee(req.body.EmployeeId);
             await savehApp.setCompany(req.user.id);
             await savehApp.setApprovalMethod(ApprovalMethodId);
+            //update employee role
+            const updateEmployeeRole = await Employee.update({role:"approver"}, {
+              where: {id: EmployeeId},
+            });
             //update employee data
 
             const updateResult = await ApprovalMethod.update({isCompleted:true}, {
               where: {id: ApprovalMethodId},
             });
             console.log(updateResult)
-            return res
-              .status(201)
-              .json("successfully registered now your payroll can be approved");
+            return res.status(201).json({
+              employeerole: updateEmployeeRole,
+              message:
+                "successfully registered now your payroll can be approved",
+            });
           } else if (minimumApp === settedApprover + 1) {
             const savehApp = await Approver.create({
               level: 0,
@@ -432,13 +447,20 @@ exports.createApprover = async (req, res) => {
             });
             await savehApp.setEmployee(req.body.EmployeeId);
             await savehApp.setCompany(req.user.id);
-            await savehApp.setApprovalMethod(ApprovalMethodId)
+            await savehApp.setApprovalMethod(ApprovalMethodId);
+            //update employee role
+            const updateEmployeeRole = await Employee.update({role:"approver"}, {
+              where: {id: EmployeeId},
+            });
             //update here
             const updateResult = await ApprovalMethod.update({isCompleted:true}, {
               where: {id: ApprovalMethodId},
             });
             console.log(updateResult)
-            return res.json(" successfully passed minimum amount of approver ");
+            return res.json({
+              updateemployee:updateEmployeeRole,
+              message: " successfully passed minimum amount of approver ",
+            });
           } else if (minimumApp > settedApprover + 1) {
             const savehApp = await Approver.create({
               level: 0,
@@ -449,7 +471,14 @@ exports.createApprover = async (req, res) => {
             await savehApp.setEmployee(req.body.EmployeeId);
             await savehApp.setCompany(req.user.id);
             await savehApp.setApprovalMethod(ApprovalMethodId)
-            return res.json(" add more approver and meet you minimum approver");
+             //update employee role
+             const updateEmployeeRole = await Employee.update({role:"approver"}, {
+              where: {id: EmployeeId},
+            });
+            return res.json({
+              updateEmployeeRole: updateEmployeeRole,
+              messae: " add more approver and meet you minimum approver",
+            });
           } else {
             return res.json("something is wrong");
           }
