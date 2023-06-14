@@ -85,7 +85,7 @@ async function saveApprover(
   isMaster,
   role,
   level,
-  ApprovalMethodId
+  ApprovalMethodId  
 ) {
   const approver = new Approver({ isActive, isMaster, role, level });
   await approver.save();
@@ -145,7 +145,7 @@ exports.createApprover = async (req, res) => {
     });
 
     const settedApprover = await Approver.count({
-      where: { CompanyId: req.user.id,isMaster:false },
+      where: { CompanyId: req.user.id,isMaster:false, },
     });
 
     console.log("already setted", isSaved);

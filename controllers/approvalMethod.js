@@ -4,6 +4,7 @@ const Approver = require("../models/approver");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllApprovalMethod = async (req, res) => {
+  console.log("all approval")
   const CompanyId = req.user.id;
   console.log(CompanyId);
   try {
@@ -21,6 +22,7 @@ exports.getAllApprovalMethod = async (req, res) => {
   }
 };
 exports.getAllActiveApprovalMethod = async (req, res) => {
+  
   const CompanyId = req.user.id;
   console.log(CompanyId);
   try {
@@ -233,9 +235,11 @@ exports.reCreateApprovalMethod = async(req,res)=>{
         if((oldApprovalMethod===approvalMethod&&oldMinimumApprover===minimumApprover&&isOldThereMasterApprover===isThereMasterApprover&&CompanyId===req.user.id)||
           (oldApprovalMethod===approvalMethod&&oldApprovalLevel===approvalLevel&&isOldThereMasterApprover===isThereMasterApprover&&CompanyId===req.user.id)){
             
-            console.log("this is the same with your previous approval method")
+            console.log("this is the same with your previous approval method",oldApprovalMethod,approvalMethod)
             return res.json({
-              message:"this is the same with your previous approval method"
+              message:"this is the same with your previous approval method",
+              oldApprovalMethod:oldApprovalMethod,
+              approvalMethod:approvalMethod
             })
             
           }else{
