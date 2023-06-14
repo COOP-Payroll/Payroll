@@ -22,7 +22,7 @@ const newWorker = async () => {
     const employeeGrade = await EmployeeGrade.findOne({
       where: { EmployeeId: employeeId, active: true },
     });
-
+// const allowances1=
     const [
       pension,
       payrollDefinition,
@@ -54,7 +54,7 @@ const newWorker = async () => {
         ],
       }),
       Loan.findAll({ where: { EmployeeId: employeeId } }),
-      Allowance.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
+      Allowance.findAll({ where: { GradeId: employeeGrade?.GradeId } ,include:[AllowanceDefinition]}),
       Deduction.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
       AdditionalAllowances.findAll({
         where: { CompanyId: user, EmployeeId: employeeId },
@@ -66,8 +66,8 @@ const newWorker = async () => {
       }),
     ]);
 
-    const employee_pension = pension?.employeeContribution ?? 1;
-    const employer_pension = pension?.employerContribution ?? 1;
+    const employee_pension = pension?.employeeContribution ?? 0;
+    const employer_pension = pension?.employerContribution ?? 0;
 
     const taxslabs = await Taxslab.findAll({
       where: { companyId: user, isActive: true },
@@ -86,7 +86,7 @@ const newWorker = async () => {
     // Calculate total allowances
     allowances.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
-
+   console.log("exemted amount: ", allowance?.AllowanceDefinition.isExempted);
       if (allowance?.AllowanceDefinition?.isExempted) {
         totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
 
@@ -156,7 +156,7 @@ const newWorker = async () => {
     overallTotalDeduction =
       totalLoan +
       totalTaxableIncome +
-      totalDeduction +
+      totalDeduction + 
       employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100);
 
     const payrollData = {
