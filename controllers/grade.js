@@ -192,3 +192,13 @@ exports.deleteGrade = async (req, res, next) => {
     }
   }
 };
+
+
+exports.addNewGradeDefn= async(req,res,next)=>{
+  try {
+    const {name}=data;
+    console.log("data",data)
+  } catch (error) {
+    
+  }
+}

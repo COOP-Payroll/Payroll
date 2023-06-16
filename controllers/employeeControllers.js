@@ -34,6 +34,7 @@ exports.getAllEmployee = async (req, res) => {
           model: Company,
           required: false,
         },
+
         {
           model: EmployeeInfo,
           required: false,
@@ -47,6 +48,10 @@ exports.getAllEmployee = async (req, res) => {
               active: true,
             },
           },
+        },
+        {
+          model: AccountInfo,
+          required: false,
         },
         {
           model: CustomRole,
@@ -240,7 +245,7 @@ exports.createEmployee = async (req, res, next) => {
       basicInfo,
       accountInformation,
     } = req.body;
-console.log("basic INfo",basicInfo)
+    console.log("basic INfo", basicInfo);
     const { file } = req;
 
     let password = req.user.companyCode.substring(0, 4) + "0000";
@@ -360,7 +365,7 @@ console.log("basic INfo",basicInfo)
     }
     console.log("basic info");
 
-console.log("basic info", basicInfo)
+    console.log("basic info", basicInfo);
     employeeId += idFormat.separator + paddedEmployeeCode;
     let basicInfo1;
     if (file) {
@@ -390,21 +395,21 @@ console.log("basic info", basicInfo)
         EmployeeInfoId: Number(employeeInfo1.id),
       });
     }
-const URL='https://payroll-production.up.railway.app/'
- const message1 = {
-   from: "your-email@gmail.com",
-   to: basicInfo1.email,
-   subject: "Employee Registration Confirmation",
-   html: `<p>Dear ${basicInfo1.firstName},</p>
+    const URL = "https://payroll-production.up.railway.app/";
+    const message1 = {
+      from: "your-email@gmail.com",
+      to: basicInfo1.email,
+      subject: "Employee Registration Confirmation",
+      html: `<p>Dear ${basicInfo1.firstName},</p>
   <p>Thank you for registering as an employee.</p>
   <p>Your registration is valid until {formattedExpirationDate}.</p>
   <p>Please click the following link to confirm your registration:</p>
   <p><a href="${URL}/confirm/{token}">${URL}/confirm/{token}</a></p>`,
- };
-console.log("email",message1);
-    await sendEmail({message1});
+    };
+    console.log("email", message1);
+    await sendEmail({ message1 });
 
-//
+    //
 
     for (const accountInfo of accountInformation) {
       const { accountNumber, isVerified } = accountInfo;
