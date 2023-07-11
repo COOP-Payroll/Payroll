@@ -11,7 +11,7 @@ exports.getAllApprovalMethod = async (req, res) => {
     const criteria = {
       where: { companyId: req.user.id },
     };
-    const approvalMethod = await ApprovalMethod.findAll({ criteria });
+    const approvalMethod = await ApprovalMethod.findAll(criteria )
     console.log(CompanyId);
     res.status(200).json({
       count: approvalMethod.length,
@@ -29,8 +29,8 @@ exports.getAllActiveApprovalMethod = async (req, res) => {
     const criteria = {
       where: { companyId: req.user.id, isActive: true },
     };
-    const approvalMethod = await ApprovalMethod.findAll(criteria );
-    console.log(CompanyId);
+    const approvalMethod = await ApprovalMethod.findAll(criteria);
+    console.log("this is active",approvalMethod);
     res.status(200).json({
       count: approvalMethod.length,
       approvalMethod,
@@ -118,7 +118,8 @@ exports.createApprovalMethod = async (req, res) => {
     const criteria = {
       where: { companyId: req.user.id },
     };
-    const isExist = await ApprovalMethod.count({ criteria });
+    console.log("criteria",criteria)
+    const isExist = await ApprovalMethod.count(criteria);
     console.log("exist", isExist);
     if (isExist >= 1) {
       return res.json("this company setted approval method");
@@ -245,7 +246,7 @@ exports.reCreateApprovalMethod = async(req,res)=>{
       const oldApprovalMethod = activeApprovalMethod.approvalMethod;
       const isOldThereMasterApprover =
         activeApprovalMethod.isThereMasterApprover;
-      const isOldActive = activeApprovalMethod.isActive;                                                                                                                                     mj
+      const isOldActive = activeApprovalMethod.isActive;                                                                                                                                     
       console.log(
         "active approval",
         oldApprovalLevel,
