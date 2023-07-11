@@ -39,6 +39,24 @@ exports.getAllActiveApprovalMethod = async (req, res) => {
     res.status(500).json("Something gonna wrong");
   }
 };
+exports.getAllInActiveApprovalMethod = async (req, res) => {
+  
+  const CompanyId = req.user.id;
+  console.log(CompanyId);
+  try {
+    const criteria = {
+      where: { companyId: req.user.id, isActive: false },
+    };
+    const approvalMethod = await ApprovalMethod.findAll(criteria );
+    console.log(CompanyId);
+    res.status(200).json({
+      count: approvalMethod.length,
+      approvalMethod,
+    });
+  } catch (err) {
+    res.status(500).json("Something gonna wrong");
+  }
+};
 //save approval method
 async function saveApprovalMethod(
   CompanyId,
@@ -137,7 +155,8 @@ exports.createApprovalMethod = async (req, res) => {
               approvalMethod,
               lastUpdated,
               isActive
-            ); return res.status(200).json({
+            ); 
+            return res.status(200).json({
               "message":"approval method created successfully",
               response
 
@@ -178,6 +197,7 @@ async function reSaveApprovalMethod(
   if (company) {
     console.log("company");
     await appMethod.setCompany(CompanyId);
+    
   } else {
     console.log("no such company");
     return "no such company";
@@ -219,13 +239,22 @@ exports.reCreateApprovalMethod = async(req,res)=>{
 
       console.log("latest one",activeApprovalMethod)
       //fetch each data required to set new approval method
-      const oldId=activeApprovalMethod.id
-      const oldMinimumApprover=activeApprovalMethod.minimumApprover
-      const oldApprovalLevel =activeApprovalMethod.approvalLevel
-      const oldApprovalMethod = activeApprovalMethod.approvalMethod
-      const isOldThereMasterApprover=activeApprovalMethod.isThereMasterApprover
-      const isOldActive = activeApprovalMethod.isActive
-      console.log("active approval", oldApprovalLevel, oldApprovalMethod,oldId,oldMinimumApprover,isOldActive,isOldThereMasterApprover)
+      const oldId = activeApprovalMethod.id;
+      const oldMinimumApprover = activeApprovalMethod.minimumApprover;
+      const oldApprovalLevel = activeApprovalMethod.approvalLevel;
+      const oldApprovalMethod = activeApprovalMethod.approvalMethod;
+      const isOldThereMasterApprover =
+        activeApprovalMethod.isThereMasterApprover;
+      const isOldActive = activeApprovalMethod.isActive;                                                                                                                                     mj
+      console.log(
+        "active approval",
+        oldApprovalLevel,
+        oldApprovalMethod,
+        oldId,
+        oldMinimumApprover,
+        isOldActive,
+        isOldThereMasterApprover
+      );
        // check type of new and old approval are the same
        if(approvalLevel>3){
         console.log("approval level can only be upto three")
@@ -310,14 +339,17 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                 return res.json(response);
               }else{
                 console.log("undefined approval relationship")
+                return res.json("undefined approval relationship");
               }
             }else{
               console.log("undefined approval method")
+              return res.json("undefined approval method");
             }
           }
-       }
+      }
     }else{
         console.log("define your  approval method first")
+        return res.json("define your  approval method first");
     }
 
 }
