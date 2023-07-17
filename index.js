@@ -42,6 +42,7 @@ const Payroll = require("./models/Payroll");
 const PayrollDefinition = require("./models/payrollDefinition");
 const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
+const employeePayrollApprovement = require('./routes/employeePayrollApprovement')
 
 const app = express();
 
@@ -108,6 +109,8 @@ app.use("/providentFund", providentFund);
 app.use("/newPayroll", newPayroll);
 app.use("/module", moduleRoute);
 app.use("/address", addressRoute);
+app.use('/employeePayrollApprovement', employeePayrollApprovement)
+
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
