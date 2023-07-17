@@ -43,7 +43,7 @@ const createApprovement = async (req, res) => {
     const payroll = await Payroll.findOne({
       where: {
         id: payrollId,
-        status: "processed",
+        // status: "processed",
       },
     });
 
@@ -63,14 +63,13 @@ const createApprovement = async (req, res) => {
         isThereMasterApprover: true,
       },
     });
-    //does this payroll processed
+    //does this payroll processed//rejected
     const payrolls = await Payroll.findOne({
-      attributes: ["PayrollDefinitionId"],
-      where: {
-        id: payrollId,
-        status: "processed",
-      },
+        where: {
+          id: payrollId,
+        }
     });
+    const eachPayrollStatus=payrolls.status;
     //what is status of definition
     const payrollDefinitionId = payrolls.PayrollDefinitionId;
     const payrollDefinition = await PayrollDefinition.findOne({
@@ -87,6 +86,7 @@ const createApprovement = async (req, res) => {
         isActive: true,
       },
     });
+    const approverLevel= iAmApprover.level;
     //am i master approver
     const iAmMasterApprover = await Approver.findOne({
       where: {
@@ -95,6 +95,7 @@ const createApprovement = async (req, res) => {
         isMaster: true,
       },
     });
+
 
     //checking for company approval method
     const hasActiveApprovalMethods =
@@ -117,7 +118,7 @@ const createApprovement = async (req, res) => {
     const amIMasterApprover =
       iAmMasterApprover !== null && iAmMasterApprover !== undefined;
 
-    //do algorithm now
+    //do algorithm now 
     if (hasActiveApprovalMethods) {
       //check if payroll ordered
       if (payrollDefinitionStatus !== "ordered") {
@@ -133,20 +134,67 @@ const createApprovement = async (req, res) => {
       if (!isMasterApproverAvailable) {
         //check approval method of company
         if (companyApprovalMethod === "hierarchy") {
-          return res.json("hieranchy");
+          //call herarchical method
+          const herreturn = await handleHierarchicalApprove(
+            companyMinimumApprover,
+            companyApprovalLevel,
+            eachPayrollStatus,
+            isPayrollDefinitionOrdered,
+            payrollId,
+            approverId,
+            approverLevel,
+          );
+          return res.json(herreturn);
         } else if (companyApprovalMethod === "horizontal") {
-          return res.json("horizontal");
+          //call horizontal method
+          const horreturn = await handleHorizontalApprove(
+            companyMinimumApprover,
+            companyApprovalLevel,
+            isPayrollProcessed,
+            isPayrollDefinitionOrdered,
+            payrollId,
+            approverId,
+            approverLevel
+          );
+          return res.json(horreturn);
         } else {
-          return res.json("sorry, ");
+          return res.json("sorry, undefined approval method");
         }
       } else {
         //check if i am master approver
         if (!amIMasterApprover) {
-          return res.json("i am not master approver");
-        }else if(amIMasterApprover){
-          return res.json("i am  master approver");
+          //check approval method of company
+          if (companyApprovalMethod === "hierarchy") {
+            //call herarchical method
+            const herreturn = await handleHierarchicalApprove(
+              companyMinimumApprover,
+              companyApprovalLevel,
+              eachPayrollStatus,
+              isPayrollDefinitionOrdered,
+              payrollId,
+              approverId,
+              approverLevel,
+            );
+            return res.json(herreturn);
+          } else if (companyApprovalMethod === "horizontal") {
+            //call herarchical method
+            const horreturn = await handleHorizontalApprove(
+              companyMinimumApprover,
+              companyApprovalLevel,
+              isPayrollProcessed,
+              isPayrollDefinitionOrdered,
+              payrollId,
+              approverId,
+              approverLevel
+            );
+            return res.json(horreturn);
+          } else {
+            return res.json("sorry, undefined approval method");
+          }
+
+        } else if (amIMasterApprover) {
+          //check payroll is approved
         }
-  
       }
     } else {
       return res.json("your approval method is not active");
@@ -156,6 +204,55 @@ const createApprovement = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+async function handleHierarchicalApprove(
+    companyMinimumApprover,
+    companyApprovalLevel,
+    eachPayrollStatus,
+    isPayrollDefinitionOrdered,
+    payrollId,
+    approverId,
+    approverLevel,
+) {
+  //do prove hierarchy method
+  if (!isPayrollDefinitionOrdered) {
+    return "this payroll not ordered";
+  }
+  //check if status is ordered or rejected
+  const allowedStatuses = ["ordered", "processed"];
+
+  if (eachPayrollStatus === "approved" ) {
+    //do if already approved
+    
+  } else if (allowedStatuses.includes(eachPayrollStatus)) {
+    //check if you are level one
+  
+  } else if (eachPayrollStatus === "pending") {
+    //for more than step one
+
+  }   
+}
+
+async function handleHorizontalApprove(
+  companyMinimumApprover,
+  companyApprovalLevel,
+  isPayrollProcessed,
+  isPayrollDefinitionOrdered,
+  payrollId,
+  approverId,
+  approverLevel
+){
+  return {
+    message: "handle horizontal any way",
+    companyMinimumApprover: companyMinimumApprover,
+    companyApprovalLevel: companyApprovalLevel,
+    isPayrollProcessed: isPayrollProcessed,
+    isPayrollDefinitionOrdered: isPayrollDefinitionOrdered,
+    payrollId: payrollId,
+    approverId: approverId,
+    approverLevel: approverLevel,
+  };
+}
 
 const updateApprovement = async (req, res) => {
   
