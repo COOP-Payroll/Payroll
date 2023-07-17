@@ -16,6 +16,11 @@ const Department = sequelize.define("Department", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  // previous_Info:[ {
+  //   type: Sequelize.JSON,
+  //   allowNull: true,
+  //   defaultValue: null,
+  // }],
 });
 
 Company.hasMany(Department);

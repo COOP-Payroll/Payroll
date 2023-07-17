@@ -43,6 +43,7 @@ const PayrollDefinition = require("./models/payrollDefinition");
 const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
 const employeePayrollApprovement = require('./routes/employeePayrollApprovement')
+const ebirrPayment = require("./routes/eBirrPayment.js");
 
 const app = express();
 
@@ -61,12 +62,13 @@ app.use(
       "http://localhost:5172",
       "http://localhost:5171",
       "http://localhost:5170",
-      "http://localhost:5174",
-
+      "http://localhost:****",
       "http://localhost:3001",
       "http://localhost:3002",
       "http://localhost:****",
       "http://10.2.125.124:4000",
+      "http://10.2.125.124:80",
+      "http://10.2.125.124",
     ],
     credentials: true,
   })
@@ -111,6 +113,7 @@ app.use("/module", moduleRoute);
 app.use("/address", addressRoute);
 app.use('/employeePayrollApprovement', employeePayrollApprovement)
 
+app.use("/payment", ebirrPayment);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
@@ -127,7 +130,7 @@ app.use((err, req, res, next) => {
     success: false,
     status: errorStatus,
     message: errorMessage,
-    // stack: err.stack,
+    stack: err.stack,
   });
 });
 

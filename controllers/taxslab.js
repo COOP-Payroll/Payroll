@@ -4,14 +4,13 @@ const User = require("../models/user.js");
 
 // Define controller methods for handling User requests
 exports.getAllTaxslabs = async (req, res) => {
-
   try {
-    
     if (req.user.role === "superAdmin") {
       const taxslab = await Taxslab.findAll({
         where: { userId: req.user.id, isActive: true },
         include: [
-          {//company
+          {
+            //company
             model: Company,
             attributes: { exclude: ["password"] },
           },
@@ -114,7 +113,7 @@ exports.createTaxslab = async (req, res, next) => {
           to_Salary: to_Salary,
         },
       });
-      console.log("first", checkTax.length);
+
       if (checkTax.length != 0) {
         res.status(409).json("Taxslab is already defined");
       } else {
@@ -196,25 +195,47 @@ exports.updateTaxslab = async (req, res, next) => {
     const { id } = req.params;
 
     const { remark, ...otherData } = data;
-    console.log(otherData);
 
-    const taxslab = await Taxslab.findOne({ where: { id: id } });
-    if (taxslab) {
-      const result = await Taxslab.update(
-        { isActive: false, remark: remark },
-        { where: { id: id } }
-      );
-      // console.log(data);
+    if (req.user.role === "superAdmin") {
+      const taxslab = await Taxslab.findOne({ where: { id: id } });
+      if (taxslab) {
+        const result = await Taxslab.update(
+          { isActive: false, remark: remark },
+          { where: { id: id } }
+        );
+        // console.log(data);
 
-      const taxslab = await Taxslab.create(otherData);
+        const taxslab = await Taxslab.create(otherData);
+        await taxslab.setUser(req.user.id);
 
-      return res
-        .status(200)
-        .json({ message: " Tax Rule is updated successfully", taxslab });
-    } else {
-      return res
-        .status(409)
-        .json({ message: "There is no tax rule with this ID" });
+        return res
+          .status(200)
+          .json({ message: " Tax Rule is updated successfully", taxslab });
+      } else {
+        return res
+          .status(409)
+          .json({ message: "There is no tax rule with this ID" });
+      }
+    } else if (req.user.role === "companyAdmin") {
+      const taxslab = await Taxslab.findOne({ where: { id: id } });
+      if (taxslab) {
+        const result = await Taxslab.update(
+          { isActive: false, remark: remark },
+          { where: { id: id } }
+        );
+        // console.log(data);
+
+        const taxslab = await Taxslab.create(otherData);
+        await taxslab.setCompany(req.user.id);
+
+        return res
+          .status(200)
+          .json({ message: " Tax Rule is updated successfully", taxslab });
+      } else {
+        return res
+          .status(409)
+          .json({ message: "There is no tax rule with this ID" });
+      }
     }
   } catch (error) {
     console.log("first", error);

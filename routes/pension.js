@@ -10,6 +10,13 @@ router.get(
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   pensionController.getAllPension
 );
+
+router.get(
+  "/all",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+  pensionController.getAllPensionIncludingInActive
+);
 router.post(
   "/",
   middleware.protectAll,

@@ -22,4 +22,5 @@ const Grade = sequelize.define("Grade", {
 Grade.belongsTo(Company);
 Company.hasMany(Grade);
 
+
 module.exports = Grade;

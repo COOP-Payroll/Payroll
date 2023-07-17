@@ -66,6 +66,7 @@ router.put(
     { name: "image", maxCount: 1 },
     { name: "id_image", maxCount: 1 },
   ]),
+
   middleware.protectAll,
   middleware.restrictALL({
     moduleName: "employeeinfo",
@@ -96,5 +97,6 @@ router.post(
 router.post("/login", employeeController.login);
 
 router.get("/confirm/:id", newEmployeeController.confirmaRegistration);
+
 
 module.exports = router;

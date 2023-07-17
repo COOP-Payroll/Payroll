@@ -80,12 +80,14 @@ exports.createGrade = async (req, res, next) => {
 
     if (sameGrade) {
       return res.json(
-        "this grade is defined already  check if data provided is not the same with the inserted grade"
+        "This grade is defined already  check if data provided is not the same with the inserted grade"
       );
-    } else {
-      if (minSalary >= maxSalary) {
-        return res.json("check the amount of the salary inserted");
-      } else {
+    }
+     else {
+      console.log("minimum grade",minSalary)
+      console.log("maximum grade",maxSalary)
+      console.log("first",minSalary<maxSalary)
+      if (minSalary < maxSalary) {
         const grade = await Grade.create({ name, minSalary, maxSalary });
         await grade.setCompany(companyId);
 
@@ -93,6 +95,8 @@ exports.createGrade = async (req, res, next) => {
           message: "Successfully Registered",
           grade,
         });
+      } else {
+        return res.json("Minimum salary cannot be greater than maximum salary");
       }
     }
   } catch (error) {
@@ -191,4 +195,11 @@ exports.deleteGrade = async (req, res, next) => {
       return res.status(500).json({ error: "Internal server error" });
     }
   }
+};
+
+exports.addNewGradeDefn = async (req, res, next) => {
+  try {
+    const { name } = data;
+    console.log("data", data);
+  } catch (error) {}
 };

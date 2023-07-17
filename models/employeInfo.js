@@ -8,7 +8,7 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
   },
   hireDate: {
     type: DataTypes.STRING,
-    allowNull: false,
+ 
   },
   basicSalary: {
     type: DataTypes.DOUBLE,
@@ -27,7 +27,20 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  //TERMINATION INFORMATION
+
+  terminationDate: {
+    type: DataTypes.STRING,
+  },
+  terminationReason: {
+    type: DataTypes.STRING,
+  },
+  terminationNotes: {
+    type: DataTypes.STRING,
+  
+  },
 });
+
 
 Employee.hasMany(EmployeeInfo);
 EmployeeInfo.belongsTo(Employee);

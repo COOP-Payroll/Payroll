@@ -15,7 +15,7 @@ router.post(
   "/",
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
-  loanControllers.createAllowance
+  loanControllers.createLoan
 );
 router.put(
   "/:id",
