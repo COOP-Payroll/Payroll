@@ -7,6 +7,7 @@ router.post(
   "/",
   upload.fields([
     { name: "companyLogo", maxCount: 1 },
+    { name: "companyBanner", maxCount: 1 },
     { name: "acctImage", maxCount: 1 },
   ]),
   companyController.createCompany
@@ -28,5 +29,5 @@ router.get("/all/activeCompany", companyController.getAllActiveCompany);
 router.get("/all/blockedCompany", companyController.getAllBlockedCompany);
 router.get("/all/deniedCompany", companyController.getAllDeniedCompany);
 router.get("/all/pendingCompany", companyController.getAllPendingCompany);
-
+router.get("/subscriptionLeftDate/:companyId", companyController.getSubscriptionLeftDate);
 module.exports = router;

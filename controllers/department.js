@@ -3,8 +3,9 @@ const Department = require("../models/department.js");
 // Define controller methods for handling User requests
 exports.getAllDepartment = async (req, res) => {
   try {
+    
     const departments = await Department.findAll({
-      where: { companyId: req.user.id },
+      // where: { companyId: req.user.id },
     });
     if (!departments) {
       res.status(200).json("There is no department");
@@ -13,8 +14,9 @@ exports.getAllDepartment = async (req, res) => {
         count: departments.length,
         departments,
       });
-    }
+   }
   } catch (error) {
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -111,6 +113,7 @@ exports.updateDepartment = async (req, res, next) => {
     const { deptName, location, shorthandRepresentation } = req.body;
     const updates = {};
     const { id } = req.params;
+    const updatedEmployeeData = req.body;
 
     if (deptName) {
       updates.deptName = deptName;
@@ -121,14 +124,24 @@ exports.updateDepartment = async (req, res, next) => {
     if (shorthandRepresentation) {
       updates.shorthandRepresentation = shorthandRepresentation;
     }
+ const department = await Department.findByPk(id);
+ if (!department) {
+   return res.status(404).json({ message: "department not found" });
+ }
+ else{
+
 
     const result = await Department.update(updates, { where: { id: id } });
 
     return res.status(200).json({
       message: "updated successfully",
-      result,
+      
     });
+  }
+ 
+  
   } catch (error) {
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {

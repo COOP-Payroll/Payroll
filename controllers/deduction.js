@@ -53,6 +53,8 @@ exports.getDeductionById = async (req, res) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
+
+      
       return res.status(400).json(errors);
     } else {
       return res.status(500).json({ error: "Internal server error" });
