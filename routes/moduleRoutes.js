@@ -1,7 +1,6 @@
 const express = require("express");
 const moduleController = require("../controllers/moduleControllers.js");
 const middleware = require("../middleware/auth");
-
 const router = express.Router();
 //
 //get all module of the same company
@@ -20,9 +19,6 @@ router.get(
   middleware.restrictToAll("companyAdmin"),
 moduleController.getAllowanceById
 );
-
-
-
 
 // //add module of company
 router.post(

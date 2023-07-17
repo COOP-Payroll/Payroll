@@ -35,10 +35,12 @@ const Company = sequelize.define("Company", {
   companyLogo: {
     type: DataTypes.STRING,
   },
+
   phoneNumber: {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
   role: {
     type: DataTypes.STRING,
     defaultValue: "companyAdmin",
@@ -59,6 +61,42 @@ const Company = sequelize.define("Company", {
     type: DataTypes.STRING,
   },
   footer: {
+    type: DataTypes.STRING,
+  },
+  //NEW CHANGE
+  companyBanner: {
+    type: DataTypes.STRING,
+  },
+  primary_Color: {
+    type: DataTypes.STRING,
+  },
+  primary_Font_Color: {
+    type: DataTypes.STRING,
+  },
+  primary_Gradient_Color: {
+    type: DataTypes.STRING,
+  },
+  secondary_Color: {
+    type: DataTypes.STRING,
+  },
+  secondary_Font_Color: {
+    type: DataTypes.STRING,
+  },
+  social_Media_Images: {
+    type: DataTypes.BOOLEAN,
+
+    defaultValue: false,
+  },
+  region_or_City: {
+    type: DataTypes.STRING,
+  },
+  fax: {
+    type: DataTypes.STRING,
+  },
+  address_Street: {
+    type: DataTypes.STRING,
+  },
+  notes: {
     type: DataTypes.STRING,
   },
 });

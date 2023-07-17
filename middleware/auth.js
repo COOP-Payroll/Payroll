@@ -112,7 +112,7 @@ exports.restrictToAll = (...roles) => {
 
 exports.restrictALL = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
-    console.log("first", moduleName)
+    
     if (req.user.role === "companyAdmin" || req.user.role === "superAdmin") {
       next();
     } else {
@@ -160,7 +160,7 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
 
 exports.restrictApprover = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
-    console.log("first", moduleName);
+
     if (req.user.role === "companyAdmin" || req.user.role === "superAdmin" || req.user.role === "approver") {
       next();
     } else {

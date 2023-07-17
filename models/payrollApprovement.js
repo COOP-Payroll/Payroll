@@ -11,11 +11,19 @@ const PayrollApprovement = sequelize.define("PayrollApprovement", {
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
-  remark:{
+  ///
+  // no_approver: {
+  //   type: DataTypes.NUMBER,
+  //   defaultValue: 0,
+  // },
+  // approver_list: {
+  //   type: [],
+  // },
+  remark: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  rejectedBy:{
+  rejectedBy: {
     type: DataTypes.STRING,
     allowNull: true,
   },

@@ -180,3 +180,21 @@ exports.updatePayrollData = async (req, res, next) => {
     }
   }
 };
+
+
+///
+// Assuming the payroll data is stored in a variable called "payrollData"
+
+// Get the current date
+// const currentDate = new Date();
+
+// // Filter the payroll array to include only the current month's payroll
+// const currentMonthPayroll = payrollData.payroll.filter((payroll) => {
+//   const startDate = new Date(payroll.startDate);
+//   const endDate = new Date(payroll.endDate);
+
+//   return startDate <= currentDate && endDate >= currentDate;
+// });
+
+// // Print the current month's payroll
+// console.log(currentMonthPayroll);

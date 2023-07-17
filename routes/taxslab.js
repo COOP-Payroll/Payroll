@@ -12,20 +12,20 @@ router.get(
   taxslabController.getAllTaxslabs
 );
 
-
-router.get(
-  "/tax/:id",
-  taxslabController.getCompanyWITHtAXSLAB
-);
+router.get("/tax/:id", taxslabController.getCompanyWITHtAXSLAB);
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("superAdmin","companyAdmin"),
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
   taxslabController.createTaxslab
 );
 router.delete("/:id", taxslabController.deleteTaxslab);
-router.put("/:id", taxslabController.updateTaxslab);
-
+router.put(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+  taxslabController.updateTaxslab
+);
 
 router.put(
   "/updateMany/tax",
@@ -33,7 +33,6 @@ router.put(
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   taxslabController.updateMany
 );
-
 
 //RESTORE TO DEFAULT
 

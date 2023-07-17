@@ -18,6 +18,8 @@ exports.createCompany = async (req, res) => {
 
   try {
     const { packageId, duration, accountNumber, ...companyData } = req.body;
+    console.log("first", companyData);
+
     const existingCompany = await Company.findOne({
       where: {
         [Op.or]: [
@@ -54,13 +56,18 @@ exports.createCompany = async (req, res) => {
     // console.log(req.files.companyLogo)
     const imagePath =
       (req?.files?.companyLogo && req?.files?.companyLogo[0]?.path) || null;
+    // console.log("companyBanner", imagePath);
     const acctImagePath =
       (req?.files?.acctImage && req?.files?.acctImage[0]?.path) || null;
+    const bannerPath =
+      (req?.files?.companyBanner && req?.files?.companyBanner[0]?.path) || null;
+    console.log("companyBanner", bannerPath);
 
     const company = await Company.create(
       {
         ...companyData,
         companyLogo: imagePath,
+        companyBanner: bannerPath,
       },
       { transaction }
     );
@@ -232,6 +239,10 @@ exports.getAllCompany = async (req, res) => {
     if (company.companyLogo) {
       const imageUrl = `${baseUrl}${company.companyLogo.replace(/\\/g, "/")}`;
       company.companyLogo = imageUrl;
+    }
+    if (company.companyBanner) {
+      const imageUrl = `${baseUrl}${company.companyBanner.replace(/\\/g, "/")}`;
+      company.companyBanner = imageUrl;
     }
     if (company.footer) {
       const imageUrl = `${baseUrl}${company.footer.replace(/\\/g, "/")}`;
@@ -453,7 +464,46 @@ exports.getAllDeniedCompany = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      // console.log("first", error);
+
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+//GET LEFT DATE
+exports.getSubscriptionLeftDate = async (req, res, next) => {
+  try {
+    const companyId = req.params.companyId;
+    const currentDate = moment();
+
+    const subscriptionLeftDate = await Subscription.findOne({
+      where: { companyId: companyId },
+    });
+
+    
+    const nextPaymentDate = moment(subscriptionLeftDate.nextPaymentDate);
+    const startDate = moment(subscriptionLeftDate.createdAt);
+    const diff = nextPaymentDate.diff(currentDate, "days");
+    return res.status(200).json({
+      Subscription_left_date: diff,
+    });
+  } catch (error) {
+    console.log("first", error);
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
       return res.status(500).json({ error: "Internal server error" });
     }
   }

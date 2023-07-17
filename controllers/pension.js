@@ -1,11 +1,13 @@
 const Pension = require("../models/pension.js");
 
+
 // Define controller methods for handling User requests
 exports.getAllPension = async (req, res) => {
   try {
     if (req.user.role === "superAdmin") {
       const pensions = await Pension.findAll({
-        where: { userId: req.user.id },
+        where: { userId: req.user.id ,
+        isActive:true},
       });
       res.status(200).json({
         count: pensions.length,
@@ -138,6 +140,16 @@ exports.updatePension = async (req, res, next) => {
     const { id } = req.params;
 
     if (req.user.role === "superAdmin") {
+const checkPension = await Pension.findByPk(id);
+if(!checkPension){
+
+   return res
+     .status(404)
+     .json({ message: "There is no pension with these Id" });
+
+    }
+    else{
+      
       if (employerContribution) {
         updates.employerContribution = employerContribution;
       }
@@ -159,29 +171,41 @@ exports.updatePension = async (req, res, next) => {
         message: "updated successfully",
         newPension,
       });
-    } else if (req.user.role === "companyAdmin") {
-      if (employerContribution) {
-        updates.employerContribution = employerContribution;
-      }
-      if (employeeContribution) {
-        updates.employeeContribution = employeeContribution;
-      }
-
-      const result = await Pension.update(
-        { isActive: false },
-        { where: { id: id } }
-      );
-      const newPension = await Pension.create({
-        employeeContribution,
-        employerContribution,
-      });
-      await newPension.setCompany(Number(req.user.id));
-
-      return res.status(200).json({
-        message: "updated successfully",
-        newPension,
-      });
     }
+    } else if (req.user.role === "companyAdmin") {
+const checkPension= await Pension.findByPk(id)
+
+if( !checkPension){
+      return res
+        .status(404)
+        .json({ message: "There is no pension with these Id" });
+
+  
+  }else{
+    if (employerContribution) {
+      updates.employerContribution = employerContribution;
+    }
+    if (employeeContribution) {
+      updates.employeeContribution = employeeContribution;
+    }
+
+    const result = await Pension.update(
+      { isActive: false },
+      { where: { id: id } }
+    );
+    const newPension = await Pension.create({
+      employeeContribution,
+      employerContribution,
+    });
+    await newPension.setCompany(Number(req.user.id));
+
+    return res.status(200).json({
+      message: "updated successfully",
+      newPension,
+    });
+  }
+
+  }
   } catch (error) {
     console.log("first", error);
     if (error.name === "SequelizeValidationError") {
@@ -216,6 +240,50 @@ exports.deletePension = async (req, res, next) => {
       return res
         .status(409)
         .json({ message: "There is no pension with this ID" });
+    }
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+};
+
+
+
+//GET ALL INCLUDING IN ACTIVE PENSION 
+
+exports.getAllPensionIncludingInActive = async (req, res) => {
+  try {
+    if (req.user.role === "superAdmin") {
+      const pensions = await Pension.findAll({
+        where: { userId: req.user.id, },
+      });
+      res.status(200).json({
+        count: pensions.length,
+        pensions,
+      });
+    } else if (req.user.role === "companyAdmin") {
+      const pensions = await Pension.findAll({
+        where: { companyId: req.user.id },
+      });
+      res.status(200).json({
+        count: pensions.length,
+        pensions,
+      });
     }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {

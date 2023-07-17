@@ -13,6 +13,7 @@ const sendEmail = require("../utils/sendEmail.js");
 const { v4: uuidv4 } = require("uuid");
 const crypto = require("crypto");
 
+
 exports.createEmployee = async (req, res) => {
   const {
     address,
@@ -243,8 +244,15 @@ exports.updateEmployee = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { basicSalary, position, DepartmentId, GradeId, employement_Type } =
-      req.body;
+    const {
+      basicSalary,
+      position,
+      DepartmentId,
+      GradeId, 
+      employement_Type,
+    } = req.body;
+
+
 
     const employee = await Employee.findByPk(
       Number(req.params.id),
@@ -275,6 +283,7 @@ exports.updateEmployee = async (req, res) => {
     let department, grade;
 
     if (basicSalary) {
+      console.log("basicsalary",basicSalary)
       if (
         basicSalary < employee.Grades[0]?.minSalary ||
         basicSalary > employee.Grades[0]?.maxSalary
@@ -287,7 +296,10 @@ exports.updateEmployee = async (req, res) => {
           where: { EmployeeId: Number(employee.id), isActive: true },
         });
         if (employeeInfo) {
-          await employeeInfo.update({ isActive: false }, { transaction });
+        const updatedData=  await employeeInfo.update({ isActive: false }, 
+          { transaction }
+          );
+        console.log("updated data",updatedData)
         }
 
         const newEmployeeInfo = await EmployeeInfo.create(
@@ -295,20 +307,24 @@ exports.updateEmployee = async (req, res) => {
             isActive: true,
             EmployeeId: Number(employee.id),
             basicSalary,
-            position: employeeInfo.position,
-            employement_Type: employeeInfo.employement_Type,
-            employeeTIN: employeeInfo.employeeTIN,
-            hireDate: employeeInfo.hireDate,
+            position: employeeInfo?.position,
+            employement_Type: employeeInfo?.employement_Type,
+            employeeTIN: employeeInfo?.employeeTIN,
+            hireDate: employeeInfo?.hireDate,
           },
           { transaction }
         );
+
+        // newEmployeeInfo.save();
       }
     }
 
     if (position) {
+   
       const employeeInfo = await EmployeeInfo.findOne({
         where: { EmployeeId: Number(employee.id), isActive: true },
       });
+         console.log("employee", employeeInfo.basicSalary);
       if (employeeInfo) {
         await employeeInfo.update({ isActive: false }, { transaction });
       }
@@ -317,34 +333,38 @@ exports.updateEmployee = async (req, res) => {
           isActive: true,
           EmployeeId: Number(employee.id),
           position,
-          employement_Type: employee.employement_Type,
-          employeeTIN: employee.employeeTIN,
-          basicSalary: employee.basicSalary,
+          employement_Type: employeeInfo.employement_Type,
+          employeeTIN: employeeInfo.employeeTIN,
+          basicSalary: employeeInfo.basicSalary,
         },
         { transaction }
       );
+
     }
 
+    
     if (DepartmentId) {
+     
       department = await Department.findByPk(Number(DepartmentId));
+
       if (!department) {
         errors.push("Department does not exist.");
       }
     }
-
-    if (GradeId) {
-      grade = await Grade.findByPk(Number(GradeId));
-      if (!grade) {
-        errors.push("Grade does not exist.");
+ 
+      if (GradeId) {
+        grade = await Grade.findByPk(Number(GradeId));
+        if (!grade) {
+          errors.push("Grade does not exist.");
+        }
       }
-    }
 
     if (errors.length > 0) {
       await transaction.rollback();
       return res.status(400).json({ errors });
     }
 
-    console.log("employee files", req.files);
+    // console.log("employee files", req.files);
 
     const imagePath = req.files?.["image"]
       ? req.files?.["image"]?.[0]?.path
@@ -354,12 +374,15 @@ exports.updateEmployee = async (req, res) => {
       : employee.id_image;
 
     if (department) {
+      
       const jointData = await EmployeeDepartment.findOne({
         where: { EmployeeId: employee.id, active: true },
       });
+
       if (jointData) {
         await jointData.update({ active: false }, { transaction });
       }
+  
       const createdJointData = await EmployeeDepartment.create(
         {
           active: true,
@@ -397,10 +420,10 @@ exports.updateEmployee = async (req, res) => {
     );
 
     await transaction.commit();
-
+//////////////////////
     return res.status(200).json({
       message: "Employee fields updated successfully.",
-      oldEmployee: updateEmployee,
+     // oldEmployee: updateEmployee,
     });
   } catch (error) {
     await transaction.rollback();
@@ -425,6 +448,95 @@ exports.getAllEmployee = async (req, res) => {
     const employees = await Employee.findAll({
       where: { CompanyId: Number(req.user.id) },
       exclude: ["password"],
+
+      include: [
+        {
+          model: Address,
+          required: false,
+        },
+        {
+          model: Company,
+          required: false,
+        },
+
+        {
+          model: EmployeeInfo,
+          required: false,
+        },
+        {
+          model: Department,
+          required: false,
+          through: {
+            model: EmployeeDepartment,
+            where: {
+              active: true,
+            },
+          },
+        },
+        {
+          model: AccountInfo,
+          required: false,
+        },
+        {
+          model: CustomRole,
+          required: false,
+        },
+        {
+          model: Loan,
+          required: false,
+        },
+        {
+          model: Grade,
+
+          through: {
+            model: EmployeeGrade,
+            where: {
+              active: true,
+            },
+          },
+
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+            // { model: EmployeeGrade, where: { active: true } },
+          ],
+        },
+        // {
+        //   model: EmployeeGrade,
+        //   where: { active: true },
+        // },
+        {
+          model: EmergencyContact,
+          required: false,
+        },
+        {
+          model: CustomRole,
+          include: [Permission],
+        },
+        {
+          model: AdditionalAllowance,
+          include: [AdditionalAllowanceDefinition],
+        },
+        {
+          model: AdditionalDeduction,
+          include: [AdditionalDeductionDefinition],
+        },
+        //Address,
+        // EmployeeInfo,
+        // EmergencyContact,
+        // AccountInfo,
+        // Department,
+        // Grade,
+
+        // // Company,
+        // CustomRole,
+      ],
     });
     return res.status(200).json({ count: employees.length, employees });
   } catch (error) {
@@ -482,3 +594,15 @@ exports.confirmaRegistration = async (req, res, next) => {
 //   <form action="http://yourwebsite.com/reject/" method="POST">
 //   <button type="submit">Reject</button>
 // </form>
+
+
+
+//PROMOTION 
+
+exports.promotion= async(req,res,next)=>{
+  try {
+    
+  } catch (error) {
+    
+  }
+}

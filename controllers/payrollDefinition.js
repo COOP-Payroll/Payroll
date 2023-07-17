@@ -1,5 +1,6 @@
 const { DATEONLY } = require("sequelize");
 const Payroll = require("../models/payrollDefinition");
+const PayrollDefinition = require("../models/payrollDefinition");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllPayroll = async (req, res, next) => {
@@ -55,82 +56,37 @@ exports.getLatestPayroll = async (req, res) => {
 exports.createPayroll = async (req, res) => {
   try {
     
-    
-    const startDate = req.body.startDate;
-    const endDate = req.body.endDate;
-    const CompanyId = req.user.id;
-    //console.log("logged in company", req.user.id)
-    const criteria1 = {
-      CompanyId: CompanyId,
-      startDate: req.body.startDate,
-    };
-    const criteria = {
-      CompanyId: CompanyId,
-    };
-    const ifPayroll = await Payroll.count({
-      where: criteria1,
-    });
-    const newPayroll = await Payroll.count({
-      where: criteria,
-    });
-    console.log(ifPayroll, "exists");
-    //calculate payroll duration
-    const payrollIntervalInMilliseconds = new Date(endDate) - new Date(startDate);
-    const duration= Math.ceil(payrollIntervalInMilliseconds / (1000 * 60 * 60 * 24));
-    if(duration>32) {
-      return res.json("day of payroll should not be more than 32 day . divide the into two payroll");
-    }else if(duration<=0) {
-      return res.json("day of payroll should be more than 1.");
-    } else if (ifPayroll >= 1) {
-      return res.json("You have already defined the payroll for this month.");
-    } else if (newPayroll === 0) {
 
-      const newPayroll = await Payroll.create({
-        payrollName: req.body.payrollName,
-        startDate: req.body.startDate,
-        endDate: req.body.endDate,
-        status: "created",
-        isRollBacked: false,
-        isPaid: false,
-      });
-      await newPayroll.setCompany(CompanyId);
-      return res.status(201).json("Successfully defined your first payroll.");
+    // const criteria = {
+    //   CompanyId: CompanyId,
+    // };
+const CompanyId = req.user.id;
 
-    } else {
-      const latestPayroll = await Payroll.findOne({
-        order: [["createdAt", "DESC"]],
-      });
-      const lastEndDate = latestPayroll.endDate.toISOString().substring(0, 10);
-      
-      console.log({
-        payroll:latestPayroll,
-        endDate:lastEndDate
-      })
-      
-      //Calculate the interval
-      const intervalInMilliseconds = new Date(startDate) - new Date(lastEndDate);
-      const intervalInDays = Math.ceil(intervalInMilliseconds / (1000 * 60 * 60 * 24));
-      console.log(intervalInDays)
-      if(intervalInDays>1){
-        console.log("your new start date should be one day after "+ lastEndDate);
-        return res.json("your new start date should be one day after "+ lastEndDate);
-      }else if(intervalInDays<1){
-        console.log(" this day was included in yoour last payrol")
-        return res.json(" this day was included in yoour last payrol")
-      }else{
-        //test month and year
-        const newPayroll = await Payroll.create({
-          payrollName: req.body.payrollName,
-          startDate: req.body.startDate,
-          endDate: req.body.endDate,
-          status: "created",
-          isRollBacked: false,
-          isPaid: false,
+    const payrollData= req.body;
+   const updatedPayrollData = payrollData.map((data) => ({
+     ...data,
+     CompanyId,
+   }));
+
+      const payrollDefinition = await PayrollDefinition.bulkCreate(
+        updatedPayrollData
+      );
+console.log("updatedPayrollData", updatedPayrollData);
+      console.log(
+        "Users inserted:",
+        payrollDefinition.map((user) => user.toJSON())
+      );
+
+      return res
+        .status(201)
+        .json({
+          message: "Successfully defined your first payroll.",
+          payrollDefinition,
         });
-        await newPayroll.setCompany(CompanyId);
-        return res.status(201).json("Successfully defined your  payroll.");
-      }
-    }
+
+
+      
+   
   } catch (err) {
     console.log("first", err);
     return res.status(500).json("Something went wrong.");
