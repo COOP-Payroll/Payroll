@@ -241,7 +241,7 @@ const createApprovement = async (req, res) => {
 
         } else if (amIMasterApprover) {
           //check payroll is approved
-          
+
         }
       }
     } else {
@@ -298,7 +298,7 @@ async function handleHierarchicalApprove(
     const level = 1
     const approvedDate = new Date()
     
-    console.log(companyId)
+    // console.log(companyId)
     // call approve handler
     const approveResult = handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId);
     return approveResult;
@@ -401,17 +401,63 @@ async function handleHorizontalApprove(
   approverLevel,
   employeeId
 ){
-  return {
-    message: "handle horizontal any way",
-    companyMinimumApprover: companyMinimumApprover,
-    companyApprovalLevel: companyApprovalLevel,
-    isPayrollProcessed: isPayrollProcessed,
-    isPayrollDefinitionOrdered: isPayrollDefinitionOrdered,
-    payrollId: payrollId,
-    approverId: approverId,
-    approverLevel: approverLevel,
-  };
-}
+  if(!isPayrollDefinitionOrdered){
+    return "the payroll is not ordered yet "
+  }
+ //check if minimum passed
+ const isMinimumApproved = EmployeePayrollApprovement.count({
+  where: {
+    PayrollId: payloadId,
+  }
+})
+
+  if (isMinimumApproved >= Number(companyMinimumApprover)) {
+    return "already approved"
+  } else if ((isMinimumApproved+1) < Number(companyApprovalLevel)) {
+     //approve on employeepayroll and pend on payroll
+    const updatePayroll = await Payroll.findOne({
+      where: {
+        id: payrollId,
+      },
+    });
+    if (!updatePayroll) {
+      return "Payroll record not found";
+    }
+    // Modify the payroll record properties
+    payrollId =payrollId
+    const eachPayrollStatus = 'pending'
+    const employeestatus = 'approved'
+    const level = 1
+    const approvedDate = new Date()
+    
+
+    // call approve handler
+    const approveResult = handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId);
+    return approveResult;
+  } else if((isMinimumApproved +1) ===Number(companyApprovalLevel)){
+      //approve on employeepayroll and pend on payroll
+    const updatePayroll = await Payroll.findOne({
+      where: {
+        id: payrollId,
+      },
+    });
+    if (!updatePayroll) {
+      return "Payroll record not found";
+    }
+    // Modify the payroll record properties
+    payrollId =payrollId
+    const eachPayrollStatus = 'approved'
+    const employeestatus = 'approved'
+    const level = 1
+    const approvedDate = new Date()
+    
+
+    // call approve handler
+    const approveResult = handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId);
+    return approveResult;
+  }
+
+  }
 async function handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId){
       // const payrollId=payrollId
       // const eachPayrollStatus= eachPayrollStatus
