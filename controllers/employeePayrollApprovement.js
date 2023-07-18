@@ -186,6 +186,8 @@ const createApprovement = async (req, res) => {
           return res.json(herreturn);
         } else if (companyApprovalMethod === "horizontal") {
           //call horizontal method
+          const eachPayrollStatus=payrolls.status;
+
           const horreturn = await handleHorizontalApprove(
             companyId,
             companyMinimumApprover,
@@ -208,6 +210,7 @@ const createApprovement = async (req, res) => {
           //check approval method of company
           if (companyApprovalMethod === "hierarchy") {
             //call herarchical method
+            const eachPayrollStatus=payrolls.status;
             
             const herreturn = await handleHierarchicalApprove(
               companyId,
@@ -222,12 +225,12 @@ const createApprovement = async (req, res) => {
             );
             return res.json(herreturn);
           } else if (companyApprovalMethod === "horizontal") {
-            //call herarchical method
+            //call horizontal method
             const horreturn = await handleHorizontalApprove(
               companyId,
               companyMinimumApprover,
               companyApprovalLevel,
-              isPayrollProcessed,
+              eachPayrollStatus,
               isPayrollDefinitionOrdered,
               payrollId,
               approverId,
@@ -241,7 +244,18 @@ const createApprovement = async (req, res) => {
 
         } else if (amIMasterApprover) {
           //check payroll is approved
-
+          const isApproved = await Payroll.findOne({
+            where: {
+              id: payrollId,
+              status: 'approved',
+            },
+          });
+          
+          if (!isApproved) {
+           return res.json("not approved")
+          }
+          await isApproved.update({ status: 'active' });
+          return res.json("payroll activated  successfully");
         }
       }
     } else {
@@ -249,7 +263,7 @@ const createApprovement = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -405,57 +419,63 @@ async function handleHorizontalApprove(
     return "the payroll is not ordered yet "
   }
  //check if minimum passed
- const isMinimumApproved = EmployeePayrollApprovement.count({
+ const isMinimumApproved = await EmployeePayrollApprovement.count({
   where: {
-    PayrollId: payloadId,
+    PayrollId: payrollId,
+  },
+});
+
+const compLevel = Number(companyMinimumApprover);
+const approved = Number(isMinimumApproved)
+
+const isLast= approved+1;
+
+
+if (approved >= compLevel ) {
+  return "already approved";
+} else if ((isLast) < compLevel) {
+  //approve on employeepayroll and pend on payroll
+  
+  const updatePayroll = await Payroll.findOne({
+    where: {
+      id: payrollId,
+    },
+  });
+  if (!updatePayroll) {
+    return "Payroll record not found";
   }
-})
+  // Modify the payroll record properties
+  const eachPayrollStatus = 'pending';
+  const employeestatus = 'approved';
+  const level = 1;
+  const approvedDate = new Date();
 
-  if (isMinimumApproved >= Number(companyMinimumApprover)) {
-    return "already approved"
-  } else if ((isMinimumApproved+1) < Number(companyApprovalLevel)) {
-     //approve on employeepayroll and pend on payroll
-    const updatePayroll = await Payroll.findOne({
-      where: {
-        id: payrollId,
-      },
-    });
-    if (!updatePayroll) {
-      return "Payroll record not found";
-    }
-    // Modify the payroll record properties
-    payrollId =payrollId
-    const eachPayrollStatus = 'pending'
-    const employeestatus = 'approved'
-    const level = 1
-    const approvedDate = new Date()
-    
-
-    // call approve handler
-    const approveResult = handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId);
-    return approveResult;
-  } else if((isMinimumApproved +1) ===Number(companyApprovalLevel)){
-      //approve on employeepayroll and pend on payroll
-    const updatePayroll = await Payroll.findOne({
-      where: {
-        id: payrollId,
-      },
-    });
-    if (!updatePayroll) {
-      return "Payroll record not found";
-    }
-    // Modify the payroll record properties
-    payrollId =payrollId
-    const eachPayrollStatus = 'approved'
-    const employeestatus = 'approved'
-    const level = 1
-    const approvedDate = new Date()
-    
-
-    // call approve handler
-    const approveResult = handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId);
-    return approveResult;
+  // call approve handler
+  const approveResult = handlePayrollApprove(payrollId, eachPayrollStatus, employeestatus, level, approvedDate, approverId, employeeId, companyId);
+  return approveResult;
+} else if (isLast === compLevel) {
+  //approve on employeepayroll and pend on payroll
+  const updatePayroll = await Payroll.findOne({
+    where: {
+      id: payrollId,
+    },
+  });
+  if (!updatePayroll) {
+    return "Payroll record not found";
   }
+  // Modify the payroll record properties
+  const eachPayrollStatus = 'approved';
+  const employeestatus = 'approved';
+  const level = 1;
+  const approvedDate = new Date();
+
+  // call approve handler
+  const approveResult = handlePayrollApprove(payrollId, eachPayrollStatus, employeestatus, level, approvedDate, approverId, employeeId, companyId);
+  return approveResult;
+} else {
+  return "some error";
+}
+
 
   }
 async function handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId){
