@@ -76,6 +76,7 @@ console.log("updatedPayrollData", updatedPayrollData);
         "Users inserted:",
         payrollDefinition.map((user) => user.toJSON())
       );
+      console.log("");
 
       return res
         .status(201)
