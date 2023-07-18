@@ -250,7 +250,15 @@ const createApprovement = async (req, res) => {
               status: 'approved',
             },
           });
-          
+          const isActivated = await Payroll.findOne({
+            where: {
+              id: payrollId,
+              status: 'active',
+            },
+          });
+          if(isActivated){
+            return res.json("already activated")
+          }
           if (!isApproved) {
            return res.json("not approved")
           }
@@ -475,7 +483,6 @@ if (approved >= compLevel ) {
 } else {
   return "some error";
 }
-
 
   }
 async function handlePayrollApprove(payrollId,eachPayrollStatus,employeestatus,level,approvedDate,approverId,employeeId,companyId){
