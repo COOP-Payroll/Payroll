@@ -32,12 +32,42 @@ exports.getAllApprovers = async (req, res) => {
   }
 
 };
-
+//get all active approver
 exports.getAllActiveApprovers = async (req, res) => {
   const CompanyId = req.user.id;
   console.log(CompanyId);
   const criteria = {
     where: { CompanyId: CompanyId, isActive: true },
+  };
+  try {
+    const approvers = await Approver.findAll({
+      ...criteria,
+      include: 'Employee',
+    });
+
+    let employeeNames = [];
+    if (approvers && approvers.length > 0) {
+      employeeNames = approvers.map(approver => approver.Employee.fullname);
+    }
+
+    res.json({
+      count: approvers.length,
+      approvers: approvers,
+      Names: employeeNames,
+    });
+
+  } catch (error) {
+    console.error("Error retrieving Approvers:", error);
+    res.status(500).json({ error: "Failed to retrieve Approvers" });
+  }
+
+};
+//get all inactive approver
+exports.getAllInActiveApprovers = async (req, res) => {
+  const CompanyId = req.user.id;
+  console.log(CompanyId);
+  const criteria = {
+    where: { CompanyId: CompanyId, isActive: false },
   };
   try {
     const approvers = await Approver.findAll({
@@ -71,6 +101,24 @@ exports.getApproverById = async (req, res) => {
       return res.status(404).json({ error: "Approver not found" });
     }
     res.json(approver);
+  } catch (error) {
+    console.error("Error retrieving Approver:", error);
+    res.status(500).json({ error: "Failed to retrieve Approver" });
+  }
+};
+//get approver by employee id
+exports.getApproverByEmployeeId = async (req, res) => {
+  const approverEmployeeId = req.params.id;
+  try {
+    const approver = await Approver.findOne({
+      where: { EmployeeId: approverEmployeeId },
+      include: [{ model: Employee }]
+    });
+    
+    if (!approver) {
+      return res.status(404).json({ error: "Approver not found" });
+    }
+    res.status(200).json(approver);
   } catch (error) {
     console.error("Error retrieving Approver:", error);
     res.status(500).json({ error: "Failed to retrieve Approver" });
@@ -635,17 +683,14 @@ exports.deleteApprover = async (req, res) => {
 };
 
 exports.deactiveApprover = async (req, res) => {
-
-  const approverId =  req.body.approverId;
+  const approverId = req.body.approverId;
   const EmployeeId = req.body.EmployeeId;
 
   const updateApprover = await Approver.update(
-
-    { isActive: false, },
+    { isActive: false },
     {
       where: {
         id: approverId,
-        
       },
     }
   );
@@ -653,28 +698,16 @@ exports.deactiveApprover = async (req, res) => {
     { role: "employee" },
     {
       where: {
-        id:EmployeeId
+        id: EmployeeId,
       },
     }
   );
 
-  return res.json({ status:201,message:"approver deActivated successfully", updateEmployee:updateEmployee, updateApprover:updateApprover})
-}
-
-exports.getApproverByEmployeeId = async (req, res) => {
-  const approverEmployeeId = req.params.id;
-  try {
-    const approver = await Approver.findOne({
-      where: { EmployeeId: approverEmployeeId },
-      include: [{ model: Employee }]
-    });
-    
-    if (!approver) {
-      return res.status(404).json({ error: "Approver not found" });
-    }
-    res.status(200).json(approver);
-  } catch (error) {
-    console.error("Error retrieving Approver:", error);
-    res.status(500).json({ error: "Failed to retrieve Approver" });
-  }
+  return res.json({
+    status: 201,
+    message: "approver deActivated successfully.",
+    updateEmployee: updateEmployee,
+    updateApprover: updateApprover,
+  });
 };
+

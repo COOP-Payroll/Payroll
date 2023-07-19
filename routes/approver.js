@@ -9,20 +9,36 @@ middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 approverController.getAllApprovers);
 
-
-
+//get all active approver
 router.get('/active', 
 middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 approverController.getAllActiveApprovers);
-// // GET /approvers/:id - Get a single Approver by ID
-router.get('/:id', approverController.getApproverById);
+
+//get all active approver
+router.get('/inactive', 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approverController.getAllInActiveApprovers);
+
+ // GET /approvers/:id - Get a single Approver by ID
+router.get('/:id',
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approverController.getApproverById);
 
 //approver by employee 
-router.get('/employeeId/:id', approverController.getApproverByEmployeeId);
+router.get('/employeeId/:id',
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approverController.getApproverByEmployeeId);
 
 //deactive approver  
-router.put('/:id', approverController.deactiveApprover);
+router.put('/deactive', 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approverController.deactiveApprover);
+
  // POST /approvers - Create a new Approver
  router.post(
    "/",
@@ -31,16 +47,17 @@ router.put('/:id', approverController.deactiveApprover);
    approverController.createApprover
  );
 
- router.post(
-  "/deActive",
-  middleware.protectAll,
-  middleware.restrictTo("companyAdmin"),
-  approverController.createApprover
-);
-// // PUT /approvers/:id - Update an existing Approver
-router.put('/:id', approverController.updateApprover);
+
+//  PUT /approvers/:id - Update an existing Approver
+router.put('/:id', 
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approverController.updateApprover);
 
 // // DELETE /approvers/:id - Delete an Approver
-router.delete('/:id', approverController.deleteApprover);
+router.delete('/:id',
+middleware.protectAll,
+middleware.restrictTo('companyAdmin'),
+approverController.deleteApprover);
 
 module.exports = router;
