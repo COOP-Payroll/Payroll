@@ -6,9 +6,11 @@ const employeePayrollApprovementController = require("../controllers/employeePay
 // GET /employee-payroll-approvements
 router.get("/", employeePayrollApprovementController.getAllApprovements);
 
-// GET /employee-payroll-approvements/:id
+// GET /employee-payroll-approvements/:id by definition id
 router.get("/:id", employeePayrollApprovementController.getApprovementById);
 
+// GET /employee-payroll-approvements/:id by payroll id
+router.get("/employeeApprovement/:id", employeePayrollApprovementController.getApprovementByPayrollId);
 // POST /employee-payroll-approvements
 router.post(
   "/",
