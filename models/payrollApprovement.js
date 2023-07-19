@@ -44,7 +44,6 @@ PayrollDefinition.hasMany(PayrollApprovement);
 PayrollApprovement.belongsTo(Approver);
 Approver.hasOne(PayrollApprovement);
 
-
 PayrollApprovement.belongsTo(Company);
 Company.hasMany(PayrollApprovement);
 
