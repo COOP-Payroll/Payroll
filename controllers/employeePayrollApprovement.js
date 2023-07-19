@@ -596,7 +596,7 @@ const arrayApproveApprovement = async (req, res) => {
           const returnValue = res.json("this company has no active approval method pleaase define one ");
           return returnValue;
         }
-       
+      
         //does this payroll processed//rejected
         const payrolls = await Payroll.findOne({
             where: {
