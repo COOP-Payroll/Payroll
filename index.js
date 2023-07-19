@@ -134,7 +134,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-sequelize.sync({ force: true }).then(() => console.log("db is ready"));
+sequelize.sync({ force: false }).then(() => console.log("db is ready"));
 
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
