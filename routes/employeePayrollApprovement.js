@@ -20,7 +20,17 @@ router.post(
   }),
   employeePayrollApprovementController.createApprovement
 );
-
+//aprove by array
+router.post(
+  "/approve",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  employeePayrollApprovementController.arrayApproveApprovement
+);
 
   
 
