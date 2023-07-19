@@ -17,6 +17,7 @@ router.get(
 );
 router.post(
   "/",
+  
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
   allowance.createAllowance

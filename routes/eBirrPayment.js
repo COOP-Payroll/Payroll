@@ -9,6 +9,10 @@ router.post(
   //   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   e_birr.EbirrPayment
 );
+router.post(
+  "/chappa",
 
+  e_birr.ChapaPayment
+);
 
 module.exports = router;
