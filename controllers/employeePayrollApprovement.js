@@ -908,9 +908,136 @@ async function handlePayrollApprove(
   };
 }
 
+// const rejectPayroll = async(req,res,next)=>{
+//   const companyId = Number(req.user.id); // Company ID
+//   const payrollIds = Number(req.body.Payrolls); // Array of Payroll IDs
+//   const approverId = Number(req.body.approverId);
+//   const results = [];
+
+//   try {
+//     // check if company has active approval method
+
+//     const activeApprovalMethod= await ApprovalMethod.findOne({where:{
+//       CompanyId:companyId,
+//       isActive:true
+//     }})
+
+//     if(!activeApprovalMethod){
+//       return res.json("your company has no active approval method defined ccontact admin!")
+//     }
+//     //check if i am active approver
+
+//     const activeApprover = await Approver.findOne({
+//       where:{
+//         id:approverId,
+//         isActive:true
+//       }
+//     })
+//     if(!activeApprover){
+//       return res.json("you are not an active approver")
+//     }
+//     //check if payroll there
+//     const thisPayroll = await Payroll.findOne({
+//       where:{
+//         id:payrollIds
+//       }
+//     })
+//     if(!thisPayroll){
+//       return res.json("no such payroll is created ")
+//     }
+//     //update it form employeement 
+//     const recordToUpdate = await  Payroll.findOne({ where: { id:payrollIds } });
+//     const recordToUpdateOnApprovement = await  EmployeePayrollApprovement.findOne({ where: { PayrollId:payrollIds } });
+//     // Check if records were found
+//     if (!recordToUpdate || !recordToUpdateOnApprovement) {
+//       return res.status(404).json('Records not found.');
+//     }
+//       // Update the record with the new 
+//       await recordToUpdateOnApprovement.update({status:'rejected',rejectedBy:approverId,remark:'revice allowance'})
+//       await recordToUpdate.update({status:'rejected'});
+
+//       // return res.json(`${recordToUpdate.id} Record updated successfully!`);
+//       return res.json({recordToUpdate:recordToUpdate,recordToUpdateOnApprovement:recordToUpdateOnApprovement})
+//   } catch (error) {
+//     return res.json(error);
+//   }
+// }
+
+const rejectPayroll = async (req, res, next) => {
+  const companyId = Number(req.user.id); // Company ID
+  const payrollIds = Array.isArray(req.body.Payrolls) ? req.body.Payrolls : [Number(req.body.Payrolls)]; // Convert to an array
+  const approverId = Number(req.body.approverId);
+  const results = [];
+
+  try {
+    // check if company has active approval method
+    const activeApprovalMethod = await ApprovalMethod.findOne({
+      where: {
+        CompanyId: companyId,
+        isActive: true,
+      },
+    });
+
+    if (!activeApprovalMethod) {
+      return res.json("Your company has no active approval method defined. Contact the admin!");
+    }
+
+    // check if I am an active approver
+    const activeApprover = await Approver.findOne({
+      where: {
+        id: approverId,
+        isActive: true,
+      },
+    });
+
+    if (!activeApprover) {
+      return res.json("You are not an active approver.");
+    }
+
+    // Process each payroll ID in the array
+    for (const payrollId of payrollIds) {
+      // Check if payroll exists
+      const thisPayroll = await Payroll.findOne({
+        where: {
+          id: payrollId,
+        },
+      });
+
+      if (!thisPayroll) {
+        results.push({ payrollId, status: 'not found' });
+      } else {
+        // Update EmployeePayrollApprovement record
+        const recordToUpdateOnApprovement = await EmployeePayrollApprovement.findOne({
+          where: {
+            PayrollId: payrollId,
+          },
+        });
+
+        if (!recordToUpdateOnApprovement) {
+          results.push({ payrollId, status: 'approvement record not found' });
+        } else {
+          // Update the records with the new status and other details
+          await recordToUpdateOnApprovement.update({ status: 'rejected', rejectedBy: approverId, remark: 'revice allowance' });
+          await thisPayroll.update({ status: 'rejected' });
+
+          results.push({ payrollId, status: 'rejected', rejectedBy: approverId, remark: 'revice allowance' });
+        }
+      }
+    }
+
+    return res.json(results);
+  } catch (error) {
+    return res.status(500).json({ error: 'An error occurred while updating payrolls.' });
+  }
+};
+
+
+
+
 
 module.exports = {
   getAllApprovements,
+  rejectPayroll,
   getApprovementById,
   createApprovement,
   updateApprovement,
