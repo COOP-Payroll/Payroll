@@ -2,11 +2,15 @@ const Company = require("../models/company.js");
 const Taxslab = require("../models/taxslab.js");
 const User = require("../models/user.js");
 
+function parseInfinityBack(value) {
+  return value === 1000000000 ? "Infinity" : value;
+}
+
 // Define controller methods for handling User requests
 exports.getAllTaxslabs = async (req, res) => {
   try {
     if (req.user.role === "superAdmin") {
-      const taxslab = await Taxslab.findAll({
+      const taxslabs = await Taxslab.findAll({
         where: { userId: req.user.id, isActive: true },
         include: [
           {
@@ -20,12 +24,23 @@ exports.getAllTaxslabs = async (req, res) => {
           },
         ],
       });
+      const taxslab = taxslabs.map((taxslab) => {
+        return {
+          ...taxslab.toJSON(),
+          to_Salary: parseInfinityBack(taxslab.to_Salary),
+        };
+      });
       return res.status(200).json({
         count: taxslab.length,
         taxslab,
       });
+
+      // return res.status(200).json({
+      //   count: taxslab.length,
+      //   taxslab,
+      // });
     } else {
-      const taxslab = await Taxslab.findAll({
+      const taxslabs = await Taxslab.findAll({
         where: { CompanyId: req.user.id, isActive: true },
         include: [
           {
@@ -38,12 +53,26 @@ exports.getAllTaxslabs = async (req, res) => {
           },
         ],
       });
+
+      const taxslab = taxslabs.map((taxslab) => {
+        return {
+          length: taxslab.length,
+          ...taxslab.toJSON(),
+          to_Salary: parseInfinityBack(taxslab.to_Salary),
+        };
+      });
+
       return res.status(200).json({
         count: taxslab.length,
         taxslab,
       });
+      // return res.status(200).json({
+      //   count: taxslab.length,
+      //   taxslab,
+      // });
     }
   } catch (error) {
+    console.log("error", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -67,9 +96,25 @@ exports.getAllTaxslabs = async (req, res) => {
 exports.getTaxslabById = async (req, res) => {
   try {
     const { id } = req.params;
-    const taxslab = await Taxslab.findByPk(id);
-    return res.json(taxslab);
+    const taxslab = await Taxslab.findOne({ where: { id: id } });
+
+    //  const taxslab = taxslabs.map((taxslab) => {
+    //    return {
+    //      ...taxslab.toJSON(),
+    //      to_Salary: parseInfinityBack(taxslab.to_Salary),
+    //    };
+    //  });
+
+    if (!taxslab) {
+      return res.status(404).json({ message: "TaxSlab not found" });
+    } else {
+      if (taxslab.to_Salary === 1000000000) {
+        taxslab.to_Salary = "Infinity";
+      }
+      return res.json(taxslab);
+    }
   } catch (error) {
+    console.log("first error: " + error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -117,9 +162,11 @@ exports.createTaxslab = async (req, res, next) => {
       if (checkTax.length != 0) {
         res.status(409).json("Taxslab is already defined");
       } else {
+        const data = to_Salary == "Infinity" ? 1000000000 : to_Salary;
+        // to_Salary === "Infinity" ? Infinity :to_Salary;
         const taxslab = await Taxslab.create({
           from_Salary,
-          to_Salary,
+          to_Salary: data,
           income_tax_payable,
           deductible_Fee,
           remark,
@@ -139,18 +186,23 @@ exports.createTaxslab = async (req, res, next) => {
         deductible_Fee,
         remark,
       } = req.body;
+      const data = to_Salary == "Infinity" ? 1000000000 : to_Salary;
       const checkTax = await Taxslab.findAll({
         where: {
           companyId: req.user.id,
           from_Salary: from_Salary,
-          to_Salary: to_Salary,
+          to_Salary: data,
         },
       });
+      console.log(to_Salary == "Infinity" ? 1000000000 : to_Salary);
 
       if (checkTax === "undefined" || checkTax.length === 0) {
+        //   const data = to_Salary == "Infinity" ? -1 : to_Salary;
+        console.log("to_Salary: ", data);
+        console.log("to salary", to_Salary);
         const taxslab = await Taxslab.create({
           from_Salary,
-          to_Salary,
+          to_Salary: data,
           income_tax_payable,
           deductible_Fee,
           remark,
