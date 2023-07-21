@@ -90,8 +90,25 @@ console.log("updatedPayrollData", updatedPayrollData);
    
   } catch (err) {
     console.log("first", err);
-    return res.status(500).json("Something went wrong.");
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(400).json(errors);
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(400).json(errors);
+    } else {
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
+  
 };
 
 exports.updatePayrollDefinition = async (req, res, next) => {
