@@ -7,15 +7,11 @@ const ChapaPayment = sequelize.define("ChapaPayment", {
     allowNull: false,
     primaryKey: true,
   },
-  referenceId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  orderID: {
+  orderId: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  requestId: {
+  tx_ref: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -27,36 +23,56 @@ const ChapaPayment = sequelize.define("ChapaPayment", {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  callBackUrl: {
+  email: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  accountNo: {
+  first_name: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  invoiceId: {
+  last_name: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  paymentService: {
+  callback_url: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  transactionId: {
+  cheackoutUrl: {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  issuerTransactionId: {
+  return_url: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  title: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  description: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  requestStatus: {
+    type: DataTypes.STRING,
+    enum: ["PENDING", "COMPLETED", "FAILED"],
+    defaultValue: "PENDING",
+    validate: {
+      isIn: [["PENDING", "COMPLETED", "FAILED"]],
+    },
   },
   paymentStatus: {
     type: DataTypes.STRING,
-    enum: ["Pending", "Approved", "Failed"],
-    defaultValue: "Pending",
+    enum: ["PENDING", "COMPLETED", "FAILED"],
+    defaultValue: "PENDING",
     validate: {
-      isIn: [["Pending", "Approved", "Failed"]],
+      isIn: [["PENDING", "COMPLETED", "FAILED"]],
     },
   },
 });

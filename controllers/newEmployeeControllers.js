@@ -299,9 +299,9 @@ exports.updateEmployee = async (req, res) => {
         const updatedData=  await employeeInfo.update({ isActive: false }, 
           { transaction }
           );
-        console.log("updated data",updatedData)
+     
         }
-
+    // console.log("department",DepartmentId)
         const newEmployeeInfo = await EmployeeInfo.create(
           {
             isActive: true,
@@ -346,7 +346,7 @@ exports.updateEmployee = async (req, res) => {
     if (DepartmentId) {
      
       department = await Department.findByPk(Number(DepartmentId));
-
+  console.log("new department",department);
       if (!department) {
         errors.push("Department does not exist.");
       }
@@ -378,6 +378,7 @@ exports.updateEmployee = async (req, res) => {
       const jointData = await EmployeeDepartment.findOne({
         where: { EmployeeId: employee.id, active: true },
       });
+      console.log("joint data", jointData)
 
       if (jointData) {
         await jointData.update({ active: false }, { transaction });
@@ -490,9 +491,9 @@ exports.getAllEmployee = async (req, res) => {
 
           through: {
             model: EmployeeGrade,
-            where: {
-              active: true,
-            },
+            // where: {
+            //   active: true,
+            // },
           },
 
           include: [
