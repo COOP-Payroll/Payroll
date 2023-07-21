@@ -42,4 +42,18 @@ router.put("/:id", employeePayrollApprovementController.updateApprovement);
 // DELETE /employee-payroll-approvements/:id
 router.delete("/:id", employeePayrollApprovementController.deleteApprovement);
 
+
+//reject 
+router.post(
+  "/reject",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictALL({
+    moduleName: "payrollpublishedreport",
+    isAccessible: true,
+  }),
+  employeePayrollApprovementController.rejectPayroll
+);
+
+
 module.exports = router;
