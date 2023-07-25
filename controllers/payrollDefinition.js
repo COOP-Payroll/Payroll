@@ -72,16 +72,16 @@ const CompanyId = req.user.id;
         updatedPayrollData
       );
 console.log("updatedPayrollData", updatedPayrollData);
-      console.log(
-        "Users inserted:",
-        payrollDefinition.map((user) => user.toJSON())
-      );
-      console.log("");
+      // console.log(
+      //   "Users inserted:",
+      //   payrollDefinition.map((user) => user.toJSON())
+      // );
+      // console.log("");
 
       return res
         .status(201)
         .json({
-          message: "Successfully defined your first payroll.",
+          message: "Successfully defined your payroll.",
           payrollDefinition,
         });
 
