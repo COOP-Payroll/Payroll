@@ -32,7 +32,7 @@ exports.getAllDepartment = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -58,7 +58,7 @@ exports.getDepartmentById = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -74,7 +74,7 @@ exports.createDepartment = async (req, res, next) => {
     const checkDepartment = await Department.findOne({ where: criteria });
 
     if (checkDepartment) {
-      res.status(404).json("this Department is defined already ");
+      res.status(404).json("Department is defined already ");
     } else {
       const departments = await Department.create({
         deptName,
@@ -103,7 +103,7 @@ exports.createDepartment = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -157,7 +157,7 @@ exports.updateDepartment = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -193,7 +193,7 @@ exports.deleteDepartment = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };

@@ -30,7 +30,7 @@ exports.getAllAllowanceDefinition = async (req, res) => {
 
         return res.status(400).json(errors);
       } else {
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
 
@@ -57,7 +57,7 @@ exports.getAllowanceDefinitionById = async (req, res) => {
 
         return res.status(400).json(errors);
       } else {
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
 
@@ -111,7 +111,7 @@ exports.createAllowanceDefinition = async (req, res, next) => {
 
         return res.status(400).json(errors);
       } else {
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
 };
@@ -163,7 +163,7 @@ exports.updateAllowanceDefinition = async (req, res, next) => {
 
         return res.status(400).json(errors);
       } else {
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
 
@@ -201,7 +201,7 @@ exports.deleteAllowanceDefinition = async (req, res, next) => {
 
         return res.status(400).json(errors);
       } else {
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ message: "Internal server error" });
       }
     }
 

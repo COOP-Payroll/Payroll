@@ -16,7 +16,7 @@ exports.createUser = async (req, res) => {
       });
       return res.status(400).json(errors);
     }
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -68,7 +68,7 @@ exports.updateUser = async (req, res) => {
       return res.status(400).json(validationErrors);
     }
 
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 

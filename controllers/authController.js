@@ -37,7 +37,7 @@ const createSendToken = async (company, statusCode, res) => {
       },
     });
   } catch (error) {
-    return res.json(error);
+    return res.status(500).json({message:error.name});
   }
 };
 
@@ -50,7 +50,7 @@ exports.login = async (req, res, next) => {
     if (!email || !password || !companyCode) {
       return res
         .status(404)
-        .json({ error: "please provide email, password or company code" });
+        .json({ message: "please provide email, password or company code" });
     }
 
     //check if user exists and password is correct
@@ -69,11 +69,11 @@ exports.login = async (req, res, next) => {
         ],
       });
     }
-console.log("first")
+
     if (!company || !(await bcrypt.compare(password, company.password))) {
-      return res
-        .status(401)
-        .json({ message: "Incorrect email, password or company Code" });
+      return res.status(401).json({
+        message: "Unauthorized access - Invalid email, password or company code",
+      });
     }
     if (company.role === "employee" || company.role === "approver") {
       createSendToken(company, 200, res);
@@ -84,28 +84,28 @@ console.log("first")
         switch (company.status) {
           case "pending":
             return res.status(401).json({
-              error: "your request is being processed please stay tune",
+              message: "your request is being processed please stay tune",
             });
           case "blocked":
             return res.status(401).json({
-              error: "Your account has been blocked",
+              message: "Your account has been blocked",
             });
           case "denied":
             return res.status(401).json({
-              error: "Your account has been denied",
+              message: "Your account has been denied",
             });
           default:
             return res.status(401).json({
-              error: "Unknown status",
+              message: "Unknown status",
             });
         }
       }
     }
   } catch (err) {
     //next(createError.createError(404, 'failed'));
-    res.status(404).json({
-      status: "failed to login",
-      message: err,
+    res.status(500).json({
+
+      message: err.name,
     });
   }
 };
@@ -126,17 +126,30 @@ exports.superAdminLogin = async (req, res, next) => {
       user.role != "superAdmin" ||
       !(await bcrypt.compare(password, user.password))
     ) {
-      return res.status(401).json({ error: "Incorrect email, password" });
+      return res.status(401).json({ message: "Incorrect email, password" });
       //next(createError.createError(401,'Incorrect email, password or company Code'))
     } else {
       return createSendToken(user, 200, res);
     }
 
     //if everything is ok send token to the client
-  } catch (err) {
-    res.status(404).json({
-      status: "error occour",
-      message: err,
-    });
+  } catch (error) {
+ if (error.name === "SequelizeValidationError") {
+   const errors = {};
+   error.errors.forEach((err) => {
+     errors[err.path] = [`${err.path} is required`];
+   });
+
+   return res.status(400).json(errors);
+ } else if (error.name === "SequelizeUniqueConstraintError") {
+   const errors = {};
+   error.errors.forEach((err) => {
+     errors[err.path] = [`${err.path} must be unique`];
+   });
+
+   return res.status(400).json(errors);
+ } else {
+   return res.status(500).json({ message: "Internal server error" });
+ }
   }
 };

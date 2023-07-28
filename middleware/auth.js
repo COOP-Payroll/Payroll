@@ -43,7 +43,7 @@ exports.protectAll = async (req, res, next) => {
     if (!currentUser) {
       return res
         .status(401)
-        .json({ error: `${currentUser.role} does not longer exists ` });
+        .json({ message: `${currentUser.role} does not longer exists ` });
     }
     //check if user change password after jwt was issued
     // if (currentUser.changedPasswordAfter(decoded.iat)) {
@@ -58,9 +58,9 @@ exports.protectAll = async (req, res, next) => {
       next();
     }
   } catch (err) {
-    return res.status(404).json({
-      status: "Error occured",
-      message: err,
+    return res.status(401).json({
+     
+      message: err.name,
     });
   }
 };

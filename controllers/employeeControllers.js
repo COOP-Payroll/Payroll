@@ -136,7 +136,7 @@ exports.getAllEmployee = async (req, res) => {
       return res.status(400).json(errors);
     } else {
       // console.log("first", error);
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -230,7 +230,7 @@ exports.getEmployeeById = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -471,7 +471,7 @@ exports.createEmployee = async (req, res, next) => {
       return res.status(400).json(errors);
     } else {
       console.log("first", error);
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -506,7 +506,7 @@ exports.updateEmployee = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -539,7 +539,7 @@ exports.deleteEmployee = async (req, res, next) => {
       return res.status(400).json(errors);
     } else {
       // console.log("er", error);
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -756,7 +756,7 @@ exports.findByDepartment = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -1013,7 +1013,7 @@ exports.createEmployeeFile = async (req, res, next) => {
 
           return res.status(400).json(errors);
         } else {
-          return res.status(500).json({ error: "Internal server error" });
+          return res.status(500).json({ message: "Internal server error" });
         }
       }
     }
@@ -1151,7 +1151,7 @@ exports.login = async (req, res, next) => {
     } else {
       return res
         .status(500)
-        .json({ error: "Internal server error", user: user });
+        .json({ message: "Internal server error", user: user });
     }
   }
 };

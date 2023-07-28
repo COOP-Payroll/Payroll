@@ -22,7 +22,7 @@ exports.createCompanyIdFormat = async (req, res) => {
       });
       return res.status(400).json(errors);
     }
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -60,7 +60,7 @@ exports.deleteCompanyIdFormat = async (req, res) => {
       return res.json("Id Format deleted successfully");
     }
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
