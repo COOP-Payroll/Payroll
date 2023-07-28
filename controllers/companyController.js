@@ -223,7 +223,7 @@ exports.createCompany = async (req, res) => {
       return res.status(400).json(errors);
     }
 
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -315,7 +315,7 @@ exports.updateCompany = async (req, res) => {
       }));
       return res.status(400).json(validationErrors);
     }
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -331,7 +331,7 @@ exports.deleteCompany = async (req, res) => {
       return res.json("company deleted successfully");
     }
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -362,7 +362,7 @@ exports.getAllActiveCompany = async (req, res, next) => {
       return res.status(400).json(errors);
     } else {
       // console.log("first", error);
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -396,7 +396,7 @@ exports.getAllPendingCompany = async (req, res, next) => {
       return res.status(400).json(errors);
     } else {
       // console.log("first", error);
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -430,7 +430,7 @@ exports.getAllBlockedCompany = async (req, res, next) => {
       return res.status(400).json(errors);
     } else {
       // console.log("first", error);
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -464,7 +464,7 @@ exports.getAllDeniedCompany = async (req, res, next) => {
       return res.status(400).json(errors);
     } else {
 
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -503,7 +503,7 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };

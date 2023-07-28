@@ -30,7 +30,7 @@ exports.getAllLoan = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -57,7 +57,7 @@ exports.getAllowanceById = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -124,7 +124,7 @@ exports.createLoan = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -174,7 +174,7 @@ exports.updateLoan = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -209,7 +209,7 @@ exports.deleteLoan = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };

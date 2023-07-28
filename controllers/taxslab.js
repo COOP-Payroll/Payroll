@@ -88,7 +88,7 @@ exports.getAllTaxslabs = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -130,7 +130,7 @@ exports.getTaxslabById = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -236,7 +236,7 @@ exports.createTaxslab = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -298,7 +298,7 @@ exports.updateTaxslab = async (req, res, next) => {
       });
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
   // try {
@@ -367,7 +367,7 @@ exports.deleteTaxslab = async (req, res, next) => {
       });
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -411,7 +411,7 @@ exports.assignTaxruleToCompany = async (req, res, next) => {
     return res.json(taxRule);
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -514,7 +514,7 @@ exports.updateMany = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -571,7 +571,7 @@ exports.restoreToDefault = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };

@@ -88,8 +88,8 @@ console.log("updatedPayrollData", updatedPayrollData);
 
       
    
-  } catch (err) {
-    console.log("first", err);
+  } catch (error) {
+    console.log("first", error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -105,7 +105,7 @@ console.log("updatedPayrollData", updatedPayrollData);
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
   
@@ -157,3 +157,45 @@ exports.deletePayrollDefinition = async (req, res, next) => {
   }
 };
 
+exports.deletePayrolldefinition= async(req,res,next)=>{
+  try {
+    
+const id= req.params.id;
+
+const checkpayrollDefinition = await   PayrollDefinition.findByPk(id);
+console.log("checkPayrollDefinition",checkpayrollDefinition)
+if(checkpayrollDefinition) {
+await checkpayrollDefinition.destroy(); 
+return res.status(200).json({ message: "Deleted successfully"})
+
+}
+else{
+
+  return res.status(404).json({
+    "message":"There is no such payroll definition ID"
+  })
+}
+
+
+
+  } catch (err) {
+     console.log("first", err);
+     if (error.name === "SequelizeValidationError") {
+       const errors = {};
+       error.errors.forEach((err) => {
+         errors[err.path] = [`${err.path} is required`];
+       });
+
+       return res.status(400).json(errors);
+     } else if (error.name === "SequelizeUniqueConstraintError") {
+       const errors = {};
+       error.errors.forEach((err) => {
+         errors[err.path] = [`${err.path} must be unique`];
+       });
+
+       return res.status(400).json(errors);
+     } else {
+       return res.status(500).json({ message: "Internal server error" });
+     }
+  }
+}

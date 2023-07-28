@@ -45,7 +45,7 @@ exports.getCustomRoleById = async (req, res) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -97,7 +97,7 @@ exports.createCustomRole = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -172,7 +172,7 @@ exports.updateCustomRole = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -214,7 +214,7 @@ exports.deleteCustomRole = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -253,7 +253,7 @@ exports.assignToEmployee = async (req, res, next) => {
 
       return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
