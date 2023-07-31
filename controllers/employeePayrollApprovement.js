@@ -969,6 +969,7 @@ const rejectPayroll = async (req, res, next) => {
   const payrollIds = Array.isArray(req.body.Payrolls) ? req.body.Payrolls : [Number(req.body.Payrolls)]; // Convert to an array
   const approverId = Number(req.body.approverId);
   const results = [];
+  const remark = req.body.remark; 
 
   try {
     // check if company has active approval method
@@ -1013,7 +1014,7 @@ const rejectPayroll = async (req, res, next) => {
             {
               status: "rejected",
               rejectedBy: approverId,
-              remark: "revice allowance",
+              remark: remark,
             },
             {
               where: {
