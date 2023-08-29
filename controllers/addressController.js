@@ -4,7 +4,7 @@ const Employee = require("../models/employee");
 exports.updateAddress = async (req, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
-    if (!employee) return res.status(404).json({ error: "employee not found" });
+    if (!employee) return res.status(404).json({ message: "employee not found" });
     const { country, state, zone_or_city, woreda, kebele, houseNumber } =
       req.body;
     const address = await Address.findOne({
@@ -26,7 +26,7 @@ exports.updateAddress = async (req, res) => {
     } else {
       return res
         .status(500)
-        .json({ error: "can't find active employee address!" });
+        .json({ message: "can't find active employee address!" });
     }
   } catch (error) {
     console.error(error);
@@ -38,7 +38,7 @@ exports.updateAddress = async (req, res) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(400).json(errors);
+      return res.status(400).json({message:errors});
     }
     return res.status(500).json({ message: "Internal server error" });
   }

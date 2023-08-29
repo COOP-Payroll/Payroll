@@ -36,7 +36,7 @@ exports.createEmployeeAccountInfo = async (req, res) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       res.status(500).json({ error: "Failed to create account info" });
     }
@@ -106,7 +106,7 @@ exports.updateEmployeeAccountInfo = async (req, res) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     }
     return res.status(500).json({ message: "Internal server error" });
   }

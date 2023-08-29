@@ -126,14 +126,14 @@ exports.getAllEmployee = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       // console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -221,14 +221,14 @@ exports.getEmployeeById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -462,13 +462,13 @@ exports.createEmployee = async (req, res, next) => {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -497,14 +497,14 @@ exports.updateEmployee = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -529,14 +529,14 @@ exports.deleteEmployee = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       // console.log("er", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -747,14 +747,14 @@ exports.findByDepartment = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -1004,14 +1004,14 @@ exports.createEmployeeFile = async (req, res, next) => {
             errors[err.path] = [`${err.path} is required`];
           });
 
-          return res.status(400).json(errors);
+          return res.status(404).json({message:errors});
         } else if (error.name === "SequelizeUniqueConstraintError") {
           const errors = {};
           error.errors.forEach((err) => {
             errors[err.path] = [`${err.path} must be unique`];
           });
 
-          return res.status(400).json(errors);
+          return res.status(404).json({message:errors});
         } else {
           return res.status(500).json({ message: "Internal server error" });
         }
@@ -1140,14 +1140,14 @@ exports.login = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       return res
         .status(500)
@@ -1345,7 +1345,7 @@ exports.createEmployee_new = async (req, res) => {
       errors.push({ error: "ID format does not exist." });
     }
     if (errors.length > 0) {
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     }
 
     let password = req?.user?.companyCode?.substring(0, 4) + "0000";

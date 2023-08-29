@@ -21,14 +21,14 @@ exports.getAllAllowance = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -40,7 +40,11 @@ exports.getAllowanceById = async (req, res) => {
     const { id } = req.params;
 
     const allowance = await Allowance.findByPk(id);
-    res.json(allowance);
+    if (!allowance) {
+      return res.status(404).json({ message: "There is no allowance id" });
+    } else {
+     return  res.json(allowance);
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -48,14 +52,14 @@ exports.getAllowanceById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -101,14 +105,15 @@ exports.createAllowance = async (req, res, next) => {
       res.status(404).json("Employee is not defined");
     } else if (!allDefinition) {
       res.status(404).json({
-        error: "Allowance definition is not defined",
+        message: "Allowance definition is not defined",
         additionalAllowanceDefinition1,
       });
 
       // await allowance.setCompany(Number(req.user.id))
-    } else if (additionalAllowanceDefinition1) {
+    }
+    else if (additionalAllowanceDefinition1) {
       res.status(404).json({
-        error: "Allowance definition is already added",
+        message: "Allowance definition is already added",
       });
     } else {
       // Handle the case where the company with the given ID is not found
@@ -131,14 +136,14 @@ exports.createAllowance = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -166,14 +171,14 @@ exports.updateAllowance = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -199,14 +204,14 @@ exports.deleteAllowance = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }

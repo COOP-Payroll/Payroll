@@ -14,7 +14,7 @@ exports.createUser = async (req, res) => {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     }
     return res.status(500).json({ message: "Internal server error" });
   }

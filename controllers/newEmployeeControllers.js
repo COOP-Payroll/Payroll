@@ -74,7 +74,7 @@ exports.createEmployee = async (req, res) => {
       errors.push({ error: "ID format does not exist." });
     }
     if (errors.length > 0) {
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     }
 
     let password = req?.user?.companyCode?.substring(0, 4) + "0000";
@@ -437,7 +437,7 @@ exports.updateEmployee = async (req, res) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     }
     console.log(error);
     return res.status(500).json({ message: "Internal server error" });

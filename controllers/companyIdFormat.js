@@ -20,7 +20,7 @@ exports.createCompanyIdFormat = async (req, res) => {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     }
     return res.status(500).json({ message: "Internal server error" });
   }
@@ -44,7 +44,24 @@ exports.getAllCompanyIdFormat = async (req, res) => {
     // res.json(parsedCompanies);
     return res.status(200).json(parsedCompanies);
   } catch (error) {
-    res.json(error);
+   if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  
   }
 };
 
@@ -105,9 +122,26 @@ exports.getActiveCompany = async (req, res) => {
       where: { isActive: true, companyId: Number(req.user.id) },
     });
     if (!activeCompanyId)
-      return res.status(404).json({ error: "there is no active Id format" });
+      return res.status(404).json({ message: "there is no active Id format" });
     res.status(200).json(activeCompanyId);
   } catch (error) {
-    return res.status(500).json({ error });
+ if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  
   }
 };
