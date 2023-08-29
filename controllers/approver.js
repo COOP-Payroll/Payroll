@@ -682,6 +682,8 @@ exports.deleteApprover = async (req, res) => {
   }
 };
 
+
+
 exports.deactiveApprover = async (req, res) => {
   const approverId = req.body.approverId;
   const EmployeeId = req.body.EmployeeId;

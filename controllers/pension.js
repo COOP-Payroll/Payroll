@@ -29,14 +29,14 @@ exports.getAllPension = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+       return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -55,14 +55,14 @@ exports.getpensionById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+          return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -119,14 +119,14 @@ exports.createPension = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+           return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -214,14 +214,14 @@ if( !checkPension){
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -248,14 +248,14 @@ exports.deletePension = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(400).json({message:errors});
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -292,14 +292,14 @@ exports.getAllPensionIncludingInActive = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+          return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }

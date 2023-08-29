@@ -16,14 +16,14 @@ exports.getAllPackages = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -36,8 +36,25 @@ exports.getpackageById = async (req, res) => {
     const { id } = req.params;
     const package = await Package.findByPk(id);
     return res.json(package);
-  } catch (er) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+   if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  
   }
 };
 
@@ -73,14 +90,14 @@ exports.createPackage = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }

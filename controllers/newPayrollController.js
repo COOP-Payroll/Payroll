@@ -12,7 +12,7 @@ exports.createPayroll = async (req, res) => {
     const { payrollDefinitionId, employeeIds } = req.body;
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
     if (!payrolldef) {
-      return res.status(404).json({ error: "payroll is not defined" });
+      return res.status(404).json({ message: "payroll is not defined" });
     }
 
     const employees = await Employee.findAll({
@@ -92,7 +92,7 @@ exports.getPayrollByPayrollDefId = async (req, res) => {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
     if (!payrollDef)
-      return res.status(404).json({ error: "Payroll not found" });
+      return res.status(404).json({ message: "Payroll not found" });
     const payrolls = await Payroll.findAll({
       where: { PayrollDefinitionId: id },
       include: [Employee, PayrollDefinition],
@@ -108,7 +108,7 @@ exports.getNonPayrollEmployee = async (req, res) => {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
     if (!payrollDef)
-      return res.status(404).json({ error: "payroll not found" });
+      return res.status(404).json({ message: "payroll not found" });
     const employees = await Employee.findAll({
       where: {
         PayrollDefinitionId: id, // Filter for payroll records of the specific month
@@ -141,7 +141,24 @@ exports.getNonPayrollEmployee = async (req, res) => {
       employees,
     });
   } catch (error) {
-    res.json(error);
+  if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(404).json({message:errors});
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  
   }
 };
 //update payroll data
@@ -152,7 +169,7 @@ exports.updatePayrollData = async (req, res, next) => {
     const employeeData = req.body;
     const payroll = await Payroll.findByPk(Number(payrollId));
     if (!payroll) {
-      return res.status(404).json({ error: "payroll does not exist" });
+      return res.status(404).json({ message: "payroll does not exist" });
     } else {
       await payroll.update(employeeData);
 
@@ -167,14 +184,14 @@ exports.updatePayrollData = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }

@@ -60,7 +60,7 @@ exports.protectAll = async (req, res, next) => {
   } catch (err) {
     return res.status(401).json({
      
-      message: err.name,
+      message:"unauthorized access"
     });
   }
 };

@@ -195,7 +195,7 @@ console.log("payroll data",payrollData)
       await payrollDefinition.update({ processedInPercent: percent });
     }
   } catch (error) {
-    console.log("fail", error);
+
     const { employeeId, payrollDefinitionId } = workerData;
     const oldPayroll = await Payroll.findOne({
       where: {

@@ -60,7 +60,7 @@ exports.createCompanyAccountInfo = async (req, res) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
       // Handle other errors
       res.status(500).json({ error: "Failed to create account info" });

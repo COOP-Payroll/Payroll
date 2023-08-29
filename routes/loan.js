@@ -10,6 +10,14 @@ router.get(
 
   loanControllers.getAllLoan
 );
+
+router.get(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+
+  loanControllers.getAllowanceById
+);
 // router.get("/:id", allowance.getAllowanceById);
 router.post(
   "/",
