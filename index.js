@@ -44,6 +44,7 @@ const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
 const employeePayrollApprovement = require('./routes/employeePayrollApprovement')
 const ebirrPayment = require("./routes/eBirrPayment.js");
+const additionalPay = require("./routes/AdditionalPayDefinition")
 
 const app = express();
 
@@ -112,7 +113,7 @@ app.use("/newPayroll", newPayroll);
 app.use("/module", moduleRoute);
 app.use("/address", addressRoute);
 app.use('/employeePayrollApprovement', employeePayrollApprovement)
-
+app.use('/additionalPay', additionalPay)
 app.use("/payment", ebirrPayment);
 
 app.use((req, res, next) => {
