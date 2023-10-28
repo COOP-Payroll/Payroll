@@ -9,21 +9,22 @@ exports.getAllPackages = async (req, res) => {
       count: packages.length,
       packages,
     });
-  } catch (error) {
+  } 
+  catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -37,24 +38,23 @@ exports.getpackageById = async (req, res) => {
     const package = await Package.findByPk(id);
     return res.json(package);
   } catch (error) {
-   if (error.name === "SequelizeValidationError") {
+    if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
-  
   }
 };
 
@@ -70,35 +70,51 @@ exports.createPackage = async (req, res, next) => {
       isTrial,
     } = req.body;
 
-    const packages = await Package.create({
-      packageName,
-      price,
-      max_employee,
-      min_employee,
-      service,
-      discount,
-      isTrial,
+    const existingPackage = await Package.findOne({
+      where: {
+        packageName: packageName,
+        max_employee: max_employee,
+        min_employee: min_employee,
+        price: price,
+      },
     });
-    return res.status(200).json({
-      message: "Successfully Registered",
-      packages,
-    });
+
+    if (existingPackage) {
+      return res.status(409).json({
+        message: "Package already created ",
+      });
+    } else {
+      const packages = await Package.create({
+        packageName,
+        price,
+        max_employee,
+        min_employee,
+        service,
+        discount,
+        isTrial,
+      });
+      return res.status(200).json({
+        message: "Successfully Registered",
+        packages,
+      });
+    }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
+    if (error instanceof Sequelize.ValidationError) {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(400).json({ message: "Validation error", errors });
+    } else if (error instanceof Sequelize.UniqueConstraintError) {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(409).json({ message: "Conflict", errors });
     } else {
+      console.error("Error during registration:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   }

@@ -65,6 +65,14 @@ exports.protectAll = async (req, res, next) => {
   }
 };
 
+exports.isLoggedIN=async(req, res, next) =>{
+  if (req.isAuthenticated()) {
+    // Adjust this condition based on your authentication mechanism
+    return next(); // User is logged in, proceed to logout
+  } else {
+    res.status(401).json({ message: "User is not logged in" }); // User is not logged in
+  }
+}
 //Restricted to
 exports.restrictTo = (role) => {
   return async (req, res, next) => {
