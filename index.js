@@ -44,7 +44,13 @@ const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
 const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
 const ebirrPayment = require("./routes/eBirrPayment.js");
+
 // const stripePayment = require("./routes/stripePayment.js");
+
+const additionalPayDefinition = require("./routes/AdditionalPayDefinition")
+const additionalPay = require('./routes/AdditionalPay')
+const employeePromotion = require("./routes/employeePromotion");
+
 
 const app = express();
 
@@ -114,9 +120,18 @@ app.use("/providentFund", providentFund);
 app.use("/newPayroll", newPayroll);
 app.use("/module", moduleRoute);
 app.use("/address", addressRoute);
+
 app.use("/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/payment", ebirrPayment);
 // app.use("/s1", stripePayment);
+=======
+app.use('/employeePayrollApprovement', employeePayrollApprovement)
+app.use('/additionalPay', additionalPayDefinition)
+app.use('/additionalpayment',additionalPay)
+app.use("/payment", ebirrPayment);
+app.use('/employeePromotion', employeePromotion)
+
+//>>>>>>> main
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
