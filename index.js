@@ -46,6 +46,7 @@ const employeePayrollApprovement = require('./routes/employeePayrollApprovement'
 const ebirrPayment = require("./routes/eBirrPayment.js");
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition")
 const additionalPay = require('./routes/AdditionalPay')
+const employeePromotion = require("./routes/employeePromotion");
 
 const app = express();
 
@@ -117,6 +118,8 @@ app.use('/employeePayrollApprovement', employeePayrollApprovement)
 app.use('/additionalPay', additionalPayDefinition)
 app.use('/additionalpayment',additionalPay)
 app.use("/payment", ebirrPayment);
+app.use('/employeePromotion', employeePromotion)
+
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
