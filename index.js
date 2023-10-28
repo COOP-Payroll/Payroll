@@ -49,7 +49,7 @@ const ebirrPayment = require("./routes/eBirrPayment.js");
 
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition");
 const additionalPay = require("./routes/AdditionalPay");
-const employeePromotion = require("./routes/employeePromotion");
+// const employeePromotion = require("./routes/employeePromotion");
 
 const app = express();
 
@@ -126,7 +126,7 @@ app.use("/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/additionalPay", additionalPayDefinition);
 app.use("/additionalpayment", additionalPay);
 app.use("/payment", ebirrPayment);
-app.use("/employeePromotion", employeePromotion);
+// app.use("/employeePromotion", employeePromotion);
 
 //>>>>>>> main
 //cors policy
