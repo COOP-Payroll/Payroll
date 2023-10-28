@@ -47,10 +47,9 @@ const ebirrPayment = require("./routes/eBirrPayment.js");
 
 // const stripePayment = require("./routes/stripePayment.js");
 
-const additionalPayDefinition = require("./routes/AdditionalPayDefinition")
-const additionalPay = require('./routes/AdditionalPay')
+const additionalPayDefinition = require("./routes/AdditionalPayDefinition");
+const additionalPay = require("./routes/AdditionalPay");
 const employeePromotion = require("./routes/employeePromotion");
-
 
 const app = express();
 
@@ -76,8 +75,7 @@ app.use(
       "http://10.2.125.124:4000",
       "http://10.2.125.124:80",
       "http://10.2.125.124",
-      "https://payroll-ms.onrender.com/"
-
+      "https://payroll-ms.onrender.com/",
     ],
     credentials: true,
   })
@@ -124,15 +122,14 @@ app.use("/address", addressRoute);
 app.use("/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/payment", ebirrPayment);
 // app.use("/s1", stripePayment);
-=======
-app.use('/employeePayrollApprovement', employeePayrollApprovement)
-app.use('/additionalPay', additionalPayDefinition)
-app.use('/additionalpayment',additionalPay)
+app.use("/employeePayrollApprovement", employeePayrollApprovement);
+app.use("/additionalPay", additionalPayDefinition);
+app.use("/additionalpayment", additionalPay);
 app.use("/payment", ebirrPayment);
-app.use('/employeePromotion', employeePromotion)
+app.use("/employeePromotion", employeePromotion);
 
 //>>>>>>> main
-
+//cors policy
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
   error.status = 404;
