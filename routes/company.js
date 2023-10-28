@@ -30,4 +30,6 @@ router.get("/all/blockedCompany", companyController.getAllBlockedCompany);
 router.get("/all/deniedCompany", companyController.getAllDeniedCompany);
 router.get("/all/pendingCompany", companyController.getAllPendingCompany);
 router.get("/subscriptionLeftDate/:companyId", companyController.getSubscriptionLeftDate);
+
+
 module.exports = router;

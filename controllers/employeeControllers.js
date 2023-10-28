@@ -126,14 +126,14 @@ exports.getAllEmployee = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       // console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -221,14 +221,14 @@ exports.getEmployeeById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -462,13 +462,13 @@ exports.createEmployee = async (req, res, next) => {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -497,14 +497,14 @@ exports.updateEmployee = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -529,14 +529,14 @@ exports.deleteEmployee = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       // console.log("er", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -747,14 +747,14 @@ exports.findByDepartment = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -1004,14 +1004,14 @@ exports.createEmployeeFile = async (req, res, next) => {
             errors[err.path] = [`${err.path} is required`];
           });
 
-          return res.status(404).json({message:errors});
+          return res.status(404).json({ message: errors });
         } else if (error.name === "SequelizeUniqueConstraintError") {
           const errors = {};
           error.errors.forEach((err) => {
             errors[err.path] = [`${err.path} must be unique`];
           });
 
-          return res.status(404).json({message:errors});
+          return res.status(404).json({ message: errors });
         } else {
           return res.status(500).json({ message: "Internal server error" });
         }
@@ -1098,40 +1098,56 @@ const createSendToken = async (user, statusCode, res) => {
 ///super admin login
 exports.login = async (req, res, next) => {
   try {
+    let company;
     const { email, password, companyCode } = req.body;
 
     //check if email and password exist company code
     if (!email || !password || !companyCode) {
       return res
         .status(404)
-        .json({ error: "please provide email, password or companycode" });
+        .json({ message: "please provide email, password or company code" });
     }
+
     //check if user exists and password is correct
-    const user = await Employee.findOne({
-      where: { email: email },
-      include: [
-        {
-          model: Company,
-          where: { companyCode: companyCode },
-        },
-        {
-          model: CustomRole,
-          include: [Permission],
-        },
-        {
-          model: Address,
-        },
-      ],
-    });
-    // console.log("user", user);
-    // console.log("password", await bcrypt.compare(password, user.password));
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: "Incorrect email, password" });
-      //next(createError.createError(401,'Incorrect email, password or company Code'))
-    } else {
-      // console.log("first",res)
-      return createSendToken(user, 200, res);
-    }
+    company = await Employee.findOne({ where: { email } });
+    // console.log("company", company);
+    // console.log("company", company)
+    //console.log("company", company === null);
+    // if (company === null) {
+    
+    //   company = await Employee.findOne({
+    //     where: { email },
+    //     include: [
+    //       {
+    //         model: CustomRole,
+    //         include: [Permission],
+    //       },
+    //     ],
+    //   });
+    // }
+
+console.log("company.passord",company.password)
+console.log("company",!company),
+//const c="$2b$10$.mOen.LsSbhGgG/FTI4iG.9CZkfTLMFhHCSH8x6wttZuMLfn3wEGC";
+console.log("first",( await bcrypt.compare(password, company.password)))
+
+    // if (!company || !(await bcrypt.compare(password, company.password))) {
+    //   return res.status(401).json({
+    //     message:
+    //       "Unauthorized access - Invalid email, password or company code",
+    //   });
+    // }
+
+
+
+       const passwordMatch = await bcrypt.compare(password, company.password);
+
+       if (passwordMatch) {
+         res.status(200).json({ message: "Authentication successful" });
+       } else {
+         res.status(401).json({ error: "Authentication failed" });
+       }
+  
   } catch (error) {
     console.log("Error", error);
     if (error.name === "SequelizeValidationError") {
@@ -1140,14 +1156,14 @@ exports.login = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res
         .status(500)
@@ -1279,12 +1295,6 @@ function generateUniqueCode() {
 //   }
 // };
 
-
-
-
-
-
-
 exports.createEmployee_new = async (req, res) => {
   const {
     address,
@@ -1345,7 +1355,7 @@ exports.createEmployee_new = async (req, res) => {
       errors.push({ error: "ID format does not exist." });
     }
     if (errors.length > 0) {
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     }
 
     let password = req?.user?.companyCode?.substring(0, 4) + "0000";
@@ -1469,7 +1479,7 @@ exports.createEmployee_new = async (req, res) => {
       console.log("generateUniqueCode", acceptanceCode);
       console.log("rejection code", rejectionCode);
 
-      const URL = "https://payroll-production.up.railway.app";
+      const URL = "https://payroll-ms.onrender.com";
       createEmployee.acceptanceCode = acceptanceCode;
       createEmployee.rejectionCode = rejectionCode;
       // createEmployee.save();

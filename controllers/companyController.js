@@ -12,14 +12,12 @@ const User = require("../models/user.js");
 const { calculateNextPayment } = require("../utils/helper.js");
 const moment = require("moment");
 const sequelize = require("../database/db.js");
-
+const IdFormat = require("../models/companyIdFormat");
 exports.createCompany = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
     const { packageId, duration, accountNumber, ...companyData } = req.body;
-    console.log("first", companyData);
-
     const existingCompany = await Company.findOne({
       where: {
         [Op.or]: [
@@ -53,16 +51,14 @@ exports.createCompany = async (req, res) => {
       await transaction.rollback();
       return res.status(404).json({ error: "Package does not exist" });
     }
-    // console.log(req.files.companyLogo)
+
     const imagePath =
       (req?.files?.companyLogo && req?.files?.companyLogo[0]?.path) || null;
-    // console.log("companyBanner", imagePath);
+
     const acctImagePath =
       (req?.files?.acctImage && req?.files?.acctImage[0]?.path) || null;
     const bannerPath =
       (req?.files?.companyBanner && req?.files?.companyBanner[0]?.path) || null;
-    console.log("companyBanner", bannerPath);
-
     const company = await Company.create(
       {
         ...companyData,
@@ -200,13 +196,24 @@ exports.createCompany = async (req, res) => {
 
     await transaction.commit();
 
+    const companyIdFormat = await IdFormat.create({
+      companyCode: "CBO",
+      year: "true",
+      department: "true",
+      separator: "/",
+      order: "companyCode,department,year",
+      digitLength: 4,
+    });
+    await companyIdFormat.setCompany(company.id);
+
     return res.status(201).json({
       message: "Created successfully",
-      taxes,
-      pensions: pensiones,
       companyAccountInfo,
-      additionalDeduction: additionalDeductions,
-      additionalAllowance: additionalAllowances,
+      // taxes,
+      // pensions: pensiones,
+
+      // additionalDeduction: additionalDeductions,
+      // additionalAllowance: additionalAllowances,
     });
   } catch (error) {
     console.error(error);
@@ -220,7 +227,7 @@ exports.createCompany = async (req, res) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     }
 
     return res.status(500).json({ message: "Internal server error" });
@@ -291,7 +298,8 @@ exports.updateCompany = async (req, res) => {
         delete body.password;
       }
 
-      const logoPath =  req?.files?.companyLogo && req?.files?.companyLogo[0]?.path ;
+      const logoPath =
+        req?.files?.companyLogo && req?.files?.companyLogo[0]?.path;
       const headerPath = req?.files?.["header"]
         ? req?.files?.["header"][0]?.path
         : company.header;
@@ -327,8 +335,12 @@ exports.deleteCompany = async (req, res) => {
     if (!company) {
       res.status(404).json({ error: "Company does not exist" });
     } else {
-      await company.destroy();
-      return res.json("company deleted successfully");
+      await CompanyAccountInfo.destroy({
+        where: { CompanyId: id },
+      });
+
+      await company.destroy({ cascade: true });
+      return res.json({message:"company deleted successfully"});
     }
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
@@ -352,14 +364,14 @@ exports.getAllActiveCompany = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       // console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -386,14 +398,14 @@ exports.getAllPendingCompany = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       // console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -420,14 +432,14 @@ exports.getAllBlockedCompany = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       // console.log("first", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -454,16 +466,15 @@ exports.getAllDeniedCompany = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
-
       return res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -479,7 +490,6 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
       where: { companyId: companyId },
     });
 
-    
     const nextPaymentDate = moment(subscriptionLeftDate.nextPaymentDate);
     const startDate = moment(subscriptionLeftDate.createdAt);
     const diff = nextPaymentDate.diff(currentDate, "days");
@@ -494,14 +504,14 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }

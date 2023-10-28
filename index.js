@@ -42,15 +42,16 @@ const Payroll = require("./models/Payroll");
 const PayrollDefinition = require("./models/payrollDefinition");
 const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
-const employeePayrollApprovement = require('./routes/employeePayrollApprovement')
+const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
 const ebirrPayment = require("./routes/eBirrPayment.js");
+// const stripePayment = require("./routes/stripePayment.js");
 
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
-
+const cookieParser = require("cookie-parser");
 app.use(bodyParser.json());
 app.use("/uploads", express.static("./uploads/"));
 app.use(
@@ -69,6 +70,8 @@ app.use(
       "http://10.2.125.124:4000",
       "http://10.2.125.124:80",
       "http://10.2.125.124",
+      "https://payroll-ms.onrender.com/"
+
     ],
     credentials: true,
   })
@@ -77,7 +80,7 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
-
+app.use(cookieParser());
 app.use("/user", userRouter);
 app.use("/company", companyRouter);
 app.use("/package", packageRouter);
@@ -111,9 +114,9 @@ app.use("/providentFund", providentFund);
 app.use("/newPayroll", newPayroll);
 app.use("/module", moduleRoute);
 app.use("/address", addressRoute);
-app.use('/employeePayrollApprovement', employeePayrollApprovement)
-
+app.use("/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/payment", ebirrPayment);
+// app.use("/s1", stripePayment);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");

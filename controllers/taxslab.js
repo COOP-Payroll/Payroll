@@ -18,10 +18,10 @@ exports.getAllTaxslabs = async (req, res) => {
             model: Company,
             attributes: { exclude: ["password"] },
           },
-          {
-            model: User,
-            attributes: { exclude: ["password"] },
-          },
+          // {
+          //   model: User,
+          //   attributes: { exclude: ["password"] },
+          // },
         ],
       });
       const taxslab = taxslabs.map((taxslab) => {
@@ -79,14 +79,14 @@ exports.getAllTaxslabs = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -121,14 +121,14 @@ exports.getTaxslabById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -227,14 +227,14 @@ exports.createTaxslab = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -296,7 +296,7 @@ exports.updateTaxslab = async (req, res, next) => {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -365,7 +365,7 @@ exports.deleteTaxslab = async (req, res, next) => {
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -505,14 +505,14 @@ exports.updateMany = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -562,16 +562,32 @@ exports.restoreToDefault = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
+
+exports.createNewTaxslab= async(req,res,next)=>{
+  try {
+    const {first_Name,last_Name,email,}=req.body;
+    if(!first_Name){
+      return res.status(404).json({
+        message:"please enter firstname"
+      })
+    }
+
+
+  } catch (error) {
+    console.log("error is ", error)
+    
+  }
+}
