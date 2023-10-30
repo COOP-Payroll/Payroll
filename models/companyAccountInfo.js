@@ -21,7 +21,9 @@ const CompanyAccountInfo = sequelize.define("CompanyAccountInfo", {
   },
 });
 
-Company.hasMany(CompanyAccountInfo);
+Company.hasMany(CompanyAccountInfo, {
+  onDelete: "CASCADE",
+});
 CompanyAccountInfo.belongsTo(Company);
 
 module.exports = CompanyAccountInfo;

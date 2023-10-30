@@ -5,6 +5,7 @@ const User = require("../models/user");
 const Employee = require("../models/employee");
 const CustomRole = require("../models/customRole");
 const Permission = require("../models/permission");
+const cookieParser = require("cookie-parser");
 
 const signToken = (id, role) => {
   try {
@@ -30,19 +31,21 @@ const createSendToken = async (company, statusCode, res) => {
     res.cookie("jwt", token, cookieOptions);
     res.status(statusCode).json({
       message: "successful",
-      token,
 
       data: {
         company,
       },
+      token,
     });
   } catch (error) {
-    return res.status(500).json({message:error.name});
+    return res.status(500).json({ message: error.name });
   }
 };
 
 exports.login = async (req, res, next) => {
   try {
+      const token = req.headers.authorization;
+      console.log("login",token)
     let company;
     const { email, password, companyCode } = req.body;
 
@@ -72,7 +75,8 @@ exports.login = async (req, res, next) => {
 
     if (!company || !(await bcrypt.compare(password, company.password))) {
       return res.status(401).json({
-        message: "Unauthorized access - Invalid email, password or company code",
+        message:
+          "Unauthorized access - Invalid email, password or company code",
       });
     }
     if (company.role === "employee" || company.role === "approver") {
@@ -104,7 +108,6 @@ exports.login = async (req, res, next) => {
   } catch (err) {
     //next(createError.createError(404, 'failed'));
     res.status(500).json({
-
       message: err.name,
     });
   }
@@ -134,22 +137,58 @@ exports.superAdminLogin = async (req, res, next) => {
 
     //if everything is ok send token to the client
   } catch (error) {
- if (error.name === "SequelizeValidationError") {
-   const errors = {};
-   error.errors.forEach((err) => {
-     errors[err.path] = [`${err.path} is required`];
-   });
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
 
-   return res.status(404).json({message:errors});
- } else if (error.name === "SequelizeUniqueConstraintError") {
-   const errors = {};
-   error.errors.forEach((err) => {
-     errors[err.path] = [`${err.path} must be unique`];
-   });
+      return res.status(404).json({ message: errors });
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
 
-   return res.status(404).json({message:errors});
- } else {
-   return res.status(500).json({ message: "Internal server error" });
- }
+      return res.status(404).json({ message: errors });
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+exports.logout = async (req, res, next) => {
+  try {
+    if (req.cookies && req.cookies.jwt) {
+      // Access the JWT cookie
+      const jwtCookie = req.cookies.jwt;
+
+      // Clear the JWT cookie
+      res.clearCookie("jwt");
+
+      // Send a JSON response for successful logout
+      res.status(200).json({ message: "Logout successful" });
+    } else {
+      // Handle the case where the JWT cookie is not present
+      res.status(401).json({ message: "User is not logged in" });
+    }
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} is required`];
+      });
+
+      return res.status(404).json({ message: errors });
+    } else if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path] = [`${err.path} must be unique`];
+      });
+
+      return res.status(404).json({ message: errors });
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
   }
 };

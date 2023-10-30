@@ -1,16 +1,14 @@
 const Pension = require("../models/pension.js");
 
-
 // Define controller methods for handling User requests
 exports.getAllPension = async (req, res) => {
   try {
     if (req.user.role === "superAdmin") {
       const pensions = await Pension.findAll({
-        where: { userId: req.user.id ,
-        isActive:true},
+        where: { userId: req.user.id, isActive: true },
       });
       res.status(200).json({
-        count: pensions.length,
+        total: pensions.length,
         pensions,
       });
     } else if (req.user.role === "companyAdmin") {
@@ -29,7 +27,7 @@ exports.getAllPension = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-       return res.status(404).json({ message: errors });
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -55,14 +53,14 @@ exports.getpensionById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-          return res.status(404).json({ message: errors });
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -80,7 +78,7 @@ exports.createPension = async (req, res, next) => {
         where: { userId: req.user.id },
       });
 
-      if ( getAllPension.length != 0) {
+      if (getAllPension.length != 0) {
         res.status(409).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({
@@ -119,7 +117,7 @@ exports.createPension = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-           return res.status(404).json({ message: errors });
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
@@ -140,72 +138,65 @@ exports.updatePension = async (req, res, next) => {
     const { id } = req.params;
 
     if (req.user.role === "superAdmin") {
-const checkPension = await Pension.findByPk(id);
-if(!checkPension){
+      const checkPension = await Pension.findByPk(id);
+      if (!checkPension) {
+        return res
+          .status(404)
+          .json({ message: "There is no pension with these Id" });
+      } else {
+        if (employerContribution) {
+          updates.employerContribution = employerContribution;
+        }
+        if (employeeContribution) {
+          updates.employeeContribution = employeeContribution;
+        }
 
-   return res
-     .status(404)
-     .json({ message: "There is no pension with these Id" });
+        const result = await Pension.update(
+          { isActive: false },
+          { where: { id: id } }
+        );
+        const newPension = await Pension.create({
+          employeeContribution,
+          employerContribution,
+        });
+        await newPension.setUser(Number(req.user.id));
 
-    }
-    else{
-      
-      if (employerContribution) {
-        updates.employerContribution = employerContribution;
+        return res.status(200).json({
+          message: "updated successfully",
+          newPension,
+        });
       }
-      if (employeeContribution) {
-        updates.employeeContribution = employeeContribution;
-      }
-
-      const result = await Pension.update(
-        { isActive: false },
-        { where: { id: id } }
-      );
-      const newPension = await Pension.create({
-        employeeContribution,
-        employerContribution,
-      });
-      await newPension.setUser(Number(req.user.id));
-
-      return res.status(200).json({
-        message: "updated successfully",
-        newPension,
-      });
-    }
     } else if (req.user.role === "companyAdmin") {
-const checkPension= await Pension.findByPk(id)
+      const checkPension = await Pension.findByPk(id);
 
-if( !checkPension){
-      return res
-        .status(404)
-        .json({ message: "There is no pension with these Id" });
+      if (!checkPension) {
+        return res
+          .status(404)
+          .json({ message: "There is no pension with these Id" });
+      } else {
+        if (employerContribution) {
+          updates.employerContribution = employerContribution;
+        }
+        if (employeeContribution) {
+          updates.employeeContribution = employeeContribution;
+        }
 
-  
-  }else{
-    if (employerContribution) {
-      updates.employerContribution = employerContribution;
+        const result = await Pension.update(
+          { isActive: false },
+          { where: { id: id } }
+        );
+        const newPension = await Pension.create({
+          employeeContribution,
+          employerContribution,
+        });
+        await newPension.setCompany(Number(req.user.id));
+
+        return res.status(200).json({
+          message: "updated successfully",
+          newPension,
+        });
+      }
     }
-    if (employeeContribution) {
-      updates.employeeContribution = employeeContribution;
-    }
-
-    const result = await Pension.update(
-      { isActive: false },
-      { where: { id: id } }
-    );
-    const newPension = await Pension.create({
-      employeeContribution,
-      employerContribution,
-    });
-    await newPension.setCompany(Number(req.user.id));
-
-    return res.status(200).json({
-      message: "updated successfully",
-      newPension,
-    });
-  }
-
-  }
   } catch (error) {
     console.log("first", error);
     if (error.name === "SequelizeValidationError") {
@@ -214,14 +205,14 @@ if( !checkPension){
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -248,29 +239,27 @@ exports.deletePension = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json({message:errors});
+      return res.status(400).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
 
-
-
-//GET ALL INCLUDING IN ACTIVE PENSION 
+//GET ALL INCLUDING IN ACTIVE PENSION
 
 exports.getAllPensionIncludingInActive = async (req, res) => {
   try {
     if (req.user.role === "superAdmin") {
       const pensions = await Pension.findAll({
-        where: { userId: req.user.id, },
+        where: { userId: req.user.id },
       });
       res.status(200).json({
         count: pensions.length,
@@ -292,14 +281,14 @@ exports.getAllPensionIncludingInActive = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-          return res.status(404).json({ message: errors });
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }

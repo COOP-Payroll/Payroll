@@ -11,7 +11,7 @@ exports.createCompanyAccountInfo = async (req, res) => {
     //  const { name, hireDate, username, password } = req.body;
 
     if (!file) {
-      return res.status(400).json({ error: "No image file provided" });
+      return res.status(400).json({ message: "No image file provided" });
     }
 
     const existingAccount = await CompanyAccountInfo.findOne({
@@ -22,7 +22,7 @@ exports.createCompanyAccountInfo = async (req, res) => {
     });
 
     if (existingAccount) {
-      return res.status(409).json({ error: "Account Info already exists" });
+      return res.status(409).json({ message: "Account Info already exists" });
     }
 
     const activeAccount = await CompanyAccountInfo.findOne({

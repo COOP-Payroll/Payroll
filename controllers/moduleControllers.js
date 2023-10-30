@@ -113,9 +113,7 @@ exports.updateModules = async (req, res, next) => {
     if (amount) {
       updates.amount = amount;
     }
-    // const criteria = {
-    //   companyId: req.user.id,
-    // };
+ 
 
     const checkModules = await Modules.findOne({
       where: { id: id, companyId: req.user.id },

@@ -141,24 +141,23 @@ exports.getNonPayrollEmployee = async (req, res) => {
       employees,
     });
   } catch (error) {
-  if (error.name === "SequelizeValidationError") {
+    if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
-  
   }
 };
 //update payroll data
@@ -184,20 +183,19 @@ exports.updatePayrollData = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
-
 
 ///
 // Assuming the payroll data is stored in a variable called "payrollData"
@@ -215,3 +213,10 @@ exports.updatePayrollData = async (req, res, next) => {
 
 // // Print the current month's payroll
 // console.log(currentMonthPayroll);
+
+exports.getAll = async (req, res) => {
+  try {
+  } catch (error) {
+    console.log("error", error);
+  }
+};

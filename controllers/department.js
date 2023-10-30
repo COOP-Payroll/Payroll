@@ -3,9 +3,8 @@ const Department = require("../models/department.js");
 // Define controller methods for handling User requests
 exports.getAllDepartment = async (req, res) => {
   try {
-    
     const departments = await Department.findAll({
-      // where: { companyId: req.user.id },
+      where: { companyId: req.user.id },
     });
     if (!departments) {
       res.status(200).json("There is no department");
@@ -14,7 +13,7 @@ exports.getAllDepartment = async (req, res) => {
         count: departments.length,
         departments,
       });
-   }
+    }
   } catch (error) {
     console.log("first", error);
     if (error.name === "SequelizeValidationError") {
@@ -23,14 +22,14 @@ exports.getAllDepartment = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -41,12 +40,13 @@ exports.getDepartmentById = async (req, res) => {
   try {
     const { id } = req.params;
     const department = await Department.findByPk(id);
-    if(!department) {
+    if (!department) {
       return res.status(404).json({
         message: "There is no Department with this ID",
       });
-    }else{
-    return res.json({ department });}
+    } else {
+      return res.json({ department });
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -54,14 +54,14 @@ exports.getDepartmentById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -73,6 +73,7 @@ exports.createDepartment = async (req, res, next) => {
     const { deptName, location, shorthandRepresentation } = req.body;
 
     const criteria = {
+      companyId: req.user.id,
       deptName: deptName,
     };
 
@@ -99,14 +100,14 @@ exports.createDepartment = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -129,22 +130,16 @@ exports.updateDepartment = async (req, res, next) => {
     if (shorthandRepresentation) {
       updates.shorthandRepresentation = shorthandRepresentation;
     }
- const department = await Department.findByPk(id);
- if (!department) {
-   return res.status(404).json({ message: "department not found" });
- }
- else{
+    const department = await Department.findByPk(id);
+    if (!department) {
+      return res.status(404).json({ message: "department not found" });
+    } else {
+      const result = await Department.update(updates, { where: { id: id } });
 
-
-    const result = await Department.update(updates, { where: { id: id } });
-
-    return res.status(200).json({
-      message: "updated successfully",
-      
-    });
-  }
- 
-  
+      return res.status(200).json({
+        message: "updated successfully",
+      });
+    }
   } catch (error) {
     console.log("first", error);
     if (error.name === "SequelizeValidationError") {
@@ -153,14 +148,14 @@ exports.updateDepartment = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -189,14 +184,14 @@ exports.deleteDepartment = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
