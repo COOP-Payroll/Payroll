@@ -197,7 +197,7 @@ exports.createCompany = async (req, res) => {
     await transaction.commit();
 
     const companyIdFormat = await IdFormat.create({
-      companyCode: "CBO",
+      companyCode: company.companyCode,
       year: "true",
       department: "true",
       separator: "/",
@@ -205,7 +205,7 @@ exports.createCompany = async (req, res) => {
       digitLength: 4,
     });
     await companyIdFormat.setCompany(company.id);
-
+    // const existingDepartment=await Department.findAll({where:companyId:company.id});
     return res.status(201).json({
       message: "Created successfully",
       companyAccountInfo,
@@ -340,7 +340,7 @@ exports.deleteCompany = async (req, res) => {
       });
 
       await company.destroy({ cascade: true });
-      return res.json({message:"company deleted successfully"});
+      return res.json({ message: "company deleted successfully" });
     }
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });

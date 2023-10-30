@@ -44,8 +44,7 @@ const createSendToken = async (company, statusCode, res) => {
 
 exports.login = async (req, res, next) => {
   try {
-      const token = req.headers.authorization;
-      console.log("login",token)
+  
     let company;
     const { email, password, companyCode } = req.body;
 

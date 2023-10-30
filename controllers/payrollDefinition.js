@@ -1,4 +1,5 @@
 const { DATEONLY } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 const Payroll = require("../models/payrollDefinition");
 const PayrollDefinition = require("../models/payrollDefinition");
 
@@ -156,7 +157,6 @@ exports.deletePayrollDefinition = async (req, res, next) => {
     return res.status(500).json("Something gonna wrong");
   }
 };
-
 exports.deletePayrolldefinition= async(req,res,next)=>{
   try {
     
@@ -203,11 +203,35 @@ else{
 exports.getCurrentMonth= async(req,res,next)=>{
   try {
     
+  const currentDate = new Date();
+  const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(),  1  );
+  const endOfMonth = new Date(currentDate.getFullYear(),currentDate.getMonth() + 1,  0  );
 
+  const currentMonthPayrolls = await PayrollDefinition.findAll({
+    where: {
+      startDate: {
+        [Op.between]: [startOfMonth, endOfMonth],
+      },
+    },
+  });
+
+console.log("current month",currentMonthPayrolls.length)
+if(currentMonthPayrolls.length == 0 ){
+  return res.status(404).json({
+    message:"Payroll not defined for this month "
+  })
+  
+}
+else{
+  return res.status(200).json(
+    currentMonthPayrolls
+  )
+}
 
 
     
   } catch (error) {
+    console.log("error",error)
         if (error.name === "SequelizeValidationError") {
           const errors = {};
           error.errors.forEach((err) => {

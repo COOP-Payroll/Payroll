@@ -1114,7 +1114,7 @@ exports.login = async (req, res, next) => {
     // console.log("company", company)
     //console.log("company", company === null);
     // if (company === null) {
-    
+
     //   company = await Employee.findOne({
     //     where: { email },
     //     include: [
@@ -1126,10 +1126,10 @@ exports.login = async (req, res, next) => {
     //   });
     // }
 
-console.log("company.passord",company.password)
-console.log("company",!company),
-//const c="$2b$10$.mOen.LsSbhGgG/FTI4iG.9CZkfTLMFhHCSH8x6wttZuMLfn3wEGC";
-console.log("first",( await bcrypt.compare(password, company.password)))
+    console.log("company.passord", company.password);
+    console.log("company", !company),
+      //const c="$2b$10$.mOen.LsSbhGgG/FTI4iG.9CZkfTLMFhHCSH8x6wttZuMLfn3wEGC";
+      console.log("first", await bcrypt.compare(password, company.password));
 
     // if (!company || !(await bcrypt.compare(password, company.password))) {
     //   return res.status(401).json({
@@ -1138,16 +1138,13 @@ console.log("first",( await bcrypt.compare(password, company.password)))
     //   });
     // }
 
+    const passwordMatch = await bcrypt.compare(password, company.password);
 
-
-       const passwordMatch = await bcrypt.compare(password, company.password);
-
-       if (passwordMatch) {
-         res.status(200).json({ message: "Authentication successful" });
-       } else {
-         res.status(401).json({ error: "Authentication failed" });
-       }
-  
+    if (passwordMatch) {
+      res.status(200).json({ message: "Authentication successful" });
+    } else {
+      res.status(401).json({ error: "Authentication failed" });
+    }
   } catch (error) {
     console.log("Error", error);
     if (error.name === "SequelizeValidationError") {
