@@ -6,6 +6,7 @@
     "dialect": "sqlite",
     "storage": "payroll.db",
     "logging": false
+ 
 },
 
 "test": 
