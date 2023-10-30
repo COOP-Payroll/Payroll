@@ -75,7 +75,8 @@ app.use(
       "http://10.2.125.124:4000",
       "http://10.2.125.124:80",
       "http://10.2.125.124",
-      "https://payroll-ms.onrender.com/",
+      "https://payroll-ms.onrender.com",
+      "https://payroll-ms.onrender.com:6000",
     ],
     credentials: true,
   })

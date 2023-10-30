@@ -57,10 +57,9 @@ exports.login = async (req, res, next) => {
 
     //check if user exists and password is correct
     company = await Company.findOne({ where: { email } });
-    // console.log("company", company)
-    //console.log("company", company === null);
+
     if (company === null) {
-      console.log("here we got no company");
+     
       company = await Employee.findOne({
         where: { email },
         include: [

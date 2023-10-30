@@ -40,7 +40,12 @@ router.put(
   payroll.updatePayrollDefinition
 );
 
-router.get("/currentMonth", payroll.getCurrentMonth);
+router.get(
+  "/currentMonth",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
+  payroll.getCurrentMonth
+);
 
 
 module.exports = router;
