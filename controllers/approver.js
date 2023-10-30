@@ -184,7 +184,7 @@ exports.createApprover = async (req, res) => {
     console.log(approvalMethodCount);
     //add company id to get employee
     const employeeCount = await Employee.count({
-      where: { id: req.body.EmployeeId,CompanyId:req.user.id},
+      where: { id:req.body.EmployeeId,CompanyId:req.user.id},
     });
     console.log("this employee is", employeeCount);
 

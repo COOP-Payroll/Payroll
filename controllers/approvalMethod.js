@@ -96,7 +96,6 @@ async function saveApprovalMethod(
 
 exports.createApprovalMethod = async (req, res) => {
   const CompanyId = req.user.id;
-
   let minimumApprover = req.body.minimumApprover;
   let approvalLevel = req.body.approvalLevel;
   const isCompleted = req.body.isCompleted;
