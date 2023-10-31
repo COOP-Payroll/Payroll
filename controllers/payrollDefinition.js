@@ -72,12 +72,8 @@ const CompanyId = req.user.id;
       const payrollDefinition = await PayrollDefinition.bulkCreate(
         updatedPayrollData
       );
-console.log("updatedPayrollData", updatedPayrollData);
-      // console.log(
-      //   "Users inserted:",
-      //   payrollDefinition.map((user) => user.toJSON())
-      // );
-      // console.log("");
+
+   
 
       return res
         .status(201)

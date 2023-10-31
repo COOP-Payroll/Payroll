@@ -19,7 +19,7 @@ router.post(
   "/",
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-  payroll.createPayroll
+  payroll.createPayroll1
 );
 
 router.get(

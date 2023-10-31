@@ -161,25 +161,26 @@ const runWorker = (employeeId, payrollDefinitionId, user) => {
 const runComputation = async (payrolls) => {
   payrolls.forEach((payroll) => {
     const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
-    runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.id);
+    runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.CompanyId);
+  
   });
 };
 
 let isRunning = false;
 
 app.listen(process.env.PORT, () => {
-  cron.schedule("*/5 * * * * *", async () => {
+  cron.schedule("*/5 * * * * * * *", async () => {
     if (!isRunning) {
       isRunning = true;
       const payrolls = await Payroll.findAll({
         where: { status: "ordered" },
         include: [PayrollDefinition],
       });
-      // console.log("first", JSON.stringify(payrolls, null, 3))
+      // console.log("first", JSON.stringify(payrolls))
       if (payrolls.length > 0) {
         await runComputation(payrolls);
       }
-      isRunning = false;
+      isRunning = true;
     }
   });
   console.log(`connected to backend`);

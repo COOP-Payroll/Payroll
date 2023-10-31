@@ -14,11 +14,13 @@ let completedWorkers = 0;
 let clients = [];
 
 const runWorker = (employeeId, req, payrollDefinitionId) => {
+
   const worker = new Worker("./controllers/newWorker.js", {
-    workerData: { employeeId, user: req.user.id, payrollDefinitionId },
+    workerData: { user: req.user.id, employeeId, payrollDefinitionId },
   });
 
   const handleProgress = (message) => {
+    console.log("first message", message);
     completedWorkers++;
     const progress = ((completedWorkers / totalWorkers) * 100).toFixed(2);
     const data = JSON.stringify({
@@ -76,6 +78,7 @@ exports.createPayroll = async (req, res) => {
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
   totalWorkers = employeeIds.length;
+
   if (!payrolldef) {
     return res.status(404).json({ error: "payroll is not defined" });
   }
@@ -84,8 +87,13 @@ exports.createPayroll = async (req, res) => {
     "Content-Type": "text/plain",
   });
 
-  const ws = new WebSocket.Server({ port: 8080 });
+  // const ws = new WebSocket.Server({ port: 8080 });
+  const ws = new WebSocket.Server({ port: 8080 }, () => {
+    console.log("WebSocket server is running and listening on port 8000");
+  });
 
+ 
+console.log("websocket",ws);
   ws.on("connection", (client) => {
     console.log("hey");
     clients.push(client);
@@ -97,6 +105,7 @@ exports.createPayroll = async (req, res) => {
   res.on("close", () => {
     ws.close();
   });
+  // employeeIds.forEach((employeeId) => console.log("employeeId", employeeId));
 
   employeeIds.forEach((employeeId) =>
     runWorker(employeeId, req, payrollDefinitionId)
@@ -185,7 +194,7 @@ exports.getAllPayroll = async (req, res, next) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(404).json({message:errors});
+      return res.status(404).json({ message: errors });
     } else {
       // Handle other errors
       res.status(500).json({ error: "Failed to create account info" });
