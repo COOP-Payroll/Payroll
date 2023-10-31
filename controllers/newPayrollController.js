@@ -7,7 +7,7 @@ const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const Deduction = require("../models/deduction.js");
 const DeductionDefinition = require("../models/deductionDefinition.js");
 
-exports.createPayroll = async (req, res) => {
+exports.createPayroll1 = async (req, res) => {
   try {
     const { payrollDefinitionId, employeeIds } = req.body;
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
@@ -22,6 +22,7 @@ exports.createPayroll = async (req, res) => {
     });
 
     const existingEmployeeIds = employees.map((employee) => employee.id);
+
     const nonExistingEmployeeIds = employeeIds.filter(
       (id) => !existingEmployeeIds.includes(id)
     );
@@ -54,14 +55,15 @@ exports.createPayroll = async (req, res) => {
             Number(payrolldef.totalNoOfprocessedEmployee) - 1;
           await payrolldef.save();
         }
-
+     
         const payrollData = {
           PayrollDefinitionId: payrollDefinitionId,
           EmployeeId: employeeId,
         };
 
-    const data=    await Payroll.create(payrollData);
+        await Payroll.create(payrollData);
         payrollCount++;
+        
       } catch (error) {
         errors.push(error);
       }
@@ -76,9 +78,11 @@ exports.createPayroll = async (req, res) => {
     // Update total payroll count in the database
     payrolldef.totalNoOfEmployee =
       Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
-   await payrolldef.save();
+    await payrolldef.save();
 
-    return res.status(201).json({ msg: "Payroll created successfully!",data });
+    return res
+      .status(201)
+      .json({ msg: "Payroll created successfully!  " });
   } catch (error) {
     console.log("err", error);
     return res
