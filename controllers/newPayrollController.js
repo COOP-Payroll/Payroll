@@ -85,7 +85,7 @@ exports.createPayroll1 = async (req, res) => {
           PayrollDefinitionId: payrollDefinitionId,
           EmployeeId: employeeId,
         };
-        // console.log("payroll Data", payrollData);
+        console.log("payroll Data", payrollData);
         await Payroll.create(payrollData);
         // payrollCount++;
       } catch (error) {
