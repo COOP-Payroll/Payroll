@@ -87,13 +87,11 @@ exports.createPayroll = async (req, res) => {
     "Content-Type": "text/plain",
   });
 
-  // const ws = new WebSocket.Server({ port: 8080 });
-  const ws = new WebSocket.Server({ port: 8080 }, () => {
-    console.log("WebSocket server is running and listening on port 8000");
-  });
+  const ws = new WebSocket.Server({ port: 8080 });
+
 
  
-console.log("websocket",ws);
+// console.log("websocket",ws);
   ws.on("connection", (client) => {
     console.log("hey");
     clients.push(client);
