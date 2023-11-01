@@ -100,7 +100,7 @@ exports.createPayroll1 = async (req, res) => {
         .status(500)
         .json({ msg: "There is a problem creating payroll", errors });
     }
-
+///
     // // Update total payroll count in the database
     // payrolldef.totalNoOfEmployee =
     //   Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
@@ -125,7 +125,7 @@ exports.getPayrollByPayrollDefId = async (req, res) => {
       where: { PayrollDefinitionId: id },
       include: [Employee, PayrollDefinition],
     });
-   
+
     return res.json({ count: payrolls.length, payrolls });
   } catch (error) {
     return res.status(500).json(error);
@@ -202,7 +202,10 @@ exports.updatePayrollData = async (req, res, next) => {
       await payroll.update(employeeData);
 
       // Return the updated company object
-      return res.json(payroll);
+      return res.json({
+        message: "updated successfully",
+        payroll,
+      });
     }
   } catch (error) {
     console.log("first", error);
@@ -237,8 +240,7 @@ async function runPayroll(
   res,
   { employeeId, company, payrollDefinitionId }
 ) {
-
-console.log("company",company);
+  console.log("company", company);
   try {
     const employeeGrade = await EmployeeGrade.findOne({
       where: { EmployeeId: employeeId, active: true },
@@ -425,10 +427,6 @@ console.log("company",company);
     });
   }
 }
-
-
-
-
 
 exports.getNonPayrollEmployee1 = async (req, res) => {
   try {
