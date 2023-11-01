@@ -1,5 +1,6 @@
 const express = require("express");
 const payroll = require("../controllers/newPayrollController");
+const payroll1=require("../controllers/payrollController.js")
 const middleware = require("../middleware/auth");
 const router = express.Router();
 
@@ -26,8 +27,21 @@ router.get(
   "/getAllEmployee/:id",
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-  payroll.getNonPayrollEmployee
+  payroll1.getAllEmployeePayroll
 );
+router.get(
+  "/nonPayrollEmployee/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  payroll.getNonPayrollEmployee1
+);
+// router.get(
+//   "/allEmployeePayroll/:id",
+//   middleware.protectAll,
+//   middleware.restrictToAll("companyAdmin", "approver"),
+//   payroll1.getAllEmployeePayroll
+// );
+
 //UPDATE
 router.put(
   "/update/:payrollId",
