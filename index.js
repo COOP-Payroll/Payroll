@@ -129,8 +129,7 @@ app.use("/additionalpayment", additionalPay);
 app.use("/payment", ebirrPayment);
 // app.use("/employeePromotion", employeePromotion);
 
-//>>>>>>> main
-//cors policy
+
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
   error.status = 404;

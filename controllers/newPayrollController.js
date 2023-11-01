@@ -67,11 +67,12 @@ exports.createPayroll1 = async (req, res) => {
             .status(200)
             .json({ message: "payroll run for employee " + employeeId });
         }
-        await runPayroll(req, res, {
+        const resp = await runPayroll(req, res, {
           employeeId,
           company,
           payrollDefinitionId,
         });
+        // console.log("response", resp);
         // if (payroll) {
         //   await payroll.destroy();
         //   payrolldef.totalNoOfEmployee =
@@ -81,12 +82,12 @@ exports.createPayroll1 = async (req, res) => {
         //   await payrolldef.save();
         // }
 
-        const payrollData = {
-          PayrollDefinitionId: payrollDefinitionId,
-          EmployeeId: employeeId,
-        };
-        console.log("payroll Data", payrollData);
-        await Payroll.create(payrollData);
+        // const payrollData = {
+        //   PayrollDefinitionId: payrollDefinitionId,
+        //   EmployeeId: employeeId,
+        // };
+        // console.log("payroll Data", payrollData);
+        // await Payroll.create(payrollData);
         // payrollCount++;
       } catch (error) {
         errors.push(error);
@@ -100,10 +101,10 @@ exports.createPayroll1 = async (req, res) => {
         .json({ msg: "There is a problem creating payroll", errors });
     }
 
-    // Update total payroll count in the database
-    payrolldef.totalNoOfEmployee =
-      Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
-    await payrolldef.save();
+    // // Update total payroll count in the database
+    // payrolldef.totalNoOfEmployee =
+    //   Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
+    // await payrolldef.save();
 
     return res.status(201).json({ msg: "Payroll created successfully!  " });
   } catch (error) {
@@ -124,6 +125,7 @@ exports.getPayrollByPayrollDefId = async (req, res) => {
       where: { PayrollDefinitionId: id },
       include: [Employee, PayrollDefinition],
     });
+   
     return res.json({ count: payrolls.length, payrolls });
   } catch (error) {
     return res.status(500).json(error);
@@ -235,9 +237,8 @@ async function runPayroll(
   res,
   { employeeId, company, payrollDefinitionId }
 ) {
-  console.log("helloooo");
-  console.log("employeeId", employeeId);
 
+console.log("company",company);
   try {
     const employeeGrade = await EmployeeGrade.findOne({
       where: { EmployeeId: employeeId, active: true },
@@ -290,6 +291,7 @@ async function runPayroll(
     ]);
     const employee_pension = pension?.employeeContribution ?? 0;
     const employer_pension = pension?.employerContribution ?? 0;
+
     const taxslabs = await Taxslab.findAll({
       where: { companyId: company, isActive: true },
     });
@@ -364,6 +366,10 @@ async function runPayroll(
     } else {
       totalTaxableIncome = totalTaxable;
     }
+    console.log(
+      "employee basic Salary ",
+      employee.EmployeeInfos[0].basicSalary
+    );
     loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
@@ -376,6 +382,7 @@ async function runPayroll(
         employee.EmployeeInfos[0]?.basicSalary +
         employee.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100)
       ).toFixed(2),
+
       basicSalary: employee.EmployeeInfos[0]?.basicSalary,
       taxableIncome: totalTaxable.toFixed(2),
       incomeTax: totalTaxableIncome.toFixed(2),
@@ -393,6 +400,13 @@ async function runPayroll(
       ),
       status: "processed",
     };
+    // console.log("payroll Data", payrollData);
+    const data = await Payroll.create({
+      ...payrollData,
+      PayrollDefinitionId: payrollDefinitionId,
+      EmployeeId: employeeId,
+    });
+    // console.log("basicSalary", data);
     // console.log("payroll data", payrollData);
     // const payroll = await oldPayroll.update(payrollData);
     // await payrollDefinition.increment("totalNoOfprocessedEmployee");
@@ -411,3 +425,46 @@ async function runPayroll(
     });
   }
 }
+
+
+
+
+
+exports.getNonPayrollEmployee1 = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payrollDef = await PayrollDefinition.findByPk(id);
+    if (!payrollDef)
+      return res.status(404).json({ error: "payroll not found" });
+    const employees = await Employee.findAll({
+      include: [
+        {
+          model: Payroll,
+          required: false,
+          where: {
+            PayrollDefinitionId: id, // Filter for payroll records of the specific month
+          },
+        },
+        {
+          model: Grade,
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+          ],
+        },
+      ],
+      where: {
+        "$Payroll.id$": null, // Filter for records where the payroll ID is null
+      },
+    });
+    return res.status(200).json({ count: employees.length, employees });
+  } catch (error) {
+    res.json(error);
+  }
+};
