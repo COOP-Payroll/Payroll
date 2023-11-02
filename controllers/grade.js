@@ -5,7 +5,7 @@ const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const { Op } = require("sequelize");
 
 //CREATE GRADE
-exports.getAllGrade = async (req, res) => {
+exports.getAllGrade = async (req, res,next) => {
   const companyId = req.user.id;
   try {
     const criteria = {
@@ -50,7 +50,7 @@ exports.getAllGrade = async (req, res) => {
   }
 };
 
-exports.getGradeById = async (req, res) => {
+exports.getGradeById = async (req, res,next) => {
   try {
     const id = req.params.id;
     const grade = await Grade.findByPk(id);
@@ -62,23 +62,7 @@ exports.getGradeById = async (req, res) => {
       res.json(grade);
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    next(error)
   }
 };
 

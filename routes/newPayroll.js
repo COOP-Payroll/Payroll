@@ -23,6 +23,13 @@ router.post(
   payroll.createPayroll1
 );
 
+router.post(
+  "/deselect",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+  payroll.deselectRunnedPayroll
+);
+
 router.get(
   "/getAllEmployee/:id",
   middleware.protectAll,
