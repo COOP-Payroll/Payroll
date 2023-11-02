@@ -21,6 +21,7 @@ const PayrollDefinition = require("../models/payrollDefinition");
 const EmployeeGrade = require("../models/EmployeeGrade");
 const { run } = require("../utils/checkSubscriptionPlan.js");
 const { child } = require("winston");
+const { error } = require("shelljs");
 
 exports.createPayroll1 = async (req, res) => {
   try {
@@ -100,7 +101,7 @@ exports.createPayroll1 = async (req, res) => {
         .status(500)
         .json({ msg: "There is a problem creating payroll", errors });
     }
-///
+    ///
     // // Update total payroll count in the database
     // payrolldef.totalNoOfEmployee =
     //   Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
@@ -368,10 +369,7 @@ async function runPayroll(
     } else {
       totalTaxableIncome = totalTaxable;
     }
-    console.log(
-      "employee basic Salary ",
-      employee.EmployeeInfos[0].basicSalary
-    );
+   
     loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
@@ -421,7 +419,7 @@ async function runPayroll(
     // }
     return 1;
   } catch (error) {
-    console.log("from runpayroll ", error);
+  
     return res.status(404).json({
       message: `error occur on empliyee with ID= ${employeeId}`,
     });
@@ -464,5 +462,68 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
     return res.status(200).json({ count: employees.length, employees });
   } catch (error) {
     res.json(error);
+  }
+};
+
+exports.deselectRunnedPayroll = async (req, res, next) => {
+  try {
+    const { payrollDefinitionId, employeeIds } = req.body;
+    const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
+    const company = req.user.id;
+    if (!payrolldef) {
+      return res.status(404).json({ message: "payroll is not defined" });
+    }
+
+    const employees = await Employee.findAll({
+      where: {
+        id: employeeIds,
+      },
+    });
+
+    const existingEmployeeIds = employees.map((employee) => employee.id);
+    console.log("existiongEmployeeIds: " + existingEmployeeIds);
+    const nonExistingEmployeeIds = employeeIds.filter(
+      (id) => !existingEmployeeIds.includes(id)
+    );
+
+    if (nonExistingEmployeeIds.length > 0) {
+      return res.status(404).json({
+        error: "employee not found",
+        employees: nonExistingEmployeeIds,
+      });
+    }
+let payrollDestroyed = false;
+    await Promise.all(
+      employeeIds.map(async (employeeId) => {
+        try {
+          const payroll = await Payroll.findOne({
+            where: {
+              EmployeeId: employeeId,
+              PayrollDefinitionId: payrollDefinitionId,
+            },
+          });
+
+          if (payroll) {
+            await payroll.destroy();
+              payrollDestroyed = true;
+          }
+        } catch (error) {
+          console.log("Error in employee payroll deselection:", error);
+          next(error);
+        }
+      })
+    );
+   // Respond with a success message after all employees have been processed
+  if(payrollDestroyed) 
+  {
+   res
+      .status(200)
+      .json({ message: "Payroll deselected successfully for rerun" });
+    }else {
+      res.status(404).json({message: "Their is no such employee"})
+    }
+  } catch (error) {
+    console.log("error", error);
+    next(error);
   }
 };
