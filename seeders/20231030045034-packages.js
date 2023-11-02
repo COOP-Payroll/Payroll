@@ -1,3 +1,4 @@
+
 "use strict";
 const Package=require("../models/package.js")
 /** @type {import('sequelize-cli').Migration} */
