@@ -173,7 +173,8 @@ exports.updateGrade = async (req, res, next) => {
 exports.deleteGrade = async (req, res, next) => {
   try {
     const { id } = req.params;
-
+    
+    
     const grade = await Grade.findOne({ where: { id: id } });
     if (grade) {
       await grade.destroy({ where: { id } });
