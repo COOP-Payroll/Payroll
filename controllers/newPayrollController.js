@@ -282,6 +282,7 @@ async function runPayroll(
         where: { GradeId: employeeGrade?.GradeId },
         include: [AllowanceDefinition],
       }),
+      
       Deduction.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
       AdditionalAllowances.findAll({
         where: { CompanyId: company, EmployeeId: employeeId },
@@ -298,6 +299,7 @@ async function runPayroll(
     const taxslabs = await Taxslab.findAll({
       where: { companyId: company, isActive: true },
     });
+    console.log("taxslabs",taxslabs);
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -308,7 +310,7 @@ async function runPayroll(
     let overallTotalDeduction = 0;
     let totalLoan = 0;
     // Calculate total allowances
-    allowances.forEach((allowance) => {
+    allowances?.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
       console.log(
         "exemted amount: ",
@@ -349,7 +351,7 @@ async function runPayroll(
         totalTaxable += Number(allowance?.amount);
       }
     });
-    deductions.forEach((deduction) => {
+    deductions?.forEach((deduction) => {
       totalDeduction += Number(deduction?.amount);
     });
     additionalDeductions.forEach((deduction) => {
@@ -367,9 +369,12 @@ async function runPayroll(
           (income_tax_payable === 0 ? 1 : income_tax_payable / 100) -
         deductible_Fee;
     } else {
-      totalTaxableIncome = totalTaxable;
+      totalTaxableIncome = 0;
     }
-   
+    console.log(
+      "employee basic Salary ",
+      employee.EmployeeInfos[0].basicSalary
+    );
     loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
@@ -398,6 +403,7 @@ async function runPayroll(
       NetSalary: (totalTaxable - overallTotalDeduction + totalExempted).toFixed(
         2
       ),
+
       status: "processed",
     };
     // console.log("payroll Data", payrollData);
@@ -406,8 +412,8 @@ async function runPayroll(
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
     });
-    // console.log("basicSalary", data);
-    // console.log("payroll data", payrollData);
+  
+    console.log("payroll data", payrollData);
     // const payroll = await oldPayroll.update(payrollData);
     // await payrollDefinition.increment("totalNoOfprocessedEmployee");
     // if (payrollDefinition.totalNoOfEmployee !== 0) {
@@ -419,7 +425,7 @@ async function runPayroll(
     // }
     return 1;
   } catch (error) {
-  
+    console.log("from runpayroll ", error);
     return res.status(404).json({
       message: `error occur on empliyee with ID= ${employeeId}`,
     });
@@ -492,7 +498,7 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
         employees: nonExistingEmployeeIds,
       });
     }
-let payrollDestroyed = false;
+    let payrollDestroyed = false;
     await Promise.all(
       employeeIds.map(async (employeeId) => {
         try {
@@ -505,7 +511,7 @@ let payrollDestroyed = false;
 
           if (payroll) {
             await payroll.destroy();
-              payrollDestroyed = true;
+            payrollDestroyed = true;
           }
         } catch (error) {
           console.log("Error in employee payroll deselection:", error);
@@ -513,14 +519,13 @@ let payrollDestroyed = false;
         }
       })
     );
-   // Respond with a success message after all employees have been processed
-  if(payrollDestroyed) 
-  {
-   res
-      .status(200)
-      .json({ message: "Payroll deselected successfully for rerun" });
-    }else {
-      res.status(404).json({message: "Their is no such employee"})
+    // Respond with a success message after all employees have been processed
+    if (payrollDestroyed) {
+      res
+        .status(200)
+        .json({ message: "Payroll deselected successfully for rerun" });
+    } else {
+      res.status(404).json({ message: "Their is no such employee" });
     }
   } catch (error) {
     console.log("error", error);
