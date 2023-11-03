@@ -13,6 +13,14 @@ const AdditionalPayDefinition = sequelize.define(
       type: DataTypes.ENUM('allowance', 'deduction'), // Replace with your actual ENUM values
       defaultValue: 'allowance', // Set a default value from your ENUM values
     }
+  }, {
+    validate: {
+      validateEnumValue() {
+        if (!['allowance', 'deduction'].includes(this.type)) {
+          throw new Error('Invalid value for "type". It must be "allowance" or "deduction".');
+        }
+      }
+    }
   }
 );
 

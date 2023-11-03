@@ -17,13 +17,15 @@ const EmployeeInfo = require("../models/employeInfo");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition");
 const AdditionalDeduction = require("../models/additionalDeduction");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
+const AdditionalPayDefinition=require("../models/additionalPayDefinition.js");
+const AdditionalPay=require("../models/additionalPay.js")
 const PayrollDefinition = require("../models/payrollDefinition");
 const EmployeeGrade = require("../models/EmployeeGrade");
 const { run } = require("../utils/checkSubscriptionPlan.js");
 const { child } = require("winston");
 const { error } = require("shelljs");
 
-exports.createPayroll1 = async (req, res) => {
+exports.createPayroll1 = async (req, res,next) => {
   try {
     const { payrollDefinitionId, employeeIds } = req.body;
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
@@ -116,7 +118,7 @@ exports.createPayroll1 = async (req, res) => {
   }
 };
 
-exports.getPayrollByPayrollDefId = async (req, res) => {
+exports.getPayrollByPayrollDefId = async (req, res,next) => {
   try {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
@@ -129,11 +131,11 @@ exports.getPayrollByPayrollDefId = async (req, res) => {
 
     return res.json({ count: payrolls.length, payrolls });
   } catch (error) {
-    return res.status(500).json(error);
+    next(error)
   }
 };
 
-exports.getNonPayrollEmployee = async (req, res) => {
+exports.getNonPayrollEmployee = async (req, res,next) => {
   try {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
@@ -171,23 +173,7 @@ exports.getNonPayrollEmployee = async (req, res) => {
       employees,
     });
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  next(error)
   }
 };
 //update payroll data
@@ -210,23 +196,7 @@ exports.updatePayrollData = async (req, res, next) => {
     }
   } catch (error) {
     console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    next(error)
   }
 };
 
@@ -257,6 +227,8 @@ async function runPayroll(
       deductions,
       additionalAllowances,
       additionalDeductions,
+      // additionalPayDefinition,
+      additionalPay,
     ] = await Promise.all([
       Pension.findOne({
         where: {
@@ -282,7 +254,7 @@ async function runPayroll(
         where: { GradeId: employeeGrade?.GradeId },
         include: [AllowanceDefinition],
       }),
-      
+
       Deduction.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
       AdditionalAllowances.findAll({
         where: { CompanyId: company, EmployeeId: employeeId },
@@ -291,6 +263,10 @@ async function runPayroll(
       AdditionalDeduction.findAll({
         where: { CompanyId: company, EmployeeId: employeeId },
         include: [AdditionalDeductionDefinition],
+      }),
+      AdditionalPay.findAll({
+        where: { CompanyId: company, EmployeeId: employeeId },
+        
       }),
     ]);
     const employee_pension = pension?.employeeContribution ?? 0;
@@ -309,6 +285,7 @@ async function runPayroll(
     let totalTaxableIncome = 0;
     let overallTotalDeduction = 0;
     let totalLoan = 0;
+    let totalAdditionalPay=0;
     // Calculate total allowances
     allowances?.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
@@ -331,6 +308,9 @@ async function runPayroll(
       } else {
         totalTaxable += Number(allowance?.amount);
       }
+    });
+    additionalPay.forEach((additionalPay)=>{
+    totalAdditionalPay+= Number(additionalPay?.amount)
     });
     // Calculate total additional allowances
     additionalAllowances.forEach((allowance) => {
@@ -361,6 +341,7 @@ async function runPayroll(
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
+    console.log("addional pay",additionalPay)
     if (taxslab) {
       deductible_Fee = taxslab?.deductible_Fee;
       income_tax_payable = taxslab?.income_tax_payable;
@@ -371,10 +352,7 @@ async function runPayroll(
     } else {
       totalTaxableIncome = 0;
     }
-    console.log(
-      "employee basic Salary ",
-      employee.EmployeeInfos[0].basicSalary
-    );
+  
     loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
@@ -400,9 +378,12 @@ async function runPayroll(
         employee.EmployeeInfos[0]?.basicSalary *
         ((employer_pension * 1) / 100)
       ).toFixed(2),
-      NetSalary: (totalTaxable - overallTotalDeduction + totalExempted).toFixed(
-        2
-      ),
+      NetSalary: (
+        totalTaxable -
+        overallTotalDeduction +
+        totalExempted +
+        totalAdditionalPay
+      ).toFixed(2),
 
       status: "processed",
     };

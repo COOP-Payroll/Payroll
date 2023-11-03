@@ -47,7 +47,7 @@ const ebirrPayment = require("./routes/eBirrPayment.js");
 
 // const stripePayment = require("./routes/stripePayment.js");
 
-const additionalPayDefinition = require("./routes/AdditionalPayDefinition");
+const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
 const additionalPay = require("./routes/AdditionalPay");
 // const employeePromotion = require("./routes/employeePromotion");
 
