@@ -10,6 +10,8 @@ const IdFormat = require("../models/companyIdFormat.js");
 const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const DeductionDefinition = require("../models/deductionDefinition.js");
+const AdditionalPayDefinition=require("../models/additionalPayDefinition.js");
+const AdditionalPay=require("../models/additionalPay.js")
 const Deduction = require("../models/deduction.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
@@ -21,7 +23,7 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail.js");
 // Define controller methods for handling User requests
 
-exports.getAllEmployee = async (req, res) => {
+exports.getAllEmployee = async (req, res,next) => {
   try {
     const Employees = await Employee.findAll({
       where: { companyId: req.user.id },
@@ -102,6 +104,10 @@ exports.getAllEmployee = async (req, res) => {
         {
           model: AdditionalDeduction,
           include: [AdditionalDeductionDefinition],
+        },
+        {
+          model: AdditionalPay,
+          include: [AdditionalPayDefinition],
         },
         //Address,
         // EmployeeInfo,

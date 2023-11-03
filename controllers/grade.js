@@ -2,10 +2,11 @@ const Grade = require("../models/grade");
 const Company = require("../models/company");
 const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition.js");
+const EmployeeGrade=require("../models/EmployeeGrade.js")
 const { Op } = require("sequelize");
 
 //CREATE GRADE
-exports.getAllGrade = async (req, res,next) => {
+exports.getAllGrade = async (req, res, next) => {
   const companyId = req.user.id;
   try {
     const criteria = {
@@ -50,7 +51,7 @@ exports.getAllGrade = async (req, res,next) => {
   }
 };
 
-exports.getGradeById = async (req, res,next) => {
+exports.getGradeById = async (req, res, next) => {
   try {
     const id = req.params.id;
     const grade = await Grade.findByPk(id);
@@ -62,7 +63,7 @@ exports.getGradeById = async (req, res,next) => {
       res.json(grade);
     }
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
@@ -173,33 +174,27 @@ exports.updateGrade = async (req, res, next) => {
 exports.deleteGrade = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    
     const grade = await Grade.findOne({ where: { id: id } });
     if (grade) {
-      await grade.destroy({ where: { id } });
-      res.status(200).json({ message: "Deleted successfully" });
+      const employeeGrade = await EmployeeGrade.findOne({
+        where: {
+          GradeId: id,
+        },
+      });
+      if (employeeGrade) {
+        res.status(404).json({
+          message:
+            "This grade is attached to an employee. You can't delete it.",
+        });
+      } else {
+        await grade.destroy({ where: { id } });
+        res.status(200).json({ message: "Deleted successfully" });
+      }
     } else {
       res.status(409).json({ message: "There is no grade with this ID" });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+      next(error)
   }
 };
 
