@@ -3,6 +3,7 @@ const payroll = require("../controllers/newPayrollController");
 const payroll1=require("../controllers/payrollController.js")
 const middleware = require("../middleware/auth");
 const router = express.Router();
+const z=require("../controllers/zcontrollers.js")
 
 router.get(
   "/:id",
@@ -15,12 +16,11 @@ router.get(
 );
 
 
-
 router.post(
   "/",
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-  payroll.createPayroll1
+  z.createPayroll1
 );
 
 router.post(
