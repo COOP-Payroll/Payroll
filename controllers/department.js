@@ -1,7 +1,7 @@
 const Department = require("../models/department.js");
 
 // Define controller methods for handling User requests
-exports.getAllDepartment = async (req, res) => {
+exports.getAllDepartment = async (req, res, next) => {
   try {
     const departments = await Department.findAll({
       where: { companyId: req.user.id },
@@ -15,24 +15,7 @@ exports.getAllDepartment = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    next(error);
   }
 };
 

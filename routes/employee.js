@@ -74,6 +74,17 @@ router.put(
   }),
   newEmployeeController.updateEmployee
 );
+router.put(
+  "/promotion/:id",
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.promotion
+);
+
 router.delete(
   "/:id",
   middleware.protectAll,
@@ -97,6 +108,5 @@ router.post(
 router.post("/login", employeeController.login);
 
 router.get("/confirm/:id", newEmployeeController.confirmaRegistration);
-
 
 module.exports = router;
