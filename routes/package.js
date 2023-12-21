@@ -11,6 +11,15 @@ router.get(
 //   middleware.restrictToAdmin("superAdmin"),
   packageController.getAllPackages
 );
+
+
+router.get("/monthlyPackages",
+packageController.getMonthlyPackages
+);
+
+router.get("/yearlyPackages",
+packageController.getYearlyPackages
+);
 router.post(
   "/",
   middleware.protectAll,

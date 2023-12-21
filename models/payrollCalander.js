@@ -35,6 +35,7 @@ const PayrollCalander = sequelize.define("PayrollCalander", {
       "active",
       "paid",
       "rejected",
+      "reject",
     ],
     default: "created",
   },
