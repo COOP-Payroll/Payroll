@@ -75,6 +75,7 @@ exports.createGrade = async (req, res, next) => {
     const companyId = req.user.id;
     const criteria = {
       [Op.or]: [
+   
         { name: name },
         { minSalary: minSalary },
         { minSalary: maxSalary },
@@ -82,8 +83,12 @@ exports.createGrade = async (req, res, next) => {
         { maxSalary: minSalary },
       ],
     };
-
-    const sameGrade = await Grade.findOne({ where: criteria });
+    const checkGrade ={
+      companyId : req.user.id,
+      name: name
+    }
+console.log()
+    const sameGrade = await Grade.findOne({ where: checkGrade });
 
     if (sameGrade) {
       return res.json(
