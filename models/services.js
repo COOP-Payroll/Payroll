@@ -1,16 +1,40 @@
-const { Sequelize, DataTypes } = require("sequelize");
-const sequelize = require("../database/db.js");
-const Company = require("./company.js");
-const Package = require("./package.js");
+// models/ServiceModel.js
 
-const Service = sequelize.define("Service", {
-  serviceName: {
+const { DataTypes } = require('sequelize');
+const sequelize = require("../database/db.js");// Import your Sequelize instance
+
+const ServiceModel = sequelize.define('ServiceModel', {
+  name: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: false
   },
+ 
 });
 
-Package.hasMany(Service);
-Service.belongsTo(Package);
+// Package.hasMany(ServiceModel);
+// ServiceModel.belongsTo(Package);
 
-module.exports = Service;
+module.exports = ServiceModel;
+
+
+
+
+
+// const { Sequelize, DataTypes } = require("sequelize");
+// const sequelize = require("../database/db.js");
+// const Company = require("./company.js");
+// const Package = require("./package.js");
+
+// const Service = sequelize.define("Service", {
+//   serviceName: {
+//     type: DataTypes.STRING,
+//     allowNull: false,
+//   },
+// });
+
+// Package.hasMany(Service);
+// Service.belongsTo(Package);
+
+// module.exports = Service;
+
+
