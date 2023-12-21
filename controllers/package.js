@@ -15,6 +15,45 @@ exports.getAllPackages = async (req, res) => {
   }
 };
 
+
+exports.getMonthlyPackages = async (req, res,next) => {
+try {
+   const monthlyPackages=await Package.findAll({where:{packageType:"Monthly"}});
+
+   res.status(200).json({count: monthlyPackages.length
+  ,monthlyPackages
+  }
+    
+    );
+
+  
+} catch (error) {
+  console.log(error);
+  next(error);
+}
+
+}
+
+
+
+exports.getYearlyPackages = async (req, res,next) => {
+  try {
+     const yearlyPackages=await Package.findAll({where:{packageType:"Yearly"}});
+  
+     res.status(200).json({count: yearlyPackages.length
+    ,yearlyPackages
+    }
+      
+      );
+  
+    
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+  
+  }
+
 exports.getpackageById = async (req, res) => {
   try {
     const { id } = req.params;
