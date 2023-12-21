@@ -1,10 +1,21 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-
+const ServiceModel=require("../models/services.js")
 const Package = sequelize.define("Package", {
+  
   packageName: {
-    type: DataTypes.ENUM("Trial", "Monthly", "Annual", "Unlimitted"),
+    type: DataTypes.ENUM("Custom", "Gold", "Platinium"),
     allowNull: false,
+    validate: {
+      isIn: [['Custom', 'Gold','Platinium']],
+    },
+  },
+  packageType:{
+    type: DataTypes.ENUM("Yearly", "Monthly"),
+    allowNull: false,
+    validate: {
+      isIn: [['Yearly', 'Monthly']],
+    },
   },
   price: {
     type: DataTypes.DOUBLE,
@@ -15,9 +26,9 @@ const Package = sequelize.define("Package", {
   max_employee: {
     type: DataTypes.INTEGER,
   },
-  service: {
+  service:[ {
     type: DataTypes.TEXT, // TEXT
-  },
+  }],
   discount: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
@@ -27,5 +38,9 @@ const Package = sequelize.define("Package", {
     defaultValue: false,
   },
 });
+
+// Define a one-to-many association between PackageModel and ServiceModel
+Package.hasMany(ServiceModel, { as: 'services' });
+
 
 module.exports = Package;
