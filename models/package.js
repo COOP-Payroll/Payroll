@@ -26,9 +26,10 @@ const Package = sequelize.define("Package", {
   max_employee: {
     type: DataTypes.INTEGER,
   },
-  service:[ {
-    type: DataTypes.TEXT, // TEXT
-  }],
+  service: {
+    type: DataTypes.JSON, // Use JSON type for storing JSON data
+    defaultValue: [], // Default value as an empty array
+  },
   discount: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
@@ -40,7 +41,7 @@ const Package = sequelize.define("Package", {
 });
 
 // Define a one-to-many association between PackageModel and ServiceModel
-Package.hasMany(ServiceModel, { as: 'services' });
+// Package.hasMany(ServiceModel, { as: 'services' });
 
 
 module.exports = Package;
