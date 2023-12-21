@@ -16,7 +16,7 @@ const calculateNextPayment = async ({ chargeType, normalDate, duration }) => {
     currentDate = moment(normalDate);
     currentDate.add(30 * duration, "days").format("YYYY-MM-DD hh:mm");
     return currentDate;
-  } else if (chargeType === "Annual") {
+  } else if (chargeType === "Yearly") {
     currentDate = moment(normalDate);
     currentDate.add(365 * duration, "days").format("YYYY-MM-DD hh:mm");
     return currentDate;

@@ -11,7 +11,8 @@ const Taxslab = require("../models/taxslab.js");
 const User = require("../models/user.js");
 const { calculateNextPayment } = require("../utils/helper.js");
 const moment = require("moment");
-const sequelize = require("../database/db.js");
+// const sequelize = require("../database/db.js");
+const sequelize=require("../database/db.js");
 const IdFormat = require("../models/companyIdFormat");
 exports.createCompany = async (req, res,next) => {
   const transaction = await sequelize.transaction();
@@ -28,6 +29,8 @@ exports.createCompany = async (req, res,next) => {
       transaction,
     });
 
+
+    console.log(companyData);
     if (existingCompany) {
       await transaction.rollback();
       return res
@@ -86,12 +89,15 @@ exports.createCompany = async (req, res,next) => {
     await subscription.setPackage(packageId, { transaction });
     await subscription.setCompany(company.id, { transaction });
 
+
+    console.log("package type",package.packageType)
     const nextPaymentDate = await calculateNextPayment({
-      chargeType: package.packageName,
+      chargeType: package.packageType,
       duration,
       normalDate: Date.now(),
     });
     const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
+    console.log(leftPaymentDate);
     await subscription.update(
       { nextPaymentDate, leftPaymentDate },
       { transaction }
@@ -217,7 +223,7 @@ exports.createCompany = async (req, res,next) => {
     });
   } catch (error) 
   {
-    
+    console.log(error);
     next(error);
   //   console.error(error);
   //   await transaction.rollback();
