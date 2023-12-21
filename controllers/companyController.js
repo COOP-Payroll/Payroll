@@ -13,7 +13,7 @@ const { calculateNextPayment } = require("../utils/helper.js");
 const moment = require("moment");
 const sequelize = require("../database/db.js");
 const IdFormat = require("../models/companyIdFormat");
-exports.createCompany = async (req, res) => {
+exports.createCompany = async (req, res,next) => {
   const transaction = await sequelize.transaction();
 
   try {
@@ -215,23 +215,27 @@ exports.createCompany = async (req, res) => {
       // additionalDeduction: additionalDeductions,
       // additionalAllowance: additionalAllowances,
     });
-  } catch (error) {
-    console.error(error);
-    await transaction.rollback();
+  } catch (error) 
+  {
+    
+    next(error);
+  //   console.error(error);
+  //   await transaction.rollback();
 
-    if (
-      error.name === "SequelizeValidationError" ||
-      error.name === "SequelizeUniqueConstraintError"
-    ) {
-      const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`];
-        return acc;
-      }, {});
-      return res.status(404).json({ message: errors });
-    }
+  //   if (
+  //     error.name === "SequelizeValidationError" ||
+  //     error.name === "SequelizeUniqueConstraintError"
+  //   ) {
+  //     const errors = error.errors.reduce((acc, err) => {
+  //       acc[err.path] = [`${err.path} is required`];
+  //       return acc;
+  //     }, {});
+  //     return res.status(404).json({ message: errors });
+  //   }
 
-    return res.status(500).json({ message: "Internal server error" });
-  }
+  //   return res.status(500).json({ message: "Internal server error" });
+  //
+ }
 };
 
 exports.getAllCompany = async (req, res) => {
