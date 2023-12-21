@@ -1,8 +1,19 @@
+
 const express = require("express");
 const companyController = require("../controllers/companyController.js");
 const upload = require("../middleware/multer");
 const router = express.Router();
 
+/**
+ * @swagger
+ * /company:
+ *   post:
+ *     summary: Add a list of Companys
+ *     description: Returns a list of Company
+ *     responses:
+ *       200:
+ *         description: Successful response
+ */
 router.post(
   "/",
   upload.fields([
@@ -12,6 +23,16 @@ router.post(
   ]),
   companyController.createCompany
 );
+/**
+ * @swagger
+ * /company:
+ *   get:
+ *     summary: Get a list of Companys
+ *     description: Returns a list of Company
+ *     responses:
+ *       200:
+ *         description: Successful response
+ */
 router.get("/", companyController.getAllCompany);
 router.get("/:id", companyController.getCompanyById);
 router.post("/", companyController.createCompany);

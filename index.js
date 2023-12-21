@@ -3,6 +3,12 @@ const { Worker } = require("worker_threads");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger'); // Path to your Swagger configuration file
+
+
+
 require("dotenv").config();
 const sequelize = require("./database/db");
 const cron = require("node-cron");
@@ -129,6 +135,14 @@ app.use("/additionalpayment", additionalPay);
 app.use("/payment", ebirrPayment);
 // app.use("/employeePromotion", employeePromotion);
 
+const swaggerOptions = {
+  swaggerOptions: {
+    url: 'http://localhost:6000/api-docs/swagger.json', // Update the URL to match your setup
+  },
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec,swaggerOptions));
+
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
@@ -139,13 +153,13 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;
-  const errorMessage = err.message || "Something went Wrong";
+  const errorMessage = err || "Something went Wrong";
 
   return res.status(errorStatus).json({
     success: false,
     status: errorStatus,
-    message: errorMessage,
-    stack: err.stack,
+    message: errorMessage.message.replace(/\\\"/g, '"') || "Something went",
+    // stack: err.stack,
   });
 });
 
@@ -167,7 +181,8 @@ const runComputation = async (payrolls) => {
 
 let isRunning = false;
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT ||6000, () => {
+  console.log("port",process.env.PORT)
   cron.schedule("*/5 * * * * * * *", async () => {
     if (!isRunning) {
       isRunning = true;

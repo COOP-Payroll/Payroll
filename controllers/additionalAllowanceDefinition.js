@@ -1,7 +1,7 @@
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const Company = require("../models/company");
 // Define controller methods for handling User requests
-exports.getAllAdditionalAllowanceDefinition = async (req, res) => {
+exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
   const Company = req.user.id;
 
   try {
@@ -15,23 +15,7 @@ exports.getAllAdditionalAllowanceDefinition = async (req, res) => {
       AdditionalAllowanceDefinitions,
     });
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+   next(error)
   }
 };
 

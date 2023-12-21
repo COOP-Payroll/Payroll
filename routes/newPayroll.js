@@ -20,7 +20,7 @@ router.post(
   "/",
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-  z.createPayroll1
+  payroll.createPayroll1
 );
 
 router.post(

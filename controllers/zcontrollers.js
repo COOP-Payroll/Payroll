@@ -175,7 +175,7 @@ async function runPayroll(
     });
     console.log("employee", Employees);
 
-    return res.json(Employees);
+    // return res.json(Employees);
   } catch (error) {
     console.log("from runpayroll ", error);
     return res.status(404).json({
