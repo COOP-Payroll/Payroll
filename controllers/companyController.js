@@ -2,7 +2,7 @@ const { Op } = require("sequelize");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 const Company = require("../models/company.js");
-const CompanyAccountInfo = require("../models/companyAccountInfo.js");
+// const CompanyAccountInfo = require("../models/companyAccountInfo.js");
 const Department = require("../models/department.js");
 const Package = require("../models/package.js");
 const Pension = require("../models/pension.js");
@@ -18,7 +18,7 @@ exports.createCompany = async (req, res,next) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { packageId, duration, accountNumber, ...companyData } = req.body;
+    const { packageId, duration,  ...companyData } = req.body;
     const existingCompany = await Company.findOne({
       where: {
         [Op.or]: [
@@ -38,15 +38,15 @@ exports.createCompany = async (req, res,next) => {
         .json({ error: "Email or companyCode already exists" });
     }
 
-    const existingAccount = await CompanyAccountInfo.findOne({
-      where: { accountNumber },
-      transaction,
-    });
+    // const existingAccount = await CompanyAccountInfo.findOne({
+    //   where: { accountNumber },
+    //   transaction,
+    // });
 
-    if (existingAccount) {
-      await transaction.rollback();
-      return res.status(409).json({ error: "Account Info already exists" });
-    }
+    // if (existingAccount) {
+    //   await transaction.rollback();
+    //   return res.status(409).json({ error: "Account Info already exists" });
+    // }
 
     const package = await Package.findByPk(packageId, { transaction });
 
@@ -71,15 +71,15 @@ exports.createCompany = async (req, res,next) => {
       { transaction }
     );
 
-    const companyAccountInfo = await CompanyAccountInfo.create(
-      {
-        accountNumber,
-        image: acctImagePath,
-        CompanyId: company.id,
-        isActive: true,
-      },
-      { transaction }
-    );
+    // const companyAccountInfo = await CompanyAccountInfo.create(
+    //   {
+    //     accountNumber,
+    //     image: acctImagePath,
+    //     CompanyId: company.id,
+    //     isActive: true,
+    //   },
+    //   { transaction }
+    // );
 
     const currentDate = moment();
     const subscription = await Subscription.create(
@@ -214,7 +214,7 @@ exports.createCompany = async (req, res,next) => {
     // const existingDepartment=await Department.findAll({where:companyId:company.id});
     return res.status(201).json({
       message: "Created successfully",
-      companyAccountInfo,
+      // companyAccountInfo,
       // taxes,
       // pensions: pensiones,
 
@@ -345,9 +345,9 @@ exports.deleteCompany = async (req, res) => {
     if (!company) {
       res.status(404).json({ error: "Company does not exist" });
     } else {
-      await CompanyAccountInfo.destroy({
-        where: { CompanyId: id },
-      });
+      // await CompanyAccountInfo.destroy({
+      //   where: { CompanyId: id },
+      // });
 
       await company.destroy({ cascade: true });
       return res.json({ message: "company deleted successfully" });
