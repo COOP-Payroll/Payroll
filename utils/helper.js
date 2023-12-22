@@ -21,7 +21,7 @@ const calculateNextPayment = async ({ chargeType, normalDate, duration }) => {
     currentDate.add(365 * duration, "days").format("YYYY-MM-DD hh:mm");
     return currentDate;
   } else if (chargeType === "Unlimited") {
-    currentDate = moment(normalDate);
+    currentDate = moment(normalDate);           
     currentDate.add(1000000, "days").format("YYYY-MM-DD hh:mm");
     return currentDate;
   }

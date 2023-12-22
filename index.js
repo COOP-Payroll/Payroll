@@ -81,7 +81,6 @@ app.use(
       "http://10.2.125.124:4000",
       "http://10.2.125.127:80",
       "http://10.2.125.127",
-
       "http://10.2.125.127:*",
       "http://10.2.125.124:80",
       "http://10.2.125.124",
@@ -158,12 +157,13 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;
-  const errorMessage = err || "Something went Wrong";
-
+  const errorMessage = err.message || "Something went Wrong";
+console.log()
   return res.status(errorStatus).json({
     success: false,
     status: errorStatus,
-    message: errorMessage.message.replace(/\\\"/g, '"') || "Something went",
+    message: err.message || "Something went",
+    timestamp: new Date().toISOString(),
     // stack: err.stack,
   });
 });
@@ -187,7 +187,7 @@ const runComputation = async (payrolls) => {
 let isRunning = false;
 
 app.listen(process.env.PORT ||6000, () => {
-  console.log("port",process.env.PORT)
+ 
   cron.schedule("*/5 * * * * * * *", async () => {
     if (!isRunning) {
       isRunning = true;
@@ -202,5 +202,5 @@ app.listen(process.env.PORT ||6000, () => {
       isRunning = true;
     }
   });
-  console.log(`connected to backend`);
+  console.log(`Server is running on port: ${process.env.PORT}`);
 });

@@ -17,6 +17,7 @@ const Package = sequelize.define("Package", {
       isIn: [['Yearly', 'Monthly']],
     },
   },
+  ///
   price: {
     type: DataTypes.DOUBLE,
   },
