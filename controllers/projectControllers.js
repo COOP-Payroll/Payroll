@@ -6,7 +6,7 @@ const Company = require("../models/company.js");
 const Projects=require("../models/projects.js");
 const createError = require('.././utils/error.js')
 // Define controller methods for handling User requests for deduction definition
-exports.getAllProjects = async (req, res) => {
+exports.getAllProjects = async (req, res,next) => {
   try {
     const companyId = req.user.id;
     const projects = await Projects.findAll({ where: { companyId } });

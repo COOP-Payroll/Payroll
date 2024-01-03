@@ -8,8 +8,7 @@ const Projects = sequelize.define("Projects", {
     allowNull: false,
   },
  });
-Projects.belongsTo(Sponsors);
-Sponsors.hasMany(Projects);
+
 
 Sponsors.belongsTo(Company);
 Company.hasMany(Sponsors);
