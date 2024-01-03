@@ -434,6 +434,33 @@ exports.getAllCompany = async (req, res, next) => {
   }
 }
 
+
+exports.updateProjectBased=async(req,res,next) => {
+
+  try {
+    const checkProject= await Company.findByPk(Number(req.user.id));
+   
+    if(!checkProject){
+     return next(createError.createError(404,"company not found"))
+    }
+  
+    if(checkProject?.isProjectBased){
+      return next(createError.createError(409,"company already is project based"))
+    }
+    else{
+      const company = await Company.findByPk(Number(req.user.id));
+      company.isProjectBased=true;
+      await company.save();
+      return res.status(200).json({
+        success: true,
+        message: 'Project based company updated successfully'
+      })
+    }
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500, 'Internal server error'));
+  }
+}
 exports.getCompanyById = async (req, res, next) => {
   const { id } = req.params
 
