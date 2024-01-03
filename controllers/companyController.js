@@ -17,6 +17,7 @@ const IdFormat = require('../models/companyIdFormat')
 const createError = require('.././utils/error.js')
 const successResponse = require('.././utils/successResponse.js')
 
+
 exports.createCompany1 = async (req, res, next) => {
   const transaction = await sequelize.transaction()
 
@@ -239,15 +240,18 @@ exports.createCompany = async (req, res, next) => {
       where: {
         [Op.or]: [
           { email: companyData.email },
-          { companyCode: companyData.companyCode }
+          { companyCode: companyData.companyCode },
+          { accountNumber: companyData.accountNumber }
         ]
+
       },
       // transaction
     });
+    
 
     if (existingCompany) {
       // await transaction.rollback();
-      return next(createError.createError(409, 'Email or companyCode already exists'));
+      return next(createError.createError(409, 'Email accountNumber,or companyCode already exists'));
     }
 
     const package = await Package.findByPk(packageId);
@@ -379,11 +383,12 @@ exports.createCompany = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: 'Created successfully'
+      
     });
   } catch (error) {
     // await transaction.rollback();
     console.error('Error:', error);
-    return next(createError.createError(500, 'Internal server error'));
+    return next(createError.createError(500, error.message));
   }
 };
 

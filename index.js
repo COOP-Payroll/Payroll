@@ -185,8 +185,8 @@ const runComputation = async (payrolls) => {
 };
 
 let isRunning = false;
-
-app.listen(process.env.PORT ||6000, () => {
+console.log(process.env.PORT)
+app.listen(process.env.PORT ||4400, () => {
  
   cron.schedule("*/5 * * * * * * *", async () => {
     if (!isRunning) {
