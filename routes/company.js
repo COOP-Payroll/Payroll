@@ -3,6 +3,7 @@ const express = require("express");
 const companyController = require("../controllers/companyController.js");
 const upload = require("../middleware/multer");
 const router = express.Router();
+const middleware=require("../middleware/auth.js")
 
 /**
  * @swagger
@@ -45,6 +46,12 @@ router.put(
   ]),
   companyController.updateCompany
 );
+
+
+router.put('/project/update/isProjectBased',
+  middleware.protectAll, 
+  companyController.updateProjectBased
+)
 router.delete("/:id", companyController.deleteCompany);
 router.get("/all/activeCompany", companyController.getAllActiveCompany);
 router.get("/all/blockedCompany", companyController.getAllBlockedCompany);
