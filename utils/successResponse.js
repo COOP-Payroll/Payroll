@@ -1,7 +1,7 @@
 // responseUtils.js
 
 function createSuccess(message) {
-    return {
+   return {
       success: true,
       message,
      };
