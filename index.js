@@ -51,6 +51,7 @@ const addressRoute = require("./routes/address");
 const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
 const ebirrPayment = require("./routes/eBirrPayment.js");
 
+const Sponsors=require("./routes/sponsors.js");
 // const stripePayment = require("./routes/stripePayment.js");
 
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
@@ -129,6 +130,7 @@ app.use("/providentFund", providentFund);
 app.use("/newPayroll", newPayroll);
 app.use("/module", moduleRoute);
 app.use("/address", addressRoute);
+app.use("/sponsors",Sponsors)
 
 app.use("/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/payment", ebirrPayment);
