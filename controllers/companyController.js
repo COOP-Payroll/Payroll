@@ -401,7 +401,7 @@ exports.getAllCompany = async (req, res, next) => {
 
     // const baseUrl = "https://localhost:6000/";
     // const baseUrl = 'https://payroll-production.up.railway.app/'
-    const baseUrl='https://10.2.125.125:6000/';
+    const baseUrl='https://10.2.125.125:4400/';
     const companies = companys.map(company => {
       if (company.companyLogo) {
         const imageUrl = `${baseUrl}${company.companyLogo.replace(/\\/g, '/')}`
@@ -424,12 +424,12 @@ exports.getAllCompany = async (req, res, next) => {
       }
       return company
     })
-    return res.json({
-      count: companies.length,
+    return res.json({count: companies.length,
 
       companies
     })
   } catch (error) {
+    console.log(error)
     return next(createError.createError(500, 'Internal server error'))
   }
 }
