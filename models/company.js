@@ -16,9 +16,14 @@ const Company = sequelize.define("Company", {
     values: ["pending", "active", "blocked", "denied"],
     defaultValue: "pending",
   },
-  fullName: {
+  organizationName: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'Organization name cannot be null.',
+      },
+    },
   },
   email: {
     type: DataTypes.STRING,
@@ -99,6 +104,19 @@ const Company = sequelize.define("Company", {
   notes: {
     type: DataTypes.STRING,
   },
+
+  accountNumber:{
+    type:DataTypes.STRING,
+    allowNull:false,
+    unique: {
+      msg: 'Company code must be unique.',
+    },
+  },
+  isProjectBased: {
+
+    type:DataTypes.BOOLEAN,
+    defaultValue:false,
+  }
 });
 
 Company.beforeCreate((company, options) => {
