@@ -1,4 +1,3 @@
-
 const express = require("express");
 const companyController = require("../controllers/companyController.js");
 const upload = require("../middleware/multer");
@@ -37,6 +36,11 @@ router.post(
 router.get("/", companyController.getAllCompany);
 router.get("/:id", companyController.getCompanyById);
 router.post("/", companyController.createCompany);
+
+router.get('/get/companyprofile',
+  middleware.protectAll, 
+  companyController.getcompanyProfiles
+)
 router.put(
   "/:id",
   upload.fields([
@@ -46,7 +50,6 @@ router.put(
   ]),
   companyController.updateCompany
 );
-
 
 router.put('/project/update/isProjectBased',
   middleware.protectAll, 

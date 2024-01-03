@@ -17,7 +17,25 @@ const IdFormat = require('../models/companyIdFormat')
 const createError = require('.././utils/error.js')
 const successResponse = require('.././utils/successResponse.js')
 
-
+exports.getcompanyProfiles= async (req, res, next)=>{
+  try {
+    const company= await Company.findByPk(req.user.id);
+   if (!company){
+      return next(createError.createError(404, "Company not found"));
+    }
+    return res.status(200).json({
+      success:true,
+      message:"Data found",
+      data:company
+      
+    })  
+    
+  } catch (error) {
+    consolo.log(error)
+    return next(createError.createError(500, error.message));
+  
+  }
+}
 exports.createCompany1 = async (req, res, next) => {
   const transaction = await sequelize.transaction()
 
