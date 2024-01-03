@@ -19,7 +19,11 @@ const successResponse = require('.././utils/successResponse.js')
 
 exports.getcompanyProfiles= async (req, res, next)=>{
   try {
-    const company= await Company.findByPk(req.user.id);
+    const company= await Company.findByPk(req.user.id,
+    
+      {attributes: { exclude: ['password'] }},
+  
+  );
    if (!company){
       return next(createError.createError(404, "Company not found"));
     }
@@ -31,7 +35,7 @@ exports.getcompanyProfiles= async (req, res, next)=>{
     })  
     
   } catch (error) {
-    consolo.log(error)
+    console.log(error)
     return next(createError.createError(500, error.message));
   
   }
