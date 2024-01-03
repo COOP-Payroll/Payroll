@@ -44,7 +44,7 @@ exports.protectAll = async (req, res, next) => {
 
     // console.log(JSON.stringify(currentUser), null, 4);
     if (!currentUser) {
-      return next(createError.createError(401,  `${currentUser.role} does not longer exists ` ));
+      return next(createError.createError(401,  `currentUserdoes not longer exists ` ));
       
     }
     //check if user change password after jwt was issued

@@ -21,6 +21,7 @@ const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail.js");
+const createError= require('../utils/error.js')
 // Define controller methods for handling User requests
 
 exports.getAllEmployee = async (req, res,next) => {
@@ -276,9 +277,11 @@ exports.createEmployee = async (req, res, next) => {
       });
       if (!existingAccount) {
       } else {
-        return res.status(400).json({
-          error: `Account number already exists: ${account.accountNumber}`,
-        });
+
+        return next(createError.createError(409,"Account number already axists"))
+        // return res.status(400).json({
+        //   error: `Account number already exists: ${account.accountNumber}`,
+        // });
       }
     }
 
