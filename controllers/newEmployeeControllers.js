@@ -12,6 +12,8 @@ const EmployeeGrade = require("../models/EmployeeGrade");
 const sendEmail = require("../utils/sendEmail.js");
 const { v4: uuidv4 } = require("uuid");
 const crypto = require("crypto");
+const Projects = require("../models/projects.js");
+const ProjectEmployee = require("../models/project-employee.js");
 
 exports.createEmployee = async (req, res) => {
   const {
@@ -224,11 +226,12 @@ exports.createEmployee = async (req, res) => {
       //  await sendEmail({ message1 });
 
       return res.status(201).json({
+        success:true,
+        message:"created successfully",
         basicInfo: createEmployee,
         address: createAddress,
         employeeInfo: createEmployeeInfo,
-        emergencyInfo: createdEmergencyInfos,
-        accountInformation: createdAccountInformations,
+      
       });
     });
   } catch (error) {
@@ -435,6 +438,8 @@ exports.updateEmployee = async (req, res) => {
 
 exports.getAllEmployee = async (req, res) => {
   try {
+
+    console.log("helloo")
     const employees = await Employee.findAll({
       where: { CompanyId: Number(req.user.id) },
       exclude: ["password"],
@@ -463,6 +468,7 @@ exports.getAllEmployee = async (req, res) => {
             },
           },
         },
+       
         {
           model: AccountInfo,
           required: false,
@@ -474,6 +480,16 @@ exports.getAllEmployee = async (req, res) => {
         {
           model: Loan,
           required: false,
+        },
+        {
+          model: ProjectEmployee,
+          attributes: ['percent'],
+          include: [
+            {
+              model: Projects,
+           
+            },
+          ],
         },
         {
           model: Grade,
@@ -496,7 +512,9 @@ exports.getAllEmployee = async (req, res) => {
             },
             // { model: EmployeeGrade, where: { active: true } },
           ],
+          
         },
+        
         // {
         //   model: EmployeeGrade,
         //   where: { active: true },

@@ -263,7 +263,7 @@ exports.createCompany = async (req, res, next) => {
         [Op.or]: [
           { email: companyData.email },
           { companyCode: companyData.companyCode },
-          { accountNumber: companyData.accountNumber }
+          
         ]
 
       },
@@ -273,7 +273,7 @@ exports.createCompany = async (req, res, next) => {
 
     if (existingCompany) {
       // await transaction.rollback();
-      return next(createError.createError(409, 'Email accountNumber,or companyCode already exists'));
+      return next(createError.createError(409, 'Email or companyCode already exists'));
     }
 
     const package = await Package.findByPk(packageId);
