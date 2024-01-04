@@ -8,4 +8,22 @@ router.get(
     projects.getAllProjects
   );
 
+
+  router.post(
+    "/",
+    middleware.protectAll,
+    projects.createProjects
+  );
+
+  
+  router.delete(
+    "/:id",
+    middleware.protectAll,
+    projects.deleteProjects
+  );
+  router.put(
+    "/:id",
+    middleware.protectAll,
+    projects.updateProjects
+  );
 module.exports=router;

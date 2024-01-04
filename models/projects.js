@@ -8,9 +8,10 @@ const Projects = sequelize.define("Projects", {
     allowNull: false,
   },
  });
+Projects.belongsTo(Sponsors);
+Sponsors.hasMany(Projects);
 
-
-Sponsors.belongsTo(Company);
-Company.hasMany(Sponsors);
+Projects.belongsTo(Company);
+Company.hasMany(Projects);
 
 module.exports = Projects;
