@@ -26,24 +26,25 @@ exports.getAllProjects = async (req, res,next) => {
 
 exports.createProjects = async (req, res, next) => {
     try {
-        const {projectName, sponsorId}=req.body;
+        const {projectName, sponsorId,location,description,accountNumber}=req.body;
+        
 
-        const checkProjectName=await Projects.findOne({where: {projectName:projectName} });
+        if(!projectName || !sponsorId || !accountNumber){
+
+          return next(createError.createError(400,"Please fill all the required fields"))
+        }
+        const checkProjectName=await Projects.findOne({where: {companyId:req.user.id,projectName:projectName} });
         if(checkProjectName) {
             return next(createError.createError(409,"Project already defined"))
         }
-      sponsor= await Sponsor.findByPk(sponsorId);
+        sponsor= await Sponsor.findOne({where:{id:sponsorId,companyId:req.user.id}});
       
   if( !sponsor)  {
     return next(createError.createError(404,"Sponsor not found"))
   }
-//     //   const checkIfAdded = await Projects.findOne({
-//     //     where: {
-//     //       GradeId: gradeId,
-//     //       sponsor: sponsorId
-//     //     },
-  
-        const projects = await Projects.create({ projectName });
+ 
+        const projects = await Projects.create({ projectName,location,description,accountNumber });
+        await projects.setSponsor(sponsorId);
         await projects.setCompany(Number(req.user.id));
        
      return    res.status(200).json({
