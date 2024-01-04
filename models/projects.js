@@ -7,6 +7,18 @@ const Projects = sequelize.define("Projects", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  accountNumber: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  location: {
+    type: DataTypes.STRING,
+
+  },
+  description: {
+    type: DataTypes.STRING,
+
+  },
  });
 Projects.belongsTo(Sponsors);
 Sponsors.hasMany(Projects);

@@ -26,24 +26,25 @@ exports.getAllProjects = async (req, res,next) => {
 
 exports.createProjects = async (req, res, next) => {
     try {
-        const {projectName, sponsorId}=req.body;
+        const {projectName, sponsorId,location,description,accountNumber}=req.body;
+        
 
-        const checkProjectName=await Projects.findOne({where: {projectName:projectName} });
+        if(!projectName || !sponsorId || !accountNumber){
+
+          return next(createError.createError(400,"Please fill all the required fields"))
+        }
+        const checkProjectName=await Projects.findOne({where: {companyId:req.user.id,projectName:projectName} });
         if(checkProjectName) {
             return next(createError.createError(409,"Project already defined"))
         }
-      sponsor= await Sponsor.findByPk(sponsorId);
+        sponsor= await Sponsor.findOne({where:{id:sponsorId,companyId:req.user.id}});
       
   if( !sponsor)  {
     return next(createError.createError(404,"Sponsor not found"))
   }
-//     //   const checkIfAdded = await Projects.findOne({
-//     //     where: {
-//     //       GradeId: gradeId,
-//     //       sponsor: sponsorId
-//     //     },
-  
-        const projects = await Projects.create({ projectName });
+ 
+        const projects = await Projects.create({ projectName,location,description,accountNumber:accountNumber });
+        await projects.setSponsor(sponsorId);
         await projects.setCompany(Number(req.user.id));
        
      return    res.status(200).json({
@@ -62,7 +63,7 @@ exports.createProjects = async (req, res, next) => {
 exports.updateProjects = async (req, res, next) => {
   try {
     //insert required field
-    const { projectName,sponsorId} = req.body
+    const { projectName,sponsorId,location,description,accountNumber} = req.body
     const updates = {}
     const { id } = req.params
 
@@ -70,11 +71,18 @@ exports.updateProjects = async (req, res, next) => {
 
     const  checkProject= await Projects.findOne({where: {id: id,companyId:req.user.id}});
     if (projectName) {
-
-      
+     
       updates.projectName = projectName
     }
- 
+ if(location){
+  updates.location=location
+ }
+ if(accountNumber){
+  updates.accountNumber=accountNumber
+ }
+ if(description) {
+  updates.description=description
+ }
     if(sponsorId){
 
       const sponsors = await Sponsor.findOne({where: {id:sponsorId, companyId:req.user.id}});
@@ -95,8 +103,7 @@ exports.updateProjects = async (req, res, next) => {
     res.status(200).json({
       success:true,
       message: 'updated successfully',
-      result
-    })
+         })
   } catch (error) {
     return next(createError.createError(500, 'Internal server error'))
   }
