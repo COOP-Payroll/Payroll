@@ -43,7 +43,7 @@ exports.createProjects = async (req, res, next) => {
     return next(createError.createError(404,"Sponsor not found"))
   }
  
-        const projects = await Projects.create({ projectName,location,description,accountNumber });
+        const projects = await Projects.create({ projectName,location,description,accountNumber:accountNumber });
         await projects.setSponsor(sponsorId);
         await projects.setCompany(Number(req.user.id));
        
@@ -63,7 +63,7 @@ exports.createProjects = async (req, res, next) => {
 exports.updateProjects = async (req, res, next) => {
   try {
     //insert required field
-    const { projectName,sponsorId} = req.body
+    const { projectName,sponsorId,location,description,accountNumber} = req.body
     const updates = {}
     const { id } = req.params
 
@@ -71,11 +71,18 @@ exports.updateProjects = async (req, res, next) => {
 
     const  checkProject= await Projects.findOne({where: {id: id,companyId:req.user.id}});
     if (projectName) {
-
-      
+     
       updates.projectName = projectName
     }
- 
+ if(location){
+  updates.location=location
+ }
+ if(accountNumber){
+  updates.accountNumber=accountNumber
+ }
+ if(description) {
+  updates.description=description
+ }
     if(sponsorId){
 
       const sponsors = await Sponsor.findOne({where: {id:sponsorId, companyId:req.user.id}});
@@ -96,8 +103,7 @@ exports.updateProjects = async (req, res, next) => {
     res.status(200).json({
       success:true,
       message: 'updated successfully',
-      result
-    })
+         })
   } catch (error) {
     return next(createError.createError(500, 'Internal server error'))
   }
