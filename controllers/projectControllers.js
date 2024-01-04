@@ -6,11 +6,20 @@ const Company = require("../models/company.js");
 const Projects=require("../models/projects.js");
 const createError = require('.././utils/error.js');
 const Sponsor = require("../models/sponsor.js");
+const { default: axios } = require("axios");
+const error = require("shelljs/src/error.js");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res,next) => {
   try {
     const companyId = req.user.id;
-    const projects = await Projects.findAll({ where: { companyId } });
+    const projects = await Projects.findAll({ where: { companyId },
+      include: [
+        {
+          model: Sponsor, // Use the correct alias defined in the association
+          
+        }
+      ]
+     });
     res.status(200).json({
         success:true,
         message:"Data found",
@@ -27,12 +36,57 @@ exports.getAllProjects = async (req, res,next) => {
 exports.createProjects = async (req, res, next) => {
     try {
         const {projectName, sponsorId,location,description,accountNumber}=req.body;
-        
+       console.log("Creating project") 
 
         if(!projectName || !sponsorId || !accountNumber){
 
           return next(createError.createError(400,"Please fill all the required fields"))
         }
+        const url ="http://10.1.245.150:7081/v1/cbo/"
+        const payload= {
+             CustomerInfoRequest:{
+             ESBHeader:{
+              serviceCode:"040000", 
+              channel: "USSD", 
+              Service_name: "customerInfo", 
+              Message_Id: "Mmr2qyutr82729" 
+             },
+             CusomerInfo:{
+              AccountId: accountNumber
+             }
+            }
+        }
+            
+       console.log(payload)
+        const response = await axios.post(url, {
+          
+            "CustomerInfoRequest": { 
+                "ESBHeader": { 
+                    "serviceCode": "040000", 
+                    "channel": "USSD", 
+                    "Service_name": "customerInfo", 
+                    "Message_Id": "Mmr2qyutr82729" 
+                }, 
+                "CusomerInfo": { 
+                    "AccountId": accountNumber 
+                } 
+            } 
+        
+        }).then((response)=>{
+            console.log(response.data.CustomerInfoResponse.CustomerInfo)
+        }).catch((error)=>{
+
+        })
+
+
+
+
+
+
+
+
+
+
         const checkProjectName=await Projects.findOne({where: {companyId:req.user.id,projectName:projectName} });
         if(checkProjectName) {
             return next(createError.createError(409,"Project already defined"))
