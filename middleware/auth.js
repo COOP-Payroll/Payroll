@@ -11,6 +11,7 @@ exports.protectAll = async (req, res, next) => {
   try {
     //getting token check if its there
     let token;
+    console.log("middleware")
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
