@@ -57,6 +57,7 @@ const Projects=require("./routes/projectRoutes.js");
 
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
 const additionalPay = require("./routes/AdditionalPay");
+const checkAccountNumber=require("./routes/accountChecker.js");
 // const employeePromotion = require("./routes/employeePromotion");
 
 const app = express();
@@ -141,6 +142,7 @@ app.use("/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/additionalPay", additionalPayDefinition);
 app.use("/additionalpayment", additionalPay);
 app.use("/payment", ebirrPayment);
+app.use("/accountNumber/verify",checkAccountNumber)
 // app.use("/employeePromotion", employeePromotion);
 
 const swaggerOptions = {

@@ -21,6 +21,10 @@ router.get(
     middleware.protectAll,
     projects.deleteProjects
   );
+  router.put("/assign-to-employee",
+  middleware.protectAll,
+  projects.assignProjectToEmployee
+  )
   router.put(
     "/:id",
     middleware.protectAll,

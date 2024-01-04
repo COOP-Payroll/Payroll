@@ -13,6 +13,8 @@ const DeductionDefinition = require("../models/deductionDefinition.js");
 const AdditionalPayDefinition=require("../models/additionalPayDefinition.js");
 const AdditionalPay=require("../models/additionalPay.js")
 const Deduction = require("../models/deduction.js");
+const Projects = require("../models/projects.js");
+const ProjectEmployee = require("../models/project-employee.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const Loan = require("../models/loan.js");
@@ -26,6 +28,7 @@ const createError= require('../utils/error.js')
 
 exports.getAllEmployee = async (req, res,next) => {
   try {
+   
     const Employees = await Employee.findAll({
       where: { companyId: req.user.id },
       include: [
@@ -52,6 +55,16 @@ exports.getAllEmployee = async (req, res,next) => {
             },
           },
         },
+        {
+          model: Projects,
+          required: false,
+          through: {
+            model: ProjectEmployee,
+                    
+          },
+          include:[Sponsor]
+        },
+       
         {
           model: AccountInfo,
           required: false,
@@ -778,6 +791,7 @@ const AdditionalDeduction = require("../models/additionalDeduction.js");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 const EmployeeGrade = require("../models/EmployeeGrade.js");
 const EmployeeDepartment = require("../models/EmployeeDepartment.js");
+const Sponsor = require("../models/sponsor.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
