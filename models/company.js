@@ -107,10 +107,7 @@ const Company = sequelize.define("Company", {
 
   accountNumber:{
     type:DataTypes.STRING,
-    allowNull:false,
-    unique: {
-      msg: 'Company code must be unique.',
-    },
+  
   },
   isProjectBased: {
 
