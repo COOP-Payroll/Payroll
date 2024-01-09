@@ -124,5 +124,5 @@ Employee.belongsTo(Company);
 
 // Address.hasOne(Employee);
 // Employee.belongsTo(Address);
-
+// Employee.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Employee;

@@ -20,12 +20,34 @@ const Projects = sequelize.define("Projects", {
     type: DataTypes.STRING,
 
   },
+  budget:{
+    type: DataTypes.NUMBER,
+  },
+
+  numberOfEmployees: {
+    type: DataTypes.STRING,
+  }, 
+  startDate:{
+    type: DataTypes.DATE,
+    allowNull:false
+  },
+  endDate:{
+    type: DataTypes.DATE,
+    allowNull:false,
+ 
+  },
   description: {
     type: DataTypes.STRING,
 
   },
+ 
   
  });
+
+
+ // Sync only the Projects model
+
+ 
 Projects.belongsTo(Sponsors);
 Sponsors.hasMany(Projects);
 
@@ -38,4 +60,5 @@ Company.hasMany(Projects);
 
 Projects.belongsToMany(Employee, { through: ProjectEmployee });
 Employee.belongsToMany(Projects, { through: ProjectEmployee });
+// Projects.sync({ force: false }).then(() => console.log('Projects model is ready'));
 module.exports = Projects;

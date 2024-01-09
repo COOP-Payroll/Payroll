@@ -40,7 +40,7 @@ router.post("/", companyController.createCompany);
 router.get('/get/companyprofile',
   middleware.protectAll, 
   companyController.getcompanyProfiles
-)
+);
 router.put(
   "/:id",
   upload.fields([

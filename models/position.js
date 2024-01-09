@@ -3,15 +3,32 @@ const sequelize = require("../database/db.js");
 const Company = require("./company.js");
 const Package = require("./package.js");
 const Employee=require("./employee.js");
+const EmployeePosition = require("./employeePosition.js");
 
 const Position = sequelize.define("Position", {
-  name: {
+  positionName: {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  description: {
+    type: DataTypes.STRING,
+   
+  },
 });
 
-Employee.hasMany(Position);
-Position.belongsTo(Employee);
 
+// Employee.belongsToMany(Position, {
+//   through: EmployeePosition,
+// });
+// Position.belongsToMany(Employee, {
+//   through: EmployeePosition,
+// });
+
+
+Position.belongsToMany(Employee, { through: EmployeePosition });
+Employee.belongsToMany(Position, { through: EmployeePosition });
+
+Company.hasMany(Position);
+Position.belongsTo(Company);
+// Position.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Position;

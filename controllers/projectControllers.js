@@ -12,15 +12,10 @@ const error = require('shelljs/src/error.js')
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res, next) => {
   try {
+    console.log("getAllProjects")
     const companyId = req.user.id
-    const projects = await Projects.findAll({
-      where: { companyId },
-      include: [
-        {
-          model: Sponsor // Use the correct alias defined in the association
-        }
-      ]
-    })
+    const projects = await Projects.findAll(        
+    )
     res.status(200).json({
       success: true,
       message: 'Data found',
@@ -34,33 +29,33 @@ exports.getAllProjects = async (req, res, next) => {
 
 exports.createProjects = async (req, res, next) => {
   try {
-    const { projectName, sponsorId, location, description, accountNumber } =
+    const { projectName, sponsorId, location, description,startDate,endDate, accountNumber } =
       req.body
     console.log('Creating project')
 
-    if (!projectName || !sponsorId || !accountNumber) {
+    if (!projectName || !sponsorId || !accountNumber  || !startDate || !endDate) {
       return next(
         createError.createError(400, 'Please fill all the required fields')
       )
     }
-    const url = 'http://10.1.245.150:7081/v1/cbo/'
-    const response = await axios.post(url, {
-      CustomerInfoRequest: {
-        ESBHeader: {
-          serviceCode: '040000',
-          channel: 'USSD',
-          Service_name: 'customerInfo',
-          Message_Id: 'Mmr2qyutr82729'
-        },
-        CusomerInfo: {
-          AccountId: accountNumber
-        }
-      }
-    });
+    // const url = 'http://10.1.245.150:7081/v1/cbo/'
+    // const response = await axios.post(url, {
+    //   CustomerInfoRequest: {
+    //     ESBHeader: {
+    //       serviceCode: '040000',
+    //       channel: 'USSD',
+    //       Service_name: 'customerInfo',
+    //       Message_Id: 'Mmr2qyutr82729'
+    //     },
+    //     CusomerInfo: {
+    //       AccountId: accountNumber
+    //     }
+    //   }
+    // });
 
-    if (response.data.CustomerInfoResponse.CustomerInfo.length === 0) {
-      return next(createError.createError(404, 'Account number not found'))
-    }
+    // if (response.data.CustomerInfoResponse.CustomerInfo.length === 0) {
+    //   return next(createError.createError(404, 'Account number not found'))
+    // }
     // console.log(response.data.CustomerInfoResponse.CustomerInfo.length)
 
     const checkProjectName = await Projects.findOne({
@@ -80,6 +75,8 @@ exports.createProjects = async (req, res, next) => {
     const projects = await Projects.create({
       projectName,
       location,
+      startDate,
+      endDate,
       description,
       accountNumber: accountNumber
     })
@@ -117,7 +114,7 @@ exports.assignProjectToEmployee = async (req,res,next)=>{
       return next(createError.createError(404, 'Project not found'))
     }
 
-
+  console.log("employee",employee);
       // if(projects?.EmployeeId === employeeId){
       //   return next(createError.createError(409, 'Project already assigned')) 
       // }

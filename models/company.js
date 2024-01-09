@@ -113,6 +113,9 @@ const Company = sequelize.define("Company", {
 
     type:DataTypes.BOOLEAN,
     defaultValue:false,
+  },
+  resetPasswordToken:{
+    type:DataTypes.STRING,
   }
 });
 
@@ -142,4 +145,6 @@ Company.beforeUpdate((company, options) => {
   }
 });
 
+
+// Company.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Company;

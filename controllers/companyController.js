@@ -15,7 +15,9 @@ const moment = require('moment')
 const sequelize = require('../database/db.js')
 const IdFormat = require('../models/companyIdFormat')
 const createError = require('.././utils/error.js')
-const successResponse = require('.././utils/successResponse.js')
+const successResponse = require('.././utils/successResponse.js');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
 exports.getcompanyProfiles= async (req, res, next)=>{
   try {
@@ -257,7 +259,8 @@ exports.createCompany = async (req, res, next) => {
 
   try {
     const { packageId, duration, ...companyData } = req.body;
-
+    const token = crypto.randomBytes(32).toString('hex');
+    console.log(`createCompany's ,token`, token)
     const existingCompany = await Company.findOne({
       where: {
         [Op.or]: [

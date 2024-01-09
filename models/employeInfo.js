@@ -36,13 +36,15 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     type: DataTypes.STRING,
   },
   terminationNotes: {
-    type: DataTypes.STRING,
-  
+    type: DataTypes.STRING,  
   },
+  grossEarning:{
+    type: DataTypes.DOUBLE,   
+  }
 });
 
 
 Employee.hasMany(EmployeeInfo);
 EmployeeInfo.belongsTo(Employee);
-
+EmployeeInfo.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = EmployeeInfo;
