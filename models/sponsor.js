@@ -7,13 +7,23 @@ const Sponsor = sequelize.define("Sponsor", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-
+  budget:{
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  accountNumber:{
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  location:{
+    type: DataTypes.STRING,
+   
+  }
 
 
 
 });
-
 Sponsor.belongsTo(Company);
 Company.hasMany(Sponsor);
-
+// Sponsor.sync({ force: false }).then(() => console.log('Sponsor model is ready'));
 module.exports = Sponsor;

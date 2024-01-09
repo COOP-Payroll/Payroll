@@ -7,6 +7,11 @@ const ProjectEmployee = sequelize.define("ProjectEmployee", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-});
+  gross: {
+    type: DataTypes.STRING,
+    allowNull: false,
 
+  }
+});
+// ProjectEmployee.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = ProjectEmployee;

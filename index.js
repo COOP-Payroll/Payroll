@@ -50,7 +50,7 @@ const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
 const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
 const ebirrPayment = require("./routes/eBirrPayment.js");
-
+const position=require("./routes/postionRoutes.js");
 const Sponsors=require("./routes/sponsors.js");
 const Projects=require("./routes/projectRoutes.js");
 // const stripePayment = require("./routes/stripePayment.js");
@@ -118,6 +118,7 @@ app.use("/deduction", deduction);
 app.use("/grade", grade);
 app.use("/approver", approver);
 app.use("/payroll", payrollRouter);
+app.use("/positions", position);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
 app.use("/PayrollApprovement", payrollApprovement);
@@ -173,7 +174,7 @@ console.log()
     // stack: err.stack,
   });
 });
-
+// sequelize.sync({ logging: console.log });
 sequelize.sync({ force: false }).then(() => console.log("db is ready"));
 
 const runWorker = (employeeId, payrollDefinitionId, user) => {

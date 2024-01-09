@@ -4,29 +4,30 @@ const Allowance = require('../models/allowance.js')
 const AllowanceDefinition = require('../models/allowanceDefinition.js')
 const EmployeeGrade = require('../models/EmployeeGrade.js')
 const { Op } = require('sequelize')
-const Sponsors = require('../models/sponsor.js')
+const Sponsors = require('../models/sponsor.js');
+const Positions=require('../models/position.js');
 const createError = require('../utils/error.js')
 const CustomError = require('../utils/customError.js')
 const successResponse = require('../utils/successResponse.js')
 const { max } = require('moment/moment.js')
 
 //CREATE GRADE
-exports.getAllSponsors = async (req, res, next) => {
+exports.getAllpositions = async (req, res, next) => {
   try {
     const criteria = {
       companyId: req.user.id
     }
-    const sponsors = await Sponsors.findAll({
+    const positions = await Positions.findAll({
       where: criteria
     })
 
-    if (!sponsors) {
-      return next(createError.createError(404, 'There is no sponsors'))
+    if (!positions) {
+      return next(createError.createError(404, 'There is no positions'))
     } else {
       res.status(200).json({
         success: true,
         message: 'Data found',
-        data: sponsors
+        data: positions
       })
     }
   } catch (error) {
@@ -35,24 +36,24 @@ exports.getAllSponsors = async (req, res, next) => {
   }
 }
 
-exports.getOneSponsors = async (req, res, next) => {
+exports.getOne = async (req, res, next) => {
   try {
     const { id } = req.params
     const criteria = {
       id:id,
       companyId: req.user.id
     }
-    const sponsors = await Sponsors.findOne({
+    const positions = await Positions.findOne({
       where: criteria
     })
 
-    if (!sponsors) {
-      return next(createError.createError(404, 'There is no sponsors with id ' + id))
+    if (!positions) {
+      return next(createError.createError(404, "Position not found"))
     } else {
       res.status(200).json({
         success: true,
         message: 'Data found',
-        data: sponsors
+        data: positions
       })
     }
   } catch (error) {
@@ -60,13 +61,13 @@ exports.getOneSponsors = async (req, res, next) => {
     return next(createError.createError(500, 'Internal server error'))
   }
 }
-exports.createSponsors = async (req, res, next) => {
+exports.createPositions = async (req, res, next) => {
   try {
     //insert required field
 
-    const { name, budget, accountNumber, location } = req.body
+    const { positionName, description } = req.body
 
-    if (!name || !budget || !accountNumber) {
+    if (!positionName ) {
       return next(
         createError.createError(400, 'Please fill all required fields')
       )
@@ -75,65 +76,59 @@ exports.createSponsors = async (req, res, next) => {
     const companyId = req.user.id
     const criteria = {
       companyId: req.user.id,
-      name: name
+      positionName: positionName
     }
-    const checkSponsors = await Sponsors.findOne({ where: criteria })
+    const positionFound = await Positions.findOne({ where: criteria })
 
-    if (checkSponsors) {
+    if (positionFound) {
       return next(createError.createError(409, 'This name is defined already '))
     }
 
-    const sponsor = await Sponsors.create({ name, budget, accountNumber,location })
-    console.log("sponsor",sponsor)  
-    await sponsor.setCompany(companyId)
+    const position = await Positions.create({ positionName, description})
+  
+    await position.setCompany(companyId)
 
     return res.status(201).json({
       success: true,
       message: 'Successfully Registered',
-      data: sponsor
+      data: position
     })
   } catch (error) {
-    // console.log('error', error)
+    console.log('error', error)
     return next(createError.createError(500, 'Internal server error'))
   }
 }
 
 
-exports.updateSponsor = async (req, res, next) => {
+exports.updatePosition= async (req, res, next) => {
   try {
     //insert required field
-    const { name, budget, location,accountNumber } =
+    const { positionName, description} =
       req.body
     const updates = {}
     const { id } = req.params
 
-    const checkSponsor = await Sponsors.findOne({
+    const foundPosition  = await Positions.findOne({
       where: { id: id, companyId: req.user.id }
     });
-    if (!checkSponsor) {
-      return next(createError.createError(404, 'Sponsor not found'))
+    if (!foundPosition ) {
+      return next(createError.createError(404, 'Position not found'))
     }
 
-    if (name) {
-      updates.name = name;
+    if (positionName) {
+      updates.positionName = positionName;
     }
-    if (location) {
-      updates.location = location
+    if (description) {
+      updates.description = description
     }
-    if (accountNumber) {
-      updates.accountNumber = accountNumber
-    }
-    if (budget) {
-      updates.budget = budget
-    }
+    
    
    
   
-    const result = await checkSponsor.update({
-      name: name,
-      budget: budget,
-      accountNumber:accountNumber,
-      location:location
+    const result = await foundPosition .update({
+      positionName: positionName,
+      description: description,
+  
     })
 
     res.status(200).json({
@@ -145,23 +140,24 @@ exports.updateSponsor = async (req, res, next) => {
   }
 }
 
-exports.deleteSponsor = async (req, res, next) => {
+exports.deletePosition = async (req, res, next) => {
   try {
     const { id } = req.params
-    const sponsors = await Sponsors.findOne({
+    const foundPosition = await Positions.findOne({
       where: { id: id, companyId: req.user.id }
     })
-    if (!sponsors) {
-      return next(createError.createError(404, 'Sponsor not found'))
+    if (!foundPosition) {
+      return next(createError.createError(404, 'Position not found'))
     } else {
-      await sponsors.destroy()
+      await foundPosition.destroy()
       res.status(200).json({
         success: true,
         message: 'Deleted successfully',
-        data: sponsors
+        data: foundPosition
       })
     }
   } catch (error) {
+    console.log(error)
     return next(createError.createError(500, 'Internal server error'))
   }
 }
