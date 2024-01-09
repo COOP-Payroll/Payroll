@@ -18,6 +18,7 @@ const createError = require('.././utils/error.js')
 const successResponse = require('.././utils/successResponse.js');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const sendEmail=require('.././utils/sendEmail.js');
 
 exports.getcompanyProfiles= async (req, res, next)=>{
   try {
@@ -259,8 +260,7 @@ exports.createCompany = async (req, res, next) => {
 
   try {
     const { packageId, duration, ...companyData } = req.body;
-    const token = crypto.randomBytes(32).toString('hex');
-    console.log(`createCompany's ,token`, token)
+  
     const existingCompany = await Company.findOne({
       where: {
         [Op.or]: [
@@ -290,6 +290,11 @@ exports.createCompany = async (req, res, next) => {
     const acctImagePath = req?.files?.acctImage?.[0]?.path || null;
     const bannerPath = req?.files?.companyBanner?.[0]?.path || null;
 
+
+    const token = crypto.randomBytes(32).toString('hex');
+    console.log(`createCompany's ,token`, token);
+
+
     const company = await Company.create(
       { ...companyData, companyLogo: imagePath, companyBanner: bannerPath },
       { transaction }
@@ -300,7 +305,7 @@ exports.createCompany = async (req, res, next) => {
       { duration },
       { transaction }
     );
-
+   
     await subscription.setPackage(packageId,{transaction});
     await subscription.setCompany(company.id,{transaction} );
 
@@ -392,6 +397,7 @@ exports.createCompany = async (req, res, next) => {
       )
     );
 
+   
     await transaction.commit();
 
     const companyIdFormat = await IdFormat.create({
@@ -402,14 +408,38 @@ exports.createCompany = async (req, res, next) => {
       order: 'companyCode,department,year',
       digitLength: 4
     });
-
     await companyIdFormat.setCompany(company.id);
 
-    return res.status(201).json({
-      success: true,
-      message: 'Created successfully'
-      
-    });
+      return res.status(201).json({
+        success: true,
+        message: 'Created successfully.  '
+        
+      });
+
+    // const text =  `Click the following link to set your password: http://localhost:4400/company/set-password/${token}`
+    // const subject= `Thank you for your going with us`
+    // console.log("email",companyData.email)
+    // const emailSent = await sendActivationEmail(companyData.email , subject,text,next);  
+    // await company.set({resetPasswordToken:token})
+    // company.resetPasswordToken=token;
+
+
+    // if (emailSent) {
+  
+    //   return res.status(201).json({
+    //     success: true,
+    //     message: 'Created successfully.   Email sent.'
+        
+    //   });
+    //   // return res.status(200).json({
+    //   //   status: "success",
+    //   //   message: "Company status activated successfully. Email sent.",
+    //   // });
+    // } else {
+    //  return next(createError.createError(500, "Error sending activation email. Company status not updated"));
+    
+    // }
+   
   } catch (error) {
     // await transaction.rollback();
     console.error('Error:', error);
@@ -649,3 +679,50 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
     return next(createError.createError(500, 'Internal server error'))
   }
 }
+
+
+
+
+
+exports.resetPasswordToken = async(req, res,next) => {
+ 
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+  
+    // Find the user by the token
+    const user = await Company.findOne({ where: { resetPasswordToken: token } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Invalid or expired token' });
+    }
+
+    // Update the user's password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    await user.save();
+
+    res.json({ message: 'Password set successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+const sendActivationEmail = async (email, subject,text,next) => {
+  try {
+    await sendEmail({
+      email,
+      subject: subject,
+      text,
+    });
+    return true;
+  } catch (err) {
+    console.log(err)
+    console.error("Error sending email:");
+    return false;
+    // return next(createError.createError(500, "Error sending activation email. Company status not updated"));
+  }
+};

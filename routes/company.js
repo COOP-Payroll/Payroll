@@ -37,6 +37,8 @@ router.get("/", companyController.getAllCompany);
 router.get("/:id", companyController.getCompanyById);
 router.post("/", companyController.createCompany);
 
+
+router.post("/set-password/:token", companyController.resetPasswordToken);
 router.get('/get/companyprofile',
   middleware.protectAll, 
   companyController.getcompanyProfiles
