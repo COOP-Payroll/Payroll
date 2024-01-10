@@ -62,7 +62,7 @@ Company.hasMany(Projects);
 Position.belongsToMany(Projects, { through: PositionProjectAssociation });
 Projects.belongsToMany(Position, { through: PositionProjectAssociation });
 
-// Projects.belongsToMany(Employee, { through: ProjectEmployee });
-// Employee.belongsToMany(Projects, { through: ProjectEmployee });
+Projects.belongsToMany(Employee, { through: ProjectEmployee });
+Employee.belongsToMany(Projects, { through: ProjectEmployee });
 // Projects.sync({ force: true }).then(() => console.log('Projects model is ready'));
 module.exports = Projects;
