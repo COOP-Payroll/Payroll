@@ -26,8 +26,15 @@ router.get(
   projects.assignProjectToEmployee
   )
   router.put(
+    "/assign-position",
+    middleware.protectAll,
+    projects.assignPositionToProject
+  );
+  router.put(
     "/:id",
     middleware.protectAll,
     projects.updateProjects
   );
+
+  
 module.exports=router;

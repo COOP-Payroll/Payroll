@@ -1,32 +1,14 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database/db');
-
+const Company= require("../models/company.js")
 const PositionProjectAssociation = sequelize.define('PositionProjectAssociation', {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  unit: {
-    type: DataTypes.STRING,
-  },
-  numberOfUnit: {
-    type: DataTypes.INTEGER,
-  },
-  amountPerUnit: {
-    type: DataTypes.FLOAT,
-  },
-  budget: {
-    type: DataTypes.FLOAT,
-  },
-  description:{
-    type: DataTypes.STRING,
-  }
+  noOfEmployees:{
+  type:DataTypes.STRING,
+  
+ }
 });
+PositionProjectAssociation.belongsTo(Company);
+Company.hasMany(PositionProjectAssociation);
 
-// Define associations
-// Position.belongsToMany(Project, { through: PositionProjectAssociation });
-// Project.belongsToMany(Position, { through: PositionProjectAssociation });
-// Position.hasMany(Employee);
-// Employee.belongsTo(Position);
-
+// PositionProjectAssociation.sync({ force: true }).then(() => console.log('Projects model is ready'));
 module.exports = PositionProjectAssociation;

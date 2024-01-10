@@ -5,10 +5,11 @@ const Company = require('../models/company.js')
 const Employee= require('../models/employee.js')
 const createError = require('.././utils/error.js')
 const Projects = require('../models/projects.js')
-
+const Positions = require('../models/position.js')
 const Sponsor = require('../models/sponsor.js')
 const { default: axios } = require('axios')
 const error = require('shelljs/src/error.js')
+const PositionProjectAssociation=require("../models/positionProjectAssociation.js")
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res, next) => {
   try {
@@ -135,8 +136,57 @@ return res.status(200).json({
   }
 }
 
+exports.assignPositionToProject= async(req,res,next)=>{
+  try {
+   
+    const {projectId,positionIds,noOfEmployees}=req.body;
+    
+    const projects= await Projects.findOne({where:{id:projectId, companyId:req.user.id}});
+    if (!projects) {
+      return next(createError.createError(404, 'Project not found'))
+    }
+   
+    const positions = await Positions.findAll({
+      where: {
+        id: positionIds,
+      },
+    });
+    console.log("positions",positions)
+
+    // Check if the lengths of positionIds and noOfEmployees arrays are the same
+  // if (positionIds.length !== noOfEmployees.length) {
+  //   return res.status(400).json({ error: 'Number of positions and noOfEmployees must be the same' });
+  // }
+
+
+    if (positions.length !== positions.length) {
+      return res.status(404).json({ error: 'One or more projects not found' });
+    }
+
+    await projects.addPositions(positionIds, {
+      through: { noOfEmployees },
+    });
+
+    console.log('Positions added to the project successfully!');
+
+    // await projects.addPositions(positionIds);
+  return res.status(200).json({
+    success:true,
+    message:"successfull assigned"
+  })
+
+    
+
+
+  } catch (error) {
+
+    console.log(error)
+    return next(createError.createError(500, 'Internal server error'));
+  }
+}
 exports.updateProjects = async (req, res, next) => {
   try {
+    console.log("da la project")
     //insert required field
     const { projectName, sponsorId, location, description, accountNumber } =
       req.body
@@ -207,4 +257,5 @@ exports.deleteProjects = async (req, res, next) => {
     return next(createError.createError(500, 'Internal server error'))
   }
 }
+
 

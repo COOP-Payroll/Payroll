@@ -3,6 +3,8 @@ const sequelize = require("../database/db.js");
 const Sponsors = require("./sponsor.js");
 const Company = require("./company.js");
 const Employee=require("./employee.js");
+const Position =require("./position.js");
+const PositionProjectAssociation=require("./positionProjectAssociation.js");
 
 const ProjectEmployee = require("./project-employee.js");
 
@@ -18,7 +20,6 @@ const Projects = sequelize.define("Projects", {
   },
   location: {
     type: DataTypes.STRING,
-
   },
   budget:{
     type: DataTypes.NUMBER,
@@ -58,7 +59,10 @@ Sponsors.hasMany(Projects);
 Projects.belongsTo(Company);
 Company.hasMany(Projects);
 
-Projects.belongsToMany(Employee, { through: ProjectEmployee });
-Employee.belongsToMany(Projects, { through: ProjectEmployee });
-// Projects.sync({ force: false }).then(() => console.log('Projects model is ready'));
+Position.belongsToMany(Projects, { through: PositionProjectAssociation });
+Projects.belongsToMany(Position, { through: PositionProjectAssociation });
+
+// Projects.belongsToMany(Employee, { through: ProjectEmployee });
+// Employee.belongsToMany(Projects, { through: ProjectEmployee });
+// Projects.sync({ force: true }).then(() => console.log('Projects model is ready'));
 module.exports = Projects;
