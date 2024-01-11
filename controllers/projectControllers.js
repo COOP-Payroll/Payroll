@@ -140,36 +140,71 @@ exports.assignPositionToProject= async(req,res,next)=>{
   try {
    
     const {projectId,positionIds,noOfEmployees}=req.body;
-    
+    // console.log(projectId,positionIds,noOfEmployees)
     const projects= await Projects.findOne({where:{id:projectId, companyId:req.user.id}});
     if (!projects) {
       return next(createError.createError(404, 'Project not found'))
     }
+    
+    // if (!positions) {
+    //   return next(createError.createError(404, 'Position not found'))
+    // }
+    //   await projects.addPositions(positionIds,{through:{noOfEmployees,CompanyId:req.user.id}});
+  
    
+
     const positions = await Positions.findAll({
       where: {
         id: positionIds,
       },
     });
-    console.log("positions",positions)
 
-    // Check if the lengths of positionIds and noOfEmployees arrays are the same
-  // if (positionIds.length !== noOfEmployees.length) {
-  //   return res.status(400).json({ error: 'Number of positions and noOfEmployees must be the same' });
-  // }
-
-
-    if (positions.length !== positions.length) {
-      return res.status(404).json({ error: 'One or more projects not found' });
+    if (positions.length !== positionIds.length) {
+      return res.status(404).json({ error: 'One or more positions not found' });
     }
 
-    await projects.addPositions(positionIds, {
-      through: { noOfEmployees },
-    });
 
-    console.log('Positions added to the project successfully!');
+     // Ensure unique positionIds
+     const uniquePositionIds = Array.from(new Set(positionIds));
 
-    // await projects.addPositions(positionIds);
+     // Check for existing associations
+     const existingAssociations = await PositionProjectAssociation.findAll({
+       where: {
+         ProjectId: projects.id,
+         PositionId: uniquePositionIds,
+       },
+     });
+ 
+     if (existingAssociations.length > 0) {
+       // Throw an error if any positions are already associated
+       const existingPositionIds = existingAssociations.map((assoc) => assoc.positionId);
+       return res.status(400).json({
+         error: `Positions with IDs ${existingPositionIds} are already associated with the project.`,
+       });
+     }
+ 
+
+// Prepare an array for bulk insertion
+const associations = positionIds.map((positionId, index) => ({
+  ProjectId: projects.id,
+  PositionId: positionId,
+  noOfEmployees: noOfEmployees[index],
+  CompanyId: req.user.id,
+}));
+
+// Bulk insert into PositionProjectAssociations table
+try {
+  await PositionProjectAssociation.bulkCreate(associations);
+} catch (error) {
+  console.error('Error bulk creating PositionProjectAssociations:', error);
+  // Handle the error appropriately, e.g., log it or return an error response
+  return res.status(500).json({ error: 'Internal server error' });
+}
+
+// Use set method to set the associations in bulk
+// await projects.setPositions(positions, { through: { noOfEmployees, CompanyId:req.user.id } });
+
+console.log('Positions added to the project successfully!');
   return res.status(200).json({
     success:true,
     message:"successfull assigned"
