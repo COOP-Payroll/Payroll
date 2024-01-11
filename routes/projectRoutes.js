@@ -8,6 +8,11 @@ router.get(
     projects.getAllProjects
   );
 
+  router.get(
+    "/:id",
+    middleware.protectAll,
+    projects.getOneProject
+  );
 
   router.post(
     "/",
@@ -21,6 +26,9 @@ router.get(
     middleware.protectAll,
     projects.deleteProjects
   );
+  router.put("/unassign",
+  middleware.protectAll,
+  projects.deassignPositionFromProject)
   router.put("/assign-to-employee",
   middleware.protectAll,
   projects.assignProjectToEmployee
