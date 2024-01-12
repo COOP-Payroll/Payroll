@@ -8,10 +8,18 @@ const ProjectEmployee = sequelize.define("ProjectEmployee", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  totalPercent:{
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
   gross: {
     type: DataTypes.STRING,
     allowNull: false,
 
+  },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
 });
 ProjectEmployee.belongsTo(Company);

@@ -13,6 +13,14 @@ router.get(
   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.getAllEmployee
 );
+
+router.get(
+  "/get-all-projects/:employeeId",
+
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  employeeController.getAllProjectEmployeeInvolded
+);
 router.get(
   "/:id",
   middleware.protectAll,

@@ -114,6 +114,10 @@ const Company = sequelize.define("Company", {
     type:DataTypes.BOOLEAN,
     defaultValue:false,
   },
+  isSetted: {
+    type:DataTypes.BOOLEAN,
+    defaultValue:false,
+  },
   resetPasswordToken:{
     type:DataTypes.STRING,
   }
