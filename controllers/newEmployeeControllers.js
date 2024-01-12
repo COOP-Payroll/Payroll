@@ -14,6 +14,8 @@ const { v4: uuidv4 } = require('uuid')
 const crypto = require('crypto')
 const Projects = require('../models/projects.js')
 const ProjectEmployee = require('../models/project-employee.js')
+const Position = require('../models/position.js')
+const EmployeePosition = require('../models/employeePosition.js')
 
 exports.createEmployee = async (req, res) => {
   const {
@@ -29,10 +31,11 @@ exports.createEmployee = async (req, res) => {
   }
 
   const accountNumbers = accountInformation?.map(acct => acct.accountNumber)
-
+ console.log("employeIfo",employeeInfo.position)
   try {
-    const [grade, department, employee, accountInfos, idformat] =
+    const [position,grade, department, employee, accountInfos, idformat] =
       await Promise.all([
+        Position.findByPk(Number(employeeInfo.position)),
         Grade.findByPk(Number(basicInfo?.GradeId)),
         Department.findByPk(Number(basicInfo?.DepartmentId)),
         Employee.findOne({ where: { email: basicInfo?.email } }),
@@ -42,7 +45,9 @@ exports.createEmployee = async (req, res) => {
         })
       ])
     const errors = []
-
+  if(!position){
+    errors.push({ error: 'Position does not exist.' })
+  }
     if (!grade) {
       errors.push({ error: 'Grade does not exist.' })
     }
@@ -147,6 +152,15 @@ exports.createEmployee = async (req, res) => {
         { transaction: t }
       )
 
+
+      const junctionPosition = await EmployeePosition.create(
+        {
+          EmployeeId: Number(createEmployee.id),
+          PositionId: Number(position.id),
+          
+        },
+        { transaction: t }
+      )
       const createAddress = await Address.create(
         { ...address, EmployeeId: createEmployee.id, isActive: true },
         { transaction: t }

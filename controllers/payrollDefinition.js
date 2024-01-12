@@ -2,6 +2,7 @@ const { DATEONLY } = require("sequelize");
 const { Sequelize, Op } = require("sequelize");
 const Payroll = require("../models/payrollDefinition");
 const PayrollDefinition = require("../models/payrollDefinition");
+const createError=require("../utils/error.js")
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllPayroll = async (req, res, next) => {
@@ -54,7 +55,7 @@ exports.getLatestPayroll = async (req, res) => {
 
   }
 };
-exports.createPayroll = async (req, res) => {
+exports.createPayroll = async (req, res,next) => {
   try {
     
 
@@ -64,10 +65,31 @@ exports.createPayroll = async (req, res) => {
 const CompanyId = req.user.id;
 
     const payrollData= req.body;
+
+ // Check if any of the provided payroll names already exist for the given CompanyId
+    const existingPayrollNames = await PayrollDefinition.findAll({
+      where: {
+        CompanyId,
+        payrollName: payrollData.map((data) => data.payrollName),
+      },
+    });
+
+    if (existingPayrollNames.length > 0) {
+      // Payroll names already exist, handle the case accordingly
+      const duplicateNames = existingPayrollNames.map((record) => record.payrollName);
+      return next(createError.createError(400,`Payroll names already exist for the given Company: ${duplicateNames.join(', ')}`))
+      // return res.status(400).json({
+      //   message: `Payroll names already exist for the given CompanyId: ${duplicateNames.join(', ')}`,
+      // });
+    }
+
+
    const updatedPayrollData = payrollData.map((data) => ({
      ...data,
      CompanyId,
    }));
+
+
 
       const payrollDefinition = await PayrollDefinition.bulkCreate(
         updatedPayrollData
@@ -87,23 +109,7 @@ const CompanyId = req.user.id;
    
   } catch (error) {
     console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+   return next(createError.createError(500,"Internal server error"))
   }
   
 };

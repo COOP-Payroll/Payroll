@@ -14,6 +14,12 @@ router.get(
     projects.getOneProject
   );
 
+  router.get(
+    "/employee/:projectId",
+    middleware.protectAll,
+    projects.getAllEmployeeUnderTheSameProject
+  );
+
   router.post(
     "/",
     middleware.protectAll,
@@ -26,6 +32,10 @@ router.get(
     middleware.protectAll,
     projects.deleteProjects
   );
+
+  router.put("/unassign-employee",
+  middleware.protectAll,
+  projects.deSelectEmployeeFromProject)
   router.put("/unassign",
   middleware.protectAll,
   projects.deassignPositionFromProject)

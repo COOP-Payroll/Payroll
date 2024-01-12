@@ -509,6 +509,8 @@ exports.updateEmployee = async (req, res, next) => {
       returning: true,
     });
 
+
+
     res.status(200).json({
       message: "updated successfully",
     });
@@ -539,6 +541,9 @@ exports.deleteEmployee = async (req, res, next) => {
 
     const Employe = await Employee.findByPk(Number(id));
     if (Employe) {
+
+
+      await AccountInfo.destroy({where: {EmployeeId:id}})
       await Employe.destroy({ where: { id } });
       res.status(200).json({ message: "Employee deleted successfully" });
     } else {
@@ -1540,3 +1545,39 @@ exports.createEmployee_new = async (req, res) => {
       .json({ error: "An error occurred while creating the records." });
   }
 };
+
+
+exports.getAllProjectEmployeeInvolded = async (req, res, next) => {
+  try {
+    const { employeeId } = req.params
+
+    const Employees = await Employee.findOne({
+      where: { id: employeeId, companyId: req.user.id },
+      attributes: ['fullname'],
+      include: [
+        {
+          model: Projects,
+          required: false,
+          through: {
+            model: ProjectEmployee,
+            attributes: ['percent', 'gross']
+          },
+          include: [
+            {
+             model: Sponsor,
+              attributes: ['name']
+            }
+          ]
+          // attributes:['name'],
+        }
+      ]
+    })
+    res.status(200).json({
+      count: Employees.length,
+      Employees
+    })
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server error'))
+  }
+}

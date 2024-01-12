@@ -19,6 +19,7 @@ const successResponse = require('.././utils/successResponse.js');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const sendEmail=require('.././utils/sendEmail.js');
+// const createError=require("../utils/error.js")
 
 exports.getcompanyProfiles= async (req, res, next)=>{
   try {
@@ -493,18 +494,25 @@ exports.getAllCompany = async (req, res, next) => {
 exports.updateProjectBased=async(req,res,next) => {
 
   try {
+    const {isProjectBased}=req.body;
+
+
+    if (typeof isProjectBased !== 'boolean') {
+        return next(createError.createError(400, 'Invalid value for isProjectBased. Must be a boolean.'));
+    }
     const checkProject= await Company.findByPk(Number(req.user.id));
    
     if(!checkProject){
      return next(createError.createError(404,"company not found"))
     }
-  
+     
     if(checkProject?.isProjectBased){
       return next(createError.createError(409,"company already is project based"))
     }
     else{
       const company = await Company.findByPk(Number(req.user.id));
-      company.isProjectBased=true;
+      company.isProjectBased=isProjectBased;
+      company.isSetted=true;
       await company.save();
       return res.status(200).json({
         success: true,

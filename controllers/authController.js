@@ -18,6 +18,51 @@ const signToken = (id, role) => {
   }
 };
 
+
+const signTokenCompany = (id, isProjectBased,isSetted,role) => {
+  try {
+    return jwt.sign({ id, isProjectBased,isSetted, role }, "secret", {
+      expiresIn: "90d",
+    });
+  } catch (err) {
+    // res.json(err);
+    return err;
+  }
+};
+
+
+
+
+
+const createSendTokenCompany = async (company, statusCode, res) => {
+  try {
+
+     const token = signTokenCompany(company.id, company.isProjectBased,company.isSetted,company.role);
+    const cookieOptions = {
+      expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
+
+      secure: "production" ? true : false,
+      httpOnly: true,
+    };
+    company.password = undefined;
+    res.cookie("jwt", token, cookieOptions);
+    res.status(statusCode).json({
+      message: "successful",
+
+      data: {
+        company,
+      },
+      token,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.name });
+  }
+};
+
+
+
+
+
 const createSendToken = async (company, statusCode, res) => {
   try {
     const token = signToken(company.id, company.role);
@@ -81,7 +126,7 @@ exports.login = async (req, res, next) => {
       createSendToken(company, 200, res);
     } else {
       if (company.status === "active") {
-        createSendToken(company, 200, res);
+        createSendTokenCompany(company, 200, res);
       } else {
         switch (company.status) {
           case "pending":

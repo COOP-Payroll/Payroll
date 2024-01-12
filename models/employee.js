@@ -81,6 +81,11 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+
+ totalPercent:{
+  type: DataTypes.INTEGER,
+  defaultValue:0
+ },
   isConfirmed: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
