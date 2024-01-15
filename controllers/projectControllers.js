@@ -30,7 +30,11 @@ exports.getAllProjects = async (req, res, next) => {
           model: Positions,
           through: { attributes: ['noOfEmployees'] }, // Include any additional attributes you need
         },
+        {
+          model:Sponsor
+        }
       ],
+ 
     })
     res.status(200).json({
       success: true,
@@ -57,6 +61,9 @@ exports.getOneProject = async (req, res, next) => {
           model: Positions,
           through: { attributes: ['noOfEmployees'] }, // Include any additional attributes you need
         },
+        {
+          model:Sponsor
+        }
       ],
     })
 
@@ -204,37 +211,9 @@ exports.assignProjectToEmployee = async (req, res, next) => {
     EmployeeId:employeeId,
    }})
 
-//    const count1= await ProjectEmployee.findAll({
-//     where: {
-//       ProjectId: 1,
-//       isActive: false,
-//     },
-//     include: [
-//       {
-//         model: Employee,
-//         required: true,
-//         include: [
-//           {
-//             model: Positions, // Assuming you have a Positions model
-//             where: {
-//               id: 1,
-              
-              
-//             },
-//           },
-//         ],
-        
-//       },
-//     ],
-//   });
-
-// console.log("count0",count1)
    if (chechEmployeAssociation) {
     return next(createError.createError(404,`Employee already  associated with the project`))
-    // res.status(404).json({
-    //   data:count1
-    // })
-    // console.error(`Position with ID  is not associated with the project`);
+ 
     }
 
    
@@ -245,7 +224,6 @@ exports.assignProjectToEmployee = async (req, res, next) => {
       },
     });    
 
-// console.log(positionProjectAssociations)
    const count= await ProjectEmployee.count({
       where: {
         ProjectId: 1,
@@ -268,9 +246,6 @@ exports.assignProjectToEmployee = async (req, res, next) => {
         },
       ],
     });
-
-
-
   
     if (!positionProjectAssociations) {
 
