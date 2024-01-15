@@ -2,6 +2,11 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../database/db');
 const Company= require("../models/company.js")
 const PositionProjectAssociation = sequelize.define('PositionProjectAssociation', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   noOfEmployees:{
   type:DataTypes.INTEGER,
   
@@ -12,7 +17,7 @@ const PositionProjectAssociation = sequelize.define('PositionProjectAssociation'
 },
 maximumPercentAllocation:{
   type: DataTypes.INTEGER,
-  defaultValue:0
+  defaultValue:100
 },
 isActive: {
   type: DataTypes.BOOLEAN,

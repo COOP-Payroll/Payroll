@@ -15,6 +15,10 @@ const PositionProjectAssociation = require('../models/positionProjectAssociation
 const EmployeeInfo = require('../models/employeInfo.js')
 const ProjectEmployee = require('../models/project-employee.js')
 const EmployeePosition = require('../models/employeePosition.js')
+
+const ProjectEmployeeHistory=require("../models/projectEmployeeHistory.js");
+const ProjectPositionHistory = require('../models/projectPositionHistory.js');
+const Position = require('../models/position.js');
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res, next) => {
   try {
@@ -283,7 +287,19 @@ exports.assignProjectToEmployee = async (req, res, next) => {
       if (employee.totalPercent + percent <= 100) {
         // If not, increment totalPercent
        await employee.increment('totalPercent', { by: percent },{transaction});
-        await projects.addEmployee(employee, { through: { percent ,gross:employee.EmployeeInfos[0].grossEarning* percent/100,} },{transaction})
+
+       const grossValue=employee?.EmployeeInfos[0]?.grossEarning* percent/100;
+        // await projects.addEmployee(employee, { through: { percent ,gross:employee.EmployeeInfos[0].grossEarning* percent/100,} },{transaction})
+        await ProjectEmployee.create({
+          ProjectId:projectId,
+          EmployeeId:employeeId,
+          CompanyId:req.user.id,
+          percent:percent ,
+          gross: grossValue
+        },{transaction}
+        )
+        
+        
         await transaction.commit();
         console.log('Total percent incremented successfully');
       } else {
@@ -310,6 +326,10 @@ exports.assignPositionToProject = async (req, res, next) => {
 
     if(! projectId || !positionIds || !noOfEmployees || !maximumPercentAllocation){
       return next(createError.createError(400,"please fill all required fields"))
+    }
+
+    if(maximumPercentAllocation>100){
+      return next(createError.createError(400,"maximumPercentAllocation can not be more than 100"));
     }
     // console.log(projectId,positionIds,noOfEmployees)
     const projects = await Projects.findOne({
@@ -466,6 +486,7 @@ exports.deleteProjects = async (req, res, next) => {
 
 
 exports.deassignPositionFromProject  = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
     const { projectId, positionIds } = req.body
     // console.log(projectId,positionIds,noOfEmployees)
@@ -501,7 +522,26 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
       }
     })
  // Check if the positions are already assigned to the project
- const assignedPositions = await projects.getPositions({ where: { id: positionIds } });
+ const assignedPositions = await projects.getPositions({ where: { id: positionIds }});
+
+//   include: [{
+//     model: Projects,
+//     through:{model:PositionProjectAssociation,
+//       attributes: ['noOfEmployees', 'maximumPercentAllocation', 'remainingEmployees'],
+//     },
+//     // attributes: ['noOfEmployees', 'maximumPercentAllocation', 'remainingEmployees'],
+//   }],
+//   // attributes: ['id', 'noOfEmployees', 'maximumPercentAllocation', 'remainingEmployees'],
+// });
+
+
+// const projectsWithPositions = await Projects.findAll({
+//   include: [{
+//     model: Position,
+//     through: PositionProjectAssociation,
+//   }],
+// });
+// return res.json(projectsWithPositions)
 
    // Identify the positions that are not assigned to the project
   //  const unassignedPositions = positionIds.filter(
@@ -511,18 +551,42 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
      return next(createError.createError(400, 'One or more positions are not assigned to the project.'))       
  }
 
-  
     // Remove associations
-    await projects.removePositions(positionIds);
+    // await projects.removePositions({positionIds},{transaction});
 
+
+    await projects.removePositions(assignedPositions,{transaction});
+
+    // Create entries in ProjectPositionHistory
+    for (const position of assignedPositions) {
+      console.log(position.PositionProjectAssociation.createdAt)
+      await ProjectPositionHistory.create({
+        ProjectId: projectId,
+        PositionId: position.id,
+        noOfEmployees: position.PositionProjectAssociation.noOfEmployees,
+        maximumPercentAllocation: position.PositionProjectAssociation.maximumPercentAllocation,
+        // remainingEmployees: position.remainingEmployees,
+        isActive: false, // Assuming deassignment means isActive should be set to false
+        startingFrom: position.PositionProjectAssociation.createdAt,
+        CompanyId:req.user.id
+      }
+      ,{transaction}
+      );
+    }
+
+    await transaction.commit(); 
+  //  await ProjectPositionHistory.bul
     console.log('Positions removed from the project successfully!');
     return res.status(200).json({
       success: true,
       message: 'Successfully removed positions from the project',
+      data:assignedPositions
     });
 
 
   } catch (error) {
+    console.log(error)
+    await transaction.rollback();
     return next(createError.createError(500, 'Internal server Error'))
   }
 }
@@ -668,7 +732,28 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
         createError.createError(404, 'Employee id and project id are required')
       );
 
-    const employee = await ProjectEmployee.findOne({
+
+      const employee= await Employee.findOne({
+        where: {
+          id: employeeId,
+          companyId:req.user.id
+        },
+      })
+// await employee.update({totalPercent:0})
+      if(!employee){
+        return next(createError.createError(404, 'Employee not found'))
+      }
+   const projects =await Projects.findOne({
+  where:{
+    id:projectId,
+    companyId:req.user.id,   
+  },
+ 
+})
+if(!projects){
+  return next(createError.createError(404, 'Project not found'))
+}
+    const projectEmployee = await ProjectEmployee.findOne({
       where: {
         ProjectId: projectId,
         EmployeeId: employeeId,
@@ -676,20 +761,36 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
       },
       include: [Employee],
     });
-    if (!employee) {
+
+
+// console.log(projectEmployee.percent)
+    if (!projectEmployee) {
       return next(createError.createError(404, 'Employee is not  associated to project'));
     }
 
-    await employee.decrement('totalPercent', { by: employee.totalPercent }, { transaction });
+    // await employee.decrement('totalPercent', { by: employee.totalPercent }, { transaction });
+// console.log(employee)
+    
+      const projectEmployeeHistory=  await ProjectEmployeeHistory.create({
+      ProjectId: projectId,
+      EmployeeId: employeeId,
+      percent: projectEmployee.percent,
+      gross: projectEmployee.gross,
+      startingFrom: projectEmployee.createdAt,
+      CompanyId:req.user.id,
+      isActive: false,
+    }, { transaction });
 
-    await employee.update({ isActive: false }, { transaction });
-
+    console.log("employee.totalPercent-projectEmployee.percent",Number(employee.totalPercent))
+    await employee.update({'totalPercent': Number(employee.totalPercent)-Number(projectEmployee.percent)}, { transaction });
+    // await projectEmployeeHistory.setCompany({companyId},{transaction});
+    await projectEmployee.destroy( { transaction });
     await transaction.commit(); // Commit the transaction if everything is successful
 
     return res.status(200).json({
       success: true,
-      message: 'Successfully unassigned',
-      data: employee,
+      message: 'Successfully unassigned from the project',
+      // data: projectEmployee.gross,
     });
   } catch (error) {
     await transaction.rollback();
