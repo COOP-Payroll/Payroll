@@ -48,6 +48,12 @@ router.get(
     middleware.protectAll,
     projects.assignPositionToProject
   );
+  router.put("/update-employee-association",
+  
+  middleware.protectAll,
+  projects.updateProjectEmployeeAssocitation
+  )
+
   router.put(
     "/:id",
     middleware.protectAll,

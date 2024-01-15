@@ -2,8 +2,14 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company=require("../models/company.js")
-const PositionProjectAssociation=require("../models/positionProjectAssociation.js")
+// const PositionProjectAssociation=require("../models/positionProjectAssociation.js")
 const ProjectEmployee = sequelize.define("ProjectEmployee", {
+
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   percent: {
     type: DataTypes.STRING,
     allowNull: false,

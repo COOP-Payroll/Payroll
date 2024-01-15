@@ -176,7 +176,7 @@ console.log()
 });
 // sequelize.sync({ logging: console.log });
 sequelize.sync({ force: false }).then(() => console.log("db is ready"));
-
+  
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
     workerData: { employeeId, user, payrollDefinitionId },
