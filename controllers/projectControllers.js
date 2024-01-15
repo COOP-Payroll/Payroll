@@ -593,7 +593,6 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
 
 
 
-
 exports.qassignEmployeesToProject = async (req,res,next) => {
   try {
     console.log("helloo");
@@ -798,3 +797,100 @@ if(!projects){
     return next(createError.createError(500, 'Internal server error'));
   }
 };
+
+
+exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
+  const transaction = await sequelize.transaction();
+  try {
+    
+    console.log('assignProjectToEmmployee')
+
+
+    const { employeeId, projectId, percent } = req.body
+     if (!employeeId || !projectId) {
+       return next(createError.createError(400, 'Please enter required fields'))
+     }
+     const projects = await Projects.findOne({
+       where: { id: projectId, companyId: req.user.id },
+      });
+ 
+     if (!projects) {
+       return next(createError.createError(404, 'Project not found'))
+     }
+     const employee = await Employee.findOne({
+       where: { id: employeeId, companyId: req.user.id },
+    include:[
+     {
+       model: Positions,
+       required: false,
+       through: {
+         model: EmployeePosition,
+                 
+       },
+       // include:[Sponsor]
+     },
+     {
+       model: EmployeeInfo,  
+     where: { isActive: true}}
+     
+    ]
+     });
+ 
+     if (!employee) {
+       return next(createError.createError(404, 'Employee not found'))
+     }
+ 
+    const chechEmployeAssociation= await ProjectEmployee.findOne({ where:{
+     ProjectId: projectId,
+     EmployeeId:employeeId,
+
+    }})
+
+    if(!chechEmployeAssociation){
+      return next(createError.createError(404, 'Employee is not  associated to project'));
+    }
+   console.log(employee.totalPercent-chechEmployeAssociation.percent)
+    if ((employee.totalPercent-chechEmployeAssociation.percent)+ percent <= 100) {
+     await employee.update({totalPercent:(employee.totalPercent-chechEmployeAssociation.percent)+ percent },{transaction})
+
+     const projectEmployeeHistory=  await ProjectEmployeeHistory.create({
+      ProjectId: projectId,
+      EmployeeId: employeeId,
+      percent: chechEmployeAssociation.percent,
+      gross: chechEmployeAssociation.gross,
+      startingFrom: chechEmployeAssociation.createdAt,
+      CompanyId:req.user.id,
+      isActive: false,
+    }, { transaction });
+    const grossValue=employee?.EmployeeInfos[0]?.grossEarning* percent/100;
+    //await chechEmployeAssociation.update({percent:percent},{transaction})
+    await chechEmployeAssociation.destroy( { transaction });
+    await ProjectEmployee.create({
+      ProjectId:projectId,
+      EmployeeId:employeeId,
+      CompanyId:req.user.id,
+      percent:percent ,
+      gross: grossValue
+    },{transaction}
+    )
+    
+
+
+    await transaction.commit();
+
+  
+       console.log('Total percent incremented successfully');
+    } else {
+      return next(createError.createError(400,`Total percent cannnot exceeds 100.currently you have reached  ${employee.totalPercent} percent  Cannot assign more projects.`))
+
+   }
+   return res.status(200).json({
+    success: true,
+    message: 'Updated successfully  '
+    })
+  } catch (error) {
+console.log(error);
+await transaction.rollback();
+return next(createError.createError(500, 'Internal server error'));    
+  }
+}
