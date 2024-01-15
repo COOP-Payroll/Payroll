@@ -388,8 +388,8 @@ exports.updateProjects = async (req, res, next) => {
   try {
     console.log('da la project')
     //insert required field
-    const { projectName, sponsorId, location, description, accountNumber } =
-      req.body
+    const { projectName, location, description, accountNumber,numberOfEmployees } =
+      req.body;
     const updates = {}
     const { id } = req.params
 
@@ -402,21 +402,24 @@ exports.updateProjects = async (req, res, next) => {
     if (location) {
       updates.location = location
     }
+    if (numberOfEmployees) {
+      updates.numberOfEmployees = numberOfEmployees
+    }
     if (accountNumber) {
       updates.accountNumber = accountNumber
     }
     if (description) {
       updates.description = description
     }
-    if (sponsorId) {
-      const sponsors = await Sponsor.findOne({
-        where: { id: sponsorId, companyId: req.user.id }
-      })
-      if (!sponsors) {
-        return next(createError.createError(404, 'Sponsor not found'))
-      }
-      updates.sponsorId = sponsorId
-    }
+    // if (sponsorId) {
+    //   const sponsors = await Sponsor.findOne({
+    //     where: { id: sponsorId, companyId: req.user.id }
+    //   })
+    //   if (!sponsors) {
+    //     return next(createError.createError(404, 'Sponsor not found'))
+    //   }
+    //   updates.sponsorId = sponsorId
+    // }
 
     if (!checkProject) {
       return next(createError.createError(404, 'project not found'))
@@ -425,7 +428,12 @@ exports.updateProjects = async (req, res, next) => {
     console.log(updates)
     const result = await checkProject.update({
       projectName: projectName,
-      SponsorId: sponsorId
+      location: location,
+      numberOfEmployees: numberOfEmployees,
+      accountNumber: accountNumber,
+      description: description,
+      // sponsorId: sponsorId
+      // SponsorId: sponsorId
     })
 
     res.status(200).json({
