@@ -9,14 +9,12 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
 
 router.put(
   "/update-contact-info/:employeeId",
-
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.updateContactInfo
 );
 router.get(
   "/",
-
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.getAllEmployee
