@@ -6,6 +6,14 @@ const upload = require("../middleware/multer");
 // const { accountInfoMulter, upload } = require("../middleware/multer.js");
 const newEmployeeController = require("../controllers/newEmployeeControllers.js");
 
+
+router.put(
+  "/get-all-projects/update/update/:employeeId",
+
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  employeeController.updateContactInfo
+);
 router.get(
   "/",
 
@@ -21,6 +29,10 @@ router.get(
   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.getAllProjectEmployeeInvolded
 );
+
+
+
+
 router.get(
   "/:id",
   middleware.protectAll,
@@ -68,8 +80,23 @@ router.put(
   }),
   employeeController.addAddionalPay
 );
+
 router.put(
-  "/:id",
+  "/updateBasicInfo/:id",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "idImage", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updatedBasicInfo
+);
+router.put(
+  "/update-employee-info/:id",
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "id_image", maxCount: 1 },

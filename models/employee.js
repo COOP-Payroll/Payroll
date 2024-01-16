@@ -71,7 +71,7 @@ const Employee = sequelize.define("Employee", {
   },
   isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false,
+    defaultValue: true,
   },
   rejectionCode: {
     type: DataTypes.STRING,
@@ -120,6 +120,42 @@ Employee.beforeUpdate((employee, options) => {
 
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
+
+
+
+Employee.beforeUpdate(async (employee, options) => {
+  // Check if isActive is being updated
+  if (employee.changed("isActive")) {
+    // Create a history record before updating the employee
+    await EmployeeHistory.create({
+      // Map the fields you want to track
+      fullname: employee.fullname,
+      image: employee.image,
+      sex: employee.sex,
+      date_of_birth: employee.data_of_birth,
+      role: employee.role,
+      nationality: employee.nationality,
+      marriageStatus: employee.marriageStatus,
+      employee_id_number: employee.employee_id_number,
+      email: employee.email,     
+      phoneNumber: employee.phoneNumber,
+      optionalNumber:employee.optionalNumber,
+      id_image: id_image,
+      id_type: employee.id_type,
+      id_Number:employee.id_Number,
+      isDeactivated: employee.isDeactivated,
+      hireDate: employee.hireDate,
+      joiningDate:employee.joiningDate,
+      password: employee.password,
+      
+      isActive: employee.isActive,
+      originalEmployeeId: employee.id,
+      changeTimestamp: new Date(),
+    });
+  }
+});
+
+
 
 // Department.hasMany(Employee);
 // Employee.belongsTo(Department);
