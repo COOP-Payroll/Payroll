@@ -19,6 +19,8 @@ const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const Loan = require("../models/loan.js");
 const nodemailer = require("nodemailer");
+
+const sequelize = require('../database/db')
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -1578,6 +1580,63 @@ exports.getAllProjectEmployeeInvolded = async (req, res, next) => {
     })
   } catch (error) {
     console.log(error)
+    return next(createError.createError(500, 'Internal Server error'))
+  }
+}
+
+
+exports.updateContactInfo= async( req,res,next)=>{
+  const transaction = await sequelize.transaction();
+  try {
+
+    console.log("here")
+    const employeeId= req.params;
+    const {
+      address,
+      employeeInfo,
+      } = req.body;
+
+      // if(!address || !employeeInfo){
+
+      //   return res.status(400).json({
+      //     message: "Please provide all the required fields"
+      //   })
+      // }
+      
+const employee = await Employee.findOne({
+  where: { id: employeeId, companyId: req.user.id }
+})
+
+const junctionGrade = await EmployeeGrade.create(
+  {
+    EmployeeId: Number(1),
+    GradeId: Number(2),
+    active: true
+  },
+  // { transaction: t }
+);
+
+
+
+return res.status(200).json(junctionGrade   )
+// if(employeeInfo?.email){
+  
+//   if(employeeInfo.email== employee.email){
+//     employee.email = employeeInfo.email
+   
+       
+
+
+//   }else{
+
+//   }
+  
+// }
+
+
+  } catch (error) {
+    console.log(error);
+    await transaction.rollback();
     return next(createError.createError(500, 'Internal Server error'))
   }
 }
