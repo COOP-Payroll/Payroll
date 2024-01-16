@@ -277,7 +277,7 @@ exports.refreshToken = async (req, res, next) => {
     )
 
     res.status(200).json({
-      accessToken: newAccessToken
+      token: newAccessToken
     })
   } catch (error) {
     next(createError.createError(500, error.message))
