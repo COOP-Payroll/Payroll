@@ -886,7 +886,7 @@ exports.updatedBasicInfo = async (req, res, next) => {
   const transaction = await sequelize.transaction()
   try {
     const id = req.params.id
-    const { fullname, marriageStatus, id_type, id_image } = req.body
+    const { fullname, marriageStatus, id_type,id_Number, id_image } = req.body
     let imagePath = null
 
     const employee = await Employee.findByPk(Number(id))
@@ -905,6 +905,7 @@ exports.updatedBasicInfo = async (req, res, next) => {
         {
           id_image: idImagePath,
           id_type: id_type ? id_type : employee.id_type,
+          id_Number:id_Number?id_Number:employee.id_Number,
           fullname: fullname ? fullname : employee.fullname,
           marriageStatus: marriageStatus
             ? marriageStatus
@@ -916,6 +917,7 @@ exports.updatedBasicInfo = async (req, res, next) => {
       const updateEmployee = await employee.update(
         {
           id_type: id_type ? id_type : employee.id_type,
+          id_Number:id_Number?id_Number:employee.id_Number,
           fullname: fullname ? fullname : employee.fullname,
           marriageStatus: marriageStatus
             ? marriageStatus
