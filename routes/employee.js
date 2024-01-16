@@ -204,7 +204,7 @@ router.post(
   employeeController.createEmployeeFile
 );
 
-router.post("/login", employeeController.login);
+// router.post("/login", employeeController.login);
 
 router.get("/confirm/:id", newEmployeeController.confirmaRegistration);
 

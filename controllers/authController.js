@@ -9,9 +9,15 @@ const cookieParser = require("cookie-parser");
 
 const signToken = (id, role) => {
   try {
-    return jwt.sign({ id, role }, "secret", {
-      expiresIn: "90d",
-    });
+
+    const token = jwt.sign({ id, role }, 'secret', {
+      expiresIn: '7d'
+    })
+
+    const refreshToken = jwt.sign({ id, role }, 'refreshSecret', {
+      expiresIn: '90d' // Set your desired expiration time for refresh tokens
+    })
+    return  { token, refreshToken }
   } catch (err) {
     // res.json(err);
     return err;
@@ -21,9 +27,18 @@ const signToken = (id, role) => {
 
 const signTokenCompany = (id, isProjectBased,isSetted,role) => {
   try {
-    return jwt.sign({ id, isProjectBased,isSetted, role }, "secret", {
-      expiresIn: "90d",
-    });
+
+    const token = jwt.sign({ id, isProjectBased,isSetted, role },'secret', {
+      expiresIn: '7d'
+    })
+    const refreshToken = jwt.sign({ id, isProjectBased,isSetted, role },'refreshSecret', {
+      expiresIn: '90d' // Set your desired expiration time for refresh tokens
+    })
+   
+    return { token, refreshToken };
+    // jwt.sign({ id, isProjectBased,isSetted, role }, "secret", {
+    //   expiresIn: "90d",
+    // });
   } catch (err) {
     // res.json(err);
     return err;
@@ -32,12 +47,11 @@ const signTokenCompany = (id, isProjectBased,isSetted,role) => {
 
 
 
-
-
 const createSendTokenCompany = async (company, statusCode, res) => {
   try {
 
-     const token = signTokenCompany(company.id, company.isProjectBased,company.isSetted,company.role);
+     const {token,refreshToken} = signTokenCompany(company.id, company.isProjectBased,company.isSetted,company.role);
+     console.log("refreshToken")
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
@@ -47,12 +61,13 @@ const createSendTokenCompany = async (company, statusCode, res) => {
     company.password = undefined;
     res.cookie("jwt", token, cookieOptions);
     res.status(statusCode).json({
-      message: "successful",
 
-      data: {
-        company,
-      },
+      // data: {
+      //   company,
+      //   // refreshToken
+      // },
       token,
+      refreshToken
     });
   } catch (error) {
     return res.status(500).json({ message: error.name });
@@ -60,28 +75,21 @@ const createSendTokenCompany = async (company, statusCode, res) => {
 };
 
 
-
-
-
 const createSendToken = async (company, statusCode, res) => {
   try {
-    const token = signToken(company.id, company.role);
+    const {token,refreshToken} = signToken(company.id, company.role);
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
       secure: "production" ? true : false,
       httpOnly: true,
     };
-    company.password = undefined;
-    res.cookie("jwt", token, cookieOptions);
+    company.password = undefined
+    res.cookie('jwt', token, cookieOptions)
     res.status(statusCode).json({
-      message: "successful",
-
-      data: {
-        company,
-      },
       token,
-    });
+      refreshToken  
+    })
   } catch (error) {
     return res.status(500).json({ message: error.name });
   }
@@ -126,6 +134,7 @@ exports.login = async (req, res, next) => {
       createSendToken(company, 200, res);
     } else {
       if (company.status === "active") {
+     
         createSendTokenCompany(company, 200, res);
       } else {
         switch (company.status) {
@@ -235,3 +244,42 @@ exports.logout = async (req, res, next) => {
     }
   }
 };
+
+
+const verifyRefreshToken = refreshToken => {
+  try {
+    const decoded = jwt.verify(refreshToken, 'refreshSecret')
+    return decoded
+  } catch (err) {
+    // return next(createError.createError(500,"Invalid refresh token"));
+    throw new Error('Invalid refresh token')
+  }
+}
+
+
+exports.refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body
+
+    if (!refreshToken) {
+      return next(createError.createError(400, 'Refresh token is missing'))
+    }
+
+    const decoded = verifyRefreshToken(refreshToken)
+
+    // Use the decoded information to generate a new access token
+    const newAccessToken = jwt.sign(
+      { id: decoded.id, role: decoded.role },
+      'secret',
+      {
+        expiresIn: '90d'
+      }
+    )
+
+    res.status(200).json({
+      accessToken: newAccessToken
+    })
+  } catch (error) {
+    next(createError.createError(500, error.message))
+  }
+}
