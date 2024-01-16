@@ -13,8 +13,10 @@ function isLoggedIn(req, res, next) {
 
 const router = express.Router();
 
-router.post("/companyLogin", authcontroller.login);
-router.post("/superAdmin", authcontroller.superAdminLogin);
+router.post("/login/companyLogin", authcontroller.login);
+router.post("/login/superAdmin", authcontroller.superAdminLogin);
+router.post("/employee/login", authcontroller.login)
+router.post("/auth/refreshToken", authcontroller.refreshToken);
 router.get("/logout", authcontroller.logout)
 
 module.exports = router;

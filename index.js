@@ -106,7 +106,7 @@ app.use("/taxslab", taxslabRouter);
 app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
-app.use("/login", authRouter);
+app.use("/", authRouter);
 app.use("/employee", employeeRouter);
 app.use("/companyIdFormat", companyIdRouter);
 app.use("/allowancedefinition", allowanceDefinition);
