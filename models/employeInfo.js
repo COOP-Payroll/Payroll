@@ -30,7 +30,8 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
   //TERMINATION INFORMATION
 
   terminationDate: {
-    type: DataTypes.STRING,
+    type: DataTypes.DATE,
+    defaultValue: new Date(),
   },
   terminationReason: {
     type: DataTypes.STRING,

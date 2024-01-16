@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
-
+const Employee=require("../models/employee.js")
 const EmployeeHistory = sequelize.define("EmployeeHistory", {
   fullname: {
     type: DataTypes.STRING,
@@ -93,11 +93,21 @@ const EmployeeHistory = sequelize.define("EmployeeHistory", {
     type: DataTypes.DATE,
     defaultValue: new Date(),
   },
+  EmployeeId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  CompanyId:{
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  }
 });
 
 // EmployeeHistory.beforeCreate((employeeHistory, options) => {
 //   // Additional logic to set history-specific fields if needed
 // });
+
+// EmployeeHistory.sync({force:true})
 
 Company.hasMany(EmployeeHistory);
 EmployeeHistory.belongsTo(Company);
