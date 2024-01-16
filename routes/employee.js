@@ -8,7 +8,7 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
 
 
 router.put(
-  "/get-all-projects/update/update/:employeeId",
+  "/update-contact-info/:employeeId",
 
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
@@ -81,11 +81,27 @@ router.put(
   employeeController.addAddionalPay
 );
 
+// router.put(
+//   "/updateBasicInfo/:id",
+//   upload.fields([
+//     // { name: "image", maxCount: 1 },
+//     { name: "id_image", maxCount: 1 },
+//   ]),
+
+//   middleware.protectAll,
+//   middleware.restrictALL({
+//     moduleName: "employeeinfo",
+//     isAccessible: true,
+//   }),
+//   newEmployeeController.updatedBasicInfo
+// );
+
+
 router.put(
-  "/updateBasicInfo/:id",
+  "/update-basic-info/:id",
   upload.fields([
     // { name: "image", maxCount: 1 },
-    { name: "idImage", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
   ]),
 
   middleware.protectAll,
@@ -95,6 +111,53 @@ router.put(
   }),
   newEmployeeController.updatedBasicInfo
 );
+
+router.put(
+  "/update-termination-status/:id",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updateTermination
+);
+
+
+router.put(
+  "/update-emergency-info/:employeeId",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updateEmergencyContact
+);
+router.put(
+  "/update-account-info/:employeeId",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "accountImage", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updateAccountInfo
+);
+
+
 router.put(
   "/update-employee-info/:id",
   upload.fields([
@@ -109,6 +172,9 @@ router.put(
   }),
   newEmployeeController.updateEmployee
 );
+
+
+
 router.put(
   "/promotion/:id",
 

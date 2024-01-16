@@ -1590,48 +1590,52 @@ exports.updateContactInfo= async( req,res,next)=>{
   try {
 
     console.log("here")
-    const employeeId= req.params;
-    const {
-      address,
-      employeeInfo,
-      } = req.body;
-
-      // if(!address || !employeeInfo){
-
-      //   return res.status(400).json({
-      //     message: "Please provide all the required fields"
-      //   })
-      // }
-      
+    const employeeId= req.params.employeeId;
+    const { email,phoneNumber,country,state,region,zone_or_city,woreda,kebele,houseNumber} = req.body;
+   
+  
 const employee = await Employee.findOne({
   where: { id: employeeId, companyId: req.user.id }
 })
 
-const junctionGrade = await EmployeeGrade.create(
-  {
-    EmployeeId: Number(1),
-    GradeId: Number(2),
-    active: true
-  },
-  // { transaction: t }
-);
 
+if(email|| phoneNumber){
+   await employee.update({ email: email?email:employee.email, phoneNumber:phoneNumber?phoneNumber:employee.phoneNumber},{transaction: transaction});     
+}
 
+if(country||state||region||zone_or_city||woreda||kebele||houseNumber){
+const checkAddress= await Address.findOne({
+  where:{EmployeeId:employeeId,
+  isActive:true}
+})
 
-return res.status(200).json(junctionGrade   )
-// if(employeeInfo?.email){
+  if (checkAddress) {
+    const updatedData = await checkAddress.update(
+      { isActive: false },
+      { transaction }
+    )
+
+    const newEmployeeInfo = await Address.create(
+      {
+        isActive: true,
+        EmployeeId: Number(employeeId),
+        kebele:kebele?kebele: checkAddress?.kebele,
+        woreda:woreda?woreda: checkAddress?.woreda,
+        zone_or_city:zone_or_city?zone_or_city:checkAddress.zone_or_city,
+        state: state?state:checkAddress.state,
+        country: country?country:checkAddress.country,
+        houseNumber:houseNumber?houseNumber:checkAddress.houseNumber
+              },
+      { transaction }
+    )
   
-//   if(employeeInfo.email== employee.email){
-//     employee.email = employeeInfo.email
-   
-       
-
-
-//   }else{
-
-//   }
-  
-// }
+            }
+  }
+  await transaction.commit()
+  return res.status(200).json({
+    success:true,
+    message: "Contact info updated successfully"
+  })
 
 
   } catch (error) {

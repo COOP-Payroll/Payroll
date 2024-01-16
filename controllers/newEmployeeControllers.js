@@ -16,7 +16,8 @@ const Projects = require('../models/projects.js')
 const ProjectEmployee = require('../models/project-employee.js')
 const Position = require('../models/position.js')
 const EmployeePosition = require('../models/employeePosition.js')
-const  createError = require('../utils/error.js')
+const createError = require('../utils/error.js')
+const { Sequelize } = require('sequelize')
 
 exports.createEmployee = async (req, res) => {
   const {
@@ -32,9 +33,9 @@ exports.createEmployee = async (req, res) => {
   }
 
   const accountNumbers = accountInformation?.map(acct => acct.accountNumber)
- console.log("employeIfo",employeeInfo.position)
+  console.log('employeIfo', employeeInfo.position)
   try {
-    const [position,grade, department, employee, accountInfos, idformat] =
+    const [position, grade, department, employee, accountInfos, idformat] =
       await Promise.all([
         Position.findByPk(Number(employeeInfo.position)),
         Grade.findByPk(Number(basicInfo?.GradeId)),
@@ -46,9 +47,9 @@ exports.createEmployee = async (req, res) => {
         })
       ])
     const errors = []
-  if(!position){
-    errors.push({ error: 'Position does not exist.' })
-  }
+    if (!position) {
+      errors.push({ error: 'Position does not exist.' })
+    }
     if (!grade) {
       errors.push({ error: 'Grade does not exist.' })
     }
@@ -127,6 +128,7 @@ exports.createEmployee = async (req, res) => {
         {
           ...basicInfo,
           password,
+          isActive: true,
           image: imagePath,
           id_image: idImagePath,
           CompanyId: Number(req.user.id),
@@ -153,12 +155,10 @@ exports.createEmployee = async (req, res) => {
         { transaction: t }
       )
 
-
       const junctionPosition = await EmployeePosition.create(
         {
           EmployeeId: Number(createEmployee.id),
-          PositionId: Number(position.id),
-          
+          PositionId: Number(position.id)
         },
         { transaction: t }
       )
@@ -175,7 +175,8 @@ exports.createEmployee = async (req, res) => {
       const createdEmergencyInfos = await EmergencyContact.bulkCreate(
         emergencyInfo.map(info => ({
           ...info,
-          isActive: true
+          isActive: true,
+          EmployeeId: createEmployee.id
         })),
         { transaction: t }
       )
@@ -189,7 +190,7 @@ exports.createEmployee = async (req, res) => {
         accountInformation.map((info, index) => ({
           ...info,
           EmployeeId: createEmployee.id,
-          isActive: info.isActive || false,
+          isActive: info.isActive || true,
           image: accountImages[index]
         })),
         { transaction: t }
@@ -257,8 +258,14 @@ exports.updateEmployee = async (req, res) => {
   const transaction = await sequelize.transaction()
 
   try {
-    const { basicSalary, position, grossEarning, DepartmentId, GradeId, employement_Type } =
-      req.body;
+    const {
+      basicSalary,
+      position,
+      grossEarning,
+      DepartmentId,
+      GradeId,
+      employement_Type
+    } = req.body
 
     console.log('GradeID ', grossEarning)
 
@@ -318,12 +325,14 @@ exports.updateEmployee = async (req, res) => {
           {
             isActive: true,
             EmployeeId: Number(employee.id),
-            basicSalary: basicSalary? basicSalary: employeeInfo?.basicSalary,
-            grossEarning:grossEarning?grossEarning: employeeInfo?.grossEarning,
+            basicSalary: basicSalary ? basicSalary : employeeInfo?.basicSalary,
+            grossEarning: grossEarning
+              ? grossEarning
+              : employeeInfo?.grossEarning,
             position: employeeInfo?.position,
             employement_Type: employeeInfo?.employement_Type,
             employeeTIN: employeeInfo?.employeeTIN,
-            
+
             hireDate: employeeInfo?.hireDate
           },
           { transaction }
@@ -873,50 +882,220 @@ exports.promotion = async (req, res, next) => {
   }
 }
 
-
-exports.updatedBasicInfo= async(req,res,next)=>{
-
+exports.updatedBasicInfo = async (req, res, next) => {
   const transaction = await sequelize.transaction()
   try {
+    const id = req.params.id
+    const { fullname, marriageStatus, id_type, id_image } = req.body
+    let imagePath = null
 
-    const id= req.params.id;
-    const {fullname,marriageStatus,id_type,idImage} = req.body;
-    let imagePath=null;
-
-    const employee = await Employee.findByPk(Number(id));
+    const employee = await Employee.findByPk(Number(id))
     if (!employee) {
       return res.status(404).json({
         error: 'Employee does not exist.'
       })
     }
-  console.log("data",req?.files?.idImage[0]?.path || null);
+    console.log('data', req?.files?.id_image?.[0]?.path || null)
 
-  const data=req?.files?.idImage[0]?.path;
- const idImagePath = data ? data: null
+    const data = req?.files?.id_image?.[0]?.path
+    const idImagePath = data ? data : null
 
- if(idImagePath !=null){
-     const updateEmployee = await employee.update(
-       {  id_image: idImagePath },
-       { transaction }
-     );
-     await transaction.commit()
-     return res.status(200).json(updateEmployee);
-
-     }
-
-
-console.log(req?.files?.idImage[0].path? req?.files?.idImage[0].path: null );
- 
+    if (idImagePath != null) {
+      const updateEmployee = await employee.update(
+        {
+          id_image: idImagePath,
+          id_type: id_type ? id_type : employee.id_type,
+          fullname: fullname ? fullname : employee.fullname,
+          marriageStatus: marriageStatus
+            ? marriageStatus
+            : employee.marriageStatus
+        },
+        { transaction }
+      )
+    } else {
+      const updateEmployee = await employee.update(
+        {
+          id_type: id_type ? id_type : employee.id_type,
+          fullname: fullname ? fullname : employee.fullname,
+          marriageStatus: marriageStatus
+            ? marriageStatus
+            : employee.marriageStatus
+        },
+        { transaction }
+      )
+    }
+    await transaction.commit()
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: 'Employee basic information updated successfully'
+      })
+  } catch (error) {
+    // console.log(req?.files?.idImage[0].path? req?.files?.idImage[0].path: null );
 
     // console.log(req?.files?.imagePath1);
     // const idImagePath = req.files?.['image']
     // ? req.files?.['image']?.[0]?.path
     // : employee.image
 
+    console.log(error)
+    await transaction.rollback()
+    return next(createError.createError(500, 'Internal server error'))
+  }
+}
 
+exports.updateTermination = async (req, res, next) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const id = req.params.id
+    const { terminantionDate, terminationReason, terminationNotes } = req.body
+
+    console.log(id, terminantionDate, terminationReason, terminationNotes)
+    if (!terminantionDate || !terminationReason) {
+      return next(
+        createError.createError(
+          500,
+          'Please enter a valid termination date and  termination reason'
+        )
+      )
+    }
+
+    const employeeInfo = await EmployeeInfo.findOne({
+      where: { EmployeeId: id }
+    })
+
+    if (!employeeInfo) {
+      return next(createError.createError(404, 'Employee not found'))
+    }
+
+    if (employeeInfo) {
+      const updatedData = await employeeInfo.update(
+        { isActive: false },
+        { transaction }
+      )
+    }
+    console.log('department', employeeInfo)
+    const newEmployeeInfo = await EmployeeInfo.create(
+      {
+        isActive: true,
+        EmployeeId: Number(id),
+        basicSalary: employeeInfo.basicSalary,
+        grossEarning: employeeInfo.grossEarning,
+        position: employeeInfo.position,
+        employement_Type: employeeInfo.employement_Type,
+        employeeTIN: employeeInfo.employeeTIN,
+        terminantionDate: terminantionDate
+          ? terminantionDate
+          : employeeInfo.terminantionDate,
+        terminationReason: terminationReason
+          ? terminationReason
+          : employeeInfo.terminationReason,
+        terminationNotes: terminationNotes
+          ? terminationNotes
+          : employeeInfo.terminationNotes,
+        hireDate: employeeInfo.hireDate
+      },
+      { transaction }
+    )
+    await transaction.commit()
+    // newEmployeeInfo.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Employee basic information updated successfully'
+    })
   } catch (error) {
     console.log(error)
     await transaction.rollback()
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(500, 'Internal Server Error'))
+  }
+}
+
+exports.updateEmergencyContact = async (req, res, next) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const employeeId = req.params.employeeId
+    const updatedEmergencyInfo = req.body.EmergencyInfo
+    const updatedRecords = []
+
+    for (const item of updatedEmergencyInfo) {
+      const { id, ...updatedData } = item
+
+      // Check if a record with the given id exists
+      const existingRecord = await EmergencyContact.findOne(
+        { where: { id: id, EmployeeId: employeeId } },
+        { transaction }
+      )
+
+      if (existingRecord) {
+        // If the record exists, update it with the provided data
+        await existingRecord.update(updatedData, { transaction })
+        updatedRecords.push(existingRecord)
+      } else {
+        // If the record doesn't exist, throw an error or handle it accordingly
+        // throw new Error(`Record with ID ${id} does not exist.`);
+        await transaction.rollback()
+        return next(
+          createError.createError(404, `Record with ID ${id} does not exist`)
+        )
+      }
+    }
+    await transaction.commit()
+    return res.status(200).json({
+      success: true,
+      message: 'updated successfully',
+      updatedRecords
+    })
+    // The updatedRecords array now contains the updated records
+    // console.log(updatedRecords);
+  } catch (error) {
+    console.log(error)
+    await transaction.rollback()
+    return next(createError.createError(500, 'Internal Server Error'))
+  }
+}
+
+exports.updateAccountInfo = async (req, res, next) => {
+  const transaction = await sequelize.transaction()
+  try {
+    const employeeId = req.params.employeeId
+    const { accountId, accountNumber, accountImage, isVerified } = req.body
+    if (!accountNumber) {
+      return next(createError.createError(400, 'please insert account number'))
+    }
+
+    const accountInfo = await AccountInfo.findOne({
+      where: { id: accountId, EmployeeId: employeeId ,isActive: true}
+    })
+
+    if (!accountInfo) {
+      return next(createError.createError(404, 'Account not found'))
+    }
+    const data = req?.files?.accountImage?.[0]?.path
+    const imagePath = data ? data : null
+
+    if (imagePath != null) {
+      await accountInfo.update({ isActive: false }, { transaction })
+      await AccountInfo.create(
+        { isActive: true, accountNumber: accountNumber, image: imagePath,isVerified:isVerified?isVerified:false,EmployeeId:employeeId },
+        { transaction }
+      )
+    } else {
+      await accountInfo.update({ isActive: false }, { transaction })
+      await AccountInfo.create(
+        { isActive: true, accountNumber: accountNumber,isVerified:isVerified?isVerified:false,EmployeeId:employeeId },
+        { transaction }
+      )
+    }
+    await transaction.commit()
+    return res.status(200).json({
+      success: true,
+      message: 'Account information updated successfully'
+    })
+  } catch (error) {
+    console.log(error)
+    await transaction.rollback()
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 }

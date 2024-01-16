@@ -3,6 +3,8 @@ const sequelize = require("../database/db.js");
 const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
 
+const EmployeeHistory= require("./employeeHistory.js")
+
 const Employee = sequelize.define("Employee", {
   fullname: {
     type: DataTypes.STRING,
@@ -121,38 +123,39 @@ Employee.beforeUpdate((employee, options) => {
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
 
-
-
 Employee.beforeUpdate(async (employee, options) => {
   // Check if isActive is being updated
-  if (employee.changed("isActive")) {
+  // if (employee.changed("isActive")) {
     // Create a history record before updating the employee
+    const existingEmployee = await Employee.findByPk(employee.id);
+    console.log(existingEmployee.phoneNumber)
     await EmployeeHistory.create({
       // Map the fields you want to track
-      fullname: employee.fullname,
-      image: employee.image,
-      sex: employee.sex,
-      date_of_birth: employee.data_of_birth,
-      role: employee.role,
-      nationality: employee.nationality,
-      marriageStatus: employee.marriageStatus,
-      employee_id_number: employee.employee_id_number,
-      email: employee.email,     
-      phoneNumber: employee.phoneNumber,
-      optionalNumber:employee.optionalNumber,
-      id_image: id_image,
-      id_type: employee.id_type,
-      id_Number:employee.id_Number,
-      isDeactivated: employee.isDeactivated,
-      hireDate: employee.hireDate,
-      joiningDate:employee.joiningDate,
-      password: employee.password,
-      
-      isActive: employee.isActive,
-      originalEmployeeId: employee.id,
+      fullname: existingEmployee.fullname,
+      image: existingEmployee.image,
+      sex: existingEmployee.sex,
+      date_of_birth: existingEmployee.date_of_birth,
+      role: existingEmployee.role,
+      nationality: existingEmployee.nationality,
+      marriageStatus: existingEmployee.marriageStatus,
+      employee_id_number: existingEmployee.employee_id_number,
+      email: existingEmployee.email,     
+      phoneNumber: existingEmployee.phoneNumber,
+      optionalNumber: existingEmployee.optionalNumber,
+      id_image: existingEmployee.id_image,
+      id_type: existingEmployee.id_type,
+      id_Number: existingEmployee.id_Number,
+      isDeactivated: existingEmployee.isDeactivated,
+      hireDate: existingEmployee.hireDate,
+      joiningDate: existingEmployee.joiningDate,
+      password: existingEmployee.password,      
+      isActive: false,
+      originalEmployeeId: existingEmployee.id,
+      EmployeeId: employee.id,
+      CompanyId: employee.CompanyId,
       changeTimestamp: new Date(),
     });
-  }
+  // }
 });
 
 
