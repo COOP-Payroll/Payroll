@@ -8,6 +8,18 @@ router.get(
     projects.getAllProjects
   );
 
+
+  router.get(
+    "/available-projects/:positionId",
+    middleware.protectAll,
+    projects.getUnassignedProjects
+  );
+
+  router.get(
+    "/getprojects/:employeeId",
+    middleware.protectAll,
+    projects.getAllProjectUnderTheEmployee
+  );
   router.get(
     "/:id",
     middleware.protectAll,
@@ -59,6 +71,7 @@ router.get(
     middleware.protectAll,
     projects.updateProjects
   );
+
 
   
 module.exports=router;

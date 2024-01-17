@@ -2,8 +2,8 @@ const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
 const Package = require("./package.js");
-const Employee=require("./employee.js");
-const EmployeePosition = require("./employeePosition.js");
+// const Employee=require("./employee.js");
+// const EmployeePosition = require("./employeePosition.js");
 const Projects=require('./projects.js');
 const PositionProjectAssociation = require("./positionProjectAssociation.js");
 
@@ -26,8 +26,8 @@ const Position = sequelize.define("Position", {
 // });
 
 
-Position.belongsToMany(Employee, { through: EmployeePosition });
-Employee.belongsToMany(Position, { through: EmployeePosition });
+// Position.belongsToMany(Employee, { through: EmployeePosition });
+// Employee.belongsToMany(Position, { through: EmployeePosition });
 
 Company.hasMany(Position);
 Position.belongsTo(Company);

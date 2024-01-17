@@ -46,7 +46,6 @@ const signTokenCompany = (id, isProjectBased,isSetted,role) => {
 };
 
 
-
 const createSendTokenCompany = async (company, statusCode, res) => {
   try {
 
@@ -73,8 +72,6 @@ const createSendTokenCompany = async (company, statusCode, res) => {
     return res.status(500).json({ message: error.name });
   }
 };
-
-
 const createSendToken = async (company, statusCode, res) => {
   try {
     const {token,refreshToken} = signToken(company.id, company.role);
@@ -287,3 +284,6 @@ exports.refreshToken = async (req, res, next) => {
     next(createError.createError(500, error.message))
   }
 }
+
+
+

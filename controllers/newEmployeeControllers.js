@@ -254,7 +254,7 @@ exports.createEmployee = async (req, res) => {
   }
 }
 
-exports.updateEmployee = async (req, res) => {
+exports.updateEmployee = async (req, res,next) => {
   const transaction = await sequelize.transaction()
 
   try {
@@ -266,7 +266,7 @@ exports.updateEmployee = async (req, res) => {
       GradeId,
       employement_Type
     } = req.body
-
+const status=false;
     console.log('GradeID ', grossEarning)
 
     const employee = await Employee.findByPk(
@@ -282,14 +282,34 @@ exports.updateEmployee = async (req, res) => {
               },
               attributes: []
             }
-          }
+          },
+          {
+            model: Department,
+            through: {
+              model: EmployeeDepartment,
+              where: {
+                active: true
+              },
+              attributes: []
+            }
+          },
+          {
+            model: Position,
+            through: {
+              model: EmployeePosition,
+              where: {
+                isActive: true
+              },
+              // attributes: []
+            }
+          },
         ]
       },
       {
         transaction
       }
     )
-
+// return res.json(employee)
     // console.log('employee',employee)
     if (!employee) {
       await transaction.rollback()
@@ -297,71 +317,109 @@ exports.updateEmployee = async (req, res) => {
     }
 
     const errors = []
-    let department, grade
+    let department ,grade,positionID
+    
+   
+// if (GradeId) {
+  
+//    grade = await Grade.findOne({ where: { id: GradeId } })
 
-    if (basicSalary) {
-      console.log('basicsalary', basicSalary)
-      if (
-        basicSalary < employee.Grades[0]?.minSalary ||
-        basicSalary > employee.Grades[0]?.maxSalary
-      ) {
-        errors.push({
-          error: `Basic salary must be between ${employee.Grades[0]?.minSalary} and ${employee.Grades[0]?.maxSalary}`
-        })
-      } else {
-        const employeeInfo = await EmployeeInfo.findOne({
-          where: { EmployeeId: Number(employee.id), isActive: true }
-        })
-        // return res.status(200).json({data:employeeInfo.basicSalary
-        // })
-        if (employeeInfo) {
-          const updatedData = await employeeInfo.update(
-            { isActive: false },
-            { transaction }
-          )
-        }
-        // console.log("department",DepartmentId)
-        const newEmployeeInfo = await EmployeeInfo.create(
-          {
-            isActive: true,
-            EmployeeId: Number(employee.id),
-            basicSalary: basicSalary ? basicSalary : employeeInfo?.basicSalary,
-            grossEarning: grossEarning
-              ? grossEarning
-              : employeeInfo?.grossEarning,
-            position: employeeInfo?.position,
-            employement_Type: employeeInfo?.employement_Type,
-            employeeTIN: employeeInfo?.employeeTIN,
+//      if (!grade) {
+//     status=true
+//   }
+//   if (basicSalary) {
+//     if (basicSalary < grade?.minSalary || basicSalary > grade?.maxSalary) {
+//       return next(
+//         createError.createError(
+//           409,
+//           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+//         )
+//       )
+//     }
+//   } else {if(employee.basicSalary < grade?.minSalary || employee.basicSalary > grade?.maxSalary) {
+//       return next(
+//         createError.createError(
+//           409,
+//           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+//         )
+//       )
+//     }
+//   }
+// }
+//     if (basicSalary) {
+//       if(status){
+//         console.log('basicsalary', basicSalary)
+//         if (
+//           basicSalary < employee.Grades[0]?.minSalary ||
+//           basicSalary > employee.Grades[0]?.maxSalary
+//         ) {
 
-            hireDate: employeeInfo?.hireDate
-          },
-          { transaction }
-        )
+//        return next(createError.createError(400, `Basic salary must be between ${employee.Grades[0]?.minSalary} and ${employee.Grades[0]?.maxSalary}`
+//           ))
+//         } 
+//       }
+        
+//       else {
+        
+//         const employeeInfo = await EmployeeInfo.findOne({
+//           where: { EmployeeId: Number(employee.id), isActive: true }
+//         },{transaction})
+//         // return res.status(200).json({data:employeeInfo.basicSalary
+//         // })
+//         if (employeeInfo) {
+//           const updatedData = await employeeInfo.update(
+//             { isActive: false },
+//             { transaction }
+//           )
+//         }
+//         // console.log("department",DepartmentId)
+//         const newEmployeeInfo = await EmployeeInfo.create(
+//           {
+//             isActive: true,
+//             EmployeeId: Number(employee.id),
+//             basicSalary: basicSalary ? basicSalary : employeeInfo?.basicSalary,
+//             grossEarning: grossEarning
+//               ? grossEarning
+//               : employeeInfo?.grossEarning,
+//             position: employeeInfo?.position,
+//             employement_Type: employeeInfo?.employement_Type,
+//             employeeTIN: employeeInfo?.employeeTIN,
 
-        // newEmployeeInfo.save();
-      }
-    }
+//             hireDate: employeeInfo?.hireDate
+//           },
+//           { transaction }
+//         )
 
-    if (position) {
-      const employeeInfo = await EmployeeInfo.findOne({
-        where: { EmployeeId: Number(employee.id), isActive: true }
-      })
-      console.log('employee', employeeInfo.basicSalary)
-      if (employeeInfo) {
-        await employeeInfo.update({ isActive: false }, { transaction })
-      }
-      const newEmployeeInfo = await EmployeeInfo.create(
-        {
-          isActive: true,
-          EmployeeId: Number(employee.id),
-          position,
-          employement_Type: employeeInfo.employement_Type,
-          employeeTIN: employeeInfo.employeeTIN,
-          basicSalary: employeeInfo.basicSalary
-        },
-        { transaction }
-      )
-    }
+//         // newEmployeeInfo.save();
+//       }
+//     }
+
+    // if (position) {
+
+    //   console.log(employee.Positions?.[0]?.id != position)
+    //   if(employee.Positions?.[0]?.id != position) {
+    //     console.log("helloo")
+    //   const foundPosition= await Position.findOne({where: {id: position, companyId:req.user.id}},{transaction});
+    //   if(!foundPosition){
+    //    return next(createError.createError(404, 'Position not found'));
+    //   }
+    //    const employeeInfo = await EmployeePosition.findOne({
+    //     where: { EmployeeId: Number(employee.id), isActive: true }
+    //   })
+    //   // console.log('employee', employeeInfo.basicSalary)
+    //   if (employeeInfo) {
+    //     await employeeInfo.update({ isActive: false }, { transaction })
+    //   }
+    //   const newEmployeeInfo = await EmployeePosition.create(
+    //     {
+    //       isActive: true,
+    //       EmployeeId: Number(employee.id),
+    //       PositionId:position,
+    //       // CompanyId:req.user.id
+    //             },
+    //     { transaction }
+    //   )}
+    // }
 
     if (DepartmentId) {
       department = await Department.findByPk(Number(DepartmentId))
@@ -371,19 +429,6 @@ exports.updateEmployee = async (req, res) => {
       }
     }
 
-    if (GradeId) {
-      grade = await Grade.findByPk(Number(GradeId))
-      if (!grade) {
-        errors.push('Grade does not exist.')
-      }
-    }
-
-    if (errors.length > 0) {
-      await transaction.rollback()
-      return res.status(400).json({ errors })
-    }
-
-    // console.log("employee files", req.files);
 
     const imagePath = req.files?.['image']
       ? req.files?.['image']?.[0]?.path
@@ -477,7 +522,16 @@ exports.getAllEmployee = async (req, res) => {
           model: Company,
           required: false
         },
-
+        {
+          model: Position,
+          required: false,
+          through: {
+            model: EmployeePosition,
+            where: {
+              active: true
+            }
+          }
+        },
         {
           model: EmployeeInfo,
           required: false
@@ -510,10 +564,10 @@ exports.getAllEmployee = async (req, res) => {
           model: Grade,
 
           through: {
-            model: EmployeeGrade
-            // where: {
-            //   active: true,
-            // },
+            model: EmployeeGrade,
+            where: {
+              active: true,
+            },
           },
 
           include: [

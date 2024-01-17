@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
-const ServiceModel=require("../models/services.js")
+// const ServiceModel=require("../models/services.js")
 const Package = sequelize.define("Package", {
   
   packageName: {

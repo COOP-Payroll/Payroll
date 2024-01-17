@@ -15,10 +15,12 @@ const PositionProjectAssociation = require('../models/positionProjectAssociation
 const EmployeeInfo = require('../models/employeInfo.js')
 const ProjectEmployee = require('../models/project-employee.js')
 const EmployeePosition = require('../models/employeePosition.js')
-
+const { Op } = require('sequelize');
 const ProjectEmployeeHistory=require("../models/projectEmployeeHistory.js");
 const ProjectPositionHistory = require('../models/projectPositionHistory.js');
 const Position = require('../models/position.js');
+const { Sequelize } = require('sequelize');
+
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res, next) => {
   try {
@@ -212,6 +214,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
    }})
 
    if (chechEmployeAssociation) {
+    await transaction.rollback();
     return next(createError.createError(404,`Employee already  associated with the project`))
  
     }
@@ -226,7 +229,8 @@ exports.assignProjectToEmployee = async (req, res, next) => {
 
    const count= await ProjectEmployee.count({
       where: {
-        ProjectId: 1,
+        ProjectId: projectId
+        ,
       },
       include: [
         {
@@ -236,7 +240,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
             {
               model: Positions, // Assuming you have a Positions model
               where: {
-                id: 1,
+                id: employee.Positions[0].id,
                 
                 
               },
@@ -248,13 +252,14 @@ exports.assignProjectToEmployee = async (req, res, next) => {
     });
   
     if (!positionProjectAssociations) {
-
+      await transaction.rollback();
       return next(createError.createError(404,`Position  is not associated with the project`))
       // console.error(`Position with ID  is not associated with the project`);
         }
    
         console.log("check", count)
       if(positionProjectAssociations?.noOfEmployees  <= count){
+        await transaction.rollback();
         return next(createError.createError(409, "The maximum number of employees for the project for this position has been reached"));
 
       }      
@@ -273,11 +278,16 @@ exports.assignProjectToEmployee = async (req, res, next) => {
           gross: grossValue
         },{transaction}
         )
-        
-        
+await positionProjectAssociations.update(
+  { noOfAssignedEmployees: positionProjectAssociations.noOfAssignedEmployees+1 },
+  // { where: { PositionId: employee.Positions[0].id } },
+  { transaction }
+)
+       
         await transaction.commit();
         console.log('Total percent incremented successfully');
       } else {
+        await transaction.rollback();
         return next(createError.createError(400,`Total percent cannnot exceeds 100.currently you have reached  ${employee.totalPercent} percent  Cannot assign more projects.`))
   
      }
@@ -875,5 +885,102 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
 console.log(error);
 await transaction.rollback();
 return next(createError.createError(500, 'Internal server error'));    
+  }
+}
+
+
+exports.getUnassignedProjects=async (req, res, next) => {
+  try {
+    const   positionId=req.params.positionId;
+
+    if (!positionId)
+      return next(
+        createError.createError(400, 'Please enter required fields')
+      );
+      const foundPosition=await Position.findAll({
+        where:{id:positionId},
+        include:[
+          {
+            model: Projects,
+            required: false,
+            through: {
+              model: PositionProjectAssociation,
+              where: {
+                
+                PositionId: positionId,
+                [Op.and]: [
+                  { noOfAssignedEmployees: { [Op.lt]: Sequelize.col('noOfEmployees') } },
+                  { isActive: true },]
+              
+              
+              }
+            },
+            include:[
+              {
+                model: Employee,
+                required: false,
+              
+              }
+            ]
+          },
+        ]
+      
+      }
+
+      )
+
+
+      // const positionfound = await Position.findAll({where: {id:positionId}},
+      //  { 
+      //    include:[
+            
+      //    ]}
+        
+      //   );
+      // const projects = await PositionProjectAssociation.findAll({
+      //   where: {
+      //     PositionId: positionId,
+      //     [Op.and]: [
+      //       { noOfAssignedEmployees: { [Op.lt]: Sequelize.col('noOfEmployees') } },
+      //       { isActive: true },
+      //     ],
+      //   },
+      //   // include:[Positions]
+      // });
+      
+      return res.status(200).json(foundPosition  )
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal server error'));
+    
+  }
+}
+
+
+
+exports.getAllProjectUnderTheEmployee= async(req,res,next)=>{
+  try {
+    console.log("data")
+    const  employeeId  = req.params.employeeId;
+
+    const employee= await Projects.findAll(
+       {include:[{
+        model:ProjectEmployee,  
+      where: { EmployeeId: employeeId,isActive:true
+      }
+      
+       }
+       ]
+       }
+      
+      )
+    if(!employee){
+      console.log(error)
+      return next(createError.createError(404, 'Employee not found'));
+    }
+    return res.status(200).json(employee)
+   } catch (error) {
+    console.log(error) 
+    return next(createError.createError(500, 'Internal server error'));
   }
 }

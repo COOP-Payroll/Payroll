@@ -24,6 +24,7 @@ const EmployeeGrade = require("../models/EmployeeGrade");
 const { run } = require("../utils/checkSubscriptionPlan.js");
 const { child } = require("winston");
 const { error } = require("shelljs");
+const AccountInfo = require("../models/accountInfo.js");
 
 exports.createPayroll1 = async (req, res,next) => {
   try {
@@ -420,6 +421,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
     if (!payrollDef)
       return res.status(404).json({ error: "payroll not found" });
     const employees = await Employee.findAll({
+      attributes:['id','fullname'],
       include: [
         {
           model: Payroll,
@@ -428,6 +430,13 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
             PayrollDefinitionId: id, // Filter for payroll records of the specific month
           },
         },
+        {
+          model: EmployeeInfo,
+          attributes:['id',"basicSalary","grossEarning"],
+          where: { isActive: true },
+          required: false
+        },
+
         {
           model: Grade,
           include: [
@@ -441,6 +450,25 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
             },
           ],
         },
+        {
+          model: AccountInfo,
+          where:{isActive:true},
+          required: false,
+          attributes:['accountNumber','id']
+        },
+        {
+          model: Loan,
+          required: false
+        },
+       
+        {
+          model: AdditionalAllowances,
+          include: [AdditionalAllowanceDefinition]
+        },
+        {
+          model: AdditionalDeduction,
+          include: [AdditionalDeductionDefinition]
+        }
       ],
       where: {
         "$Payroll.id$": null, // Filter for records where the payroll ID is null
