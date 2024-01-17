@@ -37,7 +37,7 @@ exports.createEmployee = async (req, res) => {
   try {
     const [position, grade, department, employee, accountInfos, idformat] =
       await Promise.all([
-        Position.findByPk(Number(employeeInfo.position)),
+        Position.findOne({where:{id:Number(employeeInfo.position), companyid:req.user.id}}),
         Grade.findByPk(Number(basicInfo?.GradeId)),
         Department.findByPk(Number(basicInfo?.DepartmentId)),
         Employee.findOne({ where: { email: basicInfo?.email } }),

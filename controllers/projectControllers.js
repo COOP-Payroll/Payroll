@@ -15,7 +15,7 @@ const PositionProjectAssociation = require('../models/positionProjectAssociation
 const EmployeeInfo = require('../models/employeInfo.js')
 const ProjectEmployee = require('../models/project-employee.js')
 const EmployeePosition = require('../models/employeePosition.js')
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const ProjectEmployeeHistory=require("../models/projectEmployeeHistory.js");
 const ProjectPositionHistory = require('../models/projectPositionHistory.js');
 const Position = require('../models/position.js');
@@ -203,7 +203,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
     
    ]
     });
-
+// return res.status(200).json(employee?.Positions?.[0]?.id)
     if (!employee) {
       return next(createError.createError(404, 'Employee not found'))
     }
@@ -219,11 +219,11 @@ exports.assignProjectToEmployee = async (req, res, next) => {
  
     }
 
-   
+  //  console.log(employee?.Positions?.[0].EmployeePosition?.id)
     const positionProjectAssociations = await PositionProjectAssociation.findOne({
       where: {
         projectId: projectId,
-        positionId:employee.Positions[0].id,
+        positionId:employee?.Positions?.[0]?.id
       },
     });    
 
@@ -240,8 +240,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
             {
               model: Positions, // Assuming you have a Positions model
               where: {
-                id: employee.Positions[0].id,
-                
+                id: employee?.Positions?.[0]?.id           
                 
               },
             },
@@ -387,7 +386,7 @@ exports.assignPositionToProject = async (req, res, next) => {
     console.log('Positions added to the project successfully!')
     return res.status(200).json({
       success: true,
-      message: 'successfull assigned'
+      message: 'Successfully assigned'
     })
   } catch (error) {
     console.log(error)
@@ -730,7 +729,23 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
           id: employeeId,
           companyId:req.user.id
         },
+                    // attributes:['id','totalPercent'],
+        include:[
+          {
+            model:Positions,  
+
+            through:{
+              model:EmployeePosition,
+              // attributes:['noOfEmployees','maximumPercentAllocation','remainingEmployees']?
+              where:{isActive:true}
+            }        
+           
+         
+          }
+        ]
       })
+// return res.status(200).json(employee?.totalPercent)
+      
 // await employee.update({totalPercent:0})
       if(!employee){
         return next(createError.createError(404, 'Employee not found'))
@@ -755,11 +770,19 @@ if(!projects){
     });
 
 
-// console.log(projectEmployee.percent)
+console.log("projectEmployee.percent",req.user.id)
     if (!projectEmployee) {
+      // await transaction.rollback();
       return next(createError.createError(404, 'Employee is not  associated to project'));
     }
 
+
+const positionProjectAssociation = await PositionProjectAssociation.findOne({where: {PositionId:employee?.Positions?.[0]?.id ,ProjectId:projectId,isActive:true}});
+// console.log("positionProjectAssociation.percent",positionProjectAssociation)
+if(!positionProjectAssociation){
+  await transaction.rollback();
+  return next(createError.createError(404, 'Position is not associated to the project'))
+}
     // await employee.decrement('totalPercent', { by: employee.totalPercent }, { transaction });
 // console.log(employee)
     
@@ -772,11 +795,19 @@ if(!projects){
       CompanyId:req.user.id,
       isActive: false,
     }, { transaction });
-
-    console.log("employee.totalPercent-projectEmployee.percent",Number(employee.totalPercent))
-    await employee.update({'totalPercent': Number(employee.totalPercent)-Number(projectEmployee.percent)}, { transaction });
+    
+  //  await projectEmployee.setCompany(req.user.id,{transaction})
+    console.log("employee.totalPercent-projectEmployee.percent",Number(employee.totalPercent)-Number(projectEmployee.percent))
+    const data= await employee.update({totalPercent: Number(employee.totalPercent)-Number(projectEmployee.percent)}, { transaction });
+    
+    // console.log("projectEmployeeHistory",data)
     // await projectEmployeeHistory.setCompany({companyId},{transaction});
     await projectEmployee.destroy( { transaction });
+    await positionProjectAssociation.update(
+      { noOfAssignedEmployees: positionProjectAssociation.noOfAssignedEmployees-1 },
+      // { where: { PositionId: employee.Positions[0].id } },
+      { transaction }
+    )
     await transaction.commit(); // Commit the transaction if everything is successful
 
     return res.status(200).json({
@@ -785,8 +816,9 @@ if(!projects){
       // data: projectEmployee.gross,
     });
   } catch (error) {
+    console.error(error.message);
     await transaction.rollback();
-    console.error(error);
+    console.error(error.message);
     return next(createError.createError(500, 'Internal server error'));
   }
 };
@@ -966,7 +998,7 @@ exports.getAllProjectUnderTheEmployee= async(req,res,next)=>{
     const employee= await Projects.findAll(
        {include:[{
         model:ProjectEmployee,  
-      where: { EmployeeId: employeeId,isActive:true
+      where: { EmployeeId: employeeId,isActive:true,CompanyId:req.user.id
       }
       
        }
@@ -984,3 +1016,5 @@ exports.getAllProjectUnderTheEmployee= async(req,res,next)=>{
     return next(createError.createError(500, 'Internal server error'));
   }
 }
+
+// exports.
