@@ -1,7 +1,7 @@
 const Package = require("../models/package.js");
 
 // Define controller methods for handling User requests
-exports.getAllPackages = async (req, res) => {
+exports.getAllPackages = async (req, res,next) => {
   try {
     const packages = await Package.findAll();
 
@@ -11,6 +11,7 @@ exports.getAllPackages = async (req, res) => {
     });
   } 
   catch (error) {
+    console.log(error)
    next(error);
   }
 };
@@ -18,7 +19,7 @@ exports.getAllPackages = async (req, res) => {
 
 exports.getMonthlyPackages = async (req, res,next) => {
 try {
-   const monthlyPackages=await Package.findAll({where:{packageType:"Monthly"}});
+   const monthlyPackages=await Package.findAll({where:{packageType  :"Monthly"}});
 
    res.status(200).json({count: monthlyPackages.length
   ,monthlyPackages

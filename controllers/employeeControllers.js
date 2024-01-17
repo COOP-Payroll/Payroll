@@ -27,7 +27,7 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail.js");
 const createError= require('../utils/error.js')
 // Define controller methods for handling User requests
-
+const Position=require("../models/position.js")
 exports.getAllEmployee = async (req, res,next) => {
   try {
    
@@ -46,6 +46,16 @@ exports.getAllEmployee = async (req, res,next) => {
         {
           model: EmployeeInfo,
           required: false,
+        },
+        {
+          model: Position,
+          required: false,
+          through: {
+            model: EmployeePosition,
+            where: {
+              isActive: true,
+            },
+          },
         },
         {
           model: Department,
@@ -185,6 +195,16 @@ exports.getEmployeeById = async (req, res) => {
         {
           model: Department,
           required: false,
+        },
+        {
+          model: Position,
+          required: false,
+          through: {
+            model: EmployeePosition,
+            where: {
+              isActive: true,
+            },
+          },
         },
         {
           model: CustomRole,
@@ -799,6 +819,7 @@ const AdditionalDeductionDefinition = require("../models/additionlDeductionDefin
 const EmployeeGrade = require("../models/EmployeeGrade.js");
 const EmployeeDepartment = require("../models/EmployeeDepartment.js");
 const Sponsor = require("../models/sponsor.js");
+const EmployeePosition = require("../models/employeePosition.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine

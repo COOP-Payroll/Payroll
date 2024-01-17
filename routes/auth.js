@@ -19,4 +19,9 @@ router.post("/employee/login", authcontroller.login)
 router.post("/auth/refreshToken", authcontroller.refreshToken);
 router.get("/logout", authcontroller.logout)
 
+
+
+// router.post('/forgetPassword', authcontroller.forgotPassword);
+// router.route('/resetPassword/:token').patch(authcontroller.resetPassword);
+// router.route('/updateMyPassword').patch(authcontroller.updatePassword);
 module.exports = router;

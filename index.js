@@ -53,6 +53,7 @@ const ebirrPayment = require("./routes/eBirrPayment.js");
 const position=require("./routes/postionRoutes.js");
 const Sponsors=require("./routes/sponsors.js");
 const Projects=require("./routes/projectRoutes.js");
+const packageRoutes=require("./routes/packageRoutes.js");
 // const stripePayment = require("./routes/stripePayment.js");
 
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
@@ -102,6 +103,7 @@ app.use(cookieParser());
 app.use("/user", userRouter);
 app.use("/company", companyRouter);
 app.use("/package", packageRouter);
+app.use("/packages",packageRoutes)
 app.use("/taxslab", taxslabRouter);
 app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
