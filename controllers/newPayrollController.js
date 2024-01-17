@@ -421,7 +421,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
     if (!payrollDef)
       return res.status(404).json({ error: "payroll not found" });
     const employees = await Employee.findAll({
-      attributes:['id','fullname'],
+      // attributes:['id','fullname'],
       include: [
         {
           model: Payroll,
@@ -432,7 +432,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
         },
         {
           model: EmployeeInfo,
-          attributes:['id',"basicSalary","grossEarning"],
+          // attributes:['id',"basicSalary","grossEarning"],
           where: { isActive: true },
           required: false
         },
@@ -454,7 +454,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
           model: AccountInfo,
           where:{isActive:true},
           required: false,
-          attributes:['accountNumber','id']
+          // attributes:['accountNumber','id']
         },
         {
           model: Loan,
