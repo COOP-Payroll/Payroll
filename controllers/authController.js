@@ -62,10 +62,10 @@ const createSendTokenCompany = async (company, statusCode, res) => {
     res.cookie("jwt", token, cookieOptions);
     res.status(statusCode).json({
 
-      // data: {
-      //   company,
-      //   // refreshToken
-      // },
+      data: {
+        company,
+        // refreshToken
+      },
       token,
       refreshToken
     });
@@ -87,6 +87,10 @@ const createSendToken = async (company, statusCode, res) => {
     company.password = undefined
     res.cookie('jwt', token, cookieOptions)
     res.status(statusCode).json({
+       data: {
+        company,
+        // refreshToken
+      },
       token,
       refreshToken  
     })
