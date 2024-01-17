@@ -16,9 +16,14 @@ const Company = sequelize.define("Company", {
     values: ["pending", "active", "blocked", "denied"],
     defaultValue: "pending",
   },
-  fullName: {
+  organizationName: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'Organization name cannot be null.',
+      },
+    },
   },
   email: {
     type: DataTypes.STRING,
@@ -99,6 +104,23 @@ const Company = sequelize.define("Company", {
   notes: {
     type: DataTypes.STRING,
   },
+
+  accountNumber:{
+    type:DataTypes.STRING,
+  
+  },
+  isProjectBased: {
+
+    type:DataTypes.BOOLEAN,
+    defaultValue:false,
+  },
+  isSetted: {
+    type:DataTypes.BOOLEAN,
+    defaultValue:false,
+  },
+  resetPasswordToken:{
+    type:DataTypes.STRING,
+  }
 });
 
 Company.beforeCreate((company, options) => {
@@ -127,4 +149,6 @@ Company.beforeUpdate((company, options) => {
   }
 });
 
+
+// Company.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Company;

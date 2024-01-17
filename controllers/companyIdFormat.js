@@ -1,4 +1,6 @@
 const IdFormat = require("../models/companyIdFormat");
+const createError = require('.././utils/error.js')
+const successResponse = require('.././utils/successResponse.js')
 
 // create CompanyIdFormat
 exports.createCompanyIdFormat = async (req, res) => {
@@ -15,14 +17,7 @@ exports.createCompanyIdFormat = async (req, res) => {
     await companyIdFormat.setCompany(Number(req.user.id));
     return res.status(201).json(companyIdFormat);
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-      return res.status(400).json(errors);
-    }
-    return res.status(500).json({ error: "Internal server error" });
+    return next(createError.createError(500, 'Internal server error'));
   }
 };
 
@@ -44,7 +39,8 @@ exports.getAllCompanyIdFormat = async (req, res) => {
     // res.json(parsedCompanies);
     return res.status(200).json(parsedCompanies);
   } catch (error) {
-    res.json(error);
+    return next(createError.createError(500, 'Internal server error'));
+  
   }
 };
 
@@ -60,7 +56,7 @@ exports.deleteCompanyIdFormat = async (req, res) => {
       return res.json("Id Format deleted successfully");
     }
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    return next(createError.createError(500, 'Internal server error'));
   }
 };
 
@@ -79,23 +75,12 @@ exports.updateCompanyIdFormat = async (req, res) => {
         return res.status(200).json({ msg: "id format updated successfully" ,
         updatedIdFormat
       });
-      // await idFormat.save();
-      // const companyIdFormat = await IdFormat.create(req.body);
-      // try {
-      //   await companyIdFormat.setCompany(Number(req.user.id));
-      //   return res.status(200).json({ msg: "id format updated successfully" });
-      // } catch (error) {
-      //   // Handle the error during association
-      //   await companyIdFormat.destroy(); // Rollback the created companyIdFormat if association fails
-      //   return res
-      //     .status(500)
-      //     .json({ error: "Error associating id format with companyf" });
-      // }
+   
     } catch (error) {
-      return res.status(500).json(error);
+      return next(createError.createError(500, 'Internal server error'));
     }
   } catch (error) {
-    return res.status(400).json({ error });
+    return next(createError.createError(500, 'Internal server error'));
   }
 };
 
@@ -105,9 +90,9 @@ exports.getActiveCompany = async (req, res) => {
       where: { isActive: true, companyId: Number(req.user.id) },
     });
     if (!activeCompanyId)
-      return res.status(404).json({ error: "there is no active Id format" });
+      return res.status(404).json({ message: "there is no active Id format" });
     res.status(200).json(activeCompanyId);
   } catch (error) {
-    return res.status(500).json({ error });
+    return next(createError.createError(500, 'Internal server error'));
   }
 };

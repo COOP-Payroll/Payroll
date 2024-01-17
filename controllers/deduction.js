@@ -20,16 +20,16 @@ exports.getAllDeduction = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -38,7 +38,12 @@ exports.getDeductionById = async (req, res) => {
   try {
     const { id } = req.params;
     const deduction = await Deduction.findByPk(id);
-    return res.json(deduction);
+    if (!deduction) {
+      return res.status(404).json({ message: "There is no deduction" });
+    }
+    {
+      return res.json(deduction);
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -46,18 +51,16 @@ exports.getDeductionById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-
-      
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -69,7 +72,7 @@ exports.createDeduction = async (req, res, next) => {
     const gradeId = req.body.gradeId;
     const deductinDefinitionId = req.body.deductinDefinitionId;
     console.log(amount, gradeId, deductinDefinitionId);
- 
+
     //   await deduction.setDeductionDefinition(deductionDefinitionId);
     const grade = await Grade.findByPk(gradeId);
     const dedDefinition = await DeductionDefinition.findByPk(
@@ -79,10 +82,9 @@ exports.createDeduction = async (req, res, next) => {
       res.status(404).json("Grade is not defined");
     } else if (!dedDefinition) {
       res.status(404).json("Deduction definition is not defined");
-    } 
-    else {
-         const deduction = await Deduction.create({ amount });
-         await deduction.setCompany(Number(req.user.id));
+    } else {
+      const deduction = await Deduction.create({ amount });
+      await deduction.setCompany(Number(req.user.id));
       await deduction.setGrade(gradeId);
       await deduction.setDeductionDefinition(deductinDefinitionId);
       res.status(200).json({
@@ -98,16 +100,16 @@ exports.createDeduction = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -134,16 +136,16 @@ exports.updateDeduction = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -167,16 +169,16 @@ exports.deleteDeduction = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };

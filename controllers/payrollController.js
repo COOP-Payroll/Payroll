@@ -14,11 +14,13 @@ let completedWorkers = 0;
 let clients = [];
 
 const runWorker = (employeeId, req, payrollDefinitionId) => {
+
   const worker = new Worker("./controllers/newWorker.js", {
-    workerData: { employeeId, user: req.user.id, payrollDefinitionId },
+    workerData: { user: req.user.id, employeeId, payrollDefinitionId },
   });
 
   const handleProgress = (message) => {
+    console.log("first message", message);
     completedWorkers++;
     const progress = ((completedWorkers / totalWorkers) * 100).toFixed(2);
     const data = JSON.stringify({
@@ -76,6 +78,7 @@ exports.createPayroll = async (req, res) => {
   const { payrollDefinitionId, employeeIds } = req.body;
   const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
   totalWorkers = employeeIds.length;
+
   if (!payrolldef) {
     return res.status(404).json({ error: "payroll is not defined" });
   }
@@ -86,6 +89,9 @@ exports.createPayroll = async (req, res) => {
 
   const ws = new WebSocket.Server({ port: 8080 });
 
+
+ 
+// console.log("websocket",ws);
   ws.on("connection", (client) => {
     console.log("hey");
     clients.push(client);
@@ -97,6 +103,7 @@ exports.createPayroll = async (req, res) => {
   res.on("close", () => {
     ws.close();
   });
+  // employeeIds.forEach((employeeId) => console.log("employeeId", employeeId));
 
   employeeIds.forEach((employeeId) =>
     runWorker(employeeId, req, payrollDefinitionId)
@@ -185,7 +192,7 @@ exports.getAllPayroll = async (req, res, next) => {
         acc[err.path] = [`${err.path} is required`];
         return acc;
       }, {});
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
       // Handle other errors
       res.status(500).json({ error: "Failed to create account info" });
@@ -230,12 +237,13 @@ exports.employeePaySlip = async (req, res, next) => {
     if (payrolls.length === 0) {
       return res.status(404).json("there is no payroll ");
     } else {
-      // const payslip= await Payroll.
-      res.status(200).json({
+         res.status(200).json({
         count: payrolls.length,
         payrolls,
         createdDate: moment(payrolls[0].createdAt).format("YYYY-MM-DD"),
       });
     }
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };

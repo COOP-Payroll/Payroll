@@ -9,41 +9,66 @@ exports.getAllPackages = async (req, res) => {
       count: packages.length,
       packages,
     });
-  } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(400).json(errors);
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(400).json(errors);
-    } else {
-      console.log("first", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
+  } 
+  catch (error) {
+   next(error);
   }
 };
+
+
+exports.getMonthlyPackages = async (req, res,next) => {
+try {
+   const monthlyPackages=await Package.findAll({where:{packageType:"Monthly"}});
+
+   res.status(200).json({count: monthlyPackages.length
+  ,monthlyPackages
+  }
+    
+    );
+
+  
+} catch (error) {
+  console.log(error);
+  next(error);
+}
+
+}
+
+
+
+exports.getYearlyPackages = async (req, res,next) => {
+  try {
+     const yearlyPackages=await Package.findAll({where:{packageType:"Yearly"}});
+  
+     res.status(200).json({count: yearlyPackages.length
+    ,yearlyPackages
+    }
+      
+      );
+  
+    
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+  
+  }
 
 exports.getpackageById = async (req, res) => {
   try {
     const { id } = req.params;
     const package = await Package.findByPk(id);
     return res.json(package);
-  } catch (er) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    next(error);
   }
 };
 
 exports.createPackage = async (req, res, next) => {
   try {
+    
     const {
+      packageType,
       packageName,
       min_employee,
       max_employee,
@@ -53,43 +78,48 @@ exports.createPackage = async (req, res, next) => {
       isTrial,
     } = req.body;
 
-    const packages = await Package.create({
-      packageName,
-      price,
-      max_employee,
-      min_employee,
-      service,
-      discount,
-      isTrial,
+    const existingPackage = await Package.findOne({
+      where: {
+        packageType:packageType,
+        packageName: packageName,
+        max_employee: max_employee,
+        min_employee: min_employee,
+        price: price,
+      },
     });
-    return res.status(200).json({
-      message: "Successfully Registered",
-      packages,
-    });
-  } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
 
-      return res.status(400).json(errors);
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
+    if (existingPackage) {
+      return res.status(409).json({
+        message: "Package already created ",
       });
-
-      return res.status(400).json(errors);
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      const packages = await Package.create({
+        packageType,
+        packageName,
+        price,
+        max_employee,
+        min_employee,
+        service,
+        discount,
+        isTrial,
+      });
+
+  
+      return res.status(200).json({
+        message: "Successfully Registered",
+        packages,
+      });
     }
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 };
 
 exports.updatePackage = async (req, res, next) => {
   try {
     const {
+      packageType,
       packageName,
       min_employee,
       max_employee,

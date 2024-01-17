@@ -184,7 +184,7 @@ exports.createApprover = async (req, res) => {
     console.log(approvalMethodCount);
     //add company id to get employee
     const employeeCount = await Employee.count({
-      where: { id: req.body.EmployeeId,CompanyId:req.user.id},
+      where: { id:req.body.EmployeeId,CompanyId:req.user.id},
     });
     console.log("this employee is", employeeCount);
 
@@ -681,6 +681,8 @@ exports.deleteApprover = async (req, res) => {
     res.status(500).json({ error: "Failed to delete Approver" });
   }
 };
+
+
 
 exports.deactiveApprover = async (req, res) => {
   const approverId = req.body.approverId;

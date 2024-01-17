@@ -5,11 +5,13 @@ const jwt = require("jsonwebtoken");
 const Employee = require("../models/employee");
 const CustomRole = require("../models/customRole");
 const Permission = require("../models/permission.js");
+const createError = require('.././utils/error.js'); 
 
 exports.protectAll = async (req, res, next) => {
   try {
     //getting token check if its there
     let token;
+
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
@@ -19,9 +21,11 @@ exports.protectAll = async (req, res, next) => {
       token = req.cookies.jwt;
     }
     if (!token || token === "expiredtoken") {
-      return res.status(401).json({
-        message: "You are not logged in, please log in to get access",
-      });
+      return next(createError.createError(401,  "You are not logged in, please log in to get access" ));
+    
+      // return res.status(401).json({
+      //   message: "You are not logged in, please log in to get access",
+      // });
     }
     //verification token
     const decoded = await promisify(jwt.verify)(token, "secret");
@@ -41,9 +45,8 @@ exports.protectAll = async (req, res, next) => {
 
     // console.log(JSON.stringify(currentUser), null, 4);
     if (!currentUser) {
-      return res
-        .status(401)
-        .json({ error: `${currentUser.role} does not longer exists ` });
+      return next(createError.createError(401,  `currentUserdoes not longer exists ` ));
+      
     }
     //check if user change password after jwt was issued
     // if (currentUser.changedPasswordAfter(decoded.iat)) {
@@ -58,13 +61,22 @@ exports.protectAll = async (req, res, next) => {
       next();
     }
   } catch (err) {
-    return res.status(404).json({
-      status: "Error occured",
-      message: err,
-    });
+    console.log(err);
+
+    return next(createError.createError(401,  "unauthorized access" ));
+   
   }
 };
 
+exports.isLoggedIN=async(req, res, next) =>{
+  if (req.isAuthenticated()) {
+    // Adjust this condition based on your authentication mechanism
+    return next(); // User is logged in, proceed to logout
+  } else {
+    return next(createError.createError(401,  "You are not logged in, please log in to get access" ));
+   
+  }
+}
 //Restricted to
 exports.restrictTo = (role) => {
   return async (req, res, next) => {
@@ -78,9 +90,8 @@ exports.restrictTo = (role) => {
       //     next();
       //
     } else {
-      return res.status(403).json({
-        message: "You do not have permission to perform this action",
-      });
+      return next(createError.createError(401, "You do not have permission to perform this action" ));
+      
     }
   };
 };
@@ -91,9 +102,8 @@ exports.restrictToAdmin = (role) => {
     if (req.user.role === role) {
       next();
     } else {
-      return res.status(403).json({
-        message: "You do not have permission to perform this action",
-      });
+      return next(createError.createError(403,  "You do not have permission to perform this action" ));
+     
     }
   };
 };

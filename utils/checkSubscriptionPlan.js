@@ -1,7 +1,7 @@
 const Subscription = require("../models/subscription");
 
 const run = async () => {
-  console.log("first");
+
   try {
     const find_subscription = await Subscription.findAll();
     if (find_subscription) {

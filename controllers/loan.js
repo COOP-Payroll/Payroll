@@ -21,16 +21,16 @@ exports.getAllLoan = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -39,8 +39,12 @@ exports.getAllowanceById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const allowance = await Allowance.findByPk(id);
-    res.json(allowance);
+    const loan = await Loan.findByPk(id);
+    if (!loan) {
+      return res.status(404).json({ message: "There is no Loan with this ID" });
+    } else {
+      res.json(loan);
+    }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = {};
@@ -48,16 +52,16 @@ exports.getAllowanceById = async (req, res) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -70,16 +74,17 @@ exports.createLoan = async (req, res, next) => {
     const loanDefinitionId = req.body.loanDefinitionId;
 
     //   await allowance.setGrade(gradeId);
-    //   await allowance.setAllowanceDefinition(allowanceDefinitionId);
+    //   await allowance.setAlflowanceDefinition(allowanceDefinitionId);
 
     const employee = await Employee.findByPk(employeeId);
     const loanDefinition = await LoanDefinition.findByPk(loanDefinitionId);
-    console.log("loan", employee.Loans);
+    console.log("loanDEfinitionID", loanDefinition);
+ 
     if (!employee) {
-      res.status(404).json("No Employee with this id");
+      res.status(404).json({message:"No Employee with this id"});
       //   console.log("no Employee with this id");
     } else if (!loanDefinition) {
-      res.status(404).json("No Loan Definition with this id");
+      res.status(404).json({message:"No Loan Definition with this id"});
     } else {
       const checkLoanDefinitionId = await Loan.findOne({
         where: {
@@ -108,23 +113,23 @@ exports.createLoan = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error);
+    console.log("error",error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -144,19 +149,19 @@ exports.updateLoan = async (req, res, next) => {
     const checkLoan = await Loan.findOne({
       where: { id: id, companyId: req.user.id },
     });
-    console.log("first", checkLoan);
-    if (checkLoan) {
-      const result = await Loan.update(
-        { amount: amount },
-        { where: { id: id } }
-      );
 
-      res.status(200).json({
-        message: "updated successfully",
-        result,
-      });
+    if (!checkLoan) {
+    return res.status(404).json({ message:"There is no loan with this ID"})
     } else {
-      res.status(404).json("No such Id");
+       const result = await Loan.update(
+         { amount: amount },
+         { where: { id: id } }
+       );
+
+       res.status(200).json({
+         message: "updated successfully",
+         result,
+       });
     }
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
@@ -165,16 +170,16 @@ exports.updateLoan = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -200,16 +205,16 @@ exports.deleteLoan = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };

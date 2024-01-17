@@ -3,6 +3,12 @@ const { Worker } = require("worker_threads");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger'); // Path to your Swagger configuration file
+
+
+
 require("dotenv").config();
 const sequelize = require("./database/db");
 const cron = require("node-cron");
@@ -42,15 +48,24 @@ const Payroll = require("./models/Payroll");
 const PayrollDefinition = require("./models/payrollDefinition");
 const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
-const employeePayrollApprovement = require('./routes/employeePayrollApprovement')
+const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
 const ebirrPayment = require("./routes/eBirrPayment.js");
+const position=require("./routes/postionRoutes.js");
+const Sponsors=require("./routes/sponsors.js");
+const Projects=require("./routes/projectRoutes.js");
+// const stripePayment = require("./routes/stripePayment.js");
+
+const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
+const additionalPay = require("./routes/AdditionalPay");
+const checkAccountNumber=require("./routes/accountChecker.js");
+// const employeePromotion = require("./routes/employeePromotion");
 
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
-
+const cookieParser = require("cookie-parser");
 app.use(bodyParser.json());
 app.use("/uploads", express.static("./uploads/"));
 app.use(
@@ -67,8 +82,14 @@ app.use(
       "http://localhost:3002",
       "http://localhost:****",
       "http://10.2.125.124:4000",
+      "http://10.2.125.127:80",
+      "http://10.2.125.127",
+      "http://10.2.125.127:*",
       "http://10.2.125.124:80",
       "http://10.2.125.124",
+      "https://payroll-ms.onrender.com",
+      
+      "https://payroll-ms.onrender.com:6000",
     ],
     credentials: true,
   })
@@ -77,7 +98,7 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
-
+app.use(cookieParser());
 app.use("/user", userRouter);
 app.use("/company", companyRouter);
 app.use("/package", packageRouter);
@@ -85,7 +106,7 @@ app.use("/taxslab", taxslabRouter);
 app.use("/pension", pensionRouter);
 app.use("/department", deptRouter);
 app.use("/subscription", subscriptionRouter);
-app.use("/login", authRouter);
+app.use("/", authRouter);
 app.use("/employee", employeeRouter);
 app.use("/companyIdFormat", companyIdRouter);
 app.use("/allowancedefinition", allowanceDefinition);
@@ -97,6 +118,7 @@ app.use("/deduction", deduction);
 app.use("/grade", grade);
 app.use("/approver", approver);
 app.use("/payroll", payrollRouter);
+app.use("/positions", position);
 app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
 app.use("/PayrollApprovement", payrollApprovement);
@@ -111,9 +133,27 @@ app.use("/providentFund", providentFund);
 app.use("/newPayroll", newPayroll);
 app.use("/module", moduleRoute);
 app.use("/address", addressRoute);
-app.use('/employeePayrollApprovement', employeePayrollApprovement)
+app.use("/sponsors",Sponsors)
+app.use("/projects", Projects)
 
+app.use("/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/payment", ebirrPayment);
+// app.use("/s1", stripePayment);
+app.use("/employeePayrollApprovement", employeePayrollApprovement);
+app.use("/additionalPay", additionalPayDefinition);
+app.use("/additionalpayment", additionalPay);
+app.use("/payment", ebirrPayment);
+app.use("/accountNumber/verify",checkAccountNumber)
+// app.use("/employeePromotion", employeePromotion);
+
+const swaggerOptions = {
+  swaggerOptions: {
+    url: 'http://localhost:6000/api-docs/swagger.json', // Update the URL to match your setup
+  },
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec,swaggerOptions));
+
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
@@ -125,17 +165,18 @@ app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;
   const errorMessage = err.message || "Something went Wrong";
-
+console.log()
   return res.status(errorStatus).json({
     success: false,
     status: errorStatus,
-    message: errorMessage,
-    stack: err.stack,
+    message: err.message || "Something went",
+    timestamp: new Date().toISOString(),
+    // stack: err.stack,
   });
 });
-
+// sequelize.sync({ logging: console.log });
 sequelize.sync({ force: false }).then(() => console.log("db is ready"));
-
+  
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
     workerData: { employeeId, user, payrollDefinitionId },
@@ -145,26 +186,28 @@ const runWorker = (employeeId, payrollDefinitionId, user) => {
 const runComputation = async (payrolls) => {
   payrolls.forEach((payroll) => {
     const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
-    runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.id);
+    runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.CompanyId);
+  
   });
 };
 
 let isRunning = false;
-
-app.listen(process.env.PORT, () => {
-  cron.schedule("*/5 * * * * *", async () => {
+console.log(process.env.PORT)
+app.listen(process.env.PORT ||4400, () => {
+ 
+  cron.schedule("*/5 * * * * * * *", async () => {
     if (!isRunning) {
       isRunning = true;
       const payrolls = await Payroll.findAll({
         where: { status: "ordered" },
         include: [PayrollDefinition],
       });
-      // console.log("first", JSON.stringify(payrolls, null, 3))
+      // console.log("first", JSON.stringify(payrolls))
       if (payrolls.length > 0) {
         await runComputation(payrolls);
       }
-      isRunning = false;
+      isRunning = true;
     }
   });
-  console.log(`connected to backend`);
+  console.log(`Server is running on port: ${process.env.PORT}`);
 });

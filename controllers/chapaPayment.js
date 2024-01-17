@@ -32,19 +32,7 @@ exports.EbirrPayment = async (req, res, next) => {
       accountNo,
       invoiceId,
     });
-    // await ebirrPayment.setMerchant(req.merchant);
-
-    // Create an instance of the HTTPS agent
-    // const httpsAgent = new https.Agent({
-    //   cert: certificate,
-    //   rejectUnauthorized: false,
-    //   // Additional options if required (e.g., ca, passphrase, etc.)
-    // });
-    // const agent = new https.Agent({
-    //   cert: cert,
-    //   key: key,
-    // });
-    // Configure Axios to use the HTTPS agent
+   
     const axiosInstance = axios.create({
       //   httpsAgent: httpsAgent,
     });
@@ -88,7 +76,8 @@ exports.EbirrPayment = async (req, res, next) => {
           });
         }
       })
-      .catch((error) => {
+      .catch((error) => 
+      {
         console.error(error);
         ebirrPayment.paymentStatus = "Failed";
         ebirrPayment.save();

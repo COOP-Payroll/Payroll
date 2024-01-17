@@ -26,7 +26,7 @@ const Address = sequelize.define("Address", {
   },
   isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false,
+    defaultValue: true,
   },
 });
 

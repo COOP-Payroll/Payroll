@@ -8,7 +8,6 @@ const Sequelize = require("sequelize");
 
 //reusable function for payroll approvement
 async function handlePayrollApproval(payrollId, approverId, level, status,payrollStatus) {
-  
     try {
       const approve1 = await PayrollApprovement.create({
         level,

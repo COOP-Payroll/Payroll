@@ -33,19 +33,7 @@ exports.EbirrPayment = async (req, res, next) => {
       accountNo,
       invoiceId,
     });
-    // await ebirrPayment.setMerchant(req.merchant);
-
-    // Create an instance of the HTTPS agent
-    // const httpsAgent = new https.Agent({
-    //   cert: certificate,
-    //   rejectUnauthorized: false,
-    //   // Additional options if required (e.g., ca, passphrase, etc.)
-    // });
-    // const agent = new https.Agent({
-    //   cert: cert,
-    //   key: key,
-    // });
-    // Configure Axios to use the HTTPS agent
+ 
     const axiosInstance = axios.create({
       //   httpsAgent: httpsAgent,
     });
@@ -104,16 +92,16 @@ exports.EbirrPayment = async (req, res, next) => {
         errors[err.path] = [`${err.path} is required`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else if (error.name === "SequelizeUniqueConstraintError") {
       const errors = {};
       error.errors.forEach((err) => {
         errors[err.path] = [`${err.path} must be unique`];
       });
 
-      return res.status(400).json(errors);
+      return res.status(404).json({message:errors});
     } else {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 };
@@ -131,18 +119,7 @@ exports.ChapaPayment=async (req,res,next)=>{
     const callBackUrl = req.body.callBackUrl;
     const returnUrl = req.body.returnUrl;
     const authToken = req.body.authToken;
-    // const token = await utils.getToken(
-    //   process.env.EMAIL,
-    //   process.env.PASSWORD_AUTH
-    // );
-    // const certificate = fs.readFileSync(springCert, "utf8");
-    // Create an instance of the HTTPS agent
-    // const httpsAgent = new https.Agent({
-    //   cert: certificate,
-    //   rejectUnauthorized: false,
-    //   // Additional options if required (e.g., ca, passphrase, etc.)
-    // });
-    // Configure Axios to use the HTTPS agent
+ 
     const axiosInstance = axios.create({
     //   httpsAgent: httpsAgent,
     });
@@ -178,7 +155,7 @@ exports.ChapaPayment=async (req,res,next)=>{
         title: title,
         callback_url: callBackUrl,
       });
-      // await chapaPay.setMerchant(req.user);
+    
       await chapaPay.save();
       await axiosInstance
         .post(
@@ -196,7 +173,6 @@ exports.ChapaPayment=async (req,res,next)=>{
             return_url: returnUrl,
             // orderId,
           }
-          // config
         )
         .then((response) => {
           if (response.status === 200) {
@@ -220,3 +196,5 @@ exports.ChapaPayment=async (req,res,next)=>{
      });
   }
 }
+
+

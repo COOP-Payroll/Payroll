@@ -6,13 +6,31 @@ const upload = require("../middleware/multer");
 // const { accountInfoMulter, upload } = require("../middleware/multer.js");
 const newEmployeeController = require("../controllers/newEmployeeControllers.js");
 
+
+router.put(
+  "/update-contact-info/:employeeId",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  employeeController.updateContactInfo
+);
 router.get(
   "/",
-
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.getAllEmployee
 );
+
+router.get(
+  "/get-all-projects/:employeeId",
+
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  employeeController.getAllProjectEmployeeInvolded
+);
+
+
+
+
 router.get(
   "/:id",
   middleware.protectAll,
@@ -60,8 +78,86 @@ router.put(
   }),
   employeeController.addAddionalPay
 );
+
+// router.put(
+//   "/updateBasicInfo/:id",
+//   upload.fields([
+//     // { name: "image", maxCount: 1 },
+//     { name: "id_image", maxCount: 1 },
+//   ]),
+
+//   middleware.protectAll,
+//   middleware.restrictALL({
+//     moduleName: "employeeinfo",
+//     isAccessible: true,
+//   }),
+//   newEmployeeController.updatedBasicInfo
+// );
+
+
 router.put(
-  "/:id",
+  "/update-basic-info/:id",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updatedBasicInfo
+);
+
+router.put(
+  "/update-termination-status/:id",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updateTermination
+);
+
+
+router.put(
+  "/update-emergency-info/:employeeId",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "id_image", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updateEmergencyContact
+);
+router.put(
+  "/update-account-info/:employeeId",
+  upload.fields([
+    // { name: "image", maxCount: 1 },
+    { name: "accountImage", maxCount: 1 },
+  ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updateAccountInfo
+);
+
+
+router.put(
+  "/update-employee-info/:id",
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "id_image", maxCount: 1 },
@@ -74,6 +170,20 @@ router.put(
   }),
   newEmployeeController.updateEmployee
 );
+
+
+
+router.put(
+  "/promotion/:id",
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.promotion
+);
+
 router.delete(
   "/:id",
   middleware.protectAll,
@@ -94,9 +204,8 @@ router.post(
   employeeController.createEmployeeFile
 );
 
-router.post("/login", employeeController.login);
+// router.post("/login", employeeController.login);
 
 router.get("/confirm/:id", newEmployeeController.confirmaRegistration);
-
 
 module.exports = router;

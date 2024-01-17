@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const middleware = require('../middleware/auth')
-const payroll=require('../controllers/payrollDefinition')
+const payroll=require('../controllers/payrollDefinition');
+const PayrollDefinition = require('../models/payrollDefinition');
 
 // Define routes for handling User requests
 router.get(
@@ -39,7 +40,12 @@ router.put(
   payroll.updatePayrollDefinition
 );
 
-//router.get('/:id',)
+router.get(
+  "/currentMonth",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
+  payroll.getCurrentMonth
+);
 
 
 module.exports = router;
