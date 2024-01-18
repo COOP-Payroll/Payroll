@@ -773,43 +773,139 @@ exports.getAllUnassignedProjectForEmployee= async(req,res,next)=>{
     return next(createError.createError(400,"Position is not associated to an employee"))
   }
 
-  // const fetchData= await ProjectEmployee.findAll({where: {PositionId: positionId, EmployeeId: employeeId}})
+  // // const fetchData= await ProjectEmployee.findAll({where: {PositionId: positionId, EmployeeId: employeeId}})
 
-  const foundPosition1 = await Position.findAll({
-    where: { id: positionId },
-    include: [
-      {
-        model: Projects,
-        required: false,
-        through: {
-          model: PositionProjectAssociation,
-          where: {
-            PositionId: positionId,
-            [Op.and]: [
-              { noOfAssignedEmployees: { [Op.lt]: Sequelize.col('noOfEmployees') } },
-              { isActive: true },
-            ],
-          },
-        },
-        include: [
-          {
-            model: Employee,
-            through: {
-              model: ProjectEmployee,
-              where: { projectId: { [Op.is]: null } }, // Exclude projects assigned to any employee
-            },
-            required: false,
-          },
-        ],
-      },
-    ],
-  });
- 
+  // const foundPosition1 = await Position.findAll({
+  //   where: { id: positionId },
+  //   include: [
+  //     {
+  //       model: Projects,
+  //       required: false,
+  //       through: {
+  //         model: PositionProjectAssociation,
+  //         where: {
+  //           PositionId: positionId,
+  //           [Op.and]: [
+  //             { noOfAssignedEmployees: { [Op.lt]: Sequelize.col('noOfEmployees') } },
+  //             { isActive: true },
+  //           ],
+  //         },
+  //       },
+  //       include: [
+  //         {
+  //           model: Employee,
+  //           through: {
+  //             model: ProjectEmployee, 
+  //             where: {
+  //               EmployeeId: employeeId,
+  //               isActive: true,
+  //             },
+  //             // where: { id: { [Op.is]: null } }, // Exclude projects assigned to any employee
+  //           },
+  //           required: false,
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // });
+  
+
+
+  // const projectsForEmployee = await Projects.findAll({
+  //   through: [
+  //     {
+  //       model: PositionProjectAssociation,
+  //       where: {
+  //         PositionId: positionId,
+  //         [Op.and]: [
+  //           { noOfAssignedEmployees: { [Op.lt]: Sequelize.col('noOfEmployees') } },
+  //           { isActive: true },
+  //         ],
+  //       },
+  //     },
+  //     {
+  //       model: Employee,
+  //       through: {
+  //         model: ProjectEmployee,
+  //         where: {
+  //           EmployeeId: employeeId,
+  //         },
+  //       },
+  //       required: false,
+  //     },
+  //   ],
+  // });
+  
+  // const allProjectsForPosition = await Projects.findAll({
+  //   through: [
+  //     {
+  //       model: PositionProjectAssociation,
+  //       where: {
+  //         PositionId: positionId,
+  //         isActive: true,
+  //       },
+  //     },
+  //   ],
+  // });
+  
+  // const filteredProjectsForEmployee = projectsForEmployee.filter(project => {
+  //   // Filter out projects where the employee is already assigned
+  //   return project.Employees.length === 0;
+  // });
+  
+  
 
 
   
+const foundPosition1 = await Position.findAll({
+  where: { id: positionId },
+  include: [
+    {
+      model: Projects,
+      required: false,
+      through: {
+        model: PositionProjectAssociation,
+        where: {
+          PositionId: positionId,
+          [Op.and]: [
+            { noOfAssignedEmployees: { [Op.lt]: Sequelize.col('noOfEmployees') } },
+            { isActive: true },
+          ],
+        },
+      },
+      include: [
+        {
+          model: Employee,
+          through: {
+            model: ProjectEmployee,
+            where: {
+              EmployeeId: employeeId,
+              isActive: true,
+            },
+          },
+          required: false,
+        },
+      ],
+    },
+  ],
+});
 
-return res.status(200).json(foundPosition1)
+// Filter out projects where the employee is already assigned
+const filteredProjects = foundPosition1.map(position => {
+  const filteredProjectsForPosition = position.Projects.filter(project => {
+    return project.Employees.length === 0;
+  });
+
+  return {
+    ...position.toJSON(),
+    Projects: filteredProjectsForPosition,
+  };
+}
+
+
+);
+
+return res.status(200).json(filteredProjects)
 
   } catch (error) {
     console.log(error);

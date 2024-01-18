@@ -206,7 +206,7 @@ exports.getEmployeeById = async (req, res) => {
         {
           model: Address,
           required: false,
-          // where:{  isActive: true,}
+          where:{  isActive: true,}
         },
         {
           model: Company,
