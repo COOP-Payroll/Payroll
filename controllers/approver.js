@@ -215,6 +215,7 @@ exports.createApprover = async (req, res) => {
             CompanyId: req.user.id,
           },
         });
+
         console.log("master number", masterApproverCount);
         if (masterApproverCount >= 1 && req.body.isMaster === true) {
           console.log("master approver is setted already")
@@ -228,6 +229,7 @@ exports.createApprover = async (req, res) => {
             isMaster: true,
             isActive: true,
           });
+          
           await setMaster.setApprovalMethod(ApprovalMethodId);
           await setMaster.setCompany(CompanyId);
           await setMaster.setEmployee(EmployeeId)
