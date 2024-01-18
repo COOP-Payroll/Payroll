@@ -682,8 +682,8 @@ exports.promotion = async (req, res, next) => {
   try {
     const { basicSalary, position, gradeId, employement_Type } = req.body
     console.log('reqw.body', req.body)
-    const employee = await Employee.findByPk(
-      Number(req.params.id),
+    const employee = await Employee.findOne(     
+   
       {
         include: [
           {
@@ -695,19 +695,33 @@ exports.promotion = async (req, res, next) => {
               },
               attributes: []
             }
+          },
+          {model: Position,
+          through:{
+            model:EmployeePosition,
+            where: {isActive: true}
           }
+          
+          },
+          {
+            model:EmployeeInfo,
+          where: {isActive: true}}
         ]
       },
+      {where:{id:Number(req.params.id), companyid:req.user.id}},
       {
         transaction
       }
     )
+
+    // return res.json(employee.Positions)
     if (!employee) {
+      await transaction.rollback()
       return res.status(404).json({ error: 'Employee not found' })
     }
-    if (gradeId) {
-      if (basicSalary) {
-        const grade = await Grade.findByPk(Number(gradeId))
+    if (gradeId  && basicSalary && (gradeId !== employee.Grades?.[0]?.id || basicSalary !==employee.EmployeeInfos[0].basicSalary)) {
+          console.log('data')
+           const grade = await Grade.findByPk(Number(gradeId))
         if (basicSalary < grade.minSalary || basicSalary > grade.maxSalary) {
           return res.status(409).json({
             error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
@@ -729,111 +743,64 @@ exports.promotion = async (req, res, next) => {
             isActive: true,
             EmployeeId: Number(employee.id),
             basicSalary,
-            // position: position ? position : employeeInfo?.position,
-            employement_Type: employement_Type
-              ? employement_Type
-              : employeeInfo?.employement_Type,
-            employeeTIN: employeeInfo?.employeeTIN,
-            hireDate: employeeInfo?.hireDate
-          },
-          { transaction }
-        )
-
-        newEmployeeInfo.save()
-      } else {
-        console.log('no basicSalary')
-
-        const employeeInfo = await EmployeeInfo.findOne({
-          where: { EmployeeId: Number(employee.id), isActive: true }
-        })
-        if (employeeInfo) {
-          const updatedData = await employeeInfo.update(
-            { isActive: false },
-            { transaction }
-          )
-        }
-        // console.log("department",DepartmentId)
-        const newEmployeeInfo = await EmployeeInfo.create(
-          {
-            isActive: true,
-            EmployeeId: Number(employee.id),
-            // position: position ? position : employeeInfo?.position,
-            basicSalary:  employeeInfo?.basicSalary,
-            employement_Type: employement_Type
-              ? employement_Type
-              : employeeInfo?.employement_Type,
-            employeeTIN: employeeInfo?.employeeTIN,
-            hireDate: employeeInfo?.hireDate
-          },
-          { transaction }
-        )
-
-        newEmployeeInfo.save()
-      }
-    } else {
-      if (basicSalary) {
-        console.log('basicSalary', employee.Grades[0])
-        if (
-          basicSalary < employee.Grades[0]?.minSalary ||
-          basicSalary > employee.Grades[0]?.maxSalary
-        )
-          return res.status(404).json({
-            error: `Basic salary must be between ${employee.Grades[0]?.minSalary} and ${employee.Grades[0]?.maxSalary}`
-          })
-        const employeeInfo = await EmployeeInfo.findOne({
-          where: { EmployeeId: Number(employee.id), isActive: true }
-        })
-        if (employeeInfo) {
-          const updatedData = await employeeInfo.update(
-            { isActive: false },
-            { transaction }
-          )
-        }
-        const newEmployeeInfo = await EmployeeInfo.create(
-          {
-            isActive: true,
-            EmployeeId: Number(employee.id),
-            basicSalary,
             position: position ? position : employeeInfo?.position,
-            employement_Type: employement_Type
-              ? employement_Type
-              : employeeInfo?.employement_Type,
+            employement_Type: employement_Type ?? employee.EmployeeInfos?.[0]?.employement_Type,
+            
             employeeTIN: employeeInfo?.employeeTIN,
             hireDate: employeeInfo?.hireDate
           },
           { transaction }
         )
 
-        newEmployeeInfo.save()
-      } else {
-        const employeeInfo = await EmployeeInfo.findOne({
-          where: { EmployeeId: Number(employee.id), isActive: true }
-        })
-        if (employeeInfo) {
-          const updatedData = await employeeInfo.update(
-            { isActive: false },
-            { transaction }
-          )
-        }
-        // console.log("department",DepartmentId)
-        const newEmployeeInfo = await EmployeeInfo.create(
-          {
-            isActive: true,
-            EmployeeId: Number(employee.id),
-            position: position ? position : employeeInfo?.position,
-            employement_Type: employement_Type
-              ? employement_Type
-              : employeeInfo?.employement_Type,
-            employeeTIN: employeeInfo?.employeeTIN,
-            hireDate: employeeInfo?.hireDate
-          },
-          { transaction }
-        )
-
-        newEmployeeInfo.save()
-      }
+        // newEmployeeInfo.save()
+      
+        
     }
-    await transaction.commit()
+       
+ if (position) {
+
+  // await transaction.rollback();
+  const foundPosition= await Position.findOne({where: {id:position, companyid:req.user.id}})
+
+  if(!foundPosition){
+    await transaction.rollback()
+    return next(createError.createError(404, "position not found "))
+  }
+  console.log("newEmployeeInfo",employee.id)
+  console.log("newEmployeeInfo", Number(req.params.id))
+  const checkPosition= await EmployeePosition.findOne({where:{PositionId:position, EmployeeId:Number(req.params.id),isActive:true}})
+ console.log("checke",employee.Positions)
+ return res.json(employee.Positions)
+  if(!checkPosition) {
+ 
+       const employeePosition = await EmployeePosition.findOne({
+         where: { EmployeeId: Number(req.params.id),PositionId:employee.Positions?.[0]?.id
+         , isActive: true },
+       });
+
+       console.log("newEmployeeInfo",employeePosition)
+      
+       if (employeePosition) {
+         await employeePosition.update({ isActive: false }, { transaction });
+       }
+
+       console.log("newEmployeeInfo",employeePosition)
+       const newEmployeeInfo = await EmployeePosition.create(
+         {
+           isActive: true,
+           EmployeeId: Number(employee.id),
+           PositionId: Number(position)
+               },
+         { transaction }
+       );
+     }}
+
+
+    //  await newEmployeeInfo.setEmployees(employee.id),{transaction};
+   
+   
+     await transaction.commit()
+
 
     //  if (basicSalary) {
     //    console.log("basicsalary", basicSalary);
@@ -846,27 +813,7 @@ exports.promotion = async (req, res, next) => {
     //      });
     //    } else {
 
-    //  if (position) {
-    //    const employeeInfo = await EmployeeInfo.findOne({
-    //      where: { EmployeeId: Number(employee.id), isActive: true },
-    //    });
-    //    console.log("employee", employeeInfo.basicSalary);
-    //    if (employeeInfo) {
-    //      await employeeInfo.update({ isActive: false }, { transaction });
-    //    }
-    //    const newEmployeeInfo = await EmployeeInfo.create(
-    //      {
-    //        isActive: true,
-    //        EmployeeId: Number(employee.id),
-    //        position,
-    //        employement_Type: employeeInfo.employement_Type,
-    //        employeeTIN: employeeInfo.employeeTIN,
-    //        basicSalary: employeeInfo.basicSalary,
-    //      },
-    //      { transaction }
-    //    );
-    //  }
-
+   
     //  if (DepartmentId) {
     //    department = await Department.findByPk(Number(DepartmentId));
     //    console.log("new department", department);
@@ -935,10 +882,13 @@ exports.promotion = async (req, res, next) => {
     })
   } catch (error) {
     await transaction.rollback()
-    console.error(error)
+    // console.error(error)
     next(error)
   }
 }
+
+
+
 
 exports.updatedBasicInfo = async (req, res, next) => {
   const transaction = await sequelize.transaction()

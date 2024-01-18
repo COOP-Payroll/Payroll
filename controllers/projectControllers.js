@@ -180,7 +180,16 @@ exports.assignProjectToEmployee = async (req, res, next) => {
     }
     const projects = await Projects.findOne({
       where: { id: projectId, companyId: req.user.id },
+
+
      });
+
+const getAllEmployeeUnderTheProject= await ProjectEmployee.count({where:{ProjectId:projectId}})
+
+if(getAllEmployeeUnderTheProject  >= Number(projects?.numberOfEmployees)){
+  return next(createError.createError(409, 'Maximum allocation reached'))
+}
+    //  return res.status(200).json(getAllEmployeeUnderTheProject)  
 
     if (!projects) {
       return next(createError.createError(404, 'Project not found'))
