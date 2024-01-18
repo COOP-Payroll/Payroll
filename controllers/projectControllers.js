@@ -272,17 +272,17 @@ if(getAllEmployeeUnderTheProject  >= Number(projects?.numberOfEmployees)){
 
       }      
    
-      if (employee.totalPercent + percent <= 100) {
+      if (employee.totalPercent + Number(percent) <= 100) {
         // If not, increment totalPercent
        await employee.increment('totalPercent', { by: percent },{transaction});
 
-       const grossValue=employee?.EmployeeInfos[0]?.grossEarning* percent/100;
+       const grossValue=employee?.EmployeeInfos[0]?.grossEarning* Number(percent)/100;
         // await projects.addEmployee(employee, { through: { percent ,gross:employee.EmployeeInfos[0].grossEarning* percent/100,} },{transaction})
         await ProjectEmployee.create({
           ProjectId:projectId,
           EmployeeId:employeeId,
           CompanyId:req.user.id,
-          percent:percent ,
+          percent: Number(percent) ,
           gross: grossValue
         },{transaction}
         )
@@ -746,6 +746,75 @@ exports.getAllEmployeeUnderTheSameProject= async(req,res,next)=>{
   }
 }
 
+
+exports.getAllUnassignedProjectForEmployee= async(req,res,next)=>{
+  try {
+    const {positionId,employeeId}= req.params;
+
+    console.log(positionId)
+   if(!positionId  || !employeeId){
+    return next(createError.createError(400,'position id or employee id not found'))
+   }
+
+   const foundPosition= await EmployeePosition.findOne({where:{id:positionId}})
+  if(!foundPosition){
+    return next(createError.createError(404,'position not found'))
+  }
+
+  const foundEmployee= await Employee.findOne({where:{id:employeeId}})
+  if(!foundEmployee){
+    return next(createError.createError(404,'Employee not found '))
+  }
+
+  const employeePosition = await EmployeePosition.findOne({where: {PositionId: positionId, EmployeeId:employeeId,isActive:true}})
+
+  if(!employeePosition){
+    return next(createError.createError(400,"Position is not associated to an employee"))
+  }
+
+  // const fetchData= await ProjectEmployee.findAll({where: {PositionId: positionId, EmployeeId: employeeId}})
+
+  const foundPosition1 = await Position.findAll({
+    where: { id: positionId },
+    include: [
+      {
+        model: Projects,
+        required: false,
+        through: {
+          model: PositionProjectAssociation,
+          where: {
+            PositionId: positionId,
+            [Op.and]: [
+              { noOfAssignedEmployees: { [Op.lt]: Sequelize.col('noOfEmployees') } },
+              { isActive: true },
+            ],
+          },
+        },
+        include: [
+          {
+            model: Employee,
+            through: {
+              model: ProjectEmployee,
+              where: { projectId: { [Op.is]: null } }, // Exclude projects assigned to any employee
+            },
+            required: false,
+          },
+        ],
+      },
+    ],
+  });
+ 
+
+
+  
+
+return res.status(200).json(foundPosition1)
+
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500,'Internal server error'))
+  }
+}
 exports.deSelectEmployeeFromProject = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
@@ -1050,3 +1119,19 @@ exports.getAllProjectUnderTheEmployee= async(req,res,next)=>{
 }
 
 // exports.
+
+exports.getTotalAssignedForEmployee= async(req,res,next)=>{
+  try {
+    const id=req.params.id;
+    // const 
+    const foundEmployee= await Employee.findOne({where: {id :id,companyId:req?.user?.id}})
+    if(!foundEmployee){
+      return next(createError.createError(404,"Employee not found"))
+    }
+
+    return res.status(200).json({total:foundEmployee?.totalPercent})
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500,'Internal server error'))
+  }
+}
