@@ -399,7 +399,7 @@ exports.assignPositionToProject = async (req, res, next) => {
       0
     );
 
-    if(  (Number(totalNoOfEmployeeForPosition+totalNoOfEmployees)) >= projects.numberOfEmployees )
+    if(  (Number(totalNoOfEmployeeForPosition+totalNoOfEmployees)) > Number(projects.numberOfEmployees) )
     {
       return next(createError.createError(400,`You can't assign the maximum allocation under this project is   ${projects.numberOfEmployees} employees currently ${totalNoOfEmployees} employees assigned to the project`))
     }
