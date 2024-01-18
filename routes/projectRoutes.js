@@ -8,11 +8,17 @@ router.get(
     projects.getAllProjects
   );
 
+  router.get(
+    "/total-percent-assigned/:id",
+    middleware.protectAll,
+    projects.getTotalAssignedForEmployee
+  );
 
   router.get(
-    "/available-projects/:positionId",
+    "/available-projects/:positionId/:employeeId",
     middleware.protectAll,
-    projects.getUnassignedProjects
+    projects.getAllUnassignedProjectForEmployee
+    //getUnassignedProjects
   );
 
   router.get(
