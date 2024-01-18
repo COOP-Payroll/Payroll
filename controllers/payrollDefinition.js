@@ -211,6 +211,7 @@ exports.getCurrentMonth= async(req,res,next)=>{
 
   const currentMonthPayrolls = await PayrollDefinition.findAll({
     where: {
+      companyId:req.user.id,
       startDate: {
         [Op.between]: [startOfMonth, endOfMonth],
       },
