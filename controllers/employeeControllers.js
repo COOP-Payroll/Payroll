@@ -32,7 +32,7 @@ exports.getAllEmployee = async (req, res,next) => {
   try {
    
     const Employees = await Employee.findAll({
-      where: { companyId: req.user.id },
+      where: { companyId: req.user.id},
       include: [
         {
           model: Address,
@@ -41,6 +41,7 @@ exports.getAllEmployee = async (req, res,next) => {
         {
           model: Company,
           required: false,
+          attributes:['id','companyCode','organizationName','numberOfEmployees','role','status']
         },
 
         {
@@ -80,6 +81,7 @@ exports.getAllEmployee = async (req, res,next) => {
         {
           model: AccountInfo,
           required: false,
+          where:{isActive:true}
         },
         {
           model: CustomRole,
@@ -146,9 +148,28 @@ exports.getAllEmployee = async (req, res,next) => {
         // CustomRole,
       ],
     });
+
+    const sanitizedEmployees = Employees.map(employee => {
+      // Destructure the employee object excluding the password field
+      const { password, ...sanitizedEmployee } = employee.dataValues;
+    
+      // If there are nested associations, remove passwords from them as well
+      if (sanitizedEmployee.Companys) {
+        sanitizedEmployee.Companys = sanitizedEmployee.Companys.map(info => {
+          const { password, ...sanitizedInfo } = info.dataValues;
+          return sanitizedInfo;
+        });
+      }
+    
+      // Similarly, sanitize other nested associations if needed
+    
+      return sanitizedEmployee;
+    });
+    
+
     res.status(200).json({
       count: Employees.length,
-      Employees,
+      Employees: sanitizedEmployees 
     });
   } catch (error) {
     console.log("first", error);

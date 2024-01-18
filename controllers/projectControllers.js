@@ -989,7 +989,6 @@ exports.getUnassignedProjects=async (req, res, next) => {
 }
 
 
-
 exports.getAllProjectUnderTheEmployee= async(req,res,next)=>{
   try {
     console.log("data")
