@@ -420,8 +420,10 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
     const payrollDef = await PayrollDefinition.findByPk(id);
     if (!payrollDef)
       return res.status(404).json({ error: "payroll not found" });
+    
     const employees = await Employee.findAll({
-      // attributes:['id','fullname'],
+    
+      where:{CompanyId: req.user.id},
       include: [
         {
           model: Payroll,
@@ -472,6 +474,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
       ],
       where: {
         "$Payroll.id$": null, // Filter for records where the payroll ID is null
+        companyId:req.user.id
       },
     });
     return res.status(200).json({ count: employees.length, employees });

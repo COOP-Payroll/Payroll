@@ -549,7 +549,10 @@ exports.getAllEmployee = async (req, res) => {
 
         {
           model: AccountInfo,
-          required: false
+          required: false,
+          where: {
+            isActive: true
+          }
         },
         {
           model: CustomRole,
@@ -1130,7 +1133,7 @@ exports.updateAccountInfo = async (req, res, next) => {
     }
     const data = req?.files?.accountImage?.[0]?.path
     const imagePath = data ? data : null
-
+console.log("data",data)
     if (imagePath != null) {
       await accountInfo.update({ isActive: false }, { transaction })
       await AccountInfo.create(
@@ -1138,6 +1141,7 @@ exports.updateAccountInfo = async (req, res, next) => {
         { transaction }
       )
     } else {
+      console.log("im her")
       await accountInfo.update({ isActive: false }, { transaction })
       await AccountInfo.create(
         { isActive: true, accountNumber: accountNumber,isVerified:isVerified?isVerified:false,EmployeeId:employeeId },
