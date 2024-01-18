@@ -30,7 +30,7 @@ exports.getAllProjects = async (req, res, next) => {
       include: [
         {
           model: Positions,
-          through: { attributes: ['noOfEmployees'] }, // Include any additional attributes you need
+          through: { attributes: ['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation'] }, // Include any additional attributes you need
         },
         {
           model:Sponsor
@@ -61,7 +61,7 @@ exports.getOneProject = async (req, res, next) => {
       include: [
         {
           model: Positions,
-          through: { attributes: ['noOfEmployees'] }, // Include any additional attributes you need
+          through: { attributes:['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation'] }, // Include any additional attributes you need
         },
         {
           model:Sponsor
