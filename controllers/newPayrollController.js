@@ -420,7 +420,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
     const payrollDef = await PayrollDefinition.findByPk(id);
     if (!payrollDef)
       return res.status(404).json({ error: "payroll not found" });
-    
+    console.log("0i mhere from")
     const employees = await Employee.findAll({
     
       where:{CompanyId: req.user.id},

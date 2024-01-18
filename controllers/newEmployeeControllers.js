@@ -729,7 +729,7 @@ exports.promotion = async (req, res, next) => {
             isActive: true,
             EmployeeId: Number(employee.id),
             basicSalary,
-            position: position ? position : employeeInfo?.position,
+            // position: position ? position : employeeInfo?.position,
             employement_Type: employement_Type
               ? employement_Type
               : employeeInfo?.employement_Type,
@@ -757,7 +757,8 @@ exports.promotion = async (req, res, next) => {
           {
             isActive: true,
             EmployeeId: Number(employee.id),
-            position: position ? position : employeeInfo?.position,
+            // position: position ? position : employeeInfo?.position,
+            basicSalary:  employeeInfo?.basicSalary,
             employement_Type: employement_Type
               ? employement_Type
               : employeeInfo?.employement_Type,
