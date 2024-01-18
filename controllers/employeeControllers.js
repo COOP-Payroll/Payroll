@@ -37,6 +37,7 @@ exports.getAllEmployee = async (req, res,next) => {
         {
           model: Address,
           required: false,
+          where:{isActive:true}
         },
         {
           model: Company,
@@ -47,6 +48,7 @@ exports.getAllEmployee = async (req, res,next) => {
         {
           model: EmployeeInfo,
           required: false,
+          where:{  isActive: true,}
         },
         {
           model: Position,
@@ -73,7 +75,7 @@ exports.getAllEmployee = async (req, res,next) => {
           required: false,
           through: {
             model: ProjectEmployee,
-                    
+            // where:{isActive:true}     
           },
           include:[Sponsor]
         },

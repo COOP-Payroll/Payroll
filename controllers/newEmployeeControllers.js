@@ -681,10 +681,9 @@ exports.promotion = async (req, res, next) => {
 
   try {
     const { basicSalary, position, gradeId, employement_Type } = req.body
-    console.log('reqw.body', req.body)
+    // console.log('reqw.body', req.body)
     const employee = await Employee.findOne(     
-   
-      {
+         {
         include: [
           {
             model: Grade,
@@ -714,14 +713,24 @@ exports.promotion = async (req, res, next) => {
       }
     )
 
-    // return res.json(employee.Positions)
+    // return res.json(employee)
     if (!employee) {
       await transaction.rollback()
       return res.status(404).json({ error: 'Employee not found' })
     }
+
+    // const employeeInfo = await EmployeeInfo.findOne({
+    //   where: { EmployeeId: Number(employee.id), isActive: true }
+    // })
+
+    console.log("gradeid",gradeId, )
+    console.log("gradeid", employee.Grades?.[0]?.id , )
+    console.log(gradeId !== employee.Grades?.[0]?.id || basicSalary !==employee.EmployeeInfos[0].basicSalary)
     if (gradeId  && basicSalary && (gradeId !== employee.Grades?.[0]?.id || basicSalary !==employee.EmployeeInfos[0].basicSalary)) {
           console.log('data')
-           const grade = await Grade.findByPk(Number(gradeId))
+
+          // const grade1= await Grade
+           const grade = await Grade.findOne({where:{id:Number(gradeId),companyid:req.user.id}})
         if (basicSalary < grade.minSalary || basicSalary > grade.maxSalary) {
           return res.status(409).json({
             error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
@@ -729,8 +738,11 @@ exports.promotion = async (req, res, next) => {
         }
 
         const employeeInfo = await EmployeeInfo.findOne({
-          where: { EmployeeId: Number(employee.id), isActive: true }
+          where: { EmployeeId: req.params.id, isActive: true }
         })
+        // console.log(employeeInfo)
+
+        return res.json(employeeInfo)
         if (employeeInfo) {
           const updatedData = await employeeInfo.update(
             { isActive: false },
@@ -741,59 +753,60 @@ exports.promotion = async (req, res, next) => {
         const newEmployeeInfo = await EmployeeInfo.create(
           {
             isActive: true,
-            EmployeeId: Number(employee.id),
+            EmployeeId: req.params.id,
             basicSalary,
             position: position ? position : employeeInfo?.position,
-            employement_Type: employement_Type ?? employee.EmployeeInfos?.[0]?.employement_Type,
-            
-            employeeTIN: employeeInfo?.employeeTIN,
-            hireDate: employeeInfo?.hireDate
+            employement_Type: employement_Type ?? employee.EmployeeInfos?.[0]?.employement_Type,            
+            employeeTIN: employee.EmployeeInfos?.[0]?.employeeTIN,
+            hireDate: employee.EmployeeInfos?.[0]?.hireDate
           },
           { transaction }
         )
 
+
+        const employeeGrade= await EmployeeGrade.findOne({where:{ GradeId:employee.Grades?.[0]?.id,EmployeeId: req.params.id}})
         // newEmployeeInfo.save()
       
-        
+        return res.json(employeeGrade)
     }
        
- if (position) {
+//  if (position) {
 
-  // await transaction.rollback();
-  const foundPosition= await Position.findOne({where: {id:position, companyid:req.user.id}})
+//   // await transaction.rollback();
+//   const foundPosition= await Position.findOne({where: {id:position, companyid:req.user.id}})
 
-  if(!foundPosition){
-    await transaction.rollback()
-    return next(createError.createError(404, "position not found "))
-  }
-  console.log("newEmployeeInfo",employee.id)
-  console.log("newEmployeeInfo", Number(req.params.id))
-  const checkPosition= await EmployeePosition.findOne({where:{PositionId:position, EmployeeId:Number(req.params.id),isActive:true}})
- console.log("checke",employee.Positions)
- return res.json(employee.Positions)
-  if(!checkPosition) {
+//   if(!foundPosition){
+//     await transaction.rollback()
+//     return next(createError.createError(404, "position not found "))
+//   }
+//   // console.log("newEmployeeInfo",employee.id)
+//   // console.log("newEmployeeInfo", Number(req.params.id))
+//   const checkPosition= await EmployeePosition.findOne({where:{PositionId:position, EmployeeId:Number(req.params.id),isActive:true}})
+// //  console.log("checke",employee.Positions)
+//  return res.json(employee.Positions)
+//   if(!checkPosition) {
  
-       const employeePosition = await EmployeePosition.findOne({
-         where: { EmployeeId: Number(req.params.id),PositionId:employee.Positions?.[0]?.id
-         , isActive: true },
-       });
+//        const employeePosition = await EmployeePosition.findOne({
+//          where: { EmployeeId: Number(req.params.id),PositionId:employee.Positions?.[0]?.id
+//          , isActive: true },
+//        });
 
-       console.log("newEmployeeInfo",employeePosition)
+//        console.log("newEmployeeInfo",employeePosition)
       
-       if (employeePosition) {
-         await employeePosition.update({ isActive: false }, { transaction });
-       }
+//        if (employeePosition) {
+//          await employeePosition.update({ isActive: false }, { transaction });
+//        }
 
-       console.log("newEmployeeInfo",employeePosition)
-       const newEmployeeInfo = await EmployeePosition.create(
-         {
-           isActive: true,
-           EmployeeId: Number(employee.id),
-           PositionId: Number(position)
-               },
-         { transaction }
-       );
-     }}
+//        console.log("newEmployeeInfo",employeePosition)
+//        const newEmployeeInfo = await EmployeePosition.create(
+//          {
+//            isActive: true,
+//            EmployeeId: Number(employee.id),
+//            PositionId: Number(position)
+//                },
+//          { transaction }
+//        );
+//      }}
 
 
     //  await newEmployeeInfo.setEmployees(employee.id),{transaction};
