@@ -321,7 +321,7 @@ exports.assignPositionToProject = async (req, res, next) => {
       return next(createError.createError(400,"please fill all required fields"))
     }
 
-    if(maximumPercentAllocation>100){
+       if(maximumPercentAllocation>100){
       return next(createError.createError(400,"maximumPercentAllocation can not be more than 100"));
     }
     // console.log(projectId,positionIds,noOfEmployees)
@@ -337,12 +337,13 @@ exports.assignPositionToProject = async (req, res, next) => {
         id: positionIds
       }
     })
-
+  
     if (positions.length !== positionIds.length  ) {
       return next(
         createError.createError(404, 'One or more positions not found')
       )
     }
+
     if (positionIds.length !== noOfEmployees.length    || positionIds.length !== maximumPercentAllocation.length ) {
       return next(
         createError.createError(404, 'No of employee ,maximumPercentAllocation or position mismatch')
@@ -374,6 +375,7 @@ exports.assignPositionToProject = async (req, res, next) => {
         )
       )
     }
+
     // Prepare an array for bulk insertion
     const associations = positionIds.map((positionId, index) => ({
       ProjectId: projects.id,
@@ -383,6 +385,28 @@ exports.assignPositionToProject = async (req, res, next) => {
       remainingEmployees:noOfEmployees[index],
       CompanyId: req.user.id
     }))
+
+  
+    const totalNoOfEmployeeForPosition = associations.reduce(
+      (total, record) => total + (record.noOfEmployees || 0),
+      0
+    );
+    const checkAllocatedNumberOfEmployee= await PositionProjectAssociation.findAll({where: {ProjectId:projectId}})
+
+
+    const totalNoOfEmployees = checkAllocatedNumberOfEmployee.reduce(
+      (total, record) => total + (record.noOfEmployees || 0),
+      0
+    );
+
+    if(  (Number(totalNoOfEmployeeForPosition+totalNoOfEmployees)) >= projects.numberOfEmployees )
+    {
+      return next(createError.createError(400,`You can't assign the maximum allocation under this project is   ${projects.numberOfEmployees} employees currently ${totalNoOfEmployees} employees assigned to the project`))
+    }
+    
+
+    // return res.json({data:totalNoOfEmployeeForPosition+totalNoOfEmployees,
+    // data1: projects.numberOfEmployees})
 
     // Bulk insert into PositionProjectAssociations table
     try {
