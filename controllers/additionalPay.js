@@ -21,7 +21,6 @@ exports.getAllAdditionalPay = async (req, res,next) => {
 exports.getAdditionalPayById = async (req, res,next) => {
   try {
     const { id } = req.params;
-
     const additionalPay = await AdditionalPay.findByPk(id);
     if (!additionalPay) {
       return res.status(404).json({ message: "There is no allowance id" });
@@ -40,12 +39,13 @@ exports.createAdditionalPay = async (req, res, next) => {
     const amount = req.body.amount;
     const employeeId = req.body.employeeId;
     const additionalPayDefinitionId = req.body.additionalPayDefinitionId;
+    const payrollDefinitionId = req.body.payrollDefinitionId;
+
     const employee = await Employee.findByPk(employeeId);
     const emp2 = await Employee.findAll({
       where: { id: employeeId },
       include: {
         model: AdditionalPay,
-       
       },
     });
 
@@ -60,8 +60,6 @@ exports.createAdditionalPay = async (req, res, next) => {
         ],
       }
     );
-
-    
     
     
     const allDefinition = await AdditionalpayDefinition.findByPk(
@@ -94,6 +92,8 @@ exports.createAdditionalPay = async (req, res, next) => {
         await additionalPay.setCompany(Number(req.user.id));
         await additionalPay.setAdditionalPayDefinition(additionalPayDefinitionId);
         await additionalPay.setEmployee(employee);
+        await additionalPay.setPayrollDefinition(payrollDefinitionId);
+
         res.status(200).json({
             message: "Successfully Registered",
             additionalPay,
@@ -104,6 +104,8 @@ exports.createAdditionalPay = async (req, res, next) => {
         await additionalPay.setCompany(Number(req.user.id));
         await additionalPay.setAdditionalPayDefinition(additionalPayDefinitionId);
         await additionalPay.setEmployee(employee);
+        await additionalPay.setPayrollDefinition(payrollDefinitionId);
+        
         res.status(200).json({
             message: "Successfully Registered",
             additionalPay,
