@@ -24,9 +24,10 @@ const { Sequelize } = require('sequelize');
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res, next) => {
   try {
-
+console.log("proje",req.user.id)
     const companyId = req.user.id
     const projects = await Projects.findAll({
+      where: {companyId:req.user.id},
       include: [
         {
           model: Positions,
@@ -287,8 +288,10 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
           gross: grossValue
         },{transaction}
         )
+
+        console.log(" noOfAssignedEmployees: Number(positionProjectAssociations.noOfAssignedEmployees) +1",Number(positionProjectAssociations.noOfAssignedEmployees) +1)
 await positionProjectAssociations.update(
-  { noOfAssignedEmployees: Number(positionProjectAssociations.noOfAssignedEmployees)+1 },
+  { noOfAssignedEmployees: Number(positionProjectAssociations.noOfAssignedEmployees) +1 },
   // { where: { PositionId: employee.Positions[0].id } },
   { transaction }
 )
@@ -525,7 +528,7 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
 
     const positions = await Positions.findAll({
       where: {
-        id: positionIds
+        id: Number(positionIds)
       }
     })
 
@@ -538,17 +541,17 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
 
     
     // Ensure unique positionIds
-    const uniquePositionIds = Array.from(new Set(positionIds))
+    const uniquePositionIds = Array.from(new Set((positionIds)))
 
     // Check for existing associations
     const existingAssociations = await PositionProjectAssociation.findAll({
       where: {
-        ProjectId: projects.id,
-        PositionId: uniquePositionIds
+        ProjectId:Number(projects.id),
+        PositionId: Number(uniquePositionIds)
       }
     })
  // Check if the positions are already assigned to the project
- const assignedPositions = await projects.getPositions({ where: { id: positionIds }});
+ const assignedPositions = await projects.getPositions({ where: { id: Number(positionIds) }});
 
 //   include: [{
 //     model: Projects,
@@ -587,10 +590,10 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
     for (const position of assignedPositions) {
       console.log(position.PositionProjectAssociation.createdAt)
       await ProjectPositionHistory.create({
-        ProjectId: projectId,
-        PositionId: position.id,
-        noOfEmployees: position.PositionProjectAssociation.noOfEmployees,
-        maximumPercentAllocation: position.PositionProjectAssociation.maximumPercentAllocation,
+        ProjectId: Number(projectId),
+        PositionId: Number(position.id),
+        noOfEmployees: Number(position.PositionProjectAssociation.noOfEmployees),
+        maximumPercentAllocation: Number(position.PositionProjectAssociation.maximumPercentAllocation),
         // remainingEmployees: position.remainingEmployees,
         isActive: false, // Assuming deassignment means isActive should be set to false
         startingFrom: position.PositionProjectAssociation.createdAt,
@@ -925,7 +928,7 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
 
       const employee= await Employee.findOne({
         where: {
-          id: employeeId,
+          id: Number(employeeId),
           companyId:req.user.id
         },
                     // attributes:['id','totalPercent'],
@@ -951,7 +954,7 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
       }
    const projects =await Projects.findOne({
   where:{
-    id:projectId,
+    id:Number(projectId),
     companyId:req.user.id,   
   },
  
@@ -961,8 +964,8 @@ if(!projects){
 }
     const projectEmployee = await ProjectEmployee.findOne({
       where: {
-        ProjectId: projectId,
-        EmployeeId: employeeId,
+        ProjectId: Number(projectId),
+        EmployeeId: Number(employeeId),
         isActive: true,
       },
       include: [Employee],
@@ -976,8 +979,8 @@ console.log("projectEmployee.percent",req.user.id)
     }
 
 
-const positionProjectAssociation = await PositionProjectAssociation.findOne({where: {PositionId:employee?.Positions?.[0]?.id ,ProjectId:projectId,isActive:true}});
-// console.log("positionProjectAssociation.percent",positionProjectAssociation)
+const positionProjectAssociation = await PositionProjectAssociation.findOne({where: {PositionId:employee?.Positions?.[0]?.id ,ProjectId:Number(projectId),isActive:true}});
+console.log("positionProjectAssociation.percent",positionProjectAssociation)
 if(!positionProjectAssociation){
   await transaction.rollback();
   return next(createError.createError(404, 'Position is not associated to the project'))
@@ -986,10 +989,10 @@ if(!positionProjectAssociation){
 // console.log(employee)
     
       const projectEmployeeHistory=  await ProjectEmployeeHistory.create({
-      ProjectId: projectId,
-      EmployeeId: employeeId,
-      percent: projectEmployee.percent,
-      gross: projectEmployee.gross,
+      ProjectId: Number(projectId),
+      EmployeeId: Number(employeeId),
+      percent: Number(projectEmployee.percent),
+      gross: Number(projectEmployee.gross),
       startingFrom: projectEmployee.createdAt,
       CompanyId:req.user.id,
       isActive: false,
@@ -1003,7 +1006,7 @@ if(!positionProjectAssociation){
     // await projectEmployeeHistory.setCompany({companyId},{transaction});
     await projectEmployee.destroy( { transaction });
     await positionProjectAssociation.update(
-      { noOfAssignedEmployees: positionProjectAssociation.noOfAssignedEmployees-1 },
+      { noOfAssignedEmployees: Number(positionProjectAssociation.noOfAssignedEmployees)-1 },
       // { where: { PositionId: employee.Positions[0].id } },
       { transaction }
     )
@@ -1229,6 +1232,37 @@ exports.getTotalAssignedForEmployee= async(req,res,next)=>{
     return res.status(200).json({total:foundEmployee?.totalPercent})
   } catch (error) {
     console.log(error);
+    return next(createError.createError(500,'Internal server error'))
+  }
+}
+
+exports.getPreviousProject= async(req,res,next)=>{
+try{
+const {projectId,employeeId}= req.params;
+console.log("com",req.user.id)
+const foundEmployee= await Employee.findOne({where: {id :employeeId,companyId:req.user.id}})
+if(!foundEmployee){
+  return next(createError.createError(404,'Employee not found'))
+}
+const foundProject=await Projects.findOne({where:{id:projectId,companyId:req.user.id}})
+
+if(!foundProject){
+  return next(createError.createError(404,'Project not found'))
+}
+const employeeProjectHistory= await ProjectEmployeeHistory.findAll({
+  where:{ProjectId:projectId,EmployeeId:employeeId}
+})
+if(!employeeProjectHistory){
+  return next(createError.createError(404,"No Records" ));
+
+}
+
+return res.status(200).json({
+  data:employeeProjectHistory})
+
+// const getHistory= a
+  }catch(error){
+    console.log(error)
     return next(createError.createError(500,'Internal server error'))
   }
 }
