@@ -33,11 +33,17 @@ router.get(
   );
 
   router.get(
+    "/employee-previous-projects/:projectId/:employeeId",
+    middleware.protectAll,
+    projects.getPreviousProject
+  );
+
+
+  router.get(
     "/employee/:projectId",
     middleware.protectAll,
     projects.getAllEmployeeUnderTheSameProject
-  );
-
+  )
   router.post(
     "/",
     middleware.protectAll,
