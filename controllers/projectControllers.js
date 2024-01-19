@@ -979,8 +979,8 @@ console.log("projectEmployee.percent",req.user.id)
     }
 
 
-const positionProjectAssociation = await PositionProjectAssociation.findOne({where: {PositionId:Number(employee?.Positions?.[0]?.id) ,ProjectId:Number(projectId),isActive:true}});
-// console.log("positionProjectAssociation.percent",positionProjectAssociation)
+const positionProjectAssociation = await PositionProjectAssociation.findOne({where: {PositionId:employee?.Positions?.[0]?.id ,ProjectId:Number(projectId),isActive:true}});
+console.log("positionProjectAssociation.percent",positionProjectAssociation)
 if(!positionProjectAssociation){
   await transaction.rollback();
   return next(createError.createError(404, 'Position is not associated to the project'))
