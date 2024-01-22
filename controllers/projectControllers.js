@@ -980,30 +980,26 @@ console.log("projectEmployee.percent",req.user.id)
 
 
 const positionProjectAssociation = await PositionProjectAssociation.findOne({where: {PositionId:employee?.Positions?.[0]?.id ,ProjectId:Number(projectId),isActive:true}});
-console.log("positionProjectAssociation.percent",positionProjectAssociation)
 if(!positionProjectAssociation){
-  await transaction.rollback();
+  // await transaction.rollback();
   return next(createError.createError(404, 'Position is not associated to the project'))
 }
     // await employee.decrement('totalPercent', { by: employee.totalPercent }, { transaction });
 // console.log(employee)
     
       const projectEmployeeHistory=  await ProjectEmployeeHistory.create({
-      ProjectId: Number(projectId),
-      EmployeeId: Number(employeeId),
+      ProjectId: projectId,
+      EmployeeId: employeeId,
       percent: Number(projectEmployee.percent),
       gross: Number(projectEmployee.gross),
       startingFrom: projectEmployee.createdAt,
       CompanyId:req.user.id,
       isActive: false,
     }, { transaction });
-    
-  //  await projectEmployee.setCompany(req.user.id,{transaction})
-    console.log("employee.totalPercent-projectEmployee.percent",Number(employee.totalPercent)-Number(projectEmployee.percent))
+    console.log("projectEmployeeHistory.percent",projectEmployeeHistory)
+      console.log("employee.totalPercent-projectEmployee.percent",Number(employee.totalPercent)-Number(projectEmployee.percent))
     const data= await employee.update({totalPercent: Number(employee.totalPercent)-Number(projectEmployee.percent)}, { transaction });
-    
-    // console.log("projectEmployeeHistory",data)
-    // await projectEmployeeHistory.setCompany({companyId},{transaction});
+ 
     await projectEmployee.destroy( { transaction });
     await positionProjectAssociation.update(
       { noOfAssignedEmployees: Number(positionProjectAssociation.noOfAssignedEmployees)-1 },
