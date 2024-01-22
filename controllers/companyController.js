@@ -19,6 +19,7 @@ const successResponse = require('.././utils/successResponse.js');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const sendEmail=require('.././utils/sendEmail.js');
+const AccountInfo = require('../models/accountInfo.js')
 // const createError=require("../utils/error.js")
 
 exports.getcompanyProfiles= async (req, res, next)=>{
@@ -685,6 +686,73 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
     })
   } catch (error) {
     return next(createError.createError(500, 'Internal server error'))
+  }
+}
+
+exports.updateAccountInfo= async(req,res,next)=>{
+
+  const transaction = await sequelize.transaction()
+  try {
+    
+    const {accountNumber,referenceNumber,referenceLetter,image}=req.body;
+    console.log(req.body)
+
+    if(!accountNumber|| !referenceNumber){
+      return next(createError.createError(400,'please insert all requiered fields'))
+    }
+
+    const company = await Company.findByPk(Number(req.user.id));
+     if(!company){
+      return next(createError.createError(404,'company not found'));
+     }
+
+
+     const accountInfo = await AccountInfo.findOne({
+      where: {  CompanyId: req.user.id ,isActive: true}
+    })
+    const data = req.files?.image?.[0]?.path
+    const imagePath = data ? data : null
+    const referenceLetterData = req.files?.referenceLetter?.[0]?.path
+    const referenceLetterPath = referenceLetterData ? referenceLetterData : null
+    if (!accountInfo) {
+   
+   
+  console.log("data",data)
+      
+        // await accountInfo.update({ isActive: false }, { transaction })
+        await AccountInfo.create(
+          { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,CompanyId:req.user.id },
+          // { transaction }
+      
+      // await AccountInfo.create({
+      //   accountNumber,referenceLetter,referenceNumber,image
+      );
+  
+  
+    }
+    else{
+
+
+    await accountInfo.update({ isActive: false }, { transaction })
+    await AccountInfo.create(
+      { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,CompanyId:req.user.id,isActive:true },
+      { transaction }
+  
+  // await AccountInfo.create({
+  //   accountNumber,referenceLetter,referenceNumber,image
+  );
+    }
+    await transaction.commit()
+  return res.status(200).json({
+    success: true,
+    message: 'Account info updated successfully'
+  })
+
+
+  } catch (error) {
+    await transaction.rollback()
+    console.error(error);
+    return next(createError.createError(500, 'Internal server error'));
   }
 }
 

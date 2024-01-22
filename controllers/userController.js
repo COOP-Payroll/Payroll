@@ -1,6 +1,9 @@
 const User = require("../models/user.js");
 const Company = require("../models/company.js");
 const createError = require('.././utils/error.js');
+const AccountInfo = require("../models/accountInfo.js");
+const sequelize = require('../database/db')
+
 
 // create User
 exports.createUser = async (req, res,next) => {
@@ -103,6 +106,38 @@ exports.updateCompanyStatus = async (req, res,next) => {
       .status(200)
       .json({ message: "Company status Activated successfully" });
   } catch (error) {
+    return next(createError.createError(500, "Internal server error"));
+  }
+};
+
+
+exports.verifyCompanyAccount = async (req, res,next) => { 
+  const transaction = await sequelize.transaction()
+  try {
+    const id= req.params.id;
+    const accountId=req.body.accountId;
+    const company = await Company.findOne({where:{id:id}}, {
+      attributes: { exclude: ["password"] },
+    });
+
+    // console.log("id",company);
+    if (!company)
+    return next(createError.createError(404, "company does not exist"));
+          // await company.update({ status });
+
+    const  foundAccount= await AccountInfo.findOne({where:{id:accountId,isActive:true,isVerified:false, companyId: id}})
+console.log(foundAccount);
+    if(!foundAccount){
+      return next(createError.createError(404, "Account does not exist or verified"));
+    }
+ const data= await foundAccount.update({isVerified: true},{transaction});
+  await transaction.commit()
+    return res
+      .status(200)
+      .json({ message: "Account verified successfully" });
+  } catch (error) {
+    console.log(error)
+    await transaction.rollback()
     return next(createError.createError(500, "Internal server error"));
   }
 };

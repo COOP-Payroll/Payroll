@@ -11,10 +11,17 @@ const AccountInfo = sequelize.define("AccountInfo", {
   image: {
     type: DataTypes.STRING,
   },
-
+   referenceNumber:{
+   type:DataTypes.STRING,
+  //  allowNull:false
+   },
+   referenceLetter:{
+    type:DataTypes.STRING,
+    // allowNull:false
+    },
   isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true,
+    defaultValue: false,
   },
   isVerified: {
     type: DataTypes.BOOLEAN,
@@ -24,5 +31,10 @@ const AccountInfo = sequelize.define("AccountInfo", {
 
 Employee.hasMany(AccountInfo);
 AccountInfo.belongsTo(Employee);
+
+
+Company.hasMany(AccountInfo);
+AccountInfo.belongsTo(Company);
+
 
 module.exports = AccountInfo;
