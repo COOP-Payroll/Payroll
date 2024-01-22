@@ -44,6 +44,16 @@ router.get('/get/companyprofile',
   companyController.getcompanyProfiles
 );
 router.put(
+  "/update-account-info/",
+  middleware.protectAll,
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "referenceLetter", maxCount: 1 },
+  
+  ]),
+  companyController.updateAccountInfo
+);
+router.put(
   "/:id",
   upload.fields([
     { name: "companyLogo", maxCount: 1 },
@@ -52,6 +62,8 @@ router.put(
   ]),
   companyController.updateCompany
 );
+
+
 
 router.put('/project/update/isProjectBased',
   middleware.protectAll, 

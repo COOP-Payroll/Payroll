@@ -25,7 +25,7 @@ exports.checkAccountNumber = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'Valid account number',
-      data:{ displayName:response.data.CustomerInfoResponse.CustomerInfo?.[0]?.displayName}
+      data:response.data.CustomerInfoResponse.CustomerInfo
     })
   } catch (error) {
     console.log(error)
