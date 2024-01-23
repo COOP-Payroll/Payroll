@@ -1,7 +1,7 @@
 const ApprovalMethod = require("../models/approvalMethod");
 const Company = require("../models/company");
 const Approver = require("../models/approver");
-
+const createError=require("../utils/error.js")
 // Define controller methods for handling User requests for deduction definition
 exports.getAllApprovalMethod = async (req, res) => {
   console.log("all approval")
@@ -22,7 +22,7 @@ exports.getAllApprovalMethod = async (req, res) => {
     // res.status(500).json("Something gonna wrong");
   }
 };
-exports.getAllActiveApprovalMethod = async (req, res) => {
+exports.getAllActiveApprovalMethod = async (req, res,next) => {
   
   const CompanyId = req.user.id;
   console.log(CompanyId);
@@ -41,7 +41,7 @@ exports.getAllActiveApprovalMethod = async (req, res) => {
     // res.status(500).json("Something gonna wrong");
   }
 };
-exports.getAllInActiveApprovalMethod = async (req, res) => {
+exports.getAllInActiveApprovalMethod = async (req, res,next) => {
   
   const CompanyId = req.user.id;
   console.log(CompanyId);
@@ -97,7 +97,7 @@ async function saveApprovalMethod(
   };
 }
 
-exports.createApprovalMethod = async (req, res) => {
+exports.createApprovalMethod = async (req, res,next) => {
   const CompanyId = req.user.id;
   let minimumApprover = req.body.minimumApprover;
   let approvalLevel = req.body.approvalLevel;
@@ -216,13 +216,13 @@ async function reSaveApprovalMethod(
     where: { id: oldId },
   });
   console.log(result);
-  return {
-    success: true,
-    Message: "Successfully defined approvel method",
-    created: appMethod,
-  };
+  // return {
+  //   success: true,
+  //   Message: "Successfully defined approvel method",
+  //   created: appMethod,
+  // };
 }
-exports.reCreateApprovalMethod = async(req,res)=>{
+exports.reCreateApprovalMethod = async(req,res,next)=>{
   const CompanyId = req.user.id;
   let minimumApprover = req.body.minimumApprover;
   let approvalLevel = req.body.approvalLevel;
@@ -295,7 +295,9 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                 oldId
               );
               console.log(response);
-              return res.json(response);
+              return res.status(201).json({
+                message:"recreated successfully",
+                response});
             }else if(oldApprovalMethod==='hierarchy' && approvalMethod==='hierarchy'){
               minimumApprover = approvalLevel;
               let response = reSaveApprovalMethod(
@@ -310,7 +312,9 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                 oldId
               );
               console.log(response);
-              return res.json(response);
+              return res.status(201).json({
+                message:"recreated successfully",
+                response});
 
             }else if((oldApprovalMethod==='horizontal' && approvalMethod==='hierarchy')||(oldApprovalMethod==='hierarchy' && approvalMethod==='horizontal')){
               if(oldApprovalMethod==='horizontal'  && approvalMethod==='hierarchy' )
@@ -328,7 +332,10 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                 oldId
               );
               console.log(response);
-              return res.status(200).json(response);
+              return res.status(200).json({
+                                  
+                message:"recreated successfully",
+                response});
 
               }else if(oldApprovalMethod==='hierarchy' && approvalMethod==='horizontal'){
                 console.log("old  one is hierarchy approval")
@@ -344,7 +351,9 @@ exports.reCreateApprovalMethod = async(req,res)=>{
                   isActive,
                   oldId
                 );
-                return res.json(response);
+                return res.status(201).json({
+                  message:"recreated successfully",
+                  response});
               }else{
                 console.log("undefined approval relationship")
                 return next(createError.createError(400,"undefined approval relationship"))
@@ -402,7 +411,7 @@ exports.updateApprovalMethod = async (req, res, next) => {
       const result = await ApprovalMethod.update({minimumApprover:minimumApprover,approvalLevel:approvalLevel,isCompleted:isCompleted,isThereMasterApprover:isThereMasterApprover,isActive:isActive}, {
         where: { id: id },
       });
-      res.json({
+      res.status(201).json({
         message: "success",
         appMethod,
       });

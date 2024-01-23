@@ -21,7 +21,7 @@ const AccountInfo = sequelize.define("AccountInfo", {
     },
   isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false,
+    defaultValue: true,
   },
   isVerified: {
     type: DataTypes.BOOLEAN,

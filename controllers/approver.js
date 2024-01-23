@@ -4,7 +4,7 @@ const Employee = require("../models/employee");
 const createError= require("../utils/error.js")
 
 // Get all Approvers
-exports.getAllApprovers = async (req, res) => {
+exports.getAllApprovers = async (req, res,next) => {
   const CompanyId = req.user.id;
   console.log(CompanyId);
   const criteria = {
@@ -35,7 +35,7 @@ exports.getAllApprovers = async (req, res) => {
 
 };
 //get all active approver
-exports.getAllActiveApprovers = async (req, res) => {
+exports.getAllActiveApprovers = async (req, res,next) => {
   const CompanyId = req.user.id;
   console.log(CompanyId);
   const criteria = {
@@ -66,7 +66,7 @@ exports.getAllActiveApprovers = async (req, res) => {
 
 };
 //get all inactive approver
-exports.getAllInActiveApprovers = async (req, res) => {
+exports.getAllInActiveApprovers = async (req, res,next) => {
   const CompanyId = req.user.id;
   console.log(CompanyId);
   const criteria = {
@@ -97,7 +97,7 @@ exports.getAllInActiveApprovers = async (req, res) => {
 
 };
 // Get a single Approver by ID
-exports.getApproverById = async (req, res) => {
+exports.getApproverById = async (req, res,next) => {
   const approverId = req.params.id;
   try {
     const approver = await Approver.findByPk(approverId);
@@ -114,7 +114,7 @@ exports.getApproverById = async (req, res) => {
   }
 };
 //get approver by employee id
-exports.getApproverByEmployeeId = async (req, res) => {
+exports.getApproverByEmployeeId = async (req, res,next) => {
   const approverEmployeeId = req.params.id;
   try {
     const approver = await Approver.findOne({
@@ -163,15 +163,34 @@ async function saveApprover(
 }
 
 // Create a new Approver
-exports.createApprover = async (req, res) => {
+exports.createApprover = async (req, res,next) => {
   const CompanyId = req.user.id;
   
   const { level, role, isActive, isMaster, EmployeeId } = req.body;
   try {
+
+    if(!EmployeeId){
+      return next(createError.createError(400, "Employee Id is required"))
+      // return res.status(400).json({ error: "Employee Id is required" });)
+    }
     console.log("data sent",level, role, isActive, isMaster, EmployeeId);
     const approvalMethod = await ApprovalMethod.findOne({
       where: { CompanyId: req.user.id, isActive: true},
     });
+
+const employee= await Employee.findOne({where:{id:EmployeeId,companyId:req.user.id,isActive:true}})
+
+if(!employee){
+  return next(createError.createError(404, "Employee not found"))
+  // return res.status(404).json({ error: "Employee not found" });))
+}
+
+const checkApprover= await Approver.findOne({where:{EmployeeId:EmployeeId,companyId:req.user.id,isActive:true}})
+
+if(checkApprover){
+  return next(createError.createError(409, "this employee is already assigned as approver"))
+  // return res.json("this employee is already assigned as approver");))
+}
     if(approvalMethod===null){
       console.log("company has no active approval method ")
       return next(createError.createError(404, "company has no active approval method"));
@@ -194,7 +213,7 @@ exports.createApprover = async (req, res) => {
     console.log(approvalMethodCount);
     //add company id to get employee
     const employeeCount = await Employee.count({
-      where: { id:req.body.EmployeeId,CompanyId:req.user.id},
+      where: { id:req.body?.EmployeeId,CompanyId:req.user.id},
     });
     console.log("this employee is", employeeCount);
 
@@ -354,7 +373,7 @@ exports.createApprover = async (req, res) => {
               console.log("save data for herarchy ");
               if (appLevel < level) {
                 return res.json({
-                  message: "your level of approval is " + levelNumber,
+                  message: "your level of approval is " + appLevel,
                 });
               } else {
                 if (appLevel === 3) {
@@ -561,7 +580,7 @@ exports.createApprover = async (req, res) => {
             console.log("save data for herrarchy");
             if (appLevel < level) {
               return res.status(400).json({
-                message: "your level of approval is " + levelNumber,
+                message: "your level of approval is " + appLevel,
               });
             } else {
               if (appLevel === 3) {
@@ -668,7 +687,7 @@ exports.createApprover = async (req, res) => {
 };
 
 // Update an existing Approver
-exports.updateApprover=async(req, res)=> {
+exports.updateApprover=async(req, res,next)=> {
   const approverId = req.params.id;
   const { level, role, isActive, isMaster, EmployeeId, companyId } = req.body;
   try {
@@ -692,7 +711,7 @@ exports.updateApprover=async(req, res)=> {
 }
 
 // Delete an Approver
-exports.deleteApprover = async (req, res) => {
+exports.deleteApprover = async (req, res,next) => {
   const approverId = req.params.id;
   try {
     const approver = await Approver.findByPk(approverId);
@@ -710,7 +729,7 @@ exports.deleteApprover = async (req, res) => {
 
 
 
-exports.deactiveApprover = async (req, res) => {
+exports.deactiveApprover = async (req, res,next) => {
   const approverId = req.body.approverId;
   const EmployeeId = req.body.EmployeeId;
 

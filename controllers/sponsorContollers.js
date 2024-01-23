@@ -108,7 +108,7 @@ exports.createSponsors = async (req, res, next) => {
     if (!accountInfo) {
    
    
-  console.log("data",data)
+  // console.log("data",data)
       
         // await accountInfo.update({ isActive: false }, { transaction })
         await AccountInfo.create(
@@ -118,8 +118,7 @@ exports.createSponsors = async (req, res, next) => {
       // await AccountInfo.create({
       //   accountNumber,referenceLetter,referenceNumber,image
       );
-  
-  
+    
     }
     else{
     await accountInfo.update({ isActive: false }, { transaction });
@@ -168,9 +167,9 @@ exports.updateSponsor = async (req, res, next) => {
     if (location) {
       updates.location = location
     }
-    if (accountNumber) {
-      updates.accountNumber = accountNumber
-    }
+    // if (accountNumber) {
+    //   updates.accountNumber = accountNumber
+    // }
     if (budget) {
       updates.budget = budget
     }
@@ -180,7 +179,7 @@ exports.updateSponsor = async (req, res, next) => {
     const result = await checkSponsor.update({
       name: name,
       budget: budget,
-      accountNumber:accountNumber,
+      // accountNumber:accountNumber,
       location:location
     })
 
