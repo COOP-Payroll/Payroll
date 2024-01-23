@@ -7,6 +7,7 @@ const Position =require("./position.js");
 const PositionProjectAssociation=require("./positionProjectAssociation.js");
 
 const ProjectEmployee = require("./project-employee.js");
+const AccountInfo = require("./accountInfo.js");
 
 
 const Projects = sequelize.define("Projects", {
@@ -14,10 +15,10 @@ const Projects = sequelize.define("Projects", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  accountNumber: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+  // accountNumber: {
+  //   type: DataTypes.STRING,
+  //   allowNull: false,
+  // },
   location: {
     type: DataTypes.STRING,
   },
@@ -64,6 +65,9 @@ Projects.belongsToMany(Position, { through: PositionProjectAssociation });
 
 Projects.belongsToMany(Employee, { through: ProjectEmployee });
 Employee.belongsToMany(Projects, { through: ProjectEmployee });
+
+Projects.hasMany(AccountInfo);
+AccountInfo.belongsTo(Projects);
 
 ProjectEmployee.belongsTo(Projects);
 Projects.hasMany(ProjectEmployee);

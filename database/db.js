@@ -39,4 +39,4 @@ const sequelize = new Sequelize("payroll-db", "user", "pass", {
   // logging: false,
 });
 
-module.exports = sequelize;
+module.exports = sequelize; 

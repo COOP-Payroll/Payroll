@@ -1,6 +1,7 @@
 const express = require("express");
 const projects=require("../controllers/projectControllers.js");
 const middleware=require("../middleware/auth.js")
+const upload = require("../middleware/multer");
 const router = express.Router();
 router.get(
     "/",
@@ -47,6 +48,12 @@ router.get(
   router.post(
     "/",
     middleware.protectAll,
+ 
+upload.fields([
+  { name: "image", maxCount: 1 },
+  { name: "referenceLetter", maxCount: 1 },
+
+]),
     projects.createProjects
   );
 
