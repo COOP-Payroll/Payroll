@@ -15,7 +15,7 @@ exports.getAllGrade = async (req, res, next) => {
   const companyId = req.user.id
   try {
     const criteria = {
-      companyId: req.user.id
+      CompanyId: req.user.id
     }
     const companyGrade = await Grade.findAll({
       where: criteria,
@@ -64,7 +64,7 @@ exports.createGrade = async (req, res, next) => {
 
     const companyId = req.user.id
     const criteria = {
-      companyId: req.user.id,
+        CompanyId: req.user.id,
       [Op.or]: [
         { name: name },
         { minSalary: minSalary },

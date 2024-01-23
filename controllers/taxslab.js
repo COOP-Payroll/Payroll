@@ -189,7 +189,7 @@ exports.createTaxslab = async (req, res, next) => {
       const data = to_Salary == "Infinity" ? 1000000000 : to_Salary;
       const checkTax = await Taxslab.findAll({
         where: {
-          companyId: req.user.id,
+          CompanyId: req.user.id,
           from_Salary: from_Salary,
           to_Salary: data,
         },
@@ -307,7 +307,7 @@ exports.updateTaxslab = async (req, res, next) => {
   //     to_Salary,
   //     income_tax_payable,
   //     deductible_Fee,
-  //     companyId,
+  //     CompanyId,
   //     isActive,
   //   } = req.body;
   //   const updates = {};
@@ -325,8 +325,8 @@ exports.updateTaxslab = async (req, res, next) => {
   //   if (deductible_Fee) {
   //     updates.deductible_Fee = deductible_Fee;
   //   }
-  //   if (companyId) {
-  //     updates.companyId = companyId;
+  //   if (CompanyId) {
+  //     updates.CompanyId = CompanyId;
   //   }
   //   if (isActive) {
   //     updates.isActive = isActive;
@@ -530,7 +530,7 @@ exports.restoreToDefault = async (req, res, next) => {
 
     const deletedData = await Taxslab.destroy({
       where: {
-        companyId: req.user.id,
+        CompanyId: req.user.id,
         isActive: true,
       },
     });

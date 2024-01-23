@@ -7,7 +7,7 @@ exports.getAllLoanDefinition = async (req, res) => {
 
   try {
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
     };
     const loanDefinitions = await LoanDefinition.findAll(criteria);
     res.status(200).json({
@@ -73,7 +73,7 @@ exports.createLoanDefinition = async (req, res, next) => {
 
     const criteria = {
       name: name,
-      companyId:req.user.id
+      CompanyId:req.user.id
     };
     const checkLoan = await LoanDefinition.findOne({
       where: criteria,

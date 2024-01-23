@@ -27,9 +27,9 @@ const AccountInfo = require('../models/accountInfo.js');
 exports.getAllProjects = async (req, res, next) => {
   try {
 console.log("proje",req.user.id)
-    const companyId = req.user.id
+    const CompanyId = req.user.id
     const projects = await Projects.findAll({
-      where: {companyId:req.user.id},
+      where: {CompanyId:req.user.id},
       include: [
         {
           model: Positions,
@@ -57,7 +57,7 @@ exports.getOneProject = async (req, res, next) => {
     const { id } = req.params
     const criteria = {
       id:id,
-      companyId: req.user.id
+      CompanyId: req.user.id
     }
     const projects = await Projects.findOne({
       where: criteria,
@@ -144,13 +144,13 @@ exports.createProjects = async (req, res, next) => {
     // console.log(response.data.CustomerInfoResponse.CustomerInfo.length)
 
     const checkProjectName = await Projects.findOne({
-      where: { companyId: req.user.id, projectName: projectName }
+      where: { CompanyId: req.user.id, projectName: projectName }
     })
     if (checkProjectName) {
       return next(createError.createError(409, 'Project already defined'))
     }
     sponsor = await Sponsor.findOne({
-      where: { id: sponsorId, companyId: req.user.id }
+      where: { id: sponsorId, CompanyId: req.user.id }
     })
 
     if (!sponsor) {
@@ -230,7 +230,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
     }
     //projectId=Number(projectId)
     const projects = await Projects.findOne({
-      where: { id: Number(projectId), companyId: req.user.id },
+      where: { id: Number(projectId), CompanyId: req.user.id },
 
 
      });
@@ -246,7 +246,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       return next(createError.createError(404, 'Project not found'))
     }
     const employee = await Employee.findOne({
-      where: { id: Number(employeeId), companyId: req.user.id },
+      where: { id: Number(employeeId), CompanyId: req.user.id },
    include:[
     {
       model: Positions,
@@ -379,7 +379,7 @@ exports.assignPositionToProject = async (req, res, next) => {
     }
     // console.log(projectId,positionIds,noOfEmployees)
     const projects = await Projects.findOne({
-      where: { id: Number(projectId), companyId: req.user.id }
+      where: { id: Number(projectId), CompanyId: req.user.id }
     })
     if (!projects) {
       return next(createError.createError(404, 'Project not found'))
@@ -489,7 +489,7 @@ exports.updateProjects = async (req, res, next) => {
     const { id } = req.params
 
     const checkProject = await Projects.findOne({
-      where: { id: id, companyId: req.user.id }
+      where: { id: id, CompanyId: req.user.id }
     })
     if (projectName) {
       updates.projectName = projectName
@@ -508,7 +508,7 @@ exports.updateProjects = async (req, res, next) => {
     }
     // if (sponsorId) {
     //   const sponsors = await Sponsor.findOne({
-    //     where: { id: sponsorId, companyId: req.user.id }
+    //     where: { id: sponsorId, CompanyId: req.user.id }
     //   })
     //   if (!sponsors) {
     //     return next(createError.createError(404, 'Sponsor not found'))
@@ -544,7 +544,7 @@ exports.deleteProjects = async (req, res, next) => {
   try {
     const { id } = req.params
     const projects = await Projects.findOne({
-      where: { id: id, companyId: req.user.id }
+      where: { id: id, CompanyId: req.user.id }
     })
     if (!projects) {
       return next(createError.createError(404, 'Project not found'))
@@ -569,7 +569,7 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
     const { projectId, positionIds } = req.body
     // console.log(projectId,positionIds,noOfEmployees)
     const projects = await Projects.findOne({
-      where: { id: projectId, companyId: req.user.id }
+      where: { id: projectId, CompanyId: req.user.id }
     })
     if (!projects) {
       return next(createError.createError(404, 'Project not found'))
@@ -767,7 +767,7 @@ exports.getAllEmployeeUnderTheSameProject= async(req,res,next)=>{
   try{
   const {projectId}=req.params;
   const projects = await Projects.findOne({
-    where: { id: projectId, companyId: req.user.id }
+    where: { id: projectId, CompanyId: req.user.id }
   })
   if (!projects) {
     return next(createError.createError(404, 'Project not found'))
@@ -978,7 +978,7 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
       const employee= await Employee.findOne({
         where: {
           id: Number(employeeId),
-          companyId:req.user.id
+          CompanyId:req.user.id
         },
                     // attributes:['id','totalPercent'],
         include:[
@@ -1004,7 +1004,7 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
    const projects =await Projects.findOne({
   where:{
     id:Number(projectId),
-    companyId:req.user.id,   
+    CompanyId:req.user.id,   
   },
  
 })
@@ -1083,14 +1083,14 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
        return next(createError.createError(400, 'Please enter required fields'))
      }
      const projects = await Projects.findOne({
-       where: { id: projectId, companyId: req.user.id },
+       where: { id: projectId, CompanyId: req.user.id },
       });
  
      if (!projects) {
        return next(createError.createError(404, 'Project not found'))
      }
      const employee = await Employee.findOne({
-       where: { id: employeeId, companyId: req.user.id },
+       where: { id: employeeId, CompanyId: req.user.id },
     include:[
      {
        model: Positions,
@@ -1269,7 +1269,7 @@ exports.getTotalAssignedForEmployee= async(req,res,next)=>{
   try {
     const id=req.params.id;
     // const 
-    const foundEmployee= await Employee.findOne({where: {id :id,companyId:req?.user?.id}})
+    const foundEmployee= await Employee.findOne({where: {id :id,CompanyId:req?.user?.id}})
     if(!foundEmployee){
       return next(createError.createError(404,"Employee not found"))
     }
@@ -1285,11 +1285,11 @@ exports.getPreviousProject= async(req,res,next)=>{
 try{
 const {projectId,employeeId}= req.params;
 console.log("com",req.user.id)
-const foundEmployee= await Employee.findOne({where: {id :employeeId,companyId:req.user.id}})
+const foundEmployee= await Employee.findOne({where: {id :employeeId,CompanyId:req.user.id}})
 if(!foundEmployee){
   return next(createError.createError(404,'Employee not found'))
 }
-const foundProject=await Projects.findOne({where:{id:projectId,companyId:req.user.id}})
+const foundProject=await Projects.findOne({where:{id:projectId,CompanyId:req.user.id}})
 
 if(!foundProject){
   return next(createError.createError(404,'Project not found'))

@@ -233,7 +233,7 @@ async function runPayroll(
     ] = await Promise.all([
       Pension.findOne({
         where: {
-          companyId: company,
+          CompanyId: company,
           isActive: true,
         },
       }),
@@ -274,7 +274,7 @@ async function runPayroll(
     const employer_pension = pension?.employerContribution ?? 0;
 
     const taxslabs = await Taxslab.findAll({
-      where: { companyId: company, isActive: true },
+      where: { CompanyId: company, isActive: true },
     });
     console.log("taxslabs",taxslabs);
     let totalDeduction = 0;
@@ -474,7 +474,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
       ],
       where: {
         "$Payroll.id$": null, // Filter for records where the payroll ID is null
-        companyId:req.user.id
+        CompanyId:req.user.id
       },
     });
     return res.status(200).json({ count: employees.length, employees });

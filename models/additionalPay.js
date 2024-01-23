@@ -7,7 +7,7 @@ const Employee = require("./employee.js");
 const Company = require("./company.js");
 const AdditionalPay = sequelize.define("AdditionalPay", {
   amount: {
-    type: DataTypes.NUMBER,
+    type: DataTypes.STRING,
     allowNull: false,
   },
   //grade id

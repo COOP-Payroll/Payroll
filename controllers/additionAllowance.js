@@ -7,8 +7,8 @@ const Employee = require("../models/employee.js");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAllowance = async (req, res) => {
   try {
-    const companyId = req.user.id;
-    const allowances = await Allowance.findAll({ where: { companyId } });
+    const CompanyId = req.user.id;
+    const allowances = await Allowance.findAll({ where: { CompanyId } });
     res.status(200).json({
       count: allowances.length,
       allowances,

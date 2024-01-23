@@ -32,7 +32,7 @@ exports.getAllEmployee = async (req, res,next) => {
   try {
    
     const Employees = await Employee.findAll({
-      where: { companyId: req.user.id},
+      where: { CompanyId: req.user.id},
       include: [
         {
           model: Address,
@@ -365,7 +365,7 @@ exports.createEmployee = async (req, res, next) => {
     }
 
     const idFormat = await IdFormat.findOne({
-      where: { companyId: Number(req.user.id), isActive: true },
+      where: { CompanyId: Number(req.user.id), isActive: true },
     });
 
     if (!idFormat) {
@@ -683,7 +683,7 @@ exports.findByDepartment = async (req, res, next) => {
 
       // console.log("not zero", 0);
       // const Employees = await Employee.findAll({
-      //   // where: { companyId: req.user.id, DepartmentId: departmentId },
+      //   // where: { CompanyId: req.user.id, DepartmentId: departmentId },
       //   include: [
       //     {
       //       model: Department,
@@ -942,7 +942,7 @@ exports.createEmployeeFile = async (req, res, next) => {
           }
 
           const idFormat = await IdFormat.findOne({
-            where: { companyId: Number(req.user.id), isActive: true },
+            where: { CompanyId: Number(req.user.id), isActive: true },
           });
 
           if (!idFormat) {
@@ -1019,7 +1019,7 @@ exports.createEmployeeFile = async (req, res, next) => {
             ...basicInfo,
             password,
             employee_id_number: employeeId,
-            companyId: Number(req.user.id),
+            CompanyId: Number(req.user.id),
             DepartmentId: Number(basicInfo.DepartmentId),
             GradeId: Number(basicInfo.GradeId),
             AddressId: Number(address1.id),
@@ -1233,7 +1233,7 @@ exports.addAddionalPay = async (req, res, next) => {
     console.log("first", updates);
 
     const employee = await Employee.findAll({
-      where: { id: req.params.id, companyId: req.user.id },
+      where: { id: req.params.id, CompanyId: req.user.id },
     });
 
     //  console.log("first", employee);
@@ -1582,7 +1582,7 @@ exports.getAllProjectEmployeeInvolded = async (req, res, next) => {
     const { employeeId } = req.params
 
     const Employees = await Employee.findOne({
-      where: { id: employeeId, companyId: req.user.id },
+      where: { id: employeeId, CompanyId: req.user.id },
       attributes: ['fullname'],
       include: [
         {
@@ -1623,7 +1623,7 @@ exports.updateContactInfo= async( req,res,next)=>{
    
   
 const employee = await Employee.findOne({
-  where: { id: employeeId, companyId: req.user.id }
+  where: { id: employeeId, CompanyId: req.user.id }
 })
 
 

@@ -23,7 +23,7 @@ const Projects = sequelize.define("Projects", {
     type: DataTypes.STRING,
   },
   budget:{
-    type: DataTypes.NUMBER,
+    type: DataTypes.STRING,
   },
 
   numberOfEmployees: {

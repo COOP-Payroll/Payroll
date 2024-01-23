@@ -4,7 +4,7 @@ const Department = require("../models/department.js");
 exports.getAllDepartment = async (req, res, next) => {
   try {
     const departments = await Department.findAll({
-      where: { companyId: req.user.id },
+      where: { CompanyId: req.user.id },
     });
     if (!departments) {
       res.status(200).json("There is no department");
@@ -56,7 +56,7 @@ exports.createDepartment = async (req, res, next) => {
     const { deptName, location, shorthandRepresentation } = req.body;
 
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
       deptName: deptName,
     };
 

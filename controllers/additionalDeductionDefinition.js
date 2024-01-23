@@ -7,7 +7,7 @@ exports.getAllAdditionalDeductionDefinition = async (req, res) => {
 
   try {
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
     };
     const AdditionalDeductionDefinitions =
       await AdditionalDeductionDefinition.findAll({ where: criteria });
@@ -75,7 +75,7 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
 
     const criteria = {
       name: name,
-      companyId: req.user.id,
+      CompanyId: req.user.id,
     };
     const checkAdditionalDeductionDefinition =
       await AdditionalDeductionDefinition.findOne({
@@ -132,11 +132,11 @@ exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
 
     const AdditionalDeductionDefinitions =
       await AdditionalDeductionDefinition.findOne({
-        where: { id: id, companyId: req.user.id },
+        where: { id: id, CompanyId: req.user.id },
       });
     if (AdditionalDeductionDefinitions) {
       await AdditionalDeductionDefinition.destroy({
-        where: { id, companyId: req.user.id },
+        where: { id, CompanyId: req.user.id },
       });
       res.status(200).json({ message: "Deleted successfully" });
     } else {

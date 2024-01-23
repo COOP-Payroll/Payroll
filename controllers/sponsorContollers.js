@@ -15,7 +15,7 @@ const AccountInfo= require("../models/accountInfo.js")
 exports.getAllSponsors = async (req, res, next) => {
   try {
     const criteria = {
-      companyId: req.user.id
+      CompanyId: req.user.id
     }
     const sponsors = await Sponsors.findAll({
       where: criteria
@@ -41,7 +41,7 @@ exports.getOneSponsors = async (req, res, next) => {
     const { id } = req.params
     const criteria = {
       id:id,
-      companyId: req.user.id
+      CompanyId: req.user.id
     }
     const sponsors = await Sponsors.findOne({
       where: criteria
@@ -82,7 +82,7 @@ exports.createSponsors = async (req, res, next) => {
 
     const companyId = req.user.id
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
       name: name
     }
     const checkSponsors = await Sponsors.findOne({ where: criteria })
@@ -155,7 +155,7 @@ exports.updateSponsor = async (req, res, next) => {
     const { id } = req.params
 
     const checkSponsor = await Sponsors.findOne({
-      where: { id: id, companyId: req.user.id }
+      where: { id: id, CompanyId: req.user.id }
     });
     if (!checkSponsor) {
       return next(createError.createError(404, 'Sponsor not found'))
@@ -196,7 +196,7 @@ exports.deleteSponsor = async (req, res, next) => {
   try {
     const { id } = req.params
     const sponsors = await Sponsors.findOne({
-      where: { id: id, companyId: req.user.id }
+      where: { id: id, CompanyId: req.user.id }
     })
     if (!sponsors) {
       return next(createError.createError(404, 'Sponsor not found'))

@@ -177,7 +177,7 @@ console.log()
   });
 });
 // sequelize.sync({ logging: console.log });
-sequelize.sync({ alter: false }).then(() => console.log("db is ready"));
+// sequelize.sync({ alter: false }).then(() => console.log("db is ready"));
   
 const runWorker = (employeeId, payrollDefinitionId, user) => {
   const worker = new Worker("./controllers/newWorker.js", {
@@ -196,20 +196,19 @@ const runComputation = async (payrolls) => {
 let isRunning = false;
 console.log(process.env.PORT)
 app.listen(process.env.PORT ||4400, () => {
- 
-  cron.schedule("*/5 * * * * * * *", async () => {
-    if (!isRunning) {
-      isRunning = true;
-      const payrolls = await Payroll.findAll({
-        where: { status: "ordered" },
-        include: [PayrollDefinition],
-      });
-      // console.log("first", JSON.stringify(payrolls))
-      if (payrolls.length > 0) {
-        await runComputation(payrolls);
-      }
-      isRunning = true;
-    }
-  });
+  // cron.schedule("*/5 * * * * * * * *", async () => {
+  //   if (!isRunning) {
+  //     isRunning = true;
+  //     const payrolls = await Payroll.findAll({
+  //       where: { status: "ordered" },
+  //       include: [PayrollDefinition],
+  //     });
+  //     // console.log("first", JSON.stringify(payrolls))
+  //     if (payrolls.length > 0) {
+  //       await runComputation(payrolls);
+  //     }
+  //     isRunning = true;
+  //   }
+  // });
   console.log(`Server is running on port: ${process.env.PORT}`);
 });

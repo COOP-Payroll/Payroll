@@ -178,14 +178,14 @@ exports.createApprover = async (req, res,next) => {
       where: { CompanyId: req.user.id, isActive: true},
     });
 
-const employee= await Employee.findOne({where:{id:EmployeeId,companyId:req.user.id,isActive:true}})
+const employee= await Employee.findOne({where:{id:EmployeeId,CompanyId:req.user.id,isActive:true}})
 
 if(!employee){
   return next(createError.createError(404, "Employee not found"))
   // return res.status(404).json({ error: "Employee not found" });))
 }
 
-const checkApprover= await Approver.findOne({where:{EmployeeId:EmployeeId,companyId:req.user.id,isActive:true}})
+const checkApprover= await Approver.findOne({where:{EmployeeId:EmployeeId,CompanyId:req.user.id,isActive:true}})
 
 if(checkApprover){
   return next(createError.createError(409, "this employee is already assigned as approver"))
@@ -700,7 +700,7 @@ exports.updateApprover=async(req, res,next)=> {
     approver.isActive = isActive;
     approver.isMaster = isMaster;
     approver.EmployeeId = EmployeeId;
-    approver.companyId = companyId;
+    approver.CompanyId = companyId;
     await approver.save();
     res.json(approver);
   } catch (error) {

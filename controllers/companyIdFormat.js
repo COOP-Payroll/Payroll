@@ -7,7 +7,7 @@ exports.createCompanyIdFormat = async (req, res) => {
   // const { companyCode, year, department, separator, order } = req.body;
   try {
     const companyIds = await IdFormat.findAll({
-      where: { companyId: Number(req.user.id) },
+      where: { CompanyId: Number(req.user.id) },
     });
     if (companyIds.length >= 1)
       return res
@@ -25,7 +25,7 @@ exports.createCompanyIdFormat = async (req, res) => {
 exports.getAllCompanyIdFormat = async (req, res) => {
   try {
     const IdFormates = await IdFormat.findAll({
-      where: { companyId: Number(req.user.id) },
+      where: { CompanyId: Number(req.user.id) },
     });
     const parsedCompanies = await Promise.all(
       IdFormates.map((company) => {
@@ -87,7 +87,7 @@ exports.updateCompanyIdFormat = async (req, res) => {
 exports.getActiveCompany = async (req, res) => {
   try {
     const activeCompanyId = await IdFormat.findOne({
-      where: { isActive: true, companyId: Number(req.user.id) },
+      where: { isActive: true, CompanyId: Number(req.user.id) },
     });
     if (!activeCompanyId)
       return res.status(404).json({ message: "there is no active Id format" });

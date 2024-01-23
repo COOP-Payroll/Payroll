@@ -6,7 +6,7 @@ const Company = require("../models/company.js");
 exports.getAllDeduction = async (req, res) => {
   try {
     const deductions = await Deduction.findAll({
-      where: { companyId: req.user.id },
+      where: { CompanyId: req.user.id },
     });
     return res.status(200).json({
       count: deductions.length,

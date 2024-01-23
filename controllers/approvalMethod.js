@@ -9,7 +9,7 @@ exports.getAllApprovalMethod = async (req, res) => {
   console.log(CompanyId);
   try {
     const criteria = {
-      where: { companyId: req.user.id },
+      where: { CompanyId: req.user.id },
     };
     const approvalMethod = await ApprovalMethod.findAll(criteria )
     console.log(CompanyId);
@@ -28,7 +28,7 @@ exports.getAllActiveApprovalMethod = async (req, res,next) => {
   console.log(CompanyId);
   try {
     const criteria = {
-      where: { companyId: req.user.id, isActive: true },
+      where: { CompanyId: req.user.id, isActive: true },
     };
     const approvalMethod = await ApprovalMethod.findAll(criteria);
     console.log("this is active",approvalMethod);
@@ -47,7 +47,7 @@ exports.getAllInActiveApprovalMethod = async (req, res,next) => {
   console.log(CompanyId);
   try {
     const criteria = {
-      where: { companyId: req.user.id, isActive: false },
+      where: { CompanyId: req.user.id, isActive: false },
     };
     const approvalMethod = await ApprovalMethod.findAll(criteria );
     console.log(CompanyId);
@@ -118,7 +118,7 @@ exports.createApprovalMethod = async (req, res,next) => {
       
     );
     const criteria = {
-      where: { companyId: req.user.id },
+      where: { CompanyId: req.user.id },
     };
     console.log("criteria",criteria)
     const isExist = await ApprovalMethod.count(criteria);

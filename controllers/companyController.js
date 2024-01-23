@@ -148,13 +148,13 @@ exports.createCompany1 = async (req, res, next) => {
     ] = await Promise.all([
       Taxslab.findAll(
         {
-          where: { userId: superAdmin.id, isActive: true }
+          where: { UserId: superAdmin.id, isActive: true }
         },
         { transaction }
       ),
       Pension.findAll(
         {
-          where: { userId: superAdmin.id, isActive: true }
+          where: { UserId: superAdmin.id, isActive: true }
         },
         { transaction }
       ),
@@ -335,8 +335,8 @@ exports.createCompany = async (req, res, next) => {
       additionalAllowanceDefinitions,
       additionalDeductionDefinitions
     ] = await Promise.all([
-      Taxslab.findAll({ where: { userId: superAdmin.id, isActive: true } }, ),
-      Pension.findAll({ where: { userId: superAdmin.id, isActive: true } }, ),
+      Taxslab.findAll({ where: { UserId: superAdmin.id, isActive: true } }, ),
+      Pension.findAll({ where: { UserId: superAdmin.id, isActive: true } }, ),
       AdditionalAllowanceDefinition.findAll({ where: { CompanyId: null } }, ),
       AdditionalDeductionDefinition.findAll({ where: { CompanyId: null } }, )
     ]);
@@ -675,7 +675,7 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
     const currentDate = moment()
 
     const subscriptionLeftDate = await Subscription.findOne({
-      where: { companyId: companyId }
+      where: { CompanyId: companyId }
     })
 
     const nextPaymentDate = moment(subscriptionLeftDate.nextPaymentDate)

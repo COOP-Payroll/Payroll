@@ -6,7 +6,7 @@ exports.getAllAllowanceDefinition = async (req, res) => {
 
   try {
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
     };
     const allowanceDefinitions = await AllowanceDefinition.findAll(criteria);
     res.status(200).json({

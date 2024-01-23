@@ -38,7 +38,7 @@ const newWorker = async () => {
     ] = await Promise.all([
       Pension.findOne({
         where: {
-          companyId: user,
+          CompanyId: user,
           isActive: true,
         },
       }),
@@ -75,7 +75,7 @@ const newWorker = async () => {
     const employer_pension = pension?.employerContribution ?? 0;
 
     const taxslabs = await Taxslab.findAll({
-      where: { companyId: user, isActive: true },
+      where: { CompanyId: user, isActive: true },
     });
 
     let totalDeduction = 0;

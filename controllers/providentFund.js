@@ -13,7 +13,7 @@ exports.getAllProvidentFund = async (req, res) => {
       });
     } else if (req.user.role === "companyAdmin") {
       const ProvidentFunds = await ProvidentFund.findAll({
-        where: { companyId: req.user.id, isActive: true },
+        where: { CompanyId: req.user.id, isActive: true },
       });
       res.status(200).json({
         count: ProvidentFunds.length,
@@ -91,7 +91,7 @@ exports.createProvidentFund = async (req, res, next) => {
       }
     } else if (req.user.role === "companyAdmin") {
       const getAllProvidentFund = await ProvidentFund.findAll({
-        companyId: req.user.id,
+        CompanyId: req.user.id,
       });
    
       if (!getAllProvidentFund || getAllProvidentFund.length == 0) {
