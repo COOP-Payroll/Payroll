@@ -11,7 +11,7 @@ exports.getAllCustomRole = async (req, res) => {
 
   try {
     const customRole = await CustomRole.findAll({
-      where: { companyId: req.user.id },
+      where: { CompanyId: req.user.id },
       include: [Permission],
     });
     res.status(200).json({
@@ -55,7 +55,7 @@ exports.createCustomRole = async (req, res, next) => {
     const { name, permission } = req.body;
 
     const checkrole = await CustomRole.findOne({
-      where: { companyId: req.user.id, name: name },
+      where: { CompanyId: req.user.id, name: name },
     });
 
     if (checkrole) {

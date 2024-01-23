@@ -37,7 +37,7 @@ exports.createEmployee = async (req, res) => {
   try {
     const [position, grade, department, employee, accountInfos, idformat] =
       await Promise.all([
-        Position.findOne({where:{id:Number(employeeInfo.position), companyid:req.user.id}}),
+        Position.findOne({where:{id:Number(employeeInfo.position), CompanyId:req.user.id}}),
         Grade.findByPk(Number(basicInfo?.GradeId)),
         Department.findByPk(Number(basicInfo?.DepartmentId)),
         Employee.findOne({ where: { email: basicInfo?.email } }),
@@ -76,9 +76,9 @@ exports.createEmployee = async (req, res) => {
       errors.push({ error: 'Account infos already exist.' })
     }
 
-    if (!idformat) {
-      errors.push({ error: 'ID format does not exist.' })
-    }
+    // if (!idformat) {
+    //   errors.push({ error: 'ID format does not exist.' })
+    // }
     if (errors.length > 0) {
       return res.status(404).json({ message: errors })
     }
@@ -88,7 +88,7 @@ exports.createEmployee = async (req, res) => {
       const imagePath = req?.files?.['basicInfo[image]']?.[0]?.path || null
       const idImagePath = req?.files?.['basicInfo[id_image]']?.[0]?.path || null
 
-      const formatElements = idformat.order.split(',')
+      const formatElements = idformat?.order?.split(',')
       const lastEmployee = await Employee.findOne({
         order: [['createdAt', 'DESC']]
       })
@@ -96,11 +96,11 @@ exports.createEmployee = async (req, res) => {
 
       if (lastEmployee) {
         const lastEmployeeId = lastEmployee.employee_id_number
-        const lastEmployeeCode = lastEmployeeId.split(idformat.separator).pop()
+        const lastEmployeeCode = lastEmployeeId.split(idformat?.separator)?.pop()
         const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1
         paddedEmployeeCode = incrementedEmployeeCode
           .toString()
-          .padStart(idformat.digitLength, '0')
+          .padStart(idformat?.digitLength, '0')
       }
 
       let employeeId = ''
@@ -108,7 +108,7 @@ exports.createEmployee = async (req, res) => {
         const element = formatElements[i]
         switch (element) {
           case 'companyCode':
-            employeeId += idformat.companyCode
+            employeeId += idformat?.companyCode
             break
           case 'year':
             employeeId += employeeInfo.hireDate.split('-')[0]
@@ -119,11 +119,11 @@ exports.createEmployee = async (req, res) => {
         }
 
         if (i !== formatElements.length - 1) {
-          employeeId += idformat.separator
+          employeeId += idformat?.separator
         }
       }
 
-      employeeId += idformat.separator + paddedEmployeeCode
+      employeeId += idformat?.separator + paddedEmployeeCode
       const createEmployee = await Employee.create(
         {
           ...basicInfo,
@@ -136,7 +136,7 @@ exports.createEmployee = async (req, res) => {
         },
         { transaction: t }
       )
-
+console.log("data")
       const junctionCreate = await EmployeeDepartment.create(
         {
           EmployeeId: Number(createEmployee.id),
@@ -247,6 +247,7 @@ exports.createEmployee = async (req, res) => {
       })
     })
   } catch (error) {
+    console.log("eror")
     console.error('Error creating records:', error)
     return res
       .status(500)

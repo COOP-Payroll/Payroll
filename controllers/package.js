@@ -67,8 +67,7 @@ exports.getpackageById = async (req, res) => {
 
 exports.createPackage = async (req, res, next) => {
   try {
-    
-    const {
+        const {
       packageType,
       packageName,
       min_employee,

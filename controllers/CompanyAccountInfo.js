@@ -5,7 +5,7 @@ const CompanyAccountInfo = require("../models/companyAccountInfo");
 
 exports.createCompanyAccountInfo = async (req, res) => {
   try {
-    const companyId = Number(req.user.id);
+    const CompanyId = Number(req.user.id);
 
     const { file } = req;
     //  const { name, hireDate, username, password } = req.body;
@@ -16,7 +16,7 @@ exports.createCompanyAccountInfo = async (req, res) => {
 
     const existingAccount = await CompanyAccountInfo.findOne({
       where: {
-        companyId,
+        CompanyId,
         accountNumber: req.body.accountNumber,
       },
     });
@@ -27,7 +27,7 @@ exports.createCompanyAccountInfo = async (req, res) => {
 
     const activeAccount = await CompanyAccountInfo.findOne({
       where: {
-        companyId,
+        CompanyId,
         isActive: true,
       },
     });
@@ -41,7 +41,7 @@ exports.createCompanyAccountInfo = async (req, res) => {
 
     const newAccountInfo = await CompanyAccountInfo.create({
       ...req.body,
-      CompanyId: companyId,
+      CompanyId: CompanyId,
       image: path,
     });
 
@@ -70,9 +70,9 @@ exports.createCompanyAccountInfo = async (req, res) => {
 
 exports.getAllCompanyAccountInfo = async (req, res) => {
   try {
-    const companyId = Number(req.user.id);
+    const CompanyId = Number(req.user.id);
     const companyAccountInfo = await CompanyAccountInfo.findOne({
-      where: { CompanyId: companyId, isActive: true },
+      where: { CompanyId: CompanyId, isActive: true },
     });
 
     // const baseUrl = "https://payroll-production.up.railway.app/"; // Replace with your base URL
@@ -93,10 +93,10 @@ exports.getAllCompanyAccountInfo = async (req, res) => {
 
 exports.deleteCompanyAccountInfo = async (req, res) => {
   try {
-    const companyId = Number(req.user.id);
+    const CompanyId = Number(req.user.id);
     const { id } = req.params;
     const companyAccountInfos = await CompanyAccountInfo.findOne({
-      where: { CompanyId: companyId, id },
+      where: { CompanyId: CompanyId, id },
     });
     if (!companyAccountInfos) {
       res.status(404).json({ error: "company Account Info does not exist" });
@@ -111,12 +111,12 @@ exports.deleteCompanyAccountInfo = async (req, res) => {
 
 exports.updateCompanyAccountInfo = async (req, res) => {
   try {
-    const companyId = Number(req.user.id);
+    const CompanyId = Number(req.user.id);
     const { isVerified, accountNumber } = req.body;
     const { id } = req.params;
 
     const accountInfo = await CompanyAccountInfo.findOne({
-      where: { CompanyId: companyId, id },
+      where: { CompanyId: CompanyId, id },
     });
 
     if (!accountInfo) {

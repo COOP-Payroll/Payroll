@@ -15,7 +15,7 @@ const { max } = require('moment/moment.js')
 exports.getAllpositions = async (req, res, next) => {
   try {
     const criteria = {
-      companyId: req.user.id
+      CompanyId: req.user.id
     }
     const positions = await Positions.findAll({
       where: criteria
@@ -41,7 +41,7 @@ exports.getOne = async (req, res, next) => {
     const { id } = req.params
     const criteria = {
       id:id,
-      companyId: req.user.id
+      CompanyId: req.user.id
     }
     const positions = await Positions.findOne({
       where: criteria
@@ -75,7 +75,7 @@ exports.createPositions = async (req, res, next) => {
 
     const companyId = req.user.id
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
       positionName: positionName
     }
     const positionFound = await Positions.findOne({ where: criteria })
@@ -109,7 +109,7 @@ exports.updatePosition= async (req, res, next) => {
     const { id } = req.params
 
     const foundPosition  = await Positions.findOne({
-      where: { id: id, companyId: req.user.id }
+      where: { id: id, CompanyId: req.user.id }
     });
     if (!foundPosition ) {
       return next(createError.createError(404, 'Position not found'))
@@ -144,7 +144,7 @@ exports.deletePosition = async (req, res, next) => {
   try {
     const { id } = req.params
     const foundPosition = await Positions.findOne({
-      where: { id: id, companyId: req.user.id }
+      where: { id: id, CompanyId: req.user.id }
     })
     if (!foundPosition) {
       return next(createError.createError(404, 'Position not found'))

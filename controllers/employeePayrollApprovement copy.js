@@ -172,8 +172,8 @@ const createApprovement = async (req, res) => {
           //call herarchical method
           const eachPayrollStatus=payrolls.status;
           
-          const herreturn = await handleHierarchicalApprove(
-            companyId,
+          const herreturn = await handleHierarchicalApprove({
+            CompanyId:companyId,
             companyMinimumApprover,
             companyApprovalLevel,
             eachPayrollStatus,
@@ -181,15 +181,16 @@ const createApprovement = async (req, res) => {
             payrollId,
             approverId,
             approverLevel,
-            employeeId
+            EmployeeId: employeeId
+          }
           );
-          return res.json(herreturn);
+          return res.status(200).json(herreturn);
         } else if (companyApprovalMethod === "horizontal") {
           //call horizontal method
           const eachPayrollStatus=payrolls.status;
 
-          const horreturn = await handleHorizontalApprove(
-            companyId,
+          const horreturn = await handleHorizontalApprove({
+            CompanyId:companyId,
             companyMinimumApprover,
             companyApprovalLevel,
             eachPayrollStatus,
@@ -197,9 +198,9 @@ const createApprovement = async (req, res) => {
             payrollId,
             approverId,
             approverLevel,
-            employeeId
-          );
-          return res.json(horreturn);
+            EmployeeId: employeeId
+        });
+          return res.status(200).json(horreturn);
         } else {
           return res.json("sorry, undefined approval method");
         }
@@ -212,8 +213,8 @@ const createApprovement = async (req, res) => {
             //call herarchical method
             const eachPayrollStatus=payrolls.status;
             
-            const herreturn = await handleHierarchicalApprove(
-              companyId,
+            const herreturn = await handleHierarchicalApprove({
+              CompanyId:companyId,
               companyMinimumApprover,
               companyApprovalLevel,
               eachPayrollStatus,
@@ -221,13 +222,13 @@ const createApprovement = async (req, res) => {
               payrollId,
               approverId,
               approverLevel,
-              employeeId
+              EmployeeId: employeeId            }
             );
             return res.json(herreturn);
           } else if (companyApprovalMethod === "horizontal") {
             //call horizontal method
-            const horreturn = await handleHorizontalApprove(
-              companyId,
+            const horreturn = await handleHorizontalApprove({
+              CompanyId:companyId,
               companyMinimumApprover,
               companyApprovalLevel,
               eachPayrollStatus,
@@ -235,8 +236,7 @@ const createApprovement = async (req, res) => {
               payrollId,
               approverId,
               approverLevel,
-              employeeId
-            );
+              EmployeeId: employeeId          });
             return res.json(horreturn);
           } else {
             return res.json("sorry, undefined approval method");
@@ -257,13 +257,13 @@ const createApprovement = async (req, res) => {
             },
           });
           if(isActivated){
-            return res.json("already activated")
+            return res.status(200).json("already activated")
           }
           if (!isApproved) {
-           return res.json("not approved")
+           return res.status(404).json("not approved")
           }
           await isApproved.update({ status: 'active' });
-          return res.json("payroll activated  successfully");
+          return res.status(200).json("payroll activated  successfully");
         }
       }
     } else {
@@ -275,8 +275,8 @@ const createApprovement = async (req, res) => {
   }
 };
 
-async function handleHierarchicalApprove(
-  companyId,
+async function handleHierarchicalApprove({
+  CompanyId:companyId,
   companyMinimumApprover,
   companyApprovalLevel,
   eachPayrollStatus,
@@ -284,7 +284,8 @@ async function handleHierarchicalApprove(
   payrollId,
   approverId,
   approverLevel,
-  employeeId
+  EmployeeId: employeeId
+}
 ) {
   
   // payrollId=payrollId;
@@ -704,8 +705,8 @@ const arrayApproveApprovement = async (req, res) => {
               //call herarchical method
               const eachPayrollStatus=payrolls.status;
               
-              const herreturn = await handleHierarchicalApprove(
-                companyId,
+              const herreturn = await handleHierarchicalApprove({
+                CompanyId:companyId,
                 companyMinimumApprover,
                 companyApprovalLevel,
                 eachPayrollStatus,
@@ -713,16 +714,16 @@ const arrayApproveApprovement = async (req, res) => {
                 payrollId,
                 approverId,
                 approverLevel,
-                employeeId
+                employeeId}
               );
-              const returnValue = res.json(herreturn);
+              const returnValue = res.status(200).json(herreturn);
               return returnValue;
             } else if (companyApprovalMethod === "horizontal") {
               //call horizontal method
               const eachPayrollStatus=payrolls.status;
     
-              const horreturn = await handleHorizontalApprove(
-                companyId,
+              const horreturn = await handleHorizontalApprove({
+                CompanyId:companyId,
                 companyMinimumApprover,
                 companyApprovalLevel,
                 eachPayrollStatus,
@@ -730,7 +731,7 @@ const arrayApproveApprovement = async (req, res) => {
                 payrollId,
                 approverId,
                 approverLevel,
-                employeeId
+                EmployeeId: employeeId}
               );
               const returnValue = res.json(horreturn);
               return returnValue;
@@ -747,8 +748,8 @@ const arrayApproveApprovement = async (req, res) => {
                 //call herarchical method
                 const eachPayrollStatus=payrolls.status;
                 
-                const herreturn = await handleHierarchicalApprove(
-                  companyId,
+                const herreturn = await handleHierarchicalApprove({
+                  CompanyId:companyId,
                   companyMinimumApprover,
                   companyApprovalLevel,
                   eachPayrollStatus,
@@ -756,15 +757,16 @@ const arrayApproveApprovement = async (req, res) => {
                   payrollId,
                   approverId,
                   approverLevel,
-                  employeeId
+                 EmployeeId: employeeId
+                }
                 );
                 const returnValue = res.json(herreturn);
                 return returnValue;
               } else if (companyApprovalMethod === "horizontal") {
                 //call horizontal method
                 const eachPayrollStatus=payrolls.status;
-                const horreturn = await handleHorizontalApprove(
-                  companyId,
+                const horreturn = await handleHorizontalApprove({
+                  CompanyId:companyId,
                   companyMinimumApprover,
                   companyApprovalLevel,
                   eachPayrollStatus,
@@ -772,7 +774,7 @@ const arrayApproveApprovement = async (req, res) => {
                   payrollId,
                   approverId,
                   approverLevel,
-                  employeeId
+                  EmployeeId: employeeId}
                 );
                 const returnValue = res.json(horreturn);
                 return returnValue;

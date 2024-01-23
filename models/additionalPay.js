@@ -9,7 +9,7 @@ const PayrollDefinition = require("./payrollDefinition.js");
 
 const AdditionalPay = sequelize.define("AdditionalPay", {
   amount: {
-    type: DataTypes.NUMBER,
+    type: DataTypes.STRING,
     allowNull: false,
   },
   //grade id

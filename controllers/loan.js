@@ -6,7 +6,7 @@ const Employee = require("../models/employee.js");
 exports.getAllLoan = async (req, res) => {
   try {
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
     };
     const loans = await Loan.findAll();
     res.status(200).json({
@@ -143,11 +143,11 @@ exports.updateLoan = async (req, res, next) => {
       updates.amount = amount;
     }
     // const criteria = {
-    //   companyId: req.user.id,
+    //   CompanyId: req.user.id,
     // };
 
     const checkLoan = await Loan.findOne({
-      where: { id: id, companyId: req.user.id },
+      where: { id: id, CompanyId: req.user.id },
     });
 
     if (!checkLoan) {
@@ -188,7 +188,7 @@ exports.deleteLoan = async (req, res, next) => {
   try {
     const { id } = req.params;
     const laon = await Loan.findOne({
-      where: { id: id, companyId: req.user.id },
+      where: { id: id, CompanyId: req.user.id },
     });
     if (laon) {
       await Loan.destroy({ where: { id } });

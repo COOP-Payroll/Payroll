@@ -6,7 +6,7 @@ exports.getAllAdditionalPayDefinition = async (req, res,next) => {
 
   try {
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
     };
     const AdditionalPayDefinitions = await AdditionalPayDefinition.findAll({
       where: criteria,

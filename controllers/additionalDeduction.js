@@ -6,7 +6,7 @@ const Employee = require("../models/employee.js");
 exports.getAllAdditionalDeduction = async (req, res, next) => {
   try {
     const criteria = {
-      companyId: req.user.id,
+      CompanyId: req.user.id,
     };
     const AdditionalDeductions = await AdditionalDeduction.findAll({
       where: criteria,
@@ -138,11 +138,11 @@ exports.updateAdditionalDeduction = async (req, res, next) => {
       updates.amount = amount;
     }
     // const criteria = {
-    //   companyId: req.user.id,
+    //   CompanyId: req.user.id,
     // };
 
     const checkAdditionalDeduction = await AdditionalDeduction.findOne({
-      where: { id: id, companyId: req.user.id },
+      where: { id: id, CompanyId: req.user.id },
     });
     console.log("first", checkAdditionalDeduction);
     if (checkAdditionalDeduction) {
@@ -183,7 +183,7 @@ exports.deleteAdditionalDeduction = async (req, res, next) => {
   try {
     const { id } = req.params;
     const laon = await AdditionalDeduction.findOne({
-      where: { id: id, companyId: req.user.id },
+      where: { id: id, CompanyId: req.user.id },
     });
     if (laon) {
       await AdditionalDeduction.destroy({ where: { id } });

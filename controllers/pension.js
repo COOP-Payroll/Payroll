@@ -13,7 +13,7 @@ exports.getAllPension = async (req, res) => {
       });
     } else if (req.user.role === "companyAdmin") {
       const pensions = await Pension.findAll({
-        where: { companyId: req.user.id },
+        where: { CompanyId: req.user.id },
       });
       res.status(200).json({
         count: pensions.length,
@@ -93,7 +93,7 @@ exports.createPension = async (req, res, next) => {
       }
     } else if (req.user.role === "companyAdmin") {
       const getAllPension = await Pension.findAll({
-        where: { companyId: req.user.id },
+        where: { CompanyId: req.user.id },
       });
       if (getAllPension.length != 0) {
         res.status(409).json("Pension is already defined update it ");
@@ -267,7 +267,7 @@ exports.getAllPensionIncludingInActive = async (req, res) => {
       });
     } else if (req.user.role === "companyAdmin") {
       const pensions = await Pension.findAll({
-        where: { companyId: req.user.id },
+        where: { CompanyId: req.user.id },
       });
       res.status(200).json({
         count: pensions.length,

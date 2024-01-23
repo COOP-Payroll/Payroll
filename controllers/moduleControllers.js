@@ -116,7 +116,7 @@ exports.updateModules = async (req, res, next) => {
  
 
     const checkModules = await Modules.findOne({
-      where: { id: id, companyId: req.user.id },
+      where: { id: id, CompanyId: req.user.id },
     });
     console.log("first", checkModules);
     if (checkModules) {
@@ -157,7 +157,7 @@ exports.deleteModules = async (req, res, next) => {
   try {
     const { id } = req.params;
     const module = await Modules.findOne({
-      where: { id: id, companyId: req.user.id },
+      where: { id: id, CompanyId: req.user.id },
     });
     if (module) {
       await Modules.destroy({ where: { id } });
@@ -193,7 +193,7 @@ exports.detlete= async(req,res,next)=>{
     const {id}=req.params.id;
 
     const module = await Modules.findOne({
-      where: { id: id, companyId: req.user.id },
+      where: { id: id, CompanyId: req.user.id },
     });
     if (module) {
       await module.destroy({ where: { id } });

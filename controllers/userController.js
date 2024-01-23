@@ -129,7 +129,7 @@ exports.verifyCompanyAccount = async (req, res, next) => {
     // await company.update({ status });
 
     const foundAccount = await AccountInfo.findOne({
-      where: { id: accountId, isActive: true, isVerified: false, companyId: id }
+      where: { id: accountId, isActive: true, isVerified: false, CompanyId: id }
     })
     if (!foundAccount) {
       return next(
