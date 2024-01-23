@@ -9,7 +9,8 @@ const createError = require('../utils/error.js')
 const CustomError = require('../utils/customError.js')
 const successResponse = require('../utils/successResponse.js')
 const { max } = require('moment/moment.js')
-
+const sequelize = require('../database/db.js')
+const AccountInfo= require("../models/accountInfo.js")
 //CREATE GRADE
 exports.getAllSponsors = async (req, res, next) => {
   try {
@@ -61,16 +62,23 @@ exports.getOneSponsors = async (req, res, next) => {
   }
 }
 exports.createSponsors = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
     //insert required field
+    const { name, budget,shortCode, accountNumber, referenceNumber, location } = req.body;
+   
 
-    const { name, budget, accountNumber, location } = req.body
-
-    if (!name || !budget || !accountNumber) {
+    if (!name || !budget ) {
       return next(
-        createError.createError(400, 'Please fill all required fields')
+        createError.createError(400, 'name or budget is not inserted')
       )
     }
+
+  
+    if(!req.files?.referenceLetter?.[0]?.path){
+      return next(createError.createError(400,'referenceLetter not found'))
+    }
+
 
     const companyId = req.user.id
     const criteria = {
@@ -83,16 +91,56 @@ exports.createSponsors = async (req, res, next) => {
       return next(createError.createError(409, 'This name is defined already '))
     }
 
-    const sponsor = await Sponsors.create({ name, budget, accountNumber,location })
+    const sponsor = await Sponsors.create({ name, budget, shortCode,location },{transaction})
     console.log("sponsor",sponsor)  
-    await sponsor.setCompany(companyId)
+    await sponsor.setCompany(companyId,{transaction});
 
+
+
+
+    const accountInfo = await AccountInfo.findOne({
+      where: {  SponsorId: sponsor?.id ,isActive: true}
+    })
+    const data = req.files?.image?.[0]?.path
+    const imagePath = data ? data : null
+    const referenceLetterData = req.files?.referenceLetter?.[0]?.path
+    const referenceLetterPath = referenceLetterData ? referenceLetterData : null
+    if (!accountInfo) {
+   
+   
+  console.log("data",data)
+      
+        // await accountInfo.update({ isActive: false }, { transaction })
+        await AccountInfo.create(
+          { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,SponsorId:sponsor.id,isActive:true },
+          { transaction }
+      
+      // await AccountInfo.create({
+      //   accountNumber,referenceLetter,referenceNumber,image
+      );
+  
+  
+    }
+    else{
+    await accountInfo.update({ isActive: false }, { transaction });
+    await AccountInfo.create(
+      { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,SponsorId:sponsor.id ,isActive:true },
+      { transaction }
+  
+  // await AccountInfo.create({
+  //   accountNumber,referenceLetter,referenceNumber,image
+  );
+    }
+
+
+    await transaction.commit();
     return res.status(201).json({
       success: true,
       message: 'Successfully Registered',
       data: sponsor
     })
   } catch (error) {
+    await transaction.rollback();
     // console.log('error', error)
     return next(createError.createError(500, 'Internal server error'))
   }

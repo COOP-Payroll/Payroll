@@ -20,6 +20,8 @@ const ProjectEmployeeHistory=require("../models/projectEmployeeHistory.js");
 const ProjectPositionHistory = require('../models/projectPositionHistory.js');
 const Position = require('../models/position.js');
 const { Sequelize } = require('sequelize');
+const AccountInfo = require('../models/accountInfo.js');
+
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res, next) => {
@@ -85,6 +87,7 @@ exports.getOneProject = async (req, res, next) => {
   }
 }
 exports.createProjects = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
     const {
       projectName,
@@ -93,6 +96,7 @@ exports.createProjects = async (req, res, next) => {
       budget,
       location,
       description,
+      referenceNumber,
       startDate,
       endDate,
       accountNumber
@@ -112,6 +116,13 @@ exports.createProjects = async (req, res, next) => {
         createError.createError(400, 'Please fill all the required fields')
       )
     }
+
+    if(!req.files?.referenceLetter?.[0]?.path){
+      return next(createError.createError(400,'referenceLetter not found'))
+    }
+
+
+
     // const url = 'http://10.1.245.150:7081/v1/cbo/'
     // const response = await axios.post(url, {
     //   CustomerInfoRequest: {
@@ -154,10 +165,47 @@ exports.createProjects = async (req, res, next) => {
       numberOfEmployees,
       endDate,
       description,
-      accountNumber: accountNumber
+      // accountNumber: accountNumber
     })
-    await projects.setSponsor(sponsorId)
-    await projects.setCompany(Number(req.user.id))
+    await projects.setSponsor(sponsorId,{transaction})
+    await projects.setCompany(Number(req.user.id),{transaction})
+
+
+
+    const accountInfo = await AccountInfo.findOne({
+      where: {  ProjectId: sponsor?.id ,isActive: true}
+    })
+    const data = req.files?.image?.[0]?.path
+    const imagePath = data ? data : null
+    const referenceLetterData = req.files?.referenceLetter?.[0]?.path
+    const referenceLetterPath = referenceLetterData ? referenceLetterData : null
+    if (!accountInfo) {
+   
+   
+  // console.log("data",data)
+      
+        // await accountInfo.update({ isActive: false }, { transaction })
+        await AccountInfo.create(
+          { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,ProjectId:sponsor.id,isActive:true },
+          { transaction }
+      
+      // await AccountInfo.create({
+      //   accountNumber,referenceLetter,referenceNumber,image
+      );
+    
+    }
+    else{
+    await accountInfo.update({ isActive: false }, { transaction });
+    await  AccountInfo.create(
+      { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,SponsorId:sponsor.id ,isActive:true },
+      { transaction }
+  
+  // await AccountInfo.create({
+  //   accountNumber,referenceLetter,referenceNumber,image
+  );
+    }
+
+    await transaction.commit();
 
     return res.status(200).json({
       success: true,
@@ -166,6 +214,7 @@ exports.createProjects = async (req, res, next) => {
     })
   } catch (error) {
     console.log('first', error)
+    await transaction.rollback();
     return next(createError.createError(500, 'Internal server error'))
   }
 }
@@ -434,7 +483,7 @@ exports.updateProjects = async (req, res, next) => {
   try {
     console.log('da la project')
     //insert required field
-    const { projectName, location, description, accountNumber,numberOfEmployees } =
+    const { projectName, location, description, numberOfEmployees } =
       req.body;
     const updates = {}
     const { id } = req.params
@@ -451,9 +500,9 @@ exports.updateProjects = async (req, res, next) => {
     if (numberOfEmployees) {
       updates.numberOfEmployees = numberOfEmployees
     }
-    if (accountNumber) {
-      updates.accountNumber = accountNumber
-    }
+    // if (accountNumber) {
+    //   updates.accountNumber = accountNumber
+    // }
     if (description) {
       updates.description = description
     }
@@ -476,7 +525,7 @@ exports.updateProjects = async (req, res, next) => {
       projectName: projectName,
       location: location,
       numberOfEmployees: numberOfEmployees,
-      accountNumber: accountNumber,
+      // accountNumber: accountNumber,
       description: description,
       // sponsorId: sponsorId
       // SponsorId: sponsorId

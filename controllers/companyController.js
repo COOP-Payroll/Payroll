@@ -443,7 +443,7 @@ exports.createCompany = async (req, res, next) => {
     // }
    
   } catch (error) {
-    // await transaction.rollback();
+    await transaction.rollback();
     console.error('Error:', error);
     return next(createError.createError(500, error.message));
   }
@@ -700,7 +700,9 @@ exports.updateAccountInfo= async(req,res,next)=>{
     if(!accountNumber|| !referenceNumber){
       return next(createError.createError(400,'please insert all requiered fields'))
     }
-
+    if(!req.files?.referenceLetter?.[0]?.path){
+      return next(createError.createError(400,'referenceLetter not found'))
+    }
     const company = await Company.findByPk(Number(req.user.id));
      if(!company){
       return next(createError.createError(404,'company not found'));
