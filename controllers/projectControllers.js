@@ -168,12 +168,12 @@ exports.createProjects = async (req, res, next) => {
       // accountNumber: accountNumber
     })
     await projects.setSponsor(sponsorId,{transaction})
-    await projects.setCompany(Number(req.user.id),{transaction})
+    await projects.setCompany(req.user.id,{transaction})
 
 
 
     const accountInfo = await AccountInfo.findOne({
-      where: {  ProjectId: sponsor?.id ,isActive: true}
+      where: {  ProjectId: projects?.id ,isActive: true}
     })
     const data = req.files?.image?.[0]?.path
     const imagePath = data ? data : null
@@ -186,7 +186,7 @@ exports.createProjects = async (req, res, next) => {
       
         // await accountInfo.update({ isActive: false }, { transaction })
         await AccountInfo.create(
-          { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,ProjectId:sponsor.id,isActive:true },
+          { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,ProjectId:projects.id,isActive:true },
           { transaction }
       
       // await AccountInfo.create({
