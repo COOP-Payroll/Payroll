@@ -236,7 +236,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
      });
 
 const getAllEmployeeUnderTheProject= await ProjectEmployee.count({where:{ProjectId:Number(projectId)}})
-
+console.log(getAllEmployeeUnderTheProject)
 if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)){
   return next(createError.createError(409, 'Maximum allocation reached'))
 }
@@ -246,7 +246,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       return next(createError.createError(404, 'Project not found'))
     }
     const employee = await Employee.findOne({
-      where: { id: Number(employeeId), CompanyId: req.user.id },
+      where: { id: employeeId, CompanyId: req.user.id },
    include:[
     {
       model: Positions,
@@ -272,21 +272,22 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
     ProjectId: Number(projectId),
     EmployeeId:Number(employeeId),
    }})
+   
 
    if (chechEmployeAssociation) {
     await transaction.rollback();
     return next(createError.createError(404,`Employee already  associated with the project`))
  
     }
-
+    // return res.json("positionProjectAssociations",employee)
   //  console.log(employee?.Positions?.[0].EmployeePosition?.id)
     const positionProjectAssociations = await PositionProjectAssociation.findOne({
       where: {
-        projectId: Number(projectId),
-        positionId:Number(employee?.Positions?.[0]?.id)
+        ProjectId: Number(projectId),
+        PositionId:Number(employee?.Positions?.[0]?.id)
       },
     });    
-
+    
    const count= await ProjectEmployee.count({
       where: {
         ProjectId:Number(projectId)
@@ -361,8 +362,9 @@ await positionProjectAssociations.update(
 
 
   } catch (error) {
+    // console.log(error)
    await transaction.rollback();
-    console.log(error)
+    // console.log(error)
     return next(createError.createError(500, 'Internal server error'))
   }}
 
