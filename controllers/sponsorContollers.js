@@ -105,7 +105,7 @@ exports.createSponsors = async (req, res, next) => {
 
     const sponsor = await Sponsors.create({ name, budget, shortCode,location },{transaction})
     console.log("sponsor",sponsor)  
-    await sponsor.setCompany(companyId,{transaction});
+    await sponsor.setCompany(req.user.id,{transaction});
 
 
 
