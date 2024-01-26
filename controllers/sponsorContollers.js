@@ -18,7 +18,13 @@ exports.getAllSponsors = async (req, res, next) => {
       CompanyId: req.user.id
     }
     const sponsors = await Sponsors.findAll({
-      where: criteria
+      where: criteria,
+      include:[
+        {
+          model: AccountInfo,
+          // where: {SponsorId:}
+        }
+      ]
     })
 
     if (!sponsors) {
@@ -44,7 +50,13 @@ exports.getOneSponsors = async (req, res, next) => {
       CompanyId: req.user.id
     }
     const sponsors = await Sponsors.findOne({
-      where: criteria
+      where: criteria,
+      include:[
+        {
+          model: AccountInfo,
+          where: {SponsorId:id}
+        }
+      ]
     })
 
     if (!sponsors) {
@@ -75,9 +87,9 @@ exports.createSponsors = async (req, res, next) => {
     }
 
   
-    if(!req.files?.referenceLetter?.[0]?.path){
-      return next(createError.createError(400,'referenceLetter not found'))
-    }
+    // if(!req.files?.referenceLetter?.[0]?.path){
+      // return next(createError.createError(400,'referenceLetter not found'))
+    // }
 
 
     const companyId = req.user.id
@@ -112,7 +124,7 @@ exports.createSponsors = async (req, res, next) => {
       
         // await accountInfo.update({ isActive: false }, { transaction })
         await AccountInfo.create(
-          { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,SponsorId:sponsor.id,isActive:true },
+          { accountNumber: accountNumber??null, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,SponsorId:sponsor.id,isActive:true },
           { transaction }
       
       // await AccountInfo.create({
@@ -123,7 +135,7 @@ exports.createSponsors = async (req, res, next) => {
     else{
     await accountInfo.update({ isActive: false }, { transaction });
     await AccountInfo.create(
-      { accountNumber: accountNumber, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,SponsorId:sponsor.id ,isActive:true },
+      { accountNumber: accountNumber?? null, referenceLetter:referenceLetterPath,referenceNumber:referenceNumber,image: imagePath,SponsorId:sponsor.id ,isActive:true },
       { transaction }
   
   // await AccountInfo.create({
@@ -139,6 +151,7 @@ exports.createSponsors = async (req, res, next) => {
       data: sponsor
     })
   } catch (error) {
+    console.log(error)
     await transaction.rollback();
     // console.log('error', error)
     return next(createError.createError(500, 'Internal server error'))

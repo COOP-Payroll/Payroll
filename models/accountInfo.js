@@ -6,7 +6,7 @@ const Employee = require("./employee.js");
 const AccountInfo = sequelize.define("AccountInfo", {
   accountNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
+    // allowNull: false,
   },
   image: {
     type: DataTypes.STRING,

@@ -108,7 +108,7 @@ exports.createProjects = async (req, res, next) => {
       !sponsorId ||
       !budget||
       !numberOfEmployees||
-      !accountNumber ||
+      // !accountNumber ||
       !startDate ||
       !endDate
     ) {
@@ -117,9 +117,9 @@ exports.createProjects = async (req, res, next) => {
       )
     }
 
-    if(!req.files?.referenceLetter?.[0]?.path){
-      return next(createError.createError(400,'referenceLetter not found'))
-    }
+    // if(!req.files?.referenceLetter?.[0]?.path){
+    //   return next(createError.createError(400,'referenceLetter not found'))
+    // }
 
 
 
