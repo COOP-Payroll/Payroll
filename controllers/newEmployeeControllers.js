@@ -510,6 +510,8 @@ const status=false;
 
 exports.getAllEmployee = async (req, res) => {
   try {
+
+    console.log("hete")
     const employees = await Employee.findAll({
       where: { CompanyId: Number(req.user.id) },
       exclude: ['password'],
@@ -620,6 +622,8 @@ exports.getAllEmployee = async (req, res) => {
     })
     return res.status(200).json({ count: employees.length, employees })
   } catch (error) {
+
+    // con=
     return res
       .status(500)
       .json({ error: 'there is a problem fetching employees' })

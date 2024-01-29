@@ -288,6 +288,8 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       },
     });    
     
+
+   
    const count= await ProjectEmployee.count({
       where: {
         ProjectId:Number(projectId)
@@ -316,7 +318,11 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       return next(createError.createError(404,`Position  is not associated with the project`))
       // console.error(`Position with ID  is not associated with the project`);
         }
-   
+   console.log("positionProjectAssociations?.maximumPercentAllocation0",positionProjectAssociations?.maximumPercentAllocation )
+console.log("positionProjectAssociations?.maximumPercentAllocation",Number(percent) > positionProjectAssociations?.maximumPercentAllocation)
+        if(Number(percent) > positionProjectAssociations?.maximumPercentAllocation){
+          return next(createError.createError(400,`percent cannot exceeds  ${positionProjectAssociations.maximumPercentAllocation} %`)
+        )}
         console.log("check", count)
       if(Number(positionProjectAssociations?.noOfEmployees)  <= count){
         await transaction.rollback();
@@ -426,7 +432,7 @@ exports.assignPositionToProject = async (req, res, next) => {
         return next(
         createError.createError(
           400,
-          `Positions with IDs ${existingPositionIds} are already associated with the project`
+          `Positions  already associated with the project`
         )
       )
     }
@@ -571,7 +577,7 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
     const { projectId, positionIds } = req.body
     // console.log(projectId,positionIds,noOfEmployees)
     const projects = await Projects.findOne({
-      where: { id: projectId, CompanyId: req.user.id }
+      where: { id: Number(projectId), CompanyId: req.user.id }
     })
     if (!projects) {
       return next(createError.createError(404, 'Project not found'))
@@ -1092,7 +1098,7 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
        return next(createError.createError(404, 'Project not found'))
      }
      const employee = await Employee.findOne({
-       where: { id: employeeId, CompanyId: req.user.id },
+       where: { id: Number(employeeId), CompanyId: req.user.id },
     include:[
      {
        model: Positions,
@@ -1115,8 +1121,8 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
      }
  
     const chechEmployeAssociation= await ProjectEmployee.findOne({ where:{
-     ProjectId: projectId,
-     EmployeeId:employeeId,
+     ProjectId: Number(projectId),
+     EmployeeId:Number(employeeId),
 
     }})
 
@@ -1124,12 +1130,12 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
       return next(createError.createError(404, 'Employee is not  associated to project'));
     }
    console.log(employee.totalPercent-chechEmployeAssociation.percent)
-    if ((employee.totalPercent-chechEmployeAssociation.percent)+ percent <= 100) {
-     await employee.update({totalPercent:(employee.totalPercent-chechEmployeAssociation.percent)+ percent },{transaction})
+    if ((employee.totalPercent-chechEmployeAssociation.percent)+ Number(percent) <= 100) {
+     await employee.update({totalPercent:(employee.totalPercent-chechEmployeAssociation.percent)+ Number(percent) },{transaction})
 
      const projectEmployeeHistory=  await ProjectEmployeeHistory.create({
-      ProjectId: projectId,
-      EmployeeId: employeeId,
+      ProjectId: Number(projectId),
+      EmployeeId: Number(employeeId),
       percent: chechEmployeAssociation.percent,
       gross: chechEmployeAssociation.gross,
       startingFrom: chechEmployeAssociation.createdAt,
@@ -1140,10 +1146,10 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
     //await chechEmployeAssociation.update({percent:percent},{transaction})
     await chechEmployeAssociation.destroy( { transaction });
     await ProjectEmployee.create({
-      ProjectId:projectId,
-      EmployeeId:employeeId,
+      ProjectId:Number(projectId),
+      EmployeeId:Number(employeeId),
       CompanyId:req.user.id,
-      percent:percent ,
+      percent:Number(percent) ,
       gross: grossValue
     },{transaction}
     )
@@ -1160,7 +1166,7 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
    }
    return res.status(200).json({
     success: true,
-    message: 'Updated successfully  '
+    message: 'Updated successfully'
     })
   } catch (error) {
 console.log(error);
