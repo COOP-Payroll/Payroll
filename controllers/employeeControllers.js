@@ -30,7 +30,7 @@ const createError= require('../utils/error.js')
 const Position=require("../models/position.js")
 exports.getAllEmployee = async (req, res,next) => {
   try {
-   
+   console.log("not heres d   d d  ")
     const Employees = await Employee.findAll({
       where: { CompanyId: req.user.id},
       include: [

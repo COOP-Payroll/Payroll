@@ -11,7 +11,7 @@ exports.getAllTaxslabs = async (req, res) => {
   try {
     if (req.user.role === "superAdmin") {
       const taxslabs = await Taxslab.findAll({
-        where: { userId: req.user.id, isActive: true },
+        where: { UserId: req.user.id, isActive: true },
         include: [
           {
             //company
@@ -42,16 +42,16 @@ exports.getAllTaxslabs = async (req, res) => {
     } else {
       const taxslabs = await Taxslab.findAll({
         where: { CompanyId: req.user.id, isActive: true },
-        include: [
-          {
-            model: Company,
-            attributes: { exclude: ["password"] },
-          },
-          {
-            model: User,
-            attributes: { exclude: ["password"] },
-          },
-        ],
+        // include: [
+        //   {
+        //     model: Company,
+        //     attributes: { exclude: ["password"] },
+        //   },
+        //   {
+        //     model: User,
+        //     attributes: { exclude: ["password"] },
+        //   },
+        // ],
       });
 
       const taxslab = taxslabs.map((taxslab) => {
@@ -153,7 +153,7 @@ exports.createTaxslab = async (req, res, next) => {
 
       const checkTax = await Taxslab.findAll({
         where: {
-          userId: req.user.id,
+          UserId: req.user.id,
           from_Salary: from_Salary,
           to_Salary: to_Salary,
         },
@@ -525,7 +525,7 @@ exports.restoreToDefault = async (req, res, next) => {
   try {
     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
     const taxslabs = await Taxslab.findAll({
-      where: { userId: Number(superAdmin.id), isActive: true },
+      where: { UserId: Number(superAdmin.id), isActive: true },
     });
 
     const deletedData = await Taxslab.destroy({
