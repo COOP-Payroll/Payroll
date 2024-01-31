@@ -82,55 +82,55 @@
 
 
 
-const { Sequelize } = require("sequelize");
-
-const sequelize = new Sequelize("PSAAS", "postgres", "pass", {
-  host: "localhost", // or your PostgreSQL host
-  dialect: "postgres",
-  port: 5432, // Default PostgreSQL port
-  logging: false,
-});
-
-// Synchronize the database, create tables if they don't exist
-sequelize.sync()
-  .then(() => {
-    console.log('Database synchronized.');
-  })
-  .catch(err => {
-    console.error('Error synchronizing database:', err);
-  });
-
-module.exports = sequelize;
-
-
-
-
-// require("dotenv").config();
 // const { Sequelize } = require("sequelize");
-// // const CustomError = require("../utils/ErrorHandler");
-// const sequelize = new Sequelize({
-//   host: process.env.DB_HOST || "localhost",
-//   port: process.env.DB_PORT || "5432",
-//   database: process.env.DB_NAME || "",
-//   username: process.env.DB_USER  ||"",
-//   password: process.env.DB_PASSWORD || "",
+
+// const sequelize = new Sequelize("PSAAS", "postgres", "pass", {
+//   host: "localhost", // or your PostgreSQL host
 //   dialect: "postgres",
+//   port: 5432, // Default PostgreSQL port
+//   logging: false,
 // });
-// // Test the database connection
-// async function testConnection() {
-//   try {
-//     await sequelize.authenticate();
-//     console.log("Database connection has been established successfully.");
-//   } catch (error) {
-//     console.error("Error connecting");
-//   }
-// }
-// sequelize.sync({ alter: true }) // Use force: true carefully, as it drops existing tables
+
+// // Synchronize the database, create tables if they don't exist
+// sequelize.sync()
 //   .then(() => {
-//     console.log('Database synchronized successfully.');
+//     console.log('Database synchronized.');
 //   })
-//   .catch((error) => {
-//     console.error('Error synchronizing database:', error);
+//   .catch(err => {
+//     console.error('Error synchronizing database:', err);
 //   });
-// testConnection();
+
 // module.exports = sequelize;
+
+
+
+
+require("dotenv").config();
+const { Sequelize } = require("sequelize");
+// const CustomError = require("../utils/ErrorHandler");
+const sequelize = new Sequelize({
+  host: process.env.DB_HOST || "localhost",
+  port: process.env.DB_PORT || "5432",
+  database: process.env.DB_NAME || "",
+  username: process.env.DB_USER  ||"",
+  password: process.env.DB_PASSWORD || "",
+  dialect: "postgres",
+});
+// Test the database connection
+async function testConnection() {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connection has been established successfully.");
+  } catch (error) {
+    console.error("Error connecting");
+  }
+}
+sequelize.sync({ alter: true }) // Use force: true carefully, as it drops existing tables
+  .then(() => {
+    console.log('Database synchronized successfully.');
+  })
+  .catch((error) => {
+    console.error('Error synchronizing database:', error);
+  });
+testConnection();
+module.exports = sequelize;
