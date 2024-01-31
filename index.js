@@ -35,6 +35,7 @@ const payrollDefinition = require("./routes/payrollDefinition");
 const approvalMethod = require("./routes/approvalMethod");
 const payrollApprovement = require("./routes/payrollApprovement");
 const customRoleRouter = require("./routes/customRole.js");
+const createCustomRole = require("./routes/createCustomRoles.js")
 const loanRoute = require("./routes/loan.js");
 const companyAccountInfoRouter = require("./routes/companyAccountInfo");
 const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
@@ -125,6 +126,7 @@ app.use("/approvalmethod", approvalMethod);
 app.use("/payrollDefinition", payrollDefinition);
 app.use("/PayrollApprovement", payrollApprovement);
 app.use("/customRole", customRoleRouter);
+app.use("/custom-roles", createCustomRole);
 app.use("/companyAccInfo", companyAccountInfoRouter);
 app.use("/employeeAccInfo", employeeAccountInfoRouter);
 app.use("/additionalDeductionDefinition", additionalDeductionDefinition);

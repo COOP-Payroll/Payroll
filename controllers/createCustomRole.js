@@ -2,16 +2,16 @@ const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const Company = require("../models/company.js");
 const Employee = require("../models/employee.js");
-const createError = require("../utils/error.js");
+const CreateCustomRole = require("../models/createCustomRole.js");
 
 // Define controller methods for handling User requests for deduction definition
-exports.getAllCustomRole = async (req, res) => {
+exports.getAllCustomRole = async (req, res,next) => {
   // const customRoles = await CustomRole.findAll({
   //   where: { companyId: req.user.id },
   // });
-
+console.log("customRoles")
   try {
-    const customRole = await CustomRole.findAll({
+    const customRole = await CreateCustomRole.findAll({
       where: { CompanyId: req.user.id },
       include: [Permission],
     });
@@ -19,6 +19,8 @@ exports.getAllCustomRole = async (req, res) => {
       count: customRole.length,
       customRole,
     });
+
+    console.log("customRoles", customRole);
   } catch (error) {
     console.error("Error retrieving permissions:", error);
   }
@@ -224,27 +226,21 @@ exports.assignToEmployee = async (req, res, next) => {
   try {
     const { employeeId, roleId } = req.body;
 
-    const getRole = await CustomRole.findOne({ where: { id: Number(roleId) } });
-    const getEmployee = await Employee.findOne({ where: { id: Number(employeeId) } });
+    const getRole = await CustomRole.findOne({ where: { id: roleId } });
+    const getEmployee = await Employee.findOne({ where: { id: employeeId } });
 
     if (!getRole) {
-      res.status(404).json({ message: "There is no Role with this ID" });
-    } 
-     if (!getEmployee) {
-      res.status(404).json({ message: "There is no Employee with this ID" });
-    } 
-    const  checkAssignedRole= await CustomRole.findOne({where:{id:Number(roleId), EmployeeId:Number(employeeId)}})
-
-    if( checkAssignedRole){
-    return next(createError.createError(409,   "Role already assigned to Employee" ))
-    }
+      res.status(409).json({ message: "There is no Role with this ID" });
+    } else if (!getEmployee) {
+      res.status(409).json({ message: "There is no Employee with this ID" });
+    } else {
       const assignedRole = await getEmployee.setCustomRole(Number(roleId));
+
       res
         .status(200)
         .json({ message: "Role Assigned successfully", assignedRole });
-    
+    }
   } catch (error) {
-    console.log(error);
     if (error.name === "SequelizeValidationError") {
       const errors = {};
       error.errors.forEach((err) => {

@@ -2,6 +2,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("./company.js");
 const CustomRole = require("./customRole.js");
+const CreateCustomRole = require("./createCustomRole.js");
 
 const Permission = sequelize.define("Permission", {
   module: {
@@ -37,5 +38,9 @@ Permission.belongsTo(Company);
 
 CustomRole.hasMany(Permission);
 Permission.belongsTo(CustomRole);
+
+
+CreateCustomRole.hasMany(Permission);
+Permission.belongsTo(CreateCustomRole);
 
 module.exports = Permission;
