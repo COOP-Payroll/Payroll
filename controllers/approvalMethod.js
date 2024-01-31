@@ -98,6 +98,7 @@ async function saveApprovalMethod(
 }
 
 exports.createApprovalMethod = async (req, res,next) => {
+  try {  
   const CompanyId = req.user.id;
   let minimumApprover = req.body.minimumApprover;
   let approvalLevel = req.body.approvalLevel;
@@ -106,28 +107,41 @@ exports.createApprovalMethod = async (req, res,next) => {
   const approvalMethod = req.body.approvalMethod;
   const lastUpdated = new Date();
   const isActive=true
-  try {  
-    console.log(
-      isCompleted,
-      approvalLevel,
-      minimumApprover,
-      isThereMasterApprover,
-      approvalMethod,
-      lastUpdated,
-      isActive,
-      
-    );
-    const criteria = {
-      where: { CompanyId: req.user.id },
-    };
-    console.log("criteria",criteria)
-    const isExist = await ApprovalMethod.count(criteria);
-    console.log("exist", isExist);
-    if (isExist >= 1) {
-      return next(createError.createError(409,"this company setted approval method"))
-      // return res.json("this company setted approval method");
-    } else {
-      if(approvalLevel>3){
+
+
+  const criteria = {
+    where: { CompanyId: req.user.id,isActive:true },
+  };
+
+  const isExist = await ApprovalMethod.count(criteria);
+  console.log("exist", isExist);
+ 
+  
+
+  if (isExist >= 1) {
+    return next(createError.createError(409,"Approval method already setted"))
+    // return res.json("this company setted approval method");
+  }
+
+
+  if(! approvalMethod ){
+    return next(createError.createError(400,"Set approvalMethod"))
+  }
+
+  if(approvalMethod== "hierarchy"){
+    if(!approvalLevel){
+      return next(createError.createError(400,'Set approval Level '))
+    }
+  }else if( approvalMethod =="horizontal"){
+    if(!minimumApprover){
+      return next(createError.createError(400,'Please set minimum approvers'))
+    }
+  }
+
+  console.log("approval level",approvalLevel)
+  console.log("approval level",approvalLevel>3)
+  
+  if(approvalLevel>3){
         console.log("approval method camnnot be greater than three level ")
         return next(createError.createError(400,"approval method levelcannot be greater than three "))
         // return res.json("approval method camnnot be greater than three ");
@@ -171,7 +185,7 @@ exports.createApprovalMethod = async (req, res,next) => {
             // return res.json("please choose your approval method properly");
           }
         }
-    }
+    
   } catch (err) {
     console.log("first", err);
     return next(createError.createError(500,"Internal server error"))
