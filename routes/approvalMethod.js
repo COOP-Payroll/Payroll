@@ -8,6 +8,7 @@ middleware.protectAll,
 middleware.restrictTo('companyAdmin'),
 approvalMethod.getAllApprovalMethod);
 
+//get
 //get only active 
 router.get("/active", 
 middleware.protectAll,

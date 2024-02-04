@@ -498,6 +498,7 @@ const arrayApproveApprovement = async (req, res,next) => {
           where: {
             ApproverId: approverId,
             PayrollId: payrollId,
+            status:'approved',
           },
         });
 
@@ -625,7 +626,16 @@ const arrayApproveApprovement = async (req, res,next) => {
                 },
               });
 
+
             // return res.json({"payrolls.status":!isApproved})
+              // does payroll activated
+              const isActivated = await Payroll.findOne({
+                where: {
+                  id: payrollId,
+                  status: "active",
+                },
+              });
+
 
 
               // const isActivated = await Payroll.findOne({
@@ -706,7 +716,7 @@ const employeeApprovement= await EmployeePayrollApprovement.findOne({
     return res.status(400).json("This payroll has not been ordered yet.");
   }
 
-  const allowedStatuses = ["ordered", "processed"];
+  const allowedStatuses = ["ordered", "processed","rejected"];
   if (eachPayrollStatus === "approved") {
     return "This payroll has already been approved.";
   } 
@@ -1126,6 +1136,7 @@ const rejectPayroll = async (req, res, next) => {
   const payrollIds = Array.isArray(req.body.Payrolls) ? req.body.Payrolls : [Number(req.body.Payrolls)]; // Convert to an array
   const approverId = Number(req.body.approverId);
   const results = [];
+  const remark = req.body.remark; 
 
   try {
     // check if company has active approval method
@@ -1165,18 +1176,28 @@ const rejectPayroll = async (req, res, next) => {
         results.push({ payrollId, status: 'not found' });
       } else {
         // Update EmployeePayrollApprovement record
-        const recordToUpdateOnApprovement = await EmployeePayrollApprovement.findOne({
-          where: {
-            PayrollId: payrollId,
-          },
-        });
+        const recordToUpdateOnApprovement =
+          await EmployeePayrollApprovement.update(
+            {
+              status: "rejected",
+              rejectedBy: approverId,
+              remark: remark,
+            },
+            {
+              where: {
+                PayrollId: payrollId,
+              },
+            }
+          );
 
         if (!recordToUpdateOnApprovement) {
           results.push({ payrollId, status: 'approvement record not found' });
         } else {
-          // Update the records with the new status and other details
-          await recordToUpdateOnApprovement.update({ status: 'rejected', rejectedBy: approverId, remark: 'revice allowance' });
-          await thisPayroll.update({ status: 'rejected' });
+          
+          await thisPayroll.update(
+            { status: "rejected" },
+            
+          );
 
           results.push({ payrollId, status: 'rejected', rejectedBy: approverId, remark: 'revice allowance' });
         }
