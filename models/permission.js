@@ -40,7 +40,5 @@ CustomRole.hasMany(Permission);
 Permission.belongsTo(CustomRole);
 
 
-CreateCustomRole.hasMany(Permission);
-Permission.belongsTo(CreateCustomRole);
 
 module.exports = Permission;

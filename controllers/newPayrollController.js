@@ -68,7 +68,7 @@ exports.createPayroll1 = async (req, res,next) => {
 
         if (payroll) {
           return res
-            .status(200)
+            .status(409)
             .json({ message: "payroll run for employee " + employeeId });
         }
         const resp = await runPayroll(req, res, {

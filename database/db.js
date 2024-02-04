@@ -92,7 +92,7 @@
 // });
 
 // // Synchronize the database, create tables if they don't exist
-// sequelize.sync()
+// sequelize.sync({alter:true})
 //   .then(() => {
 //     console.log('Database synchronized.');
 //   })
@@ -125,12 +125,12 @@ async function testConnection() {
     console.error("Error connecting");
   }
 }
-sequelize.sync({ alter: true }) // Use force: true carefully, as it drops existing tables
-  .then(() => {
-    console.log('Database synchronized successfully.');
-  })
-  .catch((error) => {
-    console.error('Error synchronizing database:', error);
-  });
+// sequelize.sync({ alter: true }) // Use force: true carefully, as it drops existing tables
+//   .then(() => {
+//     console.log('Database synchronized successfully.');
+//   })
+//   .catch((error) => {
+//     console.error('Error synchronizing database:', error);
+//   });
 testConnection();
 module.exports = sequelize;

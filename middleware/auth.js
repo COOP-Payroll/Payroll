@@ -123,7 +123,7 @@ exports.restrictToAll = (...roles) => {
 exports.restrictALL = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
     
-    if (req.user.role === "companyAdmin" || req.user.role === "superAdmin") {
+    if (req.user.role === "companyAdmin" ||req.user.role === "approver" || req.user.role === "superAdmin") {
       next();
     } else {
       //const { moduleName, employeeId } = req.body;

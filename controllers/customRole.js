@@ -233,11 +233,14 @@ exports.assignToEmployee = async (req, res, next) => {
      if (!getEmployee) {
       res.status(404).json({ message: "There is no Employee with this ID" });
     } 
-    const  checkAssignedRole= await CustomRole.findOne({where:{id:Number(roleId), EmployeeId:Number(employeeId)}})
-
+  
+    
+    const  checkAssignedRole= await Employee.findOne({where:{id:Number(employeeId), CustomRoleId:Number(roleId)}})
     if( checkAssignedRole){
     return next(createError.createError(409,   "Role already assigned to Employee" ))
     }
+
+
       const assignedRole = await getEmployee.setCustomRole(Number(roleId));
       res
         .status(200)
