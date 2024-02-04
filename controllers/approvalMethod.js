@@ -2,8 +2,9 @@ const ApprovalMethod = require("../models/approvalMethod");
 const Company = require("../models/company");
 const Approver = require("../models/approver");
 const createError=require("../utils/error.js")
+const { Op } = require("sequelize");
 // Define controller methods for handling User requests for deduction definition
-exports.getAllApprovalMethod = async (req, res) => {
+exports.getAllApprovalMethod = async (req, res,next) => {
   console.log("all approval")
   const CompanyId = req.user.id;
   console.log(CompanyId);
@@ -115,7 +116,6 @@ exports.createApprovalMethod = async (req, res,next) => {
 
   const isExist = await ApprovalMethod.count(criteria);
   console.log("exist", isExist);
- 
   
 
   if (isExist >= 1) {
@@ -137,15 +137,10 @@ exports.createApprovalMethod = async (req, res,next) => {
       return next(createError.createError(400,'Please set minimum approvers'))
     }
   }
-
   console.log("approval level",approvalLevel)
   console.log("approval level",approvalLevel>3)
-  
-  if(approvalLevel>3){
-        console.log("approval method camnnot be greater than three level ")
-        return next(createError.createError(400,"approval method levelcannot be greater than three "))
-        // return res.json("approval method camnnot be greater than three ");
-      }else{
+     
+    
           if (approvalMethod === "horizontal") {
             approvalLevel = 0;
             let response = saveApprovalMethod(
@@ -159,10 +154,9 @@ exports.createApprovalMethod = async (req, res,next) => {
               isActive
             );
             return res.status(200).json({
+              success:true,
               "message":"approval method created successfully",
-              response
-
-            });
+                          });
           } else if (approvalMethod === "hierarchy") {
             minimumApprover = approvalLevel;
             let response = saveApprovalMethod(
@@ -176,18 +170,17 @@ exports.createApprovalMethod = async (req, res,next) => {
               isActive
             ); 
             return res.status(200).json({
+              success:true,
               "message":"approval method created successfully",
-              response
+              // response
 
             });
-          } else {
-            return next(createError.createError(400,"please choose your approval method properly"))
-            // return res.json("please choose your approval method properly");
           }
-        }
+         
+        
     
-  } catch (err) {
-    console.log("first", err);
+  } catch (error) {
+    console.log("first", error);
     return next(createError.createError(500,"Internal server error"))
     // res.status(500).json("Something gonna wrong");
   }
@@ -277,24 +270,25 @@ exports.reCreateApprovalMethod = async(req,res,next)=>{
         isOldThereMasterApprover
       );
        // check type of new and old approval are the same
-       if(approvalLevel>3){
-        console.log("approval level can only be upto three")
-        return next(createError.createError(400,"approval level can only be upto three level"))
-        // return res.json("approval level can only be upto three level")
-       }else{
+      //  if(approvalLevel>3){
+      //   console.log("approval level can only be upto three")
+      //   return next(createError.createError(400,"approval level can only be upto three level"))
+      //   // return res.json("approval level can only be upto three level")
+      //  }
+      
 
         if((oldApprovalMethod===approvalMethod&&oldMinimumApprover===minimumApprover&&isOldThereMasterApprover===isThereMasterApprover&&CompanyId===req.user.id)||
           (oldApprovalMethod===approvalMethod&&oldApprovalLevel===approvalLevel&&isOldThereMasterApprover===isThereMasterApprover&&CompanyId===req.user.id)){
             
-            console.log("this is the same with your previous approval method",oldApprovalMethod,approvalMethod)
-            return res.status(409).json({
-              message:"this is the same with your previous approval method",
-              oldApprovalMethod:oldApprovalMethod,
-              approvalMethod:approvalMethod
-            })
+            console.log("This is the same with your previous approval method",oldApprovalMethod,approvalMethod)
+            return next(createError.createError(409,"This is the same with your previous approval method"))
+            // return res.status(409).json({
+            //   message:"this is the same with your previous approval method",
+            //   oldApprovalMethod:oldApprovalMethod,
+            //   approvalMethod:approvalMethod
+            // })
             
           }else{
-
             if(oldApprovalMethod==='horizontal' && approvalMethod==='horizontal'){
               approvalLevel = 0;
               let response = reSaveApprovalMethod(
@@ -310,8 +304,9 @@ exports.reCreateApprovalMethod = async(req,res,next)=>{
               );
               console.log(response);
               return res.status(201).json({
+                success:true,
                 message:"recreated successfully",
-                response});
+                });
             }else if(oldApprovalMethod==='hierarchy' && approvalMethod==='hierarchy'){
               minimumApprover = approvalLevel;
               let response = reSaveApprovalMethod(
@@ -379,7 +374,7 @@ exports.reCreateApprovalMethod = async(req,res,next)=>{
               // return res.json("undefined approval method");
             }
           }
-      }
+      
     }else{
         console.log("define your  approval method first")
         return next(createError.createError(404,"define your  approval method first"))
@@ -451,6 +446,100 @@ exports.deleteApprovalMethod = async (req, res, next) => {
         .json({ message: "There is no  such approval method with this ID" });
     }
   } catch (err) {
+    return next(createError.createError(500,"Internal server error"))
+    // res.status(500).json("Something gonna wrong");
+  }
+};
+
+
+
+
+
+
+
+exports.reCreateApprovalMethods = async (req, res,next) => {
+  try {  
+  const CompanyId = req.user.id;
+  let minimumApprover = req.body.minimumApprover;
+  let approvalLevel = req.body.approvalLevel;
+  const isCompleted = req.body.isCompleted;
+  const isThereMasterApprover = req.body.isThereMasterApprover;
+  const approvalMethod = req.body.approvalMethod;
+  const lastUpdated = new Date();
+  const isActive=true
+
+
+  const criteria = {
+    where: { CompanyId: req.user.id,isActive:true },
+  };
+
+  const isExist = await ApprovalMethod.count(criteria);
+  console.log("exist", isExist);
+  
+
+  if (isExist >= 1) {
+    return next(createError.createError(409,"Approval method already setted"))
+    // return res.json("this company setted approval method");
+  }
+
+
+  if(! approvalMethod ){
+    return next(createError.createError(400,"Set approvalMethod"))
+  }
+
+  if(approvalMethod== "hierarchy"){
+    if(!approvalLevel){
+      return next(createError.createError(400,'Set approval Level '))
+    }
+  }else if( approvalMethod =="horizontal"){
+    if(!minimumApprover){
+      return next(createError.createError(400,'Please set minimum approvers'))
+    }
+  }
+  console.log("approval level",approvalLevel)
+  console.log("approval level",approvalLevel>3)
+     
+    
+          if (approvalMethod === "horizontal") {
+            approvalLevel = 0;
+            let response = saveApprovalMethod(
+              CompanyId,
+              minimumApprover,
+              approvalLevel,
+              isCompleted,
+              isThereMasterApprover,
+              approvalMethod,
+              lastUpdated,
+              isActive
+            );
+            return res.status(200).json({
+              success:true,
+              "message":"approval method created successfully",
+                          });
+          } else if (approvalMethod === "hierarchy") {
+            minimumApprover = approvalLevel;
+            let response = saveApprovalMethod(
+              CompanyId,
+              minimumApprover,
+              approvalLevel,
+              isCompleted,
+              isThereMasterApprover,
+              approvalMethod,
+              lastUpdated,
+              isActive
+            ); 
+            return res.status(200).json({
+              success:true,
+              "message":"approval method created successfully",
+              // response
+
+            });
+          }
+         
+        
+    
+  } catch (error) {
+    console.log("first", error);
     return next(createError.createError(500,"Internal server error"))
     // res.status(500).json("Something gonna wrong");
   }

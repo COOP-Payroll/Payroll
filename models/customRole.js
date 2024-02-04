@@ -10,7 +10,8 @@ const CustomRole = sequelize.define("CustomRole", {
   },
 });
 CustomRole.hasMany(Employee)
-Employee.hasOne(CustomRole);
+Employee.belongsTo(CustomRole)
+// Employee.hasOne(CustomRole);
 // CustomRole.belongsTo(Employee);
 
 Company.hasMany(CustomRole);

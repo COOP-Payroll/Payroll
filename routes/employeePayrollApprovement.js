@@ -10,7 +10,10 @@ router.get("/", employeePayrollApprovementController.getAllApprovements);
 router.get("/:id", employeePayrollApprovementController.getApprovementById);
 
 // GET /employee-payroll-approvements/:id by payroll id
-router.get("/employeeApprovement/:id", employeePayrollApprovementController.getApprovementByPayrollId);
+router.get("/employeeApprovement/:id", 
+
+
+employeePayrollApprovementController.getApprovementByPayrollId);
 // POST /employee-payroll-approvements
 router.post(
   "/",
@@ -31,7 +34,8 @@ router.post(
     moduleName: "payrollpublishedreport",
     isAccessible: true,
   }),
-  employeePayrollApprovementController.arrayApproveApprovement
+  employeePayrollApprovementController.approveStatusOfPayroll
+  // employeePayrollApprovementController.arrayApprove2Approvement
 );
 
   

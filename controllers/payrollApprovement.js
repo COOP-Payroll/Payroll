@@ -4,6 +4,7 @@ const ApprovalMethod = require("../models/approvalMethod");
 const PayrollDefinition = require('../models/payrollDefinition');
 const Payroll = require("../models/Payroll");
 const Sequelize = require("sequelize");
+const createError  = require('../utils/error');
 
 
 //reusable function for payroll approvement
@@ -240,11 +241,13 @@ async function handleHierarchicalApprove(payrollId, approverId,companyApprovalLe
 // res.status(201).json(payrollApprovement);
 // Create a new payrollApprovement
 
-const createPayrollApprovement = async (req, res) => {
+const createPayrollApprovement = async (req, res,next) => {
         const payrollId = req.body.payrollId;
         const approverId = req.body.approverId;
           // console.log(req.body.payrollId,req.body.approverId)
     try {
+
+      console.log("payroll",payrollId,approverId)
         //grap required information 1 approval method of company  2 appreover info 3 payroll information
 
         const payrollDefinition = await PayrollDefinition.findOne({
@@ -513,7 +516,7 @@ const reCreatePayrollApprovement = async (req, res,next) => {
 };
 
 // Get all payrollApprovements
-const getAllPayrollApprovements = async (req, res) => {
+const getAllPayrollApprovements = async (req, res,next) => {
     
     const CompanyId= req.user.id;
     //console.log(CompanyId);
@@ -529,12 +532,15 @@ const getAllPayrollApprovements = async (req, res) => {
         });
     } catch (error) {
         console.error('Error getting payrollApprovements:', error);
+
+  // return next(createError.)
+      
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
 // Get a specific payrollApprovement by ID
-const getPayrollApprovementById = async (req, res) => {
+const getPayrollApprovementById = async (req, res,next) => {
    
   const { id } = req.params;
   try {
@@ -551,7 +557,7 @@ const getPayrollApprovementById = async (req, res) => {
 };
 
 // Update a specific payrollApprovement by ID
-const updatePayrollApprovement = async (req, res) => {
+const updatePayrollApprovement = async (req, res,next) => {
     console.log("update id PayrollApprovement")
   const { id } = req.params;
   try {
@@ -568,7 +574,7 @@ const updatePayrollApprovement = async (req, res) => {
   }
 };
 
-const rejectPayrollApprovement = async (req, res) => {
+const rejectPayrollApprovement = async (req, res,next) => {
 
 //reject for all if laast approver or master approver ject the payrol;
   const  PayrollDefinitionId = req.body.PayrollDefinitionId;

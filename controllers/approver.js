@@ -1,760 +1,881 @@
-const Approver = require("../models/approver");
-const ApprovalMethod = require("../models/approvalMethod");
-const Employee = require("../models/employee");
-const createError= require("../utils/error.js")
+const Approver = require('../models/approver')
+const ApprovalMethod = require('../models/approvalMethod')
+const Employee = require('../models/employee')
+const createError = require('../utils/error.js')
+const { create } = require('ts-node')
+const sequelize = require('../database/db.js')
 
 // Get all Approvers
-exports.getAllApprovers = async (req, res,next) => {
-  const CompanyId = req.user.id;
-  console.log(CompanyId);
+exports.getAllApprovers = async (req, res, next) => {
+  const CompanyId = req.user.id
+  console.log(CompanyId)
   const criteria = {
-    where: { CompanyId: CompanyId },
-  };
+    where: { CompanyId: CompanyId }
+  }
   try {
     const approvers = await Approver.findAll({
       ...criteria,
-      include: 'Employee',
-    });
+      include: 'Employee'
+    })
 
-    let employeeNames = [];
+    let employeeNames = []
     if (approvers && approvers.length > 0) {
-      employeeNames = approvers.map(approver => approver.Employee.fullname);
+      employeeNames = approvers.map(approver => approver.Employee.fullname)
     }
 
     res.status(200).json({
       count: approvers.length,
       approvers: approvers,
-      Names: employeeNames,
-    });
-
+      Names: employeeNames
+    })
   } catch (error) {
-    console.error("Error retrieving Approvers:", error);
-    return next(createError.createError(500,"Internal server error"))
+    console.error('Error retrieving Approvers:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to retrieve Approvers" });
   }
-
-};
+}
 //get all active approver
-exports.getAllActiveApprovers = async (req, res,next) => {
-  const CompanyId = req.user.id;
-  console.log(CompanyId);
+exports.getAllActiveApprovers = async (req, res, next) => {
+  const CompanyId = req.user.id
+  console.log(CompanyId)
   const criteria = {
-    where: { CompanyId: CompanyId, isActive: true },
-  };
+    where: { CompanyId: CompanyId, isActive: true }
+  }
   try {
     const approvers = await Approver.findAll({
       ...criteria,
-      include: 'Employee',
-    });
+      include: 'Employee'
+    })
 
-    let employeeNames = [];
+    let employeeNames = []
     if (approvers && approvers.length > 0) {
-      employeeNames = approvers.map(approver => approver.Employee.fullname);
+      employeeNames = approvers.map(approver => approver.Employee.fullname)
     }
 
     res.status(200).json({
       count: approvers.length,
       approvers: approvers,
-      Names: employeeNames,
-    });
-
+      Names: employeeNames
+    })
   } catch (error) {
-    console.error("Error retrieving Approvers:", error);
-    return next(createError.createError(500,"Internal server error"))
+    console.error('Error retrieving Approvers:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to retrieve Approvers" });
   }
-
-};
+}
 //get all inactive approver
-exports.getAllInActiveApprovers = async (req, res,next) => {
-  const CompanyId = req.user.id;
-  console.log(CompanyId);
+exports.getAllInActiveApprovers = async (req, res, next) => {
+  const CompanyId = req.user.id
+  console.log(CompanyId)
   const criteria = {
-    where: { CompanyId: CompanyId, isActive: false },
-  };
+    where: { CompanyId: CompanyId, isActive: false }
+  }
   try {
     const approvers = await Approver.findAll({
       ...criteria,
-      include: 'Employee',
-    });
+      include: 'Employee'
+    })
 
-    let employeeNames = [];
+    let employeeNames = []
     if (approvers && approvers.length > 0) {
-      employeeNames = approvers.map(approver => approver.Employee.fullname);
+      employeeNames = approvers.map(approver => approver.Employee.fullname)
     }
 
     res.status(200).json({
       count: approvers.length,
       approvers: approvers,
-      Names: employeeNames,
-    });
-
+      Names: employeeNames
+    })
   } catch (error) {
-    console.error("Error retrieving Approvers:", error);
-    return next(createError.createError(500,"Internal server error"))
+    console.error('Error retrieving Approvers:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to retrieve Approvers" });
   }
-
-};
+}
 // Get a single Approver by ID
-exports.getApproverById = async (req, res,next) => {
-  const approverId = req.params.id;
+exports.getApproverById = async (req, res, next) => {
+  const approverId = req.params.id
   try {
-    const approver = await Approver.findByPk(approverId);
+    const approver = await Approver.findByPk(approverId)
     if (!approver) {
-
-      return next(createError.createError(404,"Approver not found"))
+      return next(createError.createError(404, 'Approver not found'))
       // return res.status(404).json({ error: "Approver not found" });
     }
-    res.json(approver);
+    res.json(approver)
   } catch (error) {
-    console.error("Error retrieving Approver:", error);
-    return next(createError.createError(500,"Internal server error"))
+    console.error('Error retrieving Approver:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to retrieve Approver" });
   }
-};
+}
 //get approver by employee id
-exports.getApproverByEmployeeId = async (req, res,next) => {
-  const approverEmployeeId = req.params.id;
+exports.getApproverByEmployeeId = async (req, res, next) => {
+  const approverEmployeeId = req.params.id
   try {
     const approver = await Approver.findOne({
       where: { EmployeeId: approverEmployeeId },
       include: [{ model: Employee }]
-    });
-    
+    })
+
     if (!approver) {
-      return next(createError.createError(404,"Approver not found"))
+      return next(createError.createError(404, 'Approver not found'))
       // return res.status(404).json({ error: "Approver not found" });
     }
-    res.status(200).json(approver);
+    res.status(200).json(approver)
   } catch (error) {
-    console.error("Error retrieving Approver:", error);
-    return next(createError.createError(500,"Internal server error"))
+    console.error('Error retrieving Approver:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to retrieve Approver" });
   }
-};
+}
 //function used here tomanipulate the approved
 
-async function saveApprover(
+async function saveApprover (
   CompanyId,
   EmployeeId,
   isActive,
   isMaster,
   role,
   level,
-  ApprovalMethodId  
+  ApprovalMethodId
 ) {
-  const approver = new Approver({ isActive, isMaster, role, level });
-  await approver.save();
-  await approver.setCompany(CompanyId);
-  await approver.setEmployee(EmployeeId);
+  const approver = new Approver({ isActive, isMaster, role, level })
+  await approver.save()
+  await approver.setCompany(CompanyId)
+  await approver.setEmployee(EmployeeId)
   await approver.setApprovalMethod(ApprovalMethodId)
-  console.log("saved success fully bempl")
-  const updateEmployeeRole = await Employee.update({role:'approver'}, {
-    where: {id:EmployeeId },
-  });
+  console.log('saved success fully bempl')
+  const updateEmployeeRole = await Employee.update(
+    { role: 'approver' },
+    {
+      where: { id: EmployeeId }
+    }
+  )
 
   console.log(updateEmployeeRole)
-  console.log("saved success fully")
+  console.log('saved success fully')
   return {
-    approver:approver,
-    message: "Successfully saved "
-        };
+    approver: approver,
+    message: 'Successfully saved '
+  }
 }
 
 // Create a new Approver
-exports.createApprover = async (req, res,next) => {
-  const CompanyId = req.user.id;
-  
-  const { level, role, isActive, isMaster, EmployeeId } = req.body;
+exports.createApprover = async (req, res, next) => {
+  const transaction = await sequelize.transaction()
+  // const transaction=
+  const CompanyId = req.user.id
+  const { level, role, isActive, isMaster, EmployeeId } = req.body
   try {
-
-    if(!EmployeeId){
-      return next(createError.createError(400, "Employee Id is required"))
+    if (!EmployeeId || !level) {
+      return next(createError.createError(400, 'Please enter required fields'))
       // return res.status(400).json({ error: "Employee Id is required" });)
     }
-    console.log("data sent",level, role, isActive, isMaster, EmployeeId);
+
+    // console.log('data sent', level, role, isActive, isMaster, EmployeeId)
     const approvalMethod = await ApprovalMethod.findOne({
-      where: { CompanyId: req.user.id, isActive: true},
-    });
+      where: { CompanyId: req.user.id, isActive: true }
+    })
 
-const employee= await Employee.findOne({where:{id:EmployeeId,CompanyId:req.user.id,isActive:true}})
+    if (!approvalMethod) {
+      return next(createError.createError(404, 'Define approval method first'))
+    }
+    const employee = await Employee.findOne({
+      where: { id: EmployeeId, CompanyId: req.user.id, isActive: true }
+    })
 
-if(!employee){
-  return next(createError.createError(404, "Employee not found"))
-  // return res.status(404).json({ error: "Employee not found" });))
-}
+    if (!employee) {
+      return next(createError.createError(404, 'Employee not found'))
+      // return res.status(404).json({ error: "Employee not found" });))
+    }
 
-const checkApprover= await Approver.findOne({where:{EmployeeId:EmployeeId,CompanyId:req.user.id,isActive:true}})
+    const checkApprover = await Approver.findOne({
+      where: { EmployeeId: EmployeeId, CompanyId: req.user.id, isActive: true }
+    })
 
-if(checkApprover){
-  return next(createError.createError(409, "this employee is already assigned as approver"))
-  // return res.json("this employee is already assigned as approver");))
-}
-    if(approvalMethod===null){
-      console.log("company has no active approval method ")
-      return next(createError.createError(404, "company has no active approval method"));
+    if (checkApprover) {
+      return next(
+        createError.createError(
+          409,
+          'This employee is already assigned as approver'
+        )
+      )
+      // return res.json("this employee is already assigned as approver");))
+    }
+    if (approvalMethod === null) {
+      console.log('company has no active approval method ')
+      return next(
+        createError.createError(404, 'company has no active approval method')
+      )
       // return res.json("company has no active approval method ")
-    } else{
-      
-    //set each value of approval method to variable
-    console.log(req.user.id)
-    const companyId    = approvalMethod.CompanyId;
-    const appMethod    = approvalMethod.approvalMethod;
-    const appLevel     = approvalMethod.approvalLevel;
-    const minimumApp   = approvalMethod.minimumApprover;
-    const ifMaster     = approvalMethod.isThereMasterApprover;
-    const ApprovalMethodId = approvalMethod.id;
+    }
+     else {
+      const companyId = approvalMethod.CompanyId
+      const appMethod = approvalMethod.approvalMethod
+      const appLevel = approvalMethod.approvalLevel
+      const minimumApp = approvalMethod.minimumApprover
+      const ifMaster = approvalMethod.isThereMasterApprover
+      const ApprovalMethodId = approvalMethod.id
 
-    const approvalMethodCount = await ApprovalMethod.count({
-      where: { CompanyId: req.user.id,isActive: true},
-    });
+      const approvalMethodCount = await ApprovalMethod.count({
+        where: { CompanyId: req.user.id, isActive: true }
+      })
 
-    console.log(approvalMethodCount);
-    //add company id to get employee
-    const employeeCount = await Employee.count({
-      where: { id:req.body?.EmployeeId,CompanyId:req.user.id},
-    });
-    console.log("this employee is", employeeCount);
+      console.log(approvalMethodCount)
+      //add company id to get employee
+      const employeeCount = await Employee.count({
+        where: { id: req.body?.EmployeeId, CompanyId: req.user.id }
+      })
+      console.log('this employee is', employeeCount)
 
-    const isSaved = await Approver.count({
-      where: { CompanyId: req.user.id, EmployeeId: req.body.EmployeeId,isActive: true},
-    });
+      const isSaved = await Approver.count({
+        where: {
+          CompanyId: req.user.id,
+          EmployeeId: req.body.EmployeeId,
+          isActive: true
+        }
+      })
 
-    const settedApprover = await Approver.count({
-      where: { CompanyId: req.user.id,isMaster:false, },
-    });
+      const settedApprover = await Approver.count({
+        where: { CompanyId: req.user.id, isMaster: false }
+      })
 
-    console.log("already setted", isSaved);
-    if (isSaved >= 1) {
-      return next(createError.createError(409,"this employee is already assigned as approver"))
-      // res.json("this employee is already assigned as approver");
-    } else if (approvalMethodCount < 1) {
-      return next(createError.createError(400, "you should define approval method for this company"));
+      console.log('already setted', isSaved)
+      if (isSaved >= 1) {
+        return next(
+          createError.createError(
+            409,
+            'this employee is already assigned as approver'
+          )
+        )
+        // res.json("this employee is already assigned as approver");
+      }
+      if (approvalMethodCount < 1) {
+        return next(
+          createError.createError(
+            400,
+            'you should define approval method for this company'
+          )
+        )
+      }
       // res.status(200).json("you should define approval method for this company");
-    } else if (employeeCount < 1) {
-      return next(createError.createError(404,"this employee has no valid id register in employee list"))
-      // res
-      //     .status(200)
-      //   .json("this employee has no valid id register in employee list ");
-    } else {
-      console.log(companyId, appMethod, appLevel, minimumApp, ifMaster);
+      if (employeeCount < 1) {
+        return next(
+          createError.createError(
+            404,
+            'this employee has no valid id register in employee list'
+          )
+        )
+      }
+
+      console.log(companyId, appMethod, appLevel, minimumApp, ifMaster)
+
       if (ifMaster) {
-        console.log("has master");
         const masterApproverCount = await Approver.count({
           where: {
             isMaster: true,
-            CompanyId: req.user.id,
-          },
-        });
-        console.log("master number", masterApproverCount);
-        if (masterApproverCount >= 1 && req.body.isMaster === true) {
-          console.log("master approver is setted already")
+            isActive:true,
+            CompanyId: req.user.id
+          }
+        })
 
-          return next(createError.createError(409,"Master approver is seeted already"));
+
+        if (Number(masterApproverCount) >= 1 && req.body.isMaster === true) {
+          console.log('master approver is setted already')
+          await transaction.rollback()
+          return next(
+            createError.createError(409, 'Master approver is seeted already')
+          )
           // return res.json("master approver is seeted already");
+        } 
+        
+        //  if (masterApproverCount < 1) {
+          if (req.body.isMaster == true) {
+
+            if (appMethod === 'horizontal') {
+              console.log('horizontal approval')
+              //count saved approver for this company except for master
+              try {
+ 
+                  const saveHApprover = await Approver.create(
+                    {
+                      level: 0,
+                      role: req.body.role,
+                      isMaster: true,
+                      isActive: true
+                    },
+                    { transaction }
+                  )
+                  await saveHApprover.setApprovalMethod(ApprovalMethodId, {
+                    transaction
+                  })
+                  await saveHApprover.setCompany(req.user.id, { transaction })
+                  await saveHApprover.setEmployee(req.body.EmployeeId, {
+                    transaction
+                  })
+                  //update  employe role
+                  const updateEmployeeRole = await Employee.update(
+                    { role: 'approver' },
+                    {
+                      where: { id: EmployeeId }
+                    },
+                    { transaction }
+                  )
+
+                  //update approval mehod
+
+                  if(settedApprover>=minimumApp  ){
+                  const updateResult = await ApprovalMethod.update(
+                    { isCompleted: true },
+                    {
+                      where: { id: ApprovalMethodId }
+                    },
+                    // { transaction }
+                  )
+
+                  }
+                  await transaction.commit()
+                  return res.status(200).json({
+                    success: true,
+                    message: 'successfully saved you can approve your payroll'
+                  })
+                
+              } catch (error) {
+                await transaction.rollback()
+                return next(createError.createError(500, 'Internal server error'))
+                // res.status(500).json({ error: "Failed to save Approver" });
+  
+            } 
+
+          }
+
+            //setapproval here
+            const setMaster = await Approver.create(
+              {
+                level: level,
+                role,
+                isMaster: true,
+                isActive: true
+              },
+
+              { transaction }
+            )
+            await setMaster.setApprovalMethod(Number(ApprovalMethodId), {
+              transaction
+            })
+            await setMaster.setCompany(Number(CompanyId), { transaction })
+            await setMaster.setEmployee(Number(EmployeeId), { transaction })
+            //update  employe role
+            const updateEmployeeRole = await Employee.update(
+              { role: 'approver' },
+              {
+                where: { id: EmployeeId }
+              },
+              { transaction }
+            )
+
+            if( approvalMethod.approvalMethod=== 'hierarchy'){
+
+
+              const existingLevels = await Approver.findAll({
+                where: {
+                  CompanyId: req.user.id,
+                  isActive: true,
+                  ApprovalMethodId: approvalMethod.id
+                },
+                attributes: ['level'],
+                raw: true
+              })
+              const maxLevel = appLevel
+              // existingLevels.push({ level: level })
+              const allLevelsAssigned = Array.from(
+                { length: maxLevel },
+                (_, i) => i + 1
+              ).every(level =>
+                existingLevels.some(
+                  approverLevel => parseInt(approverLevel.level) === level
+                )
+              )
+              console.log('allLevelsAssigned', allLevelsAssigned)
+            
+              if (allLevelsAssigned ) {
+                approvalMethod.isCompleted = true
+                await approvalMethod.save({ transaction })
+              }
+
+            }
+            await transaction.commit()
+            return res.status(201).json({
+              success:true,
+              message: 'master approval successfully setted'
+            })
           
-        } else if (masterApproverCount < 1 && req.body.isMaster === true) {
-          //setapproval here
-          const setMaster = await Approver.create({
-            level,
-            role,
-            isMaster: true,
-            isActive: true,
-          });
-          await setMaster.setApprovalMethod(ApprovalMethodId);
-          await setMaster.setCompany(CompanyId);
-          await setMaster.setEmployee(EmployeeId)
-          //update  employe role
-          const updateEmployeeRole = await Employee.update({role:"approver"}, {
-            where: {id: EmployeeId},
-          });
-          return res
-            .status(201)
-            .json({
-              updateEmployeeRole: updateEmployeeRole,
-              messag: "master approval successfully setted",
-            });
-        } else if (req.body.isMaster === false) {
-          console.log("wow its not master");
-          if (appMethod === "horizontal") {
-            console.log("horizontal approval");
-            //count saved approver for this company except for master
-            try {
-              if (minimumApp === null) {
-                return next(createError.createError(400, "unknown minimum approver"))
-                // return res.json("unknown minimum approver");
-              } else if (minimumApp <= settedApprover) {
-                //register this approver
-                const saveHApprover = await Approver.create({
-                  level: 0,
-                  role: req.body.role,
-                  isMaster: false,
-                  isActive: true,
-                });
-                await saveHApprover.setApprovalMethod(ApprovalMethodId)
-                await saveHApprover.setCompany(req.user.id);
-                await saveHApprover.setEmployee(req.body.EmployeeId);
-                //update  employe role
-                const updateEmployeeRole = await Employee.update({role:"approver"}, {
-                  where: {id: EmployeeId},
-                });
-                
-                //update approval mehod 
-                const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                  where: {id: ApprovalMethodId},
-                });
-                
-                console.log(updateResult)
-                return res.status(200).json({
-                  success:true,
-                  approvalMethodId:updateResult,
-                  updateEmployeeRole:updateEmployeeRole,
-                  message:"successfully saved you can approve your payroll"
-                  });
-              } else if (minimumApp === settedApprover + 1) {
-                const saveHApprover = await Approver.create({
-                  level: 0,
-                  role: req.body.role,
-                  isMaster: false,
-                  isActive: true,
-                });
-                await saveHApprover.setApprovalMethod(ApprovalMethodId)
-                await saveHApprover.setCompany(req.user.id);
-                await saveHApprover.setEmployee(req.body.EmployeeId);
-                //update  employe role
-                const updateEmployeeRole = await Employee.update({role:"approver"}, {
-                  where: {id: EmployeeId},
-                });
-                //update approval method
-                const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                  where: {id: ApprovalMethodId},
-                });
-                console.log(updateResult)
-                return res.status(201).json({
-                  approvalmethod:updateResult,
-                  updateEmployeeRole: updateEmployeeRole,
-                  message: "successfully saved you have passed minimum number of approver",
-              });
-              } else if (minimumApp > settedApprover + 1) {
-                const saveHApprover = await Approver.create({
-                  level: 0,
-                  role: req.body.role,
-                  isMaster: false,
-                  isActive: true,
-                });
-                await saveHApprover.setApprovalMethod(ApprovalMethodId)
-                await saveHApprover.setCompany(req.user.id);
-                await saveHApprover.setEmployee(req.body.EmployeeId);
-                //update  employe role
-                const updateEmployeeRole = await Employee.update({role:"approver"}, {
-                  where: {id: EmployeeId},
-                });
-                return res.status(201).json({
-                  updateEmployeeRole: updateEmployeeRole,
-                  message:"add more appprover "
-                });
-              } else {
-                return next(createError.createError(500,"Internal server error"))
-                // return res.json("something is wrong");
-              }
-            } catch (error) {
-              return next(createError.createError(500,"Internal server error"))
-              // return res.status(500).json("something went wrong");
-            }
-          } else if (appMethod === "hierarchy") {
-            console.log("hierarchy approval");
-            const level = req.body.level;
-
-            if (level > 3 || level <= 0) {
-              return next(createError.createError(400,"invalid level"))
-              // return res.json({ message: "invalid level " });
-            } else {
-              console.log("save data for herarchy ");
-              if (appLevel < level) {
-                return res.json({
-                  message: "your level of approval is " + appLevel,
-                });
-              } else {
-                if (appLevel === 3) {
-                  //three level
-                  saveApprover(
-                    CompanyId,
-                    EmployeeId,
-                    isActive,
-                    isMaster,
-                    role,
-                    level,
-                    ApprovalMethodId
+          
+          
+          
+          
+          
+          }
+           else if (req.body.isMaster === false) {
+            const updateResult =null;
+            if (appMethod === 'horizontal') {
+              console.log('horizontal approval')
+              //count saved approver for this company except for master
+              try {
+                               //register this approver
+                  const saveHApprover = await Approver.create(
+                    {
+                      level: 0,
+                      role: req.body.role,
+                      isMaster: false,
+                      isActive: true
+                    },
+                    { transaction }
                   )
-                    .then(async () => {
-                      const appOne = await Approver.count({
-                        where: { level: 1, CompanyId: req.user.id },
-                      });
-                      const appTwo = await Approver.count({
-                        where: { level: 2, CompanyId: req.user.id },
-                      });
-                      const appThree = await Approver.count({
-                        where: { level: 3, CompanyId: req.user.id },
-                      });
-                      //check which one of them is setted
-                      console.log(appOne, appTwo, appThree);
-                      if (appOne >= 1 && appTwo >= 1 && appThree >= 1) {
-                        
-                        //update the complete in approval method
-                        const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                          where: {id: ApprovalMethodId},
-                        });
-
-                        console.log(updateResult)
-                        return res.status(201).json(
-                          "you are all done now you can approve payroll"
-                        );
-                      } else if (appOne >= 1 && appThree >= 1) {
-                        return res.status(200).json("add approver on level 2");
-                      } else if (appTwo >= 1 && appThree >= 1) {
-                        return res.status(200).json("add approver on level 1");
-                      } else if (appTwo >= 1 && appOne >= 1) {
-                        return res.status(200).json("add approver on level 3");
-                      } else if (appOne < 1 && appThree < 1) {
-                        return res.status(200).json("add approver on level 1 and 3");
-                      } else if (appTwo < 1 && appThree < 1) {
-                        return res.status(200).json("add approver on level 2 and 3");
-                      } else if (appTwo < 1 && appOne < 1) {
-                        return res.status(200).json("add approver on level 1 and 2");
-                      } else {
-                        return next(createError.createError(500,"Internal server error"))
-                      }
-                    })
-                    .catch((error) => {
-                      console.log(error);
-                      
-                      return next(createError.createError(500,"Internal server error"))
-                      // return res.json({
-                      //   message: "something went wrong",
-                      //   error: err,
-                      // });
-                    });
-                } else if (appLevel === 2) {
-                  saveApprover(
-                    CompanyId,
-                    EmployeeId,
-                    isActive,
-                    isMaster,
-                    role,
-                    level,
-                    ApprovalMethodId
+                  await saveHApprover.setApprovalMethod(ApprovalMethodId, {
+                    transaction
+                  })
+                  await saveHApprover.setCompany(req.user.id, { transaction })
+                  await saveHApprover.setEmployee(req.body.EmployeeId, {
+                    transaction
+                  })
+                  //update  employe role
+                  const updateEmployeeRole = await Employee.update(
+                    { role: 'approver' },
+                    {
+                      where: { id: EmployeeId }
+                    },
+                    { transaction }
                   )
-                    .then(async () => {
 
-                      const appOne = await Approver.count({
-                        where: { level: 1, CompanyId: req.user.id },
-                      });
-                      const appTwo = await Approver.count({
-                        where: { level: 2, CompanyId: req.user.id },
-                      });
-                      // const appThree = await Approver.count({ where: { level: 3, CompanyId: req.user.id } });
-                      //check which one of them is setted
-                      console.log(appOne, appTwo);
-                      if (appOne >= 1 && appTwo >= 1) {
-                        //update approval method
+                  //update approval mehod
 
-                        const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                          where: {id: ApprovalMethodId},
-                        });
-                        console.log(updateResult)
-                        res.status(200).json(
-                          "you are all done now you can approve payroll"
-                        );
-                        //update the complete in approval method
-                      } else if (appOne >= 1) {
-                        res.status(200).json("add approver on level 2");
-                      } else if (appTwo >= 1) {
-                        res.status(200).json("add approver on level 1");
-                      } else {
-                        return next(createError.createError(500,"Internal server error"))
-                      }
-                    })
-                    .catch((err) => {
-                    console.log(err)
-                    return next(createError.createError(500,"Internal server error"))
-                    });
+                  if(settedApprover+1>=minimumApp  && masterApproverCount >0){
+                  const updateResult = await ApprovalMethod.update(
+                    { isCompleted: true },
+                    {
+                      where: { id: ApprovalMethodId }
+                    },
+                    // { transaction }
+                  )
+
+                  }
+                  await transaction.commit()
+                  // console.log(updateResult)
+                  return res.status(200).json({
+                    success: true,
+                    message: 'successfully saved you can approve your payroll'
+                  })
+                } catch(error){
+                  return createError.createError(500,"Internal server error")
                 }
+              
+            } 
+            else if (appMethod === 'hierarchy') {
+              //hierarchy no master
+              const level = req.body.level
+              if (appLevel < level) {
+                await transaction.rollback()
+                return next(
+                  createError.createError(
+                    400,
+                    `The maximum level is ${appLevel}`
+                  )
+                )
               }
+              if (level < 1) {
+                await transaction.rollback()
+                return next(
+                  createError.createError(400, `The minimum level is 1`)
+                )
+              }
+
+              const saveHApprover = await Approver.create(
+                {
+                  level: level,
+                  role: req.body.role,
+                  isMaster: false,
+                  isActive: true
+                },
+                { transaction }
+              )
+              await saveHApprover.setApprovalMethod(ApprovalMethodId, {
+                transaction
+              })
+              await saveHApprover.setCompany(req.user.id, { transaction })
+              await saveHApprover.setEmployee(req.body.EmployeeId, {
+                transaction
+              })
+              //update  employe role
+              const updateEmployeeRole = await Employee.update(
+                { role: 'approver' },
+                {
+                  where: { id: EmployeeId }
+                },
+                { transaction }
+              )
+
+              const existingLevels = await Approver.findAll({
+                where: {
+                  CompanyId: req.user.id,
+                  isActive: true,
+                  ApprovalMethodId: approvalMethod.id
+                },
+                attributes: ['level'],
+                raw: true
+              })
+              const maxLevel = appLevel
+              existingLevels.push({ level: level })
+              const allLevelsAssigned = Array.from(
+                { length: maxLevel },
+                (_, i) => i + 1
+              ).every(level =>
+                existingLevels.some(
+                  approverLevel => parseInt(approverLevel.level) === level
+                )
+              )
+              console.log('allLevelsAssigned', allLevelsAssigned)
+              const foundMasterApprover = await Approver.findOne({
+                where: {
+                  CompanyId: req.user.id,
+                  isMaster: true,
+                  isActive: true
+                }
+              })
+              console.log('existingLevels.isMaster', foundMasterApprover)
+              if (allLevelsAssigned && foundMasterApprover?.isMaster) {
+                approvalMethod.isCompleted = true
+                await approvalMethod.save({ transaction })
+              }
+
+              await transaction.commit()
+
+              return res.status(201).json({
+                success: true,
+                message: 'Approver seatted successfully'
+              })
             }
-          } else {
+          }
+           else {
             //if not both /undeefined appmethod
-            console.log("undefined approval method");
-            return next(createError.createError(404,"approval method not found "))
+            console.log('undefined approval method')
+            return next(
+              createError.createError(404, 'approval method not found ')
+            )
           }
-        } else {
-          //unknown error
-          console.log("unknown error ");
-          return next(createError.createError(500,"Internal server error"))
         }
+      
         //if no master approval
-      } else {
-        //save it if it has no master approve
+        
+       else if(!ifMaster) {
 
-        if (appMethod === "horizontal") {
-          console.log("horizontal approval && not master");
-          if (minimumApp === null) {
-            return next(createError.createError(400,"undefined minimum number of approver"))
-            // return res.json("undefined minimum number of approver");
-          } else if (minimumApp <= settedApprover) {
-            console.log("save now ");
-            const savehApp = await Approver.create({
-              level: 0,
-              role: req.body.role,
-              isActive: true,
-              isMaster: false,
-            });
-            await savehApp.setEmployee(req.body.EmployeeId);
-            await savehApp.setCompany(req.user.id);
-            await savehApp.setApprovalMethod(ApprovalMethodId);
-            //update employee role
-            const updateEmployeeRole = await Employee.update({role:"approver"}, {
-              where: {id: EmployeeId},
-            });
-            //update employee data
-
-            const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-              where: {id: ApprovalMethodId},
-            });
-            console.log(updateResult)
-            return res.status(201).json({
-              employeerole: updateEmployeeRole,
-              message:
-                "successfully registered now your payroll can be approved",
-            });
-          } else if (minimumApp === settedApprover + 1) {
-            const savehApp = await Approver.create({
-              level: 0,
-              role: req.body.role,
-              isActive: true,
-              isMaster: false,
-            });
-            await savehApp.setEmployee(req.body.EmployeeId);
-            await savehApp.setCompany(req.user.id);
-            await savehApp.setApprovalMethod(ApprovalMethodId);
-            //update employee role
-            const updateEmployeeRole = await Employee.update({role:"approver"}, {
-              where: {id: EmployeeId},
-            });
-            //update here
-            const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-              where: {id: ApprovalMethodId},
-            });
-            console.log(updateResult)
-            return res.status(201).json({
-              updateemployee:updateEmployeeRole,
-              message: " successfully passed minimum amount of approver ",
-            });
-          } else if (minimumApp > settedApprover + 1) {
-            const savehApp = await Approver.create({
-              level: 0,
-              role: req.body.role,
-              isActive: true,
-              isMaster: false,
-            });
-            await savehApp.setEmployee(req.body.EmployeeId);
-            await savehApp.setCompany(req.user.id);
-            await savehApp.setApprovalMethod(ApprovalMethodId)
-             //update employee role
-             const updateEmployeeRole = await Employee.update({role:"approver"}, {
-              where: {id: EmployeeId},
-            });
-            return res.status(201).json({
-              updateEmployeeRole: updateEmployeeRole,
-              messae: " add more approver and meet you minimum approver",
-            });
-          } else {
-            return next(createError.createError(500,"Internal server error"))
-          }
-        } else if (appMethod === "hierarchy") {
-          //hierarchy no master
-          const level = req.body.level;
-          if (level > 3 || level <= 0) {
-            return res.json({ message: "invalid level " });
-          } else {
-            console.log("save data for herrarchy");
-            if (appLevel < level) {
-              return res.status(400).json({
-                message: "your level of approval is " + appLevel,
-              });
-            } else {
-              if (appLevel === 3) {
-                //save what we got check who is not registered
-                saveApprover(
-                  CompanyId,
-                  EmployeeId,
-                  isActive,
-                  isMaster,
-                  role,
-                  level,
-                  ApprovalMethodId
-                )
-                  .then(async () => {
-                    const appOne = await Approver.count({
-                      where: { level: 1, CompanyId: CompanyId },
-                    });
-                    const appTwo = await Approver.count({
-                      where: { level: 2, CompanyId: CompanyId },
-                    });
-                    const appThree = await Approver.count({
-                      where: { level: 3, CompanyId: CompanyId },
-                    });
-                    if (appOne >= 1 && appTwo >= 1 && appThree >= 1) {
-                      
-                      //update  approval status
-                      const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                        where: {id: ApprovalMethodId},
-                      });
-
-                      console.log(updateResult)
-                      return res.status(200).json(
-                        "you are all done now you can approve payroll"
-                      );
-                    } else if (appOne >= 1 && appThree >= 1) {
-                      res.status(200).json("add approver on level 2");
-                    } else if (appTwo >= 1 && appThree >= 1) {
-                      res.status(200).json("add approver on level 1");
-                    } else if (appTwo >= 1 && appOne >= 1) {
-                      res.status(200).json("add approver on level 3");
-                    } else if (appOne < 1 && appThree < 1) {
-                      res.status(200).json("add approver on level 1 and 3");
-                    } else if (appTwo < 1 && appThree < 1) {
-                      res.status(200).json("add approver on level 2 and 3");
-                    } else if (appTwo < 1 && appOne < 1) {
-                      res.status(200).json("add approver on level 1 and 2");
-                    } else {
-                      return next(createError.createError(500,"Internal server error"))
-                    }
-                  })
-                  .catch((err) => {
-                    return next(createError.createError(500,"Internal server error"))
-                  });
-              } else if (appLevel === 2) {
-                saveApprover(
-                  CompanyId,
-                  EmployeeId,
-                  isActive,
-                  isMaster,
-                  role,
-                  level,
-                  ApprovalMethodId
-                )
-                  .then(async () => {
-                    const appOne = await Approver.count({
-                      where: { level: 1, CompanyId: CompanyId },
-                    });
-                    const appTwo = await Approver.count({
-                      where: { level: 2, CompanyId: CompanyId },
-                    });
-                    
-                    if (appOne >= 1 && appTwo >= 1) {
-                      
-                      const updateResult = await ApprovalMethod.update({isCompleted:true}, {
-                        where: {id: ApprovalMethodId},
-                      });
-                      console.log(updateResult)
-                      res.status(200).json("you are all done now you can approve payroll");
-                      //update the complete in approval method
-                    } else if (appOne >= 1) {
-                      res.status(200).json("add approver on level 2");
-                    } else if (appTwo >= 1) {
-                      res.status(200).json("add approver on level 1");
-                    } else {
-                      return next(createError.createError(500,"Internal server error"))
-                    }
-                  })
-                  .catch((err) => {
-                    console.log(err)
-                    return next(createError.createError(500,"Internal server error"))
-                  });
-              }
-            }
-          }
+        if(req.body.isMaster=== true){
+          return next(createError.createError(400,"Cannot set as master approver"))
         }
-      }
-    }
-  }
+        if (appMethod === 'horizontal') {
+          console.log('horizontal approval')
+          //count saved approver for this company except for master
+          try {
+            if (minimumApp === null) {
+              return next(
+                createError.createError(400, 'unknown minimum approver')
+              )
+              // return res.json("unknown minimum approver");
+            } else if (minimumApp <= settedApprover) {
+              //register this approver
+              const saveHApprover = await Approver.create(
+                {
+                  level: 0,
+                  role: req.body.role,
+                  isMaster: false,
+                  isActive: true
+                },
+                { transaction }
+              )
+              await saveHApprover.setApprovalMethod(ApprovalMethodId, {
+                transaction
+              })
+              await saveHApprover.setCompany(req.user.id, { transaction })
+              await saveHApprover.setEmployee(req.body.EmployeeId, {
+                transaction
+              })
+              //update  employe role
+              const updateEmployeeRole = await Employee.update(
+                { role: 'approver' },
+                {
+                  where: { id: EmployeeId }
+                },
+                { transaction }
+              )
+
+              //update approval mehod
+              const updateResult = await ApprovalMethod.update(
+                { isCompleted: true },
+                {
+                  where: { id: ApprovalMethodId }
+                },
+                { transaction }
+              )
+              await transaction.commit()
+              console.log(updateResult)
+              return res.status(200).json({
+                success: true,
+                // approvalMethodId: updateResult,
+                // updateEmployeeRole: updateEmployeeRole,
+                message: 'Approver setted successfully you can approve your payroll'
+              })
+            } else if (minimumApp === settedApprover + 1) {
+              const saveHApprover = await Approver.create(
+                {
+                  level: 0,
+                  role: req.body.role,
+                  isMaster: false,
+                  isActive: true
+                },
+                { transaction }
+              )
+              await saveHApprover.setApprovalMethod(ApprovalMethodId, {
+                transaction
+              })
+              await saveHApprover.setCompany(req.user.id, { transaction })
+              await saveHApprover.setEmployee(req.body.EmployeeId, {
+                transaction
+              })
+              //update  employe role
+              const updateEmployeeRole = await Employee.update(
+                { role: 'approver' },
+                {
+                  where: { id: EmployeeId }
+                },
+                { transaction }
+              )
+              //update approval method
+              const updateResult = await ApprovalMethod.update(
+                { isCompleted: true },
+                {
+                  where: { id: ApprovalMethodId }
+                },
+                { transaction }
+              )
+
+              await transaction.commit()
+              console.log(updateResult)
+              return res.status(201).json({
+                success:true,
+                message:  'successfully saved you have passed minimum number of approver'
+              })
+            } else if (minimumApp > settedApprover + 1) {
+              const saveHApprover = await Approver.create(
+                {
+                  level: 0,
+                  role: req.body.role,
+                  isMaster: false,
+                  isActive: true
+                },
+                { transaction }
+              )
+              await saveHApprover.setApprovalMethod(ApprovalMethodId, {
+                transaction
+              })
+              await saveHApprover.setCompany(req.user.id, { transaction })
+              await saveHApprover.setEmployee(req.body.EmployeeId, {
+                transaction
+              })
+              //update  employe role
+              const updateEmployeeRole = await Employee.update(
+                { role: 'approver' },
+                {
+                  where: { id: EmployeeId }
+                },
+                { transaction }
+              )
+
+              await transaction.commit()
+              return res.status(201).json({
+                success:true,
+                // updateEmployeeRole: updateEmployeeRole,
+                message: 'Approver assigned successfully '
+              })
+            } else {
+              await transaction.rollback()
+              return next(
+                createError.createError(500, 'Internal server error')
+              )
+              // return res.json("something is wrong");
+            }
+          } catch (error) {
+            await transaction.rollback()
+            return next(
+              createError.createError(500, 'Internal server error')
+            )
+            // return res.status(500).json("something went wrong");
+          }
+        } 
+        else if (appMethod === 'hierarchy') {
+          //hierarchy no master
+          const level = req.body.level
+          if (appLevel < level) {
+            await transaction.rollback()
+            return next(
+              createError.createError(
+                400,
+                `The maximum level is ${appLevel}`
+              )
+            )
+          }
+          if (level < 1) {
+            await transaction.rollback()
+            return next(
+              createError.createError(400, `The minimum level is 1`)
+            )
+          }
+
+          const saveHApprover = await Approver.create(
+            {
+              level: level,
+              role: req.body.role,
+              isMaster: false,
+              isActive: true
+            },
+            { transaction }
+          )
+          await saveHApprover.setApprovalMethod(ApprovalMethodId, {
+            transaction
+          })
+          await saveHApprover.setCompany(req.user.id, { transaction })
+          await saveHApprover.setEmployee(req.body.EmployeeId, {
+            transaction
+          })
+          //update  employe role
+          const updateEmployeeRole = await Employee.update(
+            { role: 'approver' },
+            {
+              where: { id: EmployeeId }
+            },
+            { transaction }
+          )
+
+          const existingLevels = await Approver.findAll({
+            where: {
+              CompanyId: req.user.id,
+              isActive: true,
+              ApprovalMethodId: approvalMethod.id
+            },
+            attributes: ['level'],
+            raw: true
+          })
+          const maxLevel = appLevel
+          existingLevels.push({ level: level })
+          const allLevelsAssigned = Array.from(
+            { length: maxLevel },
+            (_, i) => i + 1
+          ).every(level =>
+            existingLevels.some(
+              approverLevel => parseInt(approverLevel.level) === level
+            )
+          )
+          console.log('allLevelsAssigned', allLevelsAssigned)
+          // const foundMasterApprover = await Approver.findOne({
+          //   where: {
+          //     CompanyId: req.user.id,
+          //     isMaster: true,
+          //     isActive: true
+          //   }
+          // })
+          // console.log('existingLevels.isMaster', foundMasterApprover)
+          if (allLevelsAssigned ) {
+            approvalMethod.isCompleted = true
+            await approvalMethod.save({ transaction })
+          }
+
+          await transaction.commit()
+
+          return res.status(201).json({
+            success: true,
+            message: 'Approver seatted successfully'
+          })
+        }
+
+        }
+      } 
+      
+      
+      
+    
   } catch (error) {
-    console.error("Error creating Approver:", error);
-    return next(createError.createError(500,"Internal server error"))
+    await transaction.rollback()
+    console.error('Error creating Approver:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to create Approver" });
   }
-};
+}
 
 // Update an existing Approver
-exports.updateApprover=async(req, res,next)=> {
-  const approverId = req.params.id;
-  const { level, role, isActive, isMaster, EmployeeId, companyId } = req.body;
+exports.updateApprover = async (req, res, next) => {
+  const approverId = req.params.id
+  const { level, role, isActive, isMaster, EmployeeId, companyId } = req.body
   try {
-    const approver = await Approver.findByPk(approverId);
+    const approver = await Approver.findByPk(approverId)
     if (!approver) {
-      return res.status(404).json({ error: "Approver not found" });
+      return res.status(404).json({ error: 'Approver not found' })
     }
-    approver.level = level;
-    approver.role = role;
-    approver.isActive = isActive;
-    approver.isMaster = isMaster;
-    approver.EmployeeId = EmployeeId;
-    approver.CompanyId = companyId;
-    await approver.save();
-    res.json(approver);
+    approver.level = level
+    approver.role = role
+    approver.isActive = isActive
+    approver.isMaster = isMaster
+    approver.EmployeeId = EmployeeId
+    approver.CompanyId = companyId
+    await approver.save()
+    res.json(approver)
   } catch (error) {
-    console.error("Error updating Approver:", error);
-    return next(createError.createError(500,"Internal server error"))
+    console.error('Error updating Approver:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to update Approver" });
   }
 }
 
 // Delete an Approver
-exports.deleteApprover = async (req, res,next) => {
-  const approverId = req.params.id;
+exports.deleteApprover = async (req, res, next) => {
+  const approverId = req.params.id
   try {
-    const approver = await Approver.findByPk(approverId);
+    const approver = await Approver.findByPk(approverId)
     if (!approver) {
-      return res.status(404).json({ error: "Approver not found" });
+      return res.status(404).json({ error: 'Approver not found' })
     }
-    await approver.destroy();
-    res.status(200).json({ message: "Approver deleted successfully" });
+    await approver.destroy()
+    res.status(200).json({ message: 'Approver deleted successfully' })
   } catch (error) {
-    console.error("Error deleting Approver:", error);
-    return next(createError.createError(500,"Internal server error"))
+    console.error('Error deleting Approver:', error)
+    return next(createError.createError(500, 'Internal server error'))
     // res.status(500).json({ error: "Failed to delete Approver" });
   }
-};
+}
 
-
-
-exports.deactiveApprover = async (req, res,next) => {
-  const approverId = req.body.approverId;
-  const EmployeeId = req.body.EmployeeId;
+exports.deactiveApprover = async (req, res, next) => {
+  const approverId = req.body.approverId
+  const EmployeeId = req.body.EmployeeId
 
   const updateApprover = await Approver.update(
     { isActive: false },
     {
       where: {
-        id: approverId,
-      },
+        id: approverId
+      }
     }
-  );
+  )
   const updateEmployee = await Employee.update(
-    { role: "employee" },
+    { role: 'employee' },
     {
       where: {
-        id: EmployeeId,
-      },
+        id: EmployeeId
+      }
     }
-  );
+  )
 
   return res.json({
     status: 201,
-    message: "approver deActivated successfully.",
+    message: 'approver deActivated successfully.',
     updateEmployee: updateEmployee,
-    updateApprover: updateApprover,
-  });
-};
-
+    updateApprover: updateApprover
+  })
+}
