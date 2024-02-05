@@ -31,7 +31,6 @@ const createError= require('../utils/error.js')
 const Position=require("../models/position.js")
 exports.getAllEmployee = async (req, res,next) => {
   try {
-   console.log("not heres d   d d  ")
     const Employees = await Employee.findAll({
       where: { CompanyId: req.user.id},
       include: [
@@ -200,11 +199,128 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
   try {
 
     const getEmployeeWithCustomRole= await Employee.findAll({
+      include: [
+        {
+          model: Address,
+          required: false,
+          where:{isActive:true}
+        },
+        {
+          model: Company,
+          required: false,
+          attributes:['id','companyCode','organizationName','numberOfEmployees','role','status']
+        },
+
+        {
+          model: EmployeeInfo,
+          required: false,
+          where:{  isActive: true,}
+        },
+        {
+          model: Position,
+          required: false,
+          through: {
+            model: EmployeePosition,
+            where: {
+              isActive: true,
+            },
+          },
+        },
+        {
+          model: Department,
+          required: false,
+          through: {
+            model: EmployeeDepartment,
+            where: {
+              active: true,
+            },
+          },
+        },
+        {
+          model: Projects,
+          required: false,
+          through: {
+            model: ProjectEmployee,
+            // where:{isActive:true}     
+          },
+          include:[Sponsor]
+        },
+       
+        {
+          model: AccountInfo,
+          required: false,
+          where:{isActive:true}
+        },
+        {
+          model: CustomRole,
+          required: false,
+        },
+        {
+          model: Loan,
+          required: false,
+        },
+        {
+          model: Grade,
+
+          through: {
+            model: EmployeeGrade,
+            where: {
+              active: true,
+            },
+          },
+
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+            // { model: EmployeeGrade, where: { active: true } },
+          ],
+        },
+        // {
+        //   model: EmployeeGrade,
+        //   where: { active: true },
+        // },
+        {
+          model: EmergencyContact,
+          required: false,
+        },
+        {
+          model: CustomRole,
+          include: [Permission],
+        },
+        {
+          model: AdditionalAllowance,
+          include: [AdditionalAllowanceDefinition],
+        },
+        {
+          model: AdditionalDeduction,
+          include: [AdditionalDeductionDefinition],
+        },
+        {
+          model: AdditionalPay,
+          include: [AdditionalPayDefinition],
+        },
+        //Address,
+        // EmployeeInfo,
+        // EmergencyContact,
+        // AccountInfo,
+        // Department,
+        // Grade,
+
+        // // Company,
+        // CustomRole,
+      ],
       where:{
         CompanyId:req.user.id,
         CustomRoleId: {
           [Op.not]: null,  // Exclude payrolls with status 'approved'
         },
+        
       }
     })
    return res.status(200).json({
