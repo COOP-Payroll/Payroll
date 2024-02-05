@@ -25,6 +25,7 @@ const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail.js");
+const { Op } = require("sequelize");
 const createError= require('../utils/error.js')
 // Define controller methods for handling User requests
 const Position=require("../models/position.js")
@@ -195,7 +196,26 @@ exports.getAllEmployee = async (req, res,next) => {
     }
   }
 };
+exports.getEmployeeWithCustomRole= async(req,res,next)=>{
+  try {
 
+    const getEmployeeWithCustomRole= await Employee.findAll({
+      where:{
+        CompanyId:req.user.id,
+        CustomRoleId: {
+          [Op.not]: null,  // Exclude payrolls with status 'approved'
+        },
+      }
+    })
+   return res.status(200).json({
+    success:true,
+    data:getEmployeeWithCustomRole
+   })
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500,"Internal server Error"))
+  }
+}
 exports.getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;

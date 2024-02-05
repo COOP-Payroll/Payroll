@@ -122,11 +122,9 @@ exports.restrictToAll = (...roles) => {
 
 exports.restrictALL = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
-    
-    if (req.user.role === "companyAdmin" ||req.user.role === "approver" || req.user.role === "superAdmin") {
+    if (req.user.role === "companyAdmin"  || req.user.role === "superAdmin") {
       next();
     } else {
-      //const { moduleName, employeeId } = req.body;
       const employee = await Employee.findOne({
         where: { id: req.user.id },
         include: [
@@ -136,12 +134,10 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
           },
         ],
       });
-
       if (!employee) {
         return res.status(404).json({ message: "Employee not found." });
       }
 
-// console.log("first", employee.CustomRole.Permissions);
       const hasPermission =
         employee.CustomRole &&
         
@@ -150,10 +146,9 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
             permission.module === moduleName &&
             permission.isAccessible === true
         );
-
+        // return res.json({ hasPermission });
         console.log("haspermission", hasPermission);
-      //return res.json({ hasPermission });
-
+      
       if (hasPermission) {
         next();
       } else {

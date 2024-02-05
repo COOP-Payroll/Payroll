@@ -4,7 +4,7 @@ const middleware = require('../middleware/auth')
 const employeePayrollApprovementController = require("../controllers/employeePayrollApprovement");
 
 // GET /employee-payroll-approvements
-router.get("/", employeePayrollApprovementController.getAllApprovements);
+router.get("/",middleware.restrictTo('approver'), employeePayrollApprovementController.getAllApprovements);
 
 // GET /employee-payroll-approvements/:id by definition id
 router.get("/:id", employeePayrollApprovementController.getApprovementById);
@@ -29,9 +29,9 @@ router.post(
 router.post(
   "/approve",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictToAll("approver"),
   middleware.restrictALL({
-    moduleName: "payrollpublishedreport",
+    moduleName: "PayrollPublishedReport",
     isAccessible: true,
   }),
   employeePayrollApprovementController.approveStatusOfPayroll

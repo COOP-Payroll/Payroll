@@ -19,7 +19,9 @@ router.get(
   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
   employeeController.getAllEmployee
 );
-
+router.get("/employees-with-custom-role", middleware.protectAll,   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+employeeController.getEmployeeWithCustomRole
+)
 router.get(
   "/get-all-projects/:employeeId",
 
