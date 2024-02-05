@@ -130,7 +130,7 @@ async function testConnection() {
 //     console.log('Database synchronized successfully.');
 //   })
 //   .catch((error) => {
-//     console.error('Error synchronizing database:', error);
+//     console.error('Erro r synchronizing database:', error);
 //   });
 testConnection();
 module.exports = sequelize;

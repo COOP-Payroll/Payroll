@@ -4,7 +4,12 @@ const payroll1=require("../controllers/payrollController.js")
 const middleware = require("../middleware/auth");
 const router = express.Router();
 const z=require("../controllers/zcontrollers.js")
-
+router.get(
+  '/available-payrolls',
+  middleware.protectAll,
+  middleware.restrictToAll('approver'),
+  payroll.getNotApprovedPayroll
+)
 router.get(
   "/:id",
   middleware.protectAll,

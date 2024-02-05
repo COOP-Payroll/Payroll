@@ -3,7 +3,7 @@ const Grade = require("../models/grade.js");
 // const AllowanceDefinition = require("../models/allowanceDefinition.js");
 
 const DeductionDefinition = require("../models/deductionDefinition.js");
-
+const { Op } = require("sequelize");
 const Pension = require("../models/pension");
 const Taxslab = require("../models/taxslab");
 const Employee = require("../models/employee");
@@ -25,6 +25,7 @@ const { run } = require("../utils/checkSubscriptionPlan.js");
 const { child } = require("winston");
 const { error } = require("shelljs");
 const AccountInfo = require("../models/accountInfo.js");
+const createError = require("../utils/error.js");
 
 exports.createPayroll1 = async (req, res,next) => {
   try {
@@ -544,3 +545,22 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
     next(error);
   }
 };
+
+
+exports.getNotApprovedPayroll= async (req,res,next)=>{
+  try {
+    
+    const payrolls= await Payroll.findAll({where:{
+      CompanyId:req.user.CompanyId,
+      status: {
+        [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+      },
+    }})
+
+    return res.status(200).json({data:payrolls})
+  } catch (error) {
+    console.log("error", error);
+    return next(createError.createError(500,"Internal server error"))
+    
+  }
+}
