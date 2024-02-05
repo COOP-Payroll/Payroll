@@ -817,7 +817,7 @@ exports.getAllUnassignedProjectForEmployee= async(req,res,next)=>{
     return next(createError.createError(400,'position id or employee id not found'))
    }
 
-   const foundPosition= await EmployeePosition.findOne({where:{id:positionId}})
+   const foundPosition= await Position.findOne({where:{id:Number(positionId)}})
   if(!foundPosition){
     return next(createError.createError(404,'position not found'))
   }
