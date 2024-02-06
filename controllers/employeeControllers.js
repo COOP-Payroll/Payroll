@@ -199,6 +199,14 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
   try {
 
     const getEmployeeWithCustomRole= await Employee.findAll({
+    
+      where:{
+        CompanyId:req.user.id,
+        CustomRoleId: {
+          [Op.not]: null,  // Exclude payrolls with status 'approved'
+        },
+        
+      },
       include: [
         {
           model: Address,
@@ -315,13 +323,6 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
         // // Company,
         // CustomRole,
       ],
-      where:{
-        CompanyId:req.user.id,
-        CustomRoleId: {
-          [Op.not]: null,  // Exclude payrolls with status 'approved'
-        },
-        
-      }
     })
    return res.status(200).json({
     success:true,

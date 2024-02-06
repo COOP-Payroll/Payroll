@@ -4,6 +4,8 @@ const Grade = require("../models/grade.js");
 
 const DeductionDefinition = require("../models/deductionDefinition.js");
 const { Op } = require("sequelize");
+const sequelize = require('../database/db');
+const { Sequelize } = require('sequelize');
 const Pension = require("../models/pension");
 const Taxslab = require("../models/taxslab");
 const Employee = require("../models/employee");
@@ -26,6 +28,9 @@ const { child } = require("winston");
 const { error } = require("shelljs");
 const AccountInfo = require("../models/accountInfo.js");
 const createError = require("../utils/error.js");
+const Approver = require("../models/approver.js");
+const ApprovalMethod = require("../models/approvalMethod.js");
+const EmployeePayrollApprovement = require("../models/employeePayrollApprovement.js");
 
 exports.createPayroll1 = async (req, res,next) => {
   try {
@@ -395,7 +400,7 @@ async function runPayroll(
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
     });
-  
+    await data.setCompany(Number(req.user.id))
     console.log("payroll data", payrollData);
     // const payroll = await oldPayroll.update(payrollData);
     // await payrollDefinition.increment("totalNoOfprocessedEmployee");
@@ -549,15 +554,230 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
 
 exports.getNotApprovedPayroll= async (req,res,next)=>{
   try {
-    
-    const payrolls= await Payroll.findAll({where:{
+ 
+const approver= await Approver.findOne({
+  where:{EmployeeId:req.user.id,
+  isActive:true},
+  include:{
+    model: ApprovalMethod,
+    as:"ApprovalMethod",
+    where:{
       CompanyId:req.user.CompanyId,
+      isActive:true,
+    }
+
+  }
+})
+
+if(approver?.ApprovalMethod === null){
+  return next(createError.createError(400,'Define approval method first'))
+}
+
+const currentDate = new Date();
+const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+const currentMonthPayrolls = await PayrollDefinition.findAll({
+  where: {
+    CompanyId: req.user.CompanyId,
+    [Op.or]: [
+      {
+        startDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
+        endDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
+      },
+      {
+        startDate: {
+          [Op.lt]: startOfMonth,
+        },
+        endDate: {
+          [Op.gte]: startOfMonth,
+        },
+      },
+    ],
+  },
+});
+
+console.log("current month", currentMonthPayrolls.length);
+
+if (currentMonthPayrolls.length === 0) {
+  return res.status(204).json({
+    message: "No payrolls defined for this month",
+  });
+} 
+
+if(approver?.ApprovalMethod?.approvalMethod === 'horizontal'){
+  const minimumApprovers=Number(approver.ApprovalMethod.minimumApprover);
+  if(approver.isMaster){
+    const payrolls = await Payroll.findAll({
+      where:{
+        status: {
+          [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+        },
+      },
+      include: [
+        {
+          model: EmployeePayrollApprovement,
+          attributes: [
+            [Sequelize.fn('COUNT', Sequelize.literal('*')), 'approvalCount'],
+          ],
+          where: {
+            status: 'approved',
+          },
+          required: false, // Keep this line
+          duplicating: false,
+        },
+      ],
+      group: ['Payroll.id'], // Add this line
+      having: Sequelize.literal(`COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`),
+      raw: true,
+    });
+
+    return res.status(200).json({
+      success:true,
+      data:payrolls
+    })
+  }
+  const payrolls = await Payroll.findAll({
+    where:{
       status: {
         [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
       },
-    }})
+    },
+    include: [
+      {
+        model: EmployeePayrollApprovement,
+        attributes: [
+          [Sequelize.fn('COUNT', Sequelize.literal('*')), 'approvalCount'],
+        ],
+        where: {
+          status: 'approved',
+        },
+        required: false, // Keep this line
+        duplicating: false,
+      },
+    ],
+    group: ['Payroll.id'], // Add this line
+    having: Sequelize.literal(`COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < ${minimumApprovers}`),
+    raw: true,
+  });
 
-    return res.status(200).json({data:payrolls})
+  return res.status(200).json({
+    success:true,
+    data:payrolls
+  })
+
+  
+return res.status(200).json({
+  success:true,
+  data:payrolls
+})
+
+}
+if(approver?.ApprovalMethod?.approvalMethod === 'hierarchy'){
+  const approvalLevel=Number(approver?.level);
+  
+  const companyApprovalLevel=approver?.ApprovalMethod?.approvalLevel;
+  if(approver.isMaster){
+    const payrolls = await Payroll.findAll({
+      where:{
+        status: {
+          [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+        },
+      },
+      include: [
+        {
+          model: EmployeePayrollApprovement,
+           where: {
+            status: 'approved',
+            level:companyApprovalLevel
+          },
+          required: true, // Keep this line
+          duplicating: false,
+        },
+      ],
+      raw: true,
+    });
+  
+    return res.status(200).json({
+      success:true,
+      data:payrolls
+    })
+  }
+if(approvalLevel === 1){
+  const payrolls= await Payroll.findAll({
+    where: {
+      status: {
+        [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+      },
+      id: {
+        [Sequelize.Op.notIn]: Sequelize.literal(
+          '(SELECT "PayrollId" FROM "EmployeePayrollApprovements")'
+        ),
+      },
+    },
+  });
+  // const payrolls = await Payroll.findAll({
+  //   where:{
+  //     status: {
+  //       [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+  //     },
+  //   },
+  //   include: [
+  //     {
+  //       model: EmployeePayrollApprovement,
+  //        where: {
+  //         status: 'approved',
+  //         level:1
+  //       },
+  //       required: true, // Keep this line
+  //       duplicating: false,
+  //     },
+  //   ],
+  //   raw: true,
+  // });
+
+
+  return res.status(200).json({
+    success:true,
+    data:payrolls
+  })
+}
+else{
+  const payrolls = await Payroll.findAll({
+    where:{
+      status: {
+        [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+      },
+    },
+    include: [
+      {
+        model: EmployeePayrollApprovement,
+         where: {
+          status: 'approved',
+          level:approvalLevel-1
+        },
+        required: true, // Keep this line
+        duplicating: false,
+      },
+    ],
+    raw: true,
+  });
+
+  return res.status(200).json({
+    success:true,
+    data:payrolls
+  })
+
+}
+ 
+
+  
+}
+
   } catch (error) {
     console.log("error", error);
     return next(createError.createError(500,"Internal server error"))

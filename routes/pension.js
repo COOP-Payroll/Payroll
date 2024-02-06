@@ -23,7 +23,7 @@ router.post(
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   pensionController.createPension
 );
-
+// router.put("/")
 router.put(
   "/:id",
   middleware.protectAll,
@@ -39,6 +39,7 @@ router.delete(
 
   pensionController.deletePension
 );
+
 router.get("/:id", pensionController.getpensionById);
 
 module.exports = router;
