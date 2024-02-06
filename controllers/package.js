@@ -1,4 +1,5 @@
 const Package = require("../models/package.js");
+const  createError  = require("../utils/error.js");
 
 // Define controller methods for handling User requests
 exports.getAllPackages = async (req, res,next) => {
@@ -180,3 +181,23 @@ exports.deletePackage = async (req, res, next) => {
     return res.status(500).json("Something gonna wrong");
   }
 };
+
+
+exports.getTrial = async (req, res,next) => {
+  try {
+     const trial=await Package.findAll({where:{packageType:"Trial"}});
+  
+     res.status(200).json({success:true,
+      data:trial
+    }
+      
+      );
+  
+    
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500,"Internal server error"))
+    next(error);
+  }
+  
+  }

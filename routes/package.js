@@ -12,7 +12,8 @@ router.get(
   packageController.getAllPackages
 );
 
-
+router.get("/trial",
+packageController.getTrial)
 router.get("/monthlyPackages",
 packageController.getMonthlyPackages
 );
@@ -20,6 +21,7 @@ packageController.getMonthlyPackages
 router.get("/yearlyPackages",
 packageController.getYearlyPackages
 );
+
 router.post(
   "/",
   middleware.protectAll,

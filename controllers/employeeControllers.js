@@ -333,7 +333,7 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
     return next(createError.createError(500,"Internal server Error"))
   }
 }
-exports.getEmployeeById = async (req, res) => {
+exports.getEmployeeById = async (req, res,next) => {
   try {
     const { id } = req.params;
 
@@ -664,22 +664,7 @@ exports.createEmployee = async (req, res, next) => {
     });
   } catch (error) {
     console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-      return res.status(404).json({ message: errors });
-    } else {
-      console.log("first", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return next(createError.createError(500,"Internal server Error"))
   }
 };
 
@@ -818,75 +803,7 @@ exports.findByDepartment = async (req, res, next) => {
         ],
       });
 
-      // console.log("not zero", 0);
-      // const Employees = await Employee.findAll({
-      //   // where: { CompanyId: req.user.id, DepartmentId: departmentId },
-      //   include: [
-      //     {
-      //       model: Department,
-      //       through: {
-      //         EmployeeDepartment,
-      //         where: {
-      //           DepartmentId: departmentId,
-      //         },
-      //       },
-      //     },
-
-      //     {
-      //       model: Address,
-      //       required: false,
-      //     },
-      //     {
-      //       model: Company,
-      //       required: false,
-      //     },
-      //     {
-      //       model: EmployeeInfo,
-      //       required: false,
-      //     },
-      //     {
-      //       model: Department,
-      //       required: false,
-      //       through: {
-      //         model: EmployeeDepartment,
-      //         where: {
-      //           active: true,
-      //         },
-      //       },
-      //     },
-      //     {
-      //       model: CustomRole,
-      //       required: false,
-      //     },
-      //     {
-      //       model: Loan,
-      //       required: false,
-      //     },
-      //     {
-      //       model: Grade,
-
-      //       through: {
-      //         model: EmployeeGrade,
-      //         where: {
-      //           active: true,
-      //         },
-      //       },
-
-      //       include: [
-      //         {
-      //           model: Allowance, // Use the correct alias defined in the association
-      //           include: [AllowanceDefinition],
-      //         },
-      //         {
-      //           model: Deduction, // Use the correct alias defined in the association
-      //           include: [DeductionDefinition],
-      //         },
-      //         // { model: EmployeeGrade, where: { active: true } },
-      //       ],
-      //     },
-      //   ],
-      // });
-
+   
       res.status(200).json({
         count: dept.length,
         dept,
@@ -953,23 +870,7 @@ exports.findByDepartment = async (req, res, next) => {
     }
   } catch (error) {
     console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+  return next(createError.createError(500,"Internal server Error"))
   }
 };
 
@@ -983,6 +884,7 @@ const EmployeeGrade = require("../models/EmployeeGrade.js");
 const EmployeeDepartment = require("../models/EmployeeDepartment.js");
 const Sponsor = require("../models/sponsor.js");
 const EmployeePosition = require("../models/employeePosition.js");
+const Approver = require("../models/approver.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -1811,3 +1713,38 @@ const checkAddress= await Address.findOne({
 }
 
 
+
+exports.UnAssignApprovers=async(req,res,next)=>{
+  const transaction = await sequelize.transaction();
+  try {
+    const EmployeeId=req.params.id
+    const employee= await Employee.findOne({
+      where:{
+        id:EmployeeId
+      }
+    })
+
+    if(!employee){
+      return next(createError.createError(404,"Employee not found"))
+    }
+if(employee?.role != 'approver'){
+  return next(createError.createError(400,"Employee is not Approver"))
+}
+const approvers= await Approver.findOne({
+  where:{
+    EmployeeId:EmployeeId
+  }
+})
+const isMaster=approvers.isMaster
+const ApprovalMethodId=approvers.ApprovalMethodId
+
+return res.status(200).json(approvers)
+
+await employee.update({role:"employee"},{transaction})
+await transaction.commit();
+  } catch (error) {
+    console.log(error);
+    await transaction.rollback();
+    return next(createError.createError(500, 'Internal Server error'));
+  }
+}

@@ -4,17 +4,17 @@ const sequelize = require("../database/db.js");
 const Package = sequelize.define("Package", {
   
   packageName: {
-    type: DataTypes.ENUM("Custom", "Gold", "Platinium"),
+    type: DataTypes.ENUM("Custom", "Gold", "Platinium","Trial"),
     allowNull: false,
     validate: {
-      isIn: [['Custom', 'Gold','Platinium']],
+      isIn: [['Custom', 'Gold','Platinium','Trial']],
     },
   },
   packageType:{
-    type: DataTypes.ENUM("Yearly", "Monthly"),
+    type: DataTypes.ENUM("Yearly", "Monthly","Trial"),
     allowNull: false,
     validate: {
-      isIn: [['Yearly', 'Monthly']],
+      isIn: [['Yearly', 'Monthly','Trial']],
     },
   },
   ///
