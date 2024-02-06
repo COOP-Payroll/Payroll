@@ -6,7 +6,11 @@ const upload = require("../middleware/multer");
 // const { accountInfoMulter, upload } = require("../middleware/multer.js");
 const newEmployeeController = require("../controllers/newEmployeeControllers.js");
 
-
+router.put('/unassign-approver/:id',
+middleware.protectAll,
+middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+employeeController.UnAssignApprovers
+)
 router.put(
   "/update-contact-info/:employeeId",
   middleware.protectAll,

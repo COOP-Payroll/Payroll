@@ -3,6 +3,9 @@ const Company = require("../models/company");
 const Approver = require("../models/approver");
 const createError=require("../utils/error.js")
 const { Op } = require("sequelize");
+const sequelize = require('../database/db')
+const { Sequelize } = require('sequelize');
+const Employee = require("../models/employee.js");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllApprovalMethod = async (req, res,next) => {
   console.log("all approval")
@@ -194,8 +197,10 @@ async function reSaveApprovalMethod(
   approvalMethod,
   lastUpdated,
   isActive,
-  oldId
+  oldId,res,next
 ) {
+  console.log
+
   const appMethod = await ApprovalMethod.create({
     minimumApprover,
     approvalLevel,
@@ -205,7 +210,7 @@ async function reSaveApprovalMethod(
     lastUpdated,
     isActive
   });
-
+  // return res.json(appMethod)
   const company = await Company.findByPk(Number(CompanyId));
 
   if (company) {
@@ -219,6 +224,11 @@ async function reSaveApprovalMethod(
   const approver = await Approver.update({isActive:false},{
     where: {ApprovalMethodId:oldId}
   });
+
+
+  // await Employee.update({role:'employee'},{
+  //   where:{id:approver.EmployeeId}
+  // })
   const result = await ApprovalMethod.update({isActive:false}, {
     where: { id: oldId },
   });
@@ -229,7 +239,7 @@ async function reSaveApprovalMethod(
   //   created: appMethod,
   // };
 }
-exports.reCreateApprovalMethod = async(req,res,next)=>{
+exports.reCreateApprovalMethods = async(req,res,next)=>{
   const CompanyId = req.user.id;
   let minimumApprover = req.body.minimumApprover;
   let approvalLevel = req.body.approvalLevel;
@@ -300,7 +310,7 @@ exports.reCreateApprovalMethod = async(req,res,next)=>{
                 approvalMethod,
                 lastUpdated,
                 isActive,
-                oldId
+                oldId,res,next
               );
               console.log(response);
               return res.status(201).json({
@@ -318,7 +328,7 @@ exports.reCreateApprovalMethod = async(req,res,next)=>{
                 approvalMethod,
                 lastUpdated,
                 isActive,
-                oldId
+                oldId,res,next
               );
               console.log(response);
               return res.status(201).json({
@@ -338,7 +348,7 @@ exports.reCreateApprovalMethod = async(req,res,next)=>{
                 approvalMethod,
                 lastUpdated,
                 isActive,
-                oldId
+                oldId,res,next
               );
               console.log(response);
               return res.status(200).json({
@@ -358,7 +368,7 @@ exports.reCreateApprovalMethod = async(req,res,next)=>{
                   approvalMethod,
                   lastUpdated,
                   isActive,
-                  oldId
+                  oldId,res,next
                 );
                 return res.status(201).json({
                   message:"recreated successfully",
@@ -456,7 +466,6 @@ exports.deleteApprovalMethod = async (req, res, next) => {
 
 
 
-
 exports.reCreateApprovalMethods = async (req, res,next) => {
   try {  
   const CompanyId = req.user.id;
@@ -544,3 +553,82 @@ exports.reCreateApprovalMethods = async (req, res,next) => {
     // res.status(500).json("Something gonna wrong");
   }
 };
+
+
+exports.reCreateApprovalMethod= async(req,res,next)=>{
+  const transaction = await sequelize.transaction();
+  try {
+
+    const {minimumApprover,approvalLevel,isThereMasterApprover,approvalMethod}=req.body;
+
+    if(!approvalMethod){
+      return next(createError.createError(400,"Set approvalMethod"))
+    }
+     const isActive=true;
+     const CompanyId=req.user.id;
+    const foundApprovalMethod= await ApprovalMethod.findOne({
+      where:{
+       isActive:isActive,
+        CompanyId:CompanyId
+      }
+    })
+if(!foundApprovalMethod){
+  return next(createError.createError(409,"No approval method found"))
+}
+     const approvalMethods= await ApprovalMethod.findOne({
+      where:{
+        minimumApprover:minimumApprover,
+        approvalLevel:approvalLevel,
+        isThereMasterApprover:isThereMasterApprover,
+        approvalMethod:approvalMethod,
+        CompanyId:CompanyId,
+        isActive:isActive,
+      }
+     })
+
+     if(approvalMethods){
+      return next(createError.createError(409,"Similar with previous approval methods"))
+     }
+  
+const getAllApprovers= await Approver.findAll({
+  where:{
+    isActive:true,
+    ApprovalMethodId:foundApprovalMethod.id
+  }
+})
+const employeeIds = [...new Set(getAllApprovers.map(employee => employee.EmployeeId))];
+
+const updatedEmployee= await sequelize.query(`
+UPDATE "Employees"
+SET "role" = 'employee'
+WHERE "id" IN (${employeeIds.join(',')})
+`,{transaction});
+     const appMethod = await ApprovalMethod.create({
+      minimumApprover,
+      approvalLevel,
+      approvalMethod,
+      isCompleted:false,
+      isThereMasterApprover,
+      isActive
+    },{transaction});
+    await appMethod.setCompany(CompanyId,{transaction});
+    
+  const approver = await Approver.update({isActive:false},{
+    where: {ApprovalMethodId:foundApprovalMethod?.id}
+  },{transaction});
+
+
+  await foundApprovalMethod.update({isActive:false}, {transaction
+  });
+     await transaction.commit();
+return res.status(200).json({
+  success:true,
+  message:"Recreated successfully"
+})
+    } catch (error) {
+      await transaction.rollback();
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
+    
+  }
+}
