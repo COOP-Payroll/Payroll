@@ -1,7 +1,6 @@
 const Pension = require("../models/pension.js");
 
-// Define controller methods for handling User requests
-exports.getAllPension = async (req, res) => {
+exports.getAllPension = async (req, res,next) => {
   try {
     if (req.user.role === "superAdmin") {
       const pensions = await Pension.findAll({
@@ -21,49 +20,19 @@ exports.getAllPension = async (req, res) => {
       });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
-exports.getpensionById = async (req, res) => {
+exports.getpensionById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const pension = await Pension.findByPk(id);
     res.json(pension);
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -110,24 +79,8 @@ exports.createPension = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -198,24 +151,8 @@ exports.updatePension = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -233,29 +170,13 @@ exports.deletePension = async (req, res, next) => {
         .json({ message: "There is no pension with this ID" });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(400).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
-//GET ALL INCLUDING IN ACTIVE PENSION
 
-exports.getAllPensionIncludingInActive = async (req, res) => {
+exports.getAllPensionIncludingInActive = async (req, res,next) => {
   try {
     if (req.user.role === "superAdmin") {
       const pensions = await Pension.findAll({
@@ -275,22 +196,48 @@ exports.getAllPensionIncludingInActive = async (req, res) => {
       });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
+  }
+};
 
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
 
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+exports.restoreToDefault = async (req, res, next) => {
+  try {
+    const superAdmin = await User.findAll({ where: { role: "superAdmin" } });
+
+    return res.json(superAdmin)
+    const taxslabs = await Taxslab.findAll({
+      where: { UserId: Number(superAdmin.id), isActive: true },
+    });
+
+    const deletedData = await Taxslab.destroy({
+      where: {
+        CompanyId: req.user.id,
+        isActive: true,
+      },
+    });
+
+
+    const tax = await Promise.all(
+      taxslabs.map((taxslab) => {
+        return Taxslab.create({
+          from_Salary: Number(taxslab.from_Salary),
+          to_Salary: Number(taxslab.to_Salary),
+          income_tax_payable: Number(taxslab.income_tax_payable),
+          deductible_Fee: Number(taxslab.deductible_Fee),
+          CompanyId: Number(req.user.id),
+          UserId: null,
+        });
+      })
+    );
+    res.status(200).json({
+      message: "Restored to default",
+      deletedData: tax,
+      tax,
+    });
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500,"Internal server error"))
   }
 };

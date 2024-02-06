@@ -167,7 +167,7 @@ exports.createApprover = async (req, res, next) => {
   const CompanyId = req.user.id
   const { level, role, isActive, isMaster, EmployeeId } = req.body
   try {
-    if (!EmployeeId || !level) {
+    if (!EmployeeId   ) {
       return next(createError.createError(400, 'Please enter required fields'))
       // return res.status(400).json({ error: "Employee Id is required" });)
     }
@@ -179,6 +179,16 @@ exports.createApprover = async (req, res, next) => {
 
     if (!approvalMethod) {
       return next(createError.createError(404, 'Define approval method first'))
+    }
+    if(approvalMethod.approvalMethod  === 'hierarchy'){
+  // return res.json()
+      if(level === undefined || level === null){
+        return next(createError.createError(400, 'Please enter level'));
+      }
+      if(Number(level)<1){
+        return next(createError.createError(400,'Level must be greater than zero'))
+      }
+    
     }
     const employee = await Employee.findOne({
       where: { id: EmployeeId, CompanyId: req.user.id, isActive: true }
@@ -826,7 +836,7 @@ exports.updateApprover = async (req, res, next) => {
     approver.EmployeeId = EmployeeId
     approver.CompanyId = companyId
     await approver.save()
-    res.json(approver)
+    return res.status(200).json(approver)
   } catch (error) {
     console.error('Error updating Approver:', error)
     return next(createError.createError(500, 'Internal server error'))
@@ -872,8 +882,8 @@ exports.deactiveApprover = async (req, res, next) => {
     }
   )
 
-  return res.json({
-    status: 201,
+  return res.status(200).json({
+   
     message: 'approver deActivated successfully.',
     updateEmployee: updateEmployee,
     updateApprover: updateApprover
