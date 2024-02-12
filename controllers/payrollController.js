@@ -384,7 +384,7 @@ const employee_providentFund=providentFund.employeeContribution ?? 0;
 const employer_providentFund=providentFund.employerContribution ?? 0;
 
 // return res.json(pension)
-    const sanitizedEmployees = Employees.map(employee => {
+    const data = Employees.map(employee => {
 
       let totalDeduction = 0;
       let totalAllowance = 0;
@@ -460,12 +460,12 @@ const employer_providentFund=providentFund.employerContribution ?? 0;
       employee.EmployeeInfos[0]?.basicSalary * ((employee_providentFund * 1) / 100)+
       employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100);
       // Destructure the employee object excluding the password field
-      const { password, ...sanitizedEmployee } = employee.dataValues;
+      const { password, ...Employees } = employee.dataValues;
       grossSalary= (      totalAllowance +
         employee.EmployeeInfos[0]?.basicSalary 
       ).toFixed(2)
       // If there are nested associations, remove passwords from them as well
-      if (sanitizedEmployee.Companys) {
+      if (Employees.Companys) {
         sanitizedEmployee.Companys = sanitizedEmployee.Companys.map(info => {
           const { password, ...sanitizedInfo } = info.dataValues;
           return sanitizedInfo;
@@ -474,7 +474,7 @@ const employer_providentFund=providentFund.employerContribution ?? 0;
     
       // Similarly, sanitize other nested associations if needed
     
-      return {sanitizedEmployee,
+      return {Employees,
         grossEarning:grossSalary   ,
         totalAllowance:totalAllowance,
         tax:totalTaxableIncome.toFixed(2),
@@ -484,8 +484,8 @@ const employer_providentFund=providentFund.employerContribution ?? 0;
     
 
     res.status(200).json({
-      count: Employees.length,
-      Employees: sanitizedEmployees 
+      success:true,
+     data
     });
   } catch (error) {
     console.log(error)

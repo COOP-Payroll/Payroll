@@ -20,6 +20,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const sendEmail=require('.././utils/sendEmail.js');
 const AccountInfo = require('../models/accountInfo.js')
+const { create } = require('domain')
 // const createError=require("../utils/error.js")
 
 exports.getcompanyProfiles= async (req, res, next)=>{
@@ -804,3 +805,20 @@ const sendActivationEmail = async (email, subject,text,next) => {
     // return next(createError.createError(500, "Error sending activation email. Company status not updated"));
   }
 };
+
+exports.updateCompanyProfile= async(req,res,next)=>{
+  try {
+    const {  header,    footer,
+    companyBanner,
+    primary_Color,
+    primary_Font_Color,
+    primary_Gradient_Color,    
+    secondary_Color    ,
+    social_Media_Images
+  } = req.body;
+  
+}catch (error) {
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
+  }
+}
