@@ -124,13 +124,9 @@ Company.hasMany(Employee);
 Employee.belongsTo(Company);
 
 Employee.beforeUpdate(async (employee, options) => {
-  // Check if isActive is being updated
-  // if (employee.changed("isActive")) {
-    // Create a history record before updating the employee
     const existingEmployee = await Employee.findByPk(employee.id);
     console.log(existingEmployee.phoneNumber)
     await EmployeeHistory.create({
-      // Map the fields you want to track
       fullname: existingEmployee.fullname,
       image: existingEmployee.image,
       sex: existingEmployee.sex,

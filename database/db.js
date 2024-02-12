@@ -122,6 +122,8 @@ async function testConnection() {
     await sequelize.authenticate();
     console.log("Database connection has been established successfully.");
   } catch (error) {
+    console.log(error)
+    console.log(process.env.DB_HOST)
     console.error("Error connecting");
   }
 }
