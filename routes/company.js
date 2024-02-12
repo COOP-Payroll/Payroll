@@ -43,6 +43,18 @@ router.get('/get/companyprofile',
   middleware.protectAll, 
   companyController.getcompanyProfiles
 );
+
+router.put(
+  "/update-company-profile/",
+  middleware.protectAll,
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "banner", maxCount: 1 },
+  
+  ]),
+  companyController.updateCompanyProfile
+);
+
 router.put(
   "/update-account-info/",
   middleware.protectAll,

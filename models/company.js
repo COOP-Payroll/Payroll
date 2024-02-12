@@ -87,6 +87,9 @@ const Company = sequelize.define("Company", {
   secondary_Font_Color: {
     type: DataTypes.STRING,
   },
+  secondary_Gradient_Color: {
+    type: DataTypes.STRING,
+  },
   social_Media_Images: {
     type: DataTypes.BOOLEAN,
 
