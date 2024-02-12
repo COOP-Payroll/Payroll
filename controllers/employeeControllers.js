@@ -885,6 +885,7 @@ const EmployeeDepartment = require("../models/EmployeeDepartment.js");
 const Sponsor = require("../models/sponsor.js");
 const EmployeePosition = require("../models/employeePosition.js");
 const Approver = require("../models/approver.js");
+const ApprovalMethod = require("../models/approvalMethod.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -1730,15 +1731,29 @@ exports.UnAssignApprovers=async(req,res,next)=>{
 if(employee?.role != 'approver'){
   return next(createError.createError(400,"Employee is not Approver"))
 }
+const approvalMethods= await ApprovalMethod.findOne({
+  where:{
+    CompanyId:req.user.id,
+    isActive:true
+  }
+})
 const approvers= await Approver.findOne({
   where:{
     EmployeeId:EmployeeId
   }
 })
-const isMaster=approvers.isMaster
-const ApprovalMethodId=approvers.ApprovalMethodId
+const isMaster=approvers?.isMaster
+const ApprovalMethodId=approvers?.ApprovalMethodId
+const approvalMethodType= approvalMethods?.approvalMethod
+const isCompleted=approvalMethods.isCompleted;
+res.status(200).json(approvalMethods)
+if(approvalMethodType){
+if(isCompleted){
 
-return res.status(200).json(approvers)
+}
+}
+
+return res.status(200).json(approvalMethodType)
 
 await employee.update({role:"employee"},{transaction})
 await transaction.commit();

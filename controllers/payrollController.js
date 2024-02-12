@@ -9,6 +9,26 @@ const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition");
 const Deduction = require("../models/deduction");
 const DeductionDefinition = require("../models/deductionDefinition.js");
+const createError  = require("../utils/error.js");
+const EmployeeGrade = require("../models/EmployeeGrade.js");
+const Projects = require("../models/projects.js");
+const AdditionalPay = require("../models/additionalPay.js");
+const AdditionalPayDefinition = require("../models/additionalPayDefinition.js");
+const AdditionalDeduction = require("../models/additionalDeduction.js");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
+const AdditionalAllowance = require("../models/additionalAllowance.js");
+const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
+const Company = require("../models/company.js");
+const EmployeeInfo = require("../models/employeInfo.js");
+const Position = require("../models/position.js");
+const EmployeePosition = require("../models/employeePosition.js");
+const Department = require("../models/department.js");
+const EmployeeDepartment = require("../models/EmployeeDepartment.js");
+const Loan = require("../models/loan.js");
+const Taxslab = require("../models/taxslab.js");
+const Pension = require("../models/pension.js");
+const ProvidentFund = require("../models/providentFund.js");
+const Sponsor = require("../models/sponsor.js");
 let totalWorkers = 0;
 let completedWorkers = 0;
 let clients = [];
@@ -247,3 +267,228 @@ exports.employeePaySlip = async (req, res, next) => {
     next(error);
   }
 };
+
+
+exports.payrollDraft= async(req,res,next)=>{
+  try {
+    const CompanyId=req.user.id;
+    const Employees = await Employee.findAll({
+      where: { CompanyId: req.user.id},
+      include: [
+       
+        {
+          model: Company,
+          required: false,
+          attributes:['id','companyCode','organizationName','numberOfEmployees','role','status']
+        },
+
+        {
+          model: EmployeeInfo,
+          required: false,
+          where:{  isActive: true,}
+        },
+        {
+          model: Position,
+          required: false,
+          through: {
+            model: EmployeePosition,
+            where: {
+              isActive: true,
+            },
+          },
+        },
+        {
+          model: Department,
+          required: false,
+          through: {
+            model: EmployeeDepartment,
+            where: {
+              active: true,
+            },
+          },
+        },
+        {
+          model: Projects,
+          required: false,
+          include:[Sponsor]
+    
+        },
+   
+    
+        {
+          model: Loan,
+          required: false,
+        },
+        {
+          model: Grade,
+
+          through: {
+            model: EmployeeGrade,
+            where: {
+              active: true,
+            },
+          },
+
+          include: [
+            {
+              model: Allowance, // Use the correct alias defined in the association
+              include: [AllowanceDefinition],
+            },
+            {
+              model: Deduction, // Use the correct alias defined in the association
+              include: [DeductionDefinition],
+            },
+            // { model: EmployeeGrade, where: { active: true } },
+          ],
+        },
+    
+
+        {
+          model: AdditionalAllowance,
+          include: [AdditionalAllowanceDefinition],
+        },
+        {
+          model: AdditionalDeduction,
+          include: [AdditionalDeductionDefinition],
+        },
+        {
+          model: AdditionalPay,
+          include: [AdditionalPayDefinition],
+        },
+    
+      ],
+    });
+const taxslabs= await Taxslab.findAll({
+  where:{
+    CompanyId:req.user.id,
+    isActive:true
+  }
+})
+
+const pension= await Pension.findOne({
+  where:{
+CompanyId:CompanyId,
+isActive:true
+  }
+})
+const providentFund= await ProvidentFund.findOne({
+  where:{
+    CompanyId:CompanyId,
+    isActive:true
+  }
+})
+const employee_pension = pension?.employeeContribution ?? 0;
+const employer_pension = pension?.employerContribution ?? 0;
+
+const employee_providentFund=providentFund.employeeContribution ?? 0;
+const employer_providentFund=providentFund.employerContribution ?? 0;
+
+// return res.json(pension)
+    const sanitizedEmployees = Employees.map(employee => {
+
+      let totalDeduction = 0;
+      let totalAllowance = 0;
+      let totalTaxable = 0;
+      let income_tax_payable = 0;
+      let deductible_Fee = 0;
+      let totalExempted = 0;
+      let totalTaxableIncome = 0;
+      let overallTotalDeduction = 0;
+      let totalLoan = 0;
+      let totalAdditionalPay=0;
+      let additionalAllowance=0
+      let taxableIncome=0;
+      let grossEarning= 0;
+      let selectedSlab=null
+      let tax=0;
+      taxableIncome=employee?.EmployeeInfos[0]?.basicSalary; 
+      // totalTaxable += Number(employee?.EmployeeInfos[0]?.basicSalary);
+      for (const slab of taxslabs) {
+        if (taxableIncome >= slab.from_Salary && taxableIncome <= slab.to_Salary) {
+          selectedSlab = slab;
+          income_tax_payable = slab.income_tax_payable;
+          deductible_Fee = slab.deductible_Fee;
+          break;
+        }
+      }
+  
+    
+      const payrollAmount = employee?.EmployeeInfos[0]?.grossEarning;
+
+      if (employee.Grades.length > 0) {
+        employee.Grades[0].Allowances.forEach(allowance => {
+            totalAllowance += parseFloat(allowance.amount);
+          });
+        employee.Grades[0].Deductions.forEach(deduction => {
+          totalDeduction += parseFloat(deduction.amount);
+        });
+      }
+      console.log(totalAllowance)
+      if(employee.AdditionalAllowances.length>0){
+  
+        employee.AdditionalAllowances.forEach(allowance => {
+          additionalAllowance += parseFloat(allowance.amount);
+        });
+      }
+      if(employee.Loan){
+    employee.Loan.forEach(loan => {
+      totalLoan += parseFloat(loan.amount);
+    });
+        
+      }
+
+      totalTaxable += Number(employee?.EmployeeInfos[0]?.basicSalary);
+      const taxslab = taxslabs.find(
+        (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
+      );
+      if (taxslab) {
+        deductible_Fee = taxslab?.deductible_Fee;
+        income_tax_payable = taxslab?.income_tax_payable;
+        totalTaxableIncome =
+        taxableIncome *
+            (income_tax_payable === 0 ? 1 : income_tax_payable / 100) -
+          deductible_Fee;
+      } else {
+        totalTaxableIncome = 0;
+      }
+
+      totalAllowance+=  additionalAllowance+  employee.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100)
+      overallTotalDeduction =
+      totalLoan +
+      totalTaxableIncome +
+      totalDeduction +
+      employee.EmployeeInfos[0]?.basicSalary * ((employee_providentFund * 1) / 100)+
+      employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100);
+      // Destructure the employee object excluding the password field
+      const { password, ...sanitizedEmployee } = employee.dataValues;
+      grossSalary= (      totalAllowance +
+        employee.EmployeeInfos[0]?.basicSalary 
+      ).toFixed(2)
+      // If there are nested associations, remove passwords from them as well
+      if (sanitizedEmployee.Companys) {
+        sanitizedEmployee.Companys = sanitizedEmployee.Companys.map(info => {
+          const { password, ...sanitizedInfo } = info.dataValues;
+          return sanitizedInfo;
+        });
+      }
+    
+      // Similarly, sanitize other nested associations if needed
+    
+      return {sanitizedEmployee,
+        grossEarning:grossSalary   ,
+        totalAllowance:totalAllowance,
+        tax:totalTaxableIncome.toFixed(2),
+        totalDeduction:overallTotalDeduction.toFixed(2)
+        };
+    });
+    
+
+    res.status(200).json({
+      count: Employees.length,
+      Employees: sanitizedEmployees 
+    });
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
+  }
+}

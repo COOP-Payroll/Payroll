@@ -2267,6 +2267,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
         }
       }
       if (approvalType === 'hierarchy') {
+
         const level = approverLevel
         const approvedDate = new Date()
         const approvementsData = payrollIds.map(async payrollId => {

@@ -10,6 +10,12 @@ router.get(
   middleware.restrictToAll('approver'),
   payroll.getNotApprovedPayroll
 )
+router.get("/payrolldraft",
+ middleware.protectAll, 
+ middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+payroll1.payrollDraft
+ 
+ )
 router.get(
   "/:id",
   middleware.protectAll,
@@ -28,6 +34,12 @@ router.post(
   payroll.createPayroll1
 );
 
+
+router.post("/project-based",
+middleware.protectAll,
+middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+payroll.projectBasedPayroll
+)
 router.post(
   "/deselect",
   middleware.protectAll,
