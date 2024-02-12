@@ -808,15 +808,46 @@ const sendActivationEmail = async (email, subject,text,next) => {
 
 exports.updateCompanyProfile= async(req,res,next)=>{
   try {
-    const {  header,    footer,
-    companyBanner,
+    const {
     primary_Color,
     primary_Font_Color,
     primary_Gradient_Color,    
-    secondary_Color    ,
-    social_Media_Images
+    secondary_Color,
+    secondary_Font_Color,
+    secondary_Gradient_Color,   
+    social_Media_Images,
   } = req.body;
+const CompanyId= req.user.id;
+const logo = req.files?.logo?.[0]?.path
+  const logoPath = logo ? logo : null
+
+  const banner = req.files?.logo?.[0]?.path
+ 
+  const bannerPath = banner ? banner : null
+
+  console.log(banner)
+  console.log(logo)
+  const company=await Company.update({
+    primary_Color,
+    primary_Font_Color,
+    primary_Gradient_Color,    
+    secondary_Color,
+    secondary_Font_Color,
+    secondary_Gradient_Color,   
+    social_Media_Images,
+    companyLogo:logo,
+    companyBanner:banner
+
   
+  },{
+    where:{id:CompanyId}
+  })
+  
+  return res.status(200).json({
+    success:true,
+    message:"Updated successfully",
+
+  })
 }catch (error) {
     console.log(error)
     return next(createError.createError(500,"Internal server error"))
