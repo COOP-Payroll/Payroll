@@ -474,7 +474,7 @@ const employer_providentFund=providentFund.employerContribution ?? 0;
     
       // Similarly, sanitize other nested associations if needed
     
-      return {Employees,
+      return {...Employees,
         grossEarning:grossSalary   ,
         totalAllowance:totalAllowance,
         tax:totalTaxableIncome.toFixed(2),

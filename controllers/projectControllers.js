@@ -334,14 +334,14 @@ console.log("positionProjectAssociations?.maximumPercentAllocation",Number(perce
         // If not, increment totalPercent
        await employee.increment('totalPercent', { by: percent },{transaction});
 
-       const grossValue=employee?.EmployeeInfos[0]?.grossEarning* Number(percent)/100;
+      //  const grossValue=employee?.EmployeeInfos[0]?.grossEarning* Number(percent)/100;
         // await projects.addEmployee(employee, { through: { percent ,gross:employee.EmployeeInfos[0].grossEarning* percent/100,} },{transaction})
         await ProjectEmployee.create({
           ProjectId:  Number(projectId),
           EmployeeId:Number(employeeId),
           CompanyId:req.user.id,
           percent: Number(percent) ,
-          gross: grossValue
+          // gross: grossValue
         },{transaction}
         )
 
@@ -753,7 +753,7 @@ exports.qassignEmployeesToProject = async (req,res,next) => {
         EmployeeId: employee.EmployeeId,
         PositionId: positionId,
         percent: percent, // You may want to adjust this based on your requirements
-        gross:100
+        // gross:100
       });
 
       // Update the PositionProjectAssociation to reflect the new employee
@@ -1048,7 +1048,7 @@ if(!positionProjectAssociation){
       ProjectId: projectId,
       EmployeeId: employeeId,
       percent: Number(projectEmployee.percent),
-      gross: Number(projectEmployee.gross),
+      // gross: Number(projectEmployee.gross),
       startingFrom: projectEmployee.createdAt,
       CompanyId:req.user.id,
       isActive: false,
@@ -1137,7 +1137,7 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
       ProjectId: Number(projectId),
       EmployeeId: Number(employeeId),
       percent: chechEmployeAssociation.percent,
-      gross: chechEmployeAssociation.gross,
+      // gross: chechEmployeAssociation.gross,
       startingFrom: chechEmployeAssociation.createdAt,
       CompanyId:req.user.id,
       isActive: false,
@@ -1150,7 +1150,7 @@ exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
       EmployeeId:Number(employeeId),
       CompanyId:req.user.id,
       percent:Number(percent) ,
-      gross: grossValue
+      // gross: grossValue
     },{transaction}
     )
     
