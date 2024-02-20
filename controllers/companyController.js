@@ -686,6 +686,7 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
       Subscription_left_date: diff
     })
   } catch (error) {
+    console.log(error)
     return next(createError.createError(500, 'Internal server error'))
   }
 }
