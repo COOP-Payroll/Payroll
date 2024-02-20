@@ -329,10 +329,12 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
     data:getEmployeeWithCustomRole
    })
   } catch (error) {
+    
     console.log(error)
     return next(createError.createError(500,"Internal server Error"))
   }
 }
+
 exports.getEmployeeById = async (req, res,next) => {
   try {
     const { id } = req.params;
@@ -1558,6 +1560,7 @@ exports.getAllProjectEmployeeInvolded = async (req, res, next) => {
             model: ProjectEmployee,
             attributes: ['percent', 'gross']
           },
+
           include: [
             {
              model: Sponsor,

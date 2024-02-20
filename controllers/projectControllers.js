@@ -47,6 +47,7 @@ console.log("proje",req.user.id)
 
     let totalAssignedEmployee=0;
     let totalRemainingEmployee=0;
+    let totalAssignedPercent=0;
     const data = projects.map(project => {
       const  projects1 = project.dataValues;
       const totalAssignedEmployees = project.Positions.reduce((total, position) => {
@@ -54,11 +55,12 @@ console.log("proje",req.user.id)
       }, 0);
   
       totalRemainingEmployee= Number(project.numberOfEmployees)-Number(totalAssignedEmployees)
-
+      totalAssignedPercent = (Number(totalAssignedEmployees)/(Number(project.numberOfEmployees)) )* 100;
       return {
           ...projects1,
           "totalAssignedEmployees": totalAssignedEmployees,
-          "totalRemainingEmployee" :totalRemainingEmployee
+          "totalRemainingEmployee" :totalRemainingEmployee,
+          "totalAssignedPercent":Number(totalAssignedPercent.toFixed(2))
           // "data": "data"
       };
   });
