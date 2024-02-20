@@ -672,7 +672,13 @@ exports.getAllDeniedCompany = async (req, res, next) => {
 //GET LEFT DATE
 exports.getSubscriptionLeftDate = async (req, res, next) => {
   try {
-    const companyId = req.params.companyId
+    const companyId = Number(req.params.companyId)
+
+    const company = await Company.findOne({where:{
+    id:companyId}})
+    if(!company){
+      return next(createError.createError(404,"Company not found"))
+    }
     const currentDate = moment()
 
     const subscriptionLeftDate = await Subscription.findOne({
