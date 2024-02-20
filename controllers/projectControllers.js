@@ -21,6 +21,9 @@ const ProjectPositionHistory = require('../models/projectPositionHistory.js');
 const Position = require('../models/position.js');
 const { Sequelize } = require('sequelize');
 const AccountInfo = require('../models/accountInfo.js');
+const EmployeeGrade = require('../models/EmployeeGrade.js');
+const AdditionalAllowance = require('../models/additionalAllowance.js');
+const AdditionalAllowanceDefinition = require('../models/additionalAllowanceDefinition.js');
 
 
 // Define controller methods for handling User requests for deduction definition
@@ -40,11 +43,30 @@ console.log("proje",req.user.id)
         }
       ],
  
-    })
+    });
+
+    let totalAssignedEmployee=0;
+    let totalRemainingEmployee=0;
+    const data = projects.map(project => {
+      const  projects1 = project.dataValues;
+      const totalAssignedEmployees = project.Positions.reduce((total, position) => {
+          return total + (position.PositionProjectAssociation ? position.PositionProjectAssociation.noOfAssignedEmployees : 0);
+      }, 0);
+  
+      totalRemainingEmployee= Number(project.numberOfEmployees)-Number(totalAssignedEmployees)
+
+      return {
+          ...projects1,
+          "totalAssignedEmployees": totalAssignedEmployees,
+          "totalRemainingEmployee" :totalRemainingEmployee
+          // "data": "data"
+      };
+  });
+
     res.status(200).json({
       success: true,
       message: 'Data found',
-      data: projects
+      data
     })
   } catch (error) {
     console.log(error)
@@ -221,9 +243,9 @@ exports.createProjects = async (req, res, next) => {
 exports.assignProjectToEmployee = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    console.log('assignProjectToEmmployee')
 
-
+    let totalAllowance=0;
+    let additionalAllowance=0;
    const { employeeId, projectId, percent } = req.body
     if (!employeeId || !projectId) {
       return next(createError.createError(400, 'Please enter required fields'))
@@ -236,7 +258,6 @@ exports.assignProjectToEmployee = async (req, res, next) => {
      });
 
 const getAllEmployeeUnderTheProject= await ProjectEmployee.count({where:{ProjectId:Number(projectId)}})
-console.log(getAllEmployeeUnderTheProject)
 if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)){
   return next(createError.createError(409, 'Maximum allocation reached'))
 }
@@ -255,7 +276,28 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
         model: EmployeePosition,
                 
       },
+      
       // include:[Sponsor]
+    },
+    {
+      model:Grade,
+      required: false,
+      through: {
+        model: EmployeeGrade,
+      },
+      include: [
+        {
+          model: Allowance, // Use the correct alias defined in the association
+          include: [AllowanceDefinition],
+        },
+        
+        // { model: EmployeeGrade, where: { active: true } },
+      ],
+      // include:[Sponsor]
+    },
+    {
+      model: AdditionalAllowance,
+      include: [AdditionalAllowanceDefinition],
     },
     {
       model: EmployeeInfo,  
@@ -268,6 +310,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       return next(createError.createError(404, 'Employee not found'))
     }
 
+   
    const chechEmployeAssociation= await ProjectEmployee.findOne({ where:{
     ProjectId: Number(projectId),
     EmployeeId:Number(employeeId),
@@ -279,8 +322,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
     return next(createError.createError(404,`Employee already  associated with the project`))
  
     }
-    // return res.json("positionProjectAssociations",employee)
-  //  console.log(employee?.Positions?.[0].EmployeePosition?.id)
+ 
     const positionProjectAssociations = await PositionProjectAssociation.findOne({
       where: {
         ProjectId: Number(projectId),
@@ -288,7 +330,6 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       },
     });    
     
-
    
    const count= await ProjectEmployee.count({
       where: {
@@ -318,12 +359,9 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       return next(createError.createError(404,`Position  is not associated with the project`))
       // console.error(`Position with ID  is not associated with the project`);
         }
-   console.log("positionProjectAssociations?.maximumPercentAllocation0",positionProjectAssociations?.maximumPercentAllocation )
-console.log("positionProjectAssociations?.maximumPercentAllocation",Number(percent) > positionProjectAssociations?.maximumPercentAllocation)
         if(Number(percent) > positionProjectAssociations?.maximumPercentAllocation){
           return next(createError.createError(400,`percent cannot exceeds  ${positionProjectAssociations.maximumPercentAllocation} %`)
         )}
-        console.log("check", count)
       if(Number(positionProjectAssociations?.noOfEmployees)  <= count){
         await transaction.rollback();
         return next(createError.createError(409, "The maximum number of employees for the project for this position has been reached"));
@@ -331,24 +369,43 @@ console.log("positionProjectAssociations?.maximumPercentAllocation",Number(perce
       }      
    
       if (Number(employee.totalPercent) + Number(percent) <= 100) {
+//         const pension= await Pension.findOne({
+//           where:{
+//         CompanyId:CompanyId,
+//         isActive:true
+//           }
+//         })
+//         const employee_pension = pension?.employeeContribution ?? 0;
+// const employer_pension = pension?.employerContribution ?? 0;
         // If not, increment totalPercent
        await employee.increment('totalPercent', { by: percent },{transaction});
 
-      //  const grossValue=employee?.EmployeeInfos[0]?.grossEarning* Number(percent)/100;
-        // await projects.addEmployee(employee, { through: { percent ,gross:employee.EmployeeInfos[0].grossEarning* percent/100,} },{transaction})
+       if (employee.Grades.length > 0) {
+        employee.Grades[0].Allowances.forEach(allowance => {
+            totalAllowance += parseFloat(allowance.amount);
+          });
+     
+      }
+      console.log(totalAllowance)
+      if(employee.AdditionalAllowances.length>0){
+  
+        employee.AdditionalAllowances.forEach(allowance => {
+          additionalAllowance += parseFloat(allowance.amount);
+        });
+      }
+       const grossValue=employee?.EmployeeInfos[0]?.basicSalary +totalAllowance +additionalAllowance;
         await ProjectEmployee.create({
           ProjectId:  Number(projectId),
           EmployeeId:Number(employeeId),
           CompanyId:req.user.id,
           percent: Number(percent) ,
-          // gross: grossValue
+          gross: grossValue *(Number(percent)/100)
         },{transaction}
         )
 
         console.log(" noOfAssignedEmployees: Number(positionProjectAssociations.noOfAssignedEmployees) +1",Number(positionProjectAssociations.noOfAssignedEmployees) +1)
 await positionProjectAssociations.update(
   { noOfAssignedEmployees: Number(positionProjectAssociations.noOfAssignedEmployees) +1 },
-  // { where: { PositionId: employee.Positions[0].id } },
   { transaction }
 )
        
@@ -368,9 +425,8 @@ await positionProjectAssociations.update(
 
 
   } catch (error) {
-    // console.log(error)
+    console.log(error)
    await transaction.rollback();
-    // console.log(error)
     return next(createError.createError(500, 'Internal server error'))
   }}
 
@@ -575,7 +631,6 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
     const { projectId, positionIds } = req.body
-    // console.log(projectId,positionIds,noOfEmployees)
     const projects = await Projects.findOne({
       where: { id: Number(projectId), CompanyId: req.user.id }
     })
@@ -633,12 +688,10 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
   //  const unassignedPositions = positionIds.filter(
   //   (positionId) => !assignedPositions.some((assignedPosition) => assignedPosition.id === positionId)
   // );
+
  if (assignedPositions.length !== positionIds.length) {
      return next(createError.createError(400, 'One or more positions are not assigned to the project.'))       
  }
-
-    // Remove associations
-    // await projects.removePositions({positionIds},{transaction});
 
 
     await projects.removePositions(assignedPositions,{transaction});

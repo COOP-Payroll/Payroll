@@ -1137,19 +1137,6 @@ exports.createEmployeeFile = async (req, res, next) => {
   });
 };
 
-// const signToken = (id) => {
-//   try {
-//     console.log("signToken",id)
-//     return jwt.sign({ id }, "secret", {
-//       expiresIn: process.env.JWT_EXPIRES_IN,
-//     });
-//   } catch (err) {
-//     res.status(404).json({
-//       status: "fail",
-//       message: err,
-//     });
-//   }
-// };
 const signToken = (id, role) => {
   try {
     return jwt.sign({ id, role }, "secret", {
@@ -1160,34 +1147,6 @@ const signToken = (id, role) => {
     return err;
   }
 };
-
-// const createSendToken = (user, statusCode, res) => {
-//   console.log("user id", user.id);
-//   const token = signToken(user.id, user.role);
-//   console.log("first");
-
-//   // const patientID = patient._id;
-//   const cookieOptions = {
-//     expires: new Date(
-//       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-//     ),
-
-//     secure: process.env.NODE_ENV === "production" ? true : false,
-//     httpOnly: true,
-//   };
-
-//   //remove password from the output
-//   user.password = undefined;
-//   res.cookie("jwt", token, cookieOptions);
-//   res.status(statusCode).json({
-//     message: "successful",
-//     token,
-
-//     data: {
-//       user,
-//     },
-//   });
-// };
 
 const createSendToken = async (user, statusCode, res) => {
   try {
@@ -1356,39 +1315,6 @@ function generateUniqueCode() {
   return uuidv4();
 }
 
-// exports.sendEmail = async (req, res, next) => {
-//   try {
-//     let email = "gemechubulti11@gmail.com";
-//     let text = "hello";
-//     const message = {
-//       from: "your-email@gmail.com",
-//       to: email,
-//       subject: "Employee Registration Confirmation",
-//       html: `<p>Dear {employee.firstName},</p>
-//   <p>Thank you for registering as an employee.</p>
-//   <p>Your registration is valid until {formattedExpirationDate}.</p>
-//   <p>Please click the following link to confirm your registration:</p>
-//   <p><a href="{process.env.BASE_URL}/confirm/{token}">{process.env.BASE_URL}/confirm/{token}</a></p>`,
-//     };
-
-//     try {
-//       await sendEmail({
-//         message,
-//       });
-//       res.status(200).json({
-//         status: "success",
-//         message: "Message  sent to email",
-//       });
-//     } catch (error) {
-//       console.log(error);
-//     }
-
-//     // res.status(200).json("updated");
-//   } catch (error) {
-//     console.log("error", error);
-//     res.status(404).json("error");
-//   }
-// };
 
 exports.createEmployee_new = async (req, res) => {
   const {
@@ -1652,7 +1578,6 @@ exports.getAllProjectEmployeeInvolded = async (req, res, next) => {
   }
 }
 
-
 exports.updateContactInfo= async( req,res,next)=>{
   const transaction = await sequelize.transaction();
   try {
@@ -1712,7 +1637,6 @@ const checkAddress= await Address.findOne({
     return next(createError.createError(500, 'Internal Server error'))
   }
 }
-
 
 
 exports.UnAssignApprovers=async(req,res,next)=>{
