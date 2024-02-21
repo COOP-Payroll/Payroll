@@ -28,16 +28,16 @@ exports.checkAccountNumber = async (req, res, next) => {
         },
         ACCTCOMPANYVIEWType: [
             {
-                criteriaValue: "1022200021557"
+                criteriaValue: accountNumber
             }
         ]
     }
     })
     console.log(response) 
 // return res.status(200).json({
-//   data:response?.data?.AccountDetailsResponse?.CustomerInfo
+//   data:response?.data?.AccountDetailsResponse?.ESBStatus?.Status === 'Failure'
 // })
-    if (response?.data?.AccountDetailsResponse?.CustomerInfo?.length === 0) {
+    if (response?.data?.AccountDetailsResponse?.ESBStatus?.Status === 'Failure') {
       return next(createError.createError(404, 'Account number not found'))
     }
     return res.status(200).json({
