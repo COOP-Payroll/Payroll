@@ -57,7 +57,7 @@ exports.createPayroll1 = async (req, res,next) => {
 
     const employees = await Employee.findAll({
       where: {
-        id: employeeIds,
+        id: Number(employeeIds),
       },
     });   
 
@@ -82,14 +82,14 @@ exports.createPayroll1 = async (req, res,next) => {
 
        const payroll = await Payroll.findOne({
         where: {
-          EmployeeId: employeeIds,
+          EmployeeId: Number(employeeIds),
           PayrollDefinitionId: payrollDefinitionId,
         },
       });
 
-      if (payroll) {
+      if (payroll != null) {
         // return res.json("data")
-        return next(createError.createError(409, "Payroll has already been run for one or more employees."));
+        return next(createError.createError(409, "Payroll has already been run for one or more employees1."));
        
       }
        for (const employeeId of employeeIds) {
@@ -108,7 +108,7 @@ exports.createPayroll1 = async (req, res,next) => {
       }
   
      }
-    
+    if(!isProjectBased){
     let payrollCount = 0;
     await payrolldef.update({ status: "ordered" });
     for (const employeeId of employeeIds) {
@@ -120,8 +120,10 @@ exports.createPayroll1 = async (req, res,next) => {
           },
         });
 
-        if (payroll) {
-          return next(createError.createError(409,"Payroll has already been run for one or more employees."))
+        if (payroll != null) {
+          // return res.json("data")
+          return next(createError.createError(409, "Payroll has already been run for one or more employees."));
+         
         }
 
         const resp = await runPayroll(req, res, {
@@ -129,23 +131,7 @@ exports.createPayroll1 = async (req, res,next) => {
           company,
           payrollDefinitionId,
         });
-        // console.log("response", resp);
-        // if (payroll) {
-        //   await payroll.destroy();
-        //   payrolldef.totalNoOfEmployee =
-        //     Number(payrolldef.totalNoOfEmployee) - 1;
-        //   payrolldef.totalNoOfprocessedEmployee =
-        //     Number(payrolldef.totalNoOfprocessedEmployee) - 1;
-        //   await payrolldef.save();
-        // }
-
-        // const payrollData = {
-        //   PayrollDefinitionId: payrollDefinitionId,
-        //   EmployeeId: employeeId,
-        // };
-        // console.log("payroll Data", payrollData);
-        // await Payroll.create(payrollData);
-        // payrollCount++;
+    
       } catch (error) {
         errors.push(error);
       }
@@ -162,8 +148,11 @@ exports.createPayroll1 = async (req, res,next) => {
     //   Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
     // await payrolldef.save();
 
-    return res.status(201).json({ msg: "Payroll created successfully!  " });
-  } catch (error) {
+   
+  }
+
+  return res.status(201).json({ msg: "Payroll created successfully!  " });
+} catch (error) {
     console.log("err", error);
     return res
       .status(500)
@@ -546,7 +535,7 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
 
     const employees = await Employee.findAll({
       where: {
-        id: employeeIds,
+        id: Number(employeeIds),
       },
     });
 
@@ -844,7 +833,7 @@ exports.projectBasedPayroll= async(req,res,next)=>{
  }
     const employees = await Employee.findAll({
       where: {
-        id: employeeIds,
+        id: Number(employeeIds),
         CompanyId:CompanyId
       },include: [
         

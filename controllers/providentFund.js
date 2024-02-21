@@ -1,5 +1,6 @@
 const ProvidentFund = require("../models/providentFund.js");
-
+const createError=require("../utils/error.js");
+const { Op, where } = require('sequelize');
 // Define controller methods for handling User requests
 exports.getAllProvidentFund = async (req, res) => {
   try {
@@ -253,5 +254,64 @@ exports.deleteProvidentFund = async (req, res, next) => {
     } else {
       return res.status(500).json({ message: "Internal server error" });
     }
+  }
+};
+
+
+
+
+exports.restoreToDefault = async (req, res, next) => {
+  try {
+    // const superAdmin = await User.findAll({ where: { role: "superAdmin" } });
+
+    // 
+    // const providentFunds = await ProvidentFund.findAll({
+    //   where: {  UserId: { [Op.ne]: null },isActive:true },
+    // });
+    // if(providentFunds.length === 0){
+    //   return next(createError.createError(404,"providentFunds is not Defined define your own"))
+    // }
+    const deletedData = await ProvidentFund.update(
+      {
+        isActive: false,
+      },
+      {
+        where: {
+          CompanyId: req.user.id,
+          isActive: true,
+        },
+      }
+    );
+
+
+
+ const PF=  await ProvidentFund.create({         
+      employeeContribution: 0,
+      employerContribution: 0,
+      CompanyId: Number(req.user.id),
+      isActive:true,
+      UserId: null,
+    });
+    // const providentFund = await Promise.all(
+    //   providentFunds.map((providentFund) => {
+    //     return ProvidentFund.create({         
+    //       employeeContribution: Number(providentFund.employeeContribution),
+    //       employerContribution: Number(providentFund.employerContribution),
+    //       CompanyId: Number(req.user.id),
+    //       isActive:true,
+    //       UserId: null,
+    //     });
+    //   })
+    // );
+   
+    
+    res.status(200).json({
+      success:true,
+      message: "Restored to default",
+      data:PF,
+    });
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500,"Internal server error"))
   }
 };
