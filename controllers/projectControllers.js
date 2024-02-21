@@ -38,9 +38,11 @@ console.log("proje",req.user.id)
           model: Positions,
           through: { attributes: ['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation'] }, // Include any additional attributes you need
         },
+         {model:AccountInfo},
         {
           model:Sponsor
-        }
+        },
+       
       ],
  
     });
@@ -189,7 +191,7 @@ exports.createProjects = async (req, res, next) => {
       numberOfEmployees,
       endDate,
       description,
-      accountNumber: accountNumber
+      // accountNumber: accountNumber
     })
     await projects.setSponsor(sponsorId,{transaction})
     await projects.setCompany(req.user.id,{transaction})

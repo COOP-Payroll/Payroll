@@ -47,6 +47,8 @@ exports.createPayroll1 = async (req, res,next) => {
   try {
     const isProjectBased=req.user.isProjectBased;
     const { payrollDefinitionId, employeeIds } = req.body;
+
+    const employeeID =employeeIds.map(id => parseInt(id));
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
     const company = req.user.id;
 
@@ -57,13 +59,12 @@ exports.createPayroll1 = async (req, res,next) => {
 
     const employees = await Employee.findAll({
       where: {
-        id: Number(employeeIds),
+        id: employeeID,
       },
     });   
-
     const existingEmployeeIds = employees.map((employee) => employee.id);
   
-    const nonExistingEmployeeIds = employeeIds.filter(
+    const nonExistingEmployeeIds = employeeID.filter(
       (id) => !existingEmployeeIds.includes(id)
     );
 
@@ -82,7 +83,7 @@ exports.createPayroll1 = async (req, res,next) => {
 
        const payroll = await Payroll.findOne({
         where: {
-          EmployeeId: Number(employeeIds),
+          EmployeeId: employeeID,
           PayrollDefinitionId: payrollDefinitionId,
         },
       });
@@ -92,7 +93,7 @@ exports.createPayroll1 = async (req, res,next) => {
         return next(createError.createError(409, "Payroll has already been run for one or more employees1."));
        
       }
-       for (const employeeId of employeeIds) {
+       for (const employeeId of employeeID) {
         try {
         
   
@@ -111,11 +112,11 @@ exports.createPayroll1 = async (req, res,next) => {
     if(!isProjectBased){
     let payrollCount = 0;
     await payrolldef.update({ status: "ordered" });
-    for (const employeeId of employeeIds) {
+    for (const employeeId of employeeID) {
       try {
         const payroll = await Payroll.findOne({
           where: {
-            EmployeeId: employeeId,
+            EmployeeId: employeeID,
             PayrollDefinitionId: payrollDefinitionId,
           },
         });
@@ -231,7 +232,7 @@ exports.updatePayrollData = async (req, res, next) => {
       await payroll.update(employeeData);
 
       // Return the updated company object
-      return res.json({
+      return res.status(200).json({
         message: "updated successfully",
         payroll,
       });
@@ -520,7 +521,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
     });
     return res.status(200).json({ count: employees.length, employees });
   } catch (error) {
-    res.json(error);
+    res.status(500).json(error);
   }
 };
 
@@ -535,13 +536,12 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
 
     const employees = await Employee.findAll({
       where: {
-        id: Number(employeeIds),
+        id: employeeID,
       },
     });
-
     const existingEmployeeIds = employees.map((employee) => employee.id);
     console.log("existiongEmployeeIds: " + existingEmployeeIds);
-    const nonExistingEmployeeIds = employeeIds.filter(
+    const nonExistingEmployeeIds = employeeID.filter(
       (id) => !existingEmployeeIds.includes(id)
     );
 
@@ -553,7 +553,7 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
     }
     let payrollDestroyed = false;
     await Promise.all(
-      employeeIds.map(async (employeeId) => {
+      employeeID.map(async (employeeId) => {
         try {
           const payroll = await Payroll.findOne({
             where: {
