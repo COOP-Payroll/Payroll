@@ -24,6 +24,14 @@ router.post(
   pensionController.createPension
 );
 // router.put("/")
+
+router.put(
+  "/:restore-to-default",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+
+  pensionController.restoreToDefault
+);
 router.put(
   "/:id",
   middleware.protectAll,

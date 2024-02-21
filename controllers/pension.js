@@ -1,4 +1,7 @@
 const Pension = require("../models/pension.js");
+const User = require("../models/user.js");
+const createError= require("../utils/error.js")
+const { Op, where } = require('sequelize');
 
 exports.getAllPension = async (req, res,next) => {
   try {
@@ -12,7 +15,7 @@ exports.getAllPension = async (req, res,next) => {
       });
     } else if (req.user.role === "companyAdmin") {
       const pensions = await Pension.findAll({
-        where: { CompanyId: req.user.id },
+        where: { CompanyId: req.user.id ,isActive: true},
       });
       res.status(200).json({
         count: pensions.length,
@@ -204,37 +207,52 @@ exports.getAllPensionIncludingInActive = async (req, res,next) => {
 
 exports.restoreToDefault = async (req, res, next) => {
   try {
-    const superAdmin = await User.findAll({ where: { role: "superAdmin" } });
+    // const superAdmin = await User.findAll({ where: { role: "superAdmin" } });
 
-    return res.json(superAdmin)
-    const taxslabs = await Taxslab.findAll({
-      where: { UserId: Number(superAdmin.id), isActive: true },
-    });
-
-    const deletedData = await Taxslab.destroy({
-      where: {
-        CompanyId: req.user.id,
-        isActive: true,
+    // 
+    // const pensions = await Pension.findAll({
+    //   where: {  UserId: { [Op.ne]: null },isActive:true },
+    // });
+    // if(pensions.length === 0){
+    //   return next(createError.createError(404,"Pension is not Defined define your own"))
+    // }
+    const deletedData = await Pension.update(
+      {
+        isActive: false,
       },
-    });
-
-
-    const tax = await Promise.all(
-      taxslabs.map((taxslab) => {
-        return Taxslab.create({
-          from_Salary: Number(taxslab.from_Salary),
-          to_Salary: Number(taxslab.to_Salary),
-          income_tax_payable: Number(taxslab.income_tax_payable),
-          deductible_Fee: Number(taxslab.deductible_Fee),
-          CompanyId: Number(req.user.id),
-          UserId: null,
-        });
-      })
+      {
+        where: {
+          CompanyId: req.user.id,
+          isActive: true,
+        },
+      }
     );
+
+  const  pension=await  Pension.create({         
+            employeeContribution: 0,
+            employerContribution: 0,
+            CompanyId: Number(req.user.id),
+            isActive:true,
+            UserId: null,
+          });
+      
+    // const pension = await Promise.all(
+    //   pensions.map((pension) => {
+    //     return Pension.create({         
+    //       employeeContribution: Number(pension.employeeContribution),
+    //       employerContribution: Number(pension.employerContribution),
+    //       CompanyId: Number(req.user.id),
+    //       isActive:true,
+    //       UserId: null,
+    //     });
+    //   })
+    // );
+   
+    
     res.status(200).json({
+      success:true,
       message: "Restored to default",
-      deletedData: tax,
-      tax,
+      data:pension,
     });
   } catch (error) {
     console.log(error);

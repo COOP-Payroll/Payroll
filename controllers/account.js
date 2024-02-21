@@ -4,28 +4,46 @@ exports.checkAccountNumber = async (req, res, next) => {
   try {
     const { accountNumber } = req.body
 
-    const url = 'http://10.1.245.150:7081/v1/cbo/'
+    // const url = 'http://10.1.245.150:7081/v1/cbo/'
+    const url= 'http://10.1.245.150:7081/v1/cbo/'
     const response = await axios.post(url, {
-      CustomerInfoRequest: {
-        ESBHeader: {
-          serviceCode: '040000',
-          channel: 'USSD',
-          Service_name: 'customerInfo',
-          Message_Id: 'Mmr2qyutr82729'
-        },
-        CusomerInfo: {
-          AccountId: accountNumber
-        }
-      }
-    })
+      // CustomerInfoRequest: {
+      //   ESBHeader: {
+      //     serviceCode: '040000',
+      //     channel: 'USSD',
+      //     Service_name: 'customerInfo',
+      //     Message_Id: 'Mmr2qyutr82729'
+      //   },
+      //   CusomerInfo: {
+      //     AccountId: accountNumber
+      //   }
+      // }
 
-    if (response.data.CustomerInfoResponse.CustomerInfo.length === 0) {
+      AccountDetailsRequest: {
+        ESBHeader: {
+            serviceCode: "180000",
+            channel: "USSD",
+            Service_name: "accountEnquiryMC",
+            Message_Id: "6255726662"
+        },
+        ACCTCOMPANYVIEWType: [
+            {
+                criteriaValue: "1022200021557"
+            }
+        ]
+    }
+    })
+    console.log(response) 
+// return res.status(200).json({
+//   data:response?.data?.AccountDetailsResponse?.CustomerInfo
+// })
+    if (response?.data?.AccountDetailsResponse?.CustomerInfo?.length === 0) {
       return next(createError.createError(404, 'Account number not found'))
     }
     return res.status(200).json({
       success: true,
       message: 'Valid account number',
-      data:response.data.CustomerInfoResponse.CustomerInfo
+      data:response?.data?.AccountDetailsResponse?.CustomerInfo
     })
   } catch (error) {
     console.log(error)

@@ -21,6 +21,7 @@ const bcrypt = require('bcrypt');
 const sendEmail=require('.././utils/sendEmail.js');
 const AccountInfo = require('../models/accountInfo.js')
 const { create } = require('domain')
+const ProvidentFund = require('../models/providentFund.js')
 // const createError=require("../utils/error.js")
 
 exports.getcompanyProfiles= async (req, res, next)=>{
@@ -143,7 +144,7 @@ exports.createCompany1 = async (req, res, next) => {
 
     const [
       taxSlabs,
-      pensions,
+      // pensions,
       additionalAllowanceDefinitions,
       additionalDeductionDefinitions
     ] = await Promise.all([
@@ -153,12 +154,12 @@ exports.createCompany1 = async (req, res, next) => {
         },
         { transaction }
       ),
-      Pension.findAll(
-        {
-          where: { UserId: superAdmin.id, isActive: true }
-        },
-        { transaction }
-      ),
+      // Pension.findAll(
+      //   {
+      //     where: { UserId: superAdmin.id, isActive: true }
+      //   },
+      //   { transaction }
+      // ),
       AdditionalAllowanceDefinition.findAll(
         {
           where: { CompanyId: null }
@@ -189,19 +190,19 @@ exports.createCompany1 = async (req, res, next) => {
       )
     )
 
-    const pensiones = await Promise.all(
-      pensions.map(pension =>
-        Pension.create(
-          {
-            employerContribution: pension.employerContribution,
-            employeeContribution: pension.employeeContribution,
-            UserId: null,
-            CompanyId: company.id
-          },
-          { transaction }
-        )
-      )
-    )
+    // const pensiones = await Promise.all(
+    //   pensions.map(pension =>
+    //     Pension.create(
+    //       {
+    //         employerContribution: pension.employerContribution,
+    //         employeeContribution: pension.employeeContribution,
+    //         UserId: null,
+    //         CompanyId: company.id
+    //       },
+    //       { transaction }
+    //     )
+    //   )
+    // )
 
     const additionalAllowances = await Promise.all(
       additionalAllowanceDefinitions.map(allowance =>
@@ -332,12 +333,12 @@ exports.createCompany = async (req, res, next) => {
 
     const [
       taxSlabs,
-      pensions,
+      // pensions,
       additionalAllowanceDefinitions,
       additionalDeductionDefinitions
     ] = await Promise.all([
       Taxslab.findAll({ where: { UserId: superAdmin.id, isActive: true } }, ),
-      Pension.findAll({ where: { UserId: superAdmin.id, isActive: true } }, ),
+      // Pension.findAll({ where: { UserId: superAdmin.id, isActive: true } }, ),
       AdditionalAllowanceDefinition.findAll({ where: { CompanyId: null } }, ),
       AdditionalDeductionDefinition.findAll({ where: { CompanyId: null } }, )
     ]);
@@ -358,19 +359,19 @@ exports.createCompany = async (req, res, next) => {
       )
     );
 
-    const pensiones = await Promise.all(
-      pensions.map(pension =>
-        Pension.create(
-          {
-            employerContribution: pension.employerContribution,
-            employeeContribution: pension.employeeContribution,
-            UserId: null,
-            CompanyId: company.id
-          },
-          { transaction }
-        )
-      )
-    );
+    // const pensiones = await Promise.all(
+    //   pensions.map(pension =>
+    //     Pension.create(
+    //       {
+    //         employerContribution: pension.employerContribution,
+    //         employeeContribution: pension.employeeContribution,
+    //         UserId: null,
+    //         CompanyId: company.id
+    //       },
+    //       { transaction }
+    //     )
+    //   )
+    // );
 
     const additionalAllowances = await Promise.all(
       additionalAllowanceDefinitions.map(allowance =>
@@ -399,6 +400,22 @@ exports.createCompany = async (req, res, next) => {
         )
       )
     );
+
+    const  pension=await  Pension.create({         
+      employeeContribution: 0,
+      employerContribution: 0,
+      CompanyId: Number(company?.id),
+      isActive:true,
+      UserId: null,
+    },{transaction});
+
+    const PF=  await ProvidentFund.create({         
+      employeeContribution: 0,
+      employerContribution: 0,
+      CompanyId: Number(company?.id),
+      isActive:true,
+      UserId: null,
+    },{transaction});
 
    
     await transaction.commit();
@@ -682,14 +699,17 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
     const currentDate = moment()
 
     const subscriptionLeftDate = await Subscription.findOne({
-      where: { CompanyId: companyId }
+      where: { CompanyId: companyId ,isActive:true},
+      include: {model:Package}
     })
 
     const nextPaymentDate = moment(subscriptionLeftDate.nextPaymentDate)
     const startDate = moment(subscriptionLeftDate.createdAt)
     const diff = nextPaymentDate.diff(currentDate, 'days')
     return res.status(200).json({
-      Subscription_left_date: diff
+      Subscription_left_date: diff,
+      packageType: subscriptionLeftDate?.Package?.packageType,
+       packageName: subscriptionLeftDate?.Package?.packageName
     })
   } catch (error) {
     console.log(error)

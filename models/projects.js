@@ -15,10 +15,10 @@ const Projects = sequelize.define("Projects", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  // accountNumber: {
-  //   type: DataTypes.STRING,
-  //   allowNull: false,
-  // },
+  accountNumber: {
+    type: DataTypes.STRING,
+    // allowNull: false,
+  },
   location: {
     type: DataTypes.STRING,
   },

@@ -18,6 +18,12 @@ router.post(
 );
 
 router.put(
+  "/:restore-to-default",
+  middleware.protectAll,
+  middleware.restrictToAll("superAdmin", "companyAdmin"),
+  providentController.restoreToDefault
+);
+router.put(
   "/:id",
   middleware.protectAll,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
