@@ -497,51 +497,54 @@ const employer_providentFund=providentFund.employerContribution ?? 0;
 
 exports.payrollDraft1= async(req,res,next)=>{
   try {
-    // const currentDate = new Date();
-    // const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    // const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const currentDate = new Date();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-    // // return res.josn(startOfMonth)
-    // const currentMonthPayrolls = await PayrollDefinition.findAll({
-    //   where: {
-    //     CompanyId: req.user.CompanyId,
-    //     [Op.or]: [
-    //       {
-    //         startDate: {
-    //           [Op.between]: [startOfMonth, endOfMonth],
-    //         },
-    //         endDate: {
-    //           [Op.between]: [startOfMonth, endOfMonth],
-    //         },
-    //       },
-    //       {
-    //         startDate: {
-    //           [Op.lt]: startOfMonth,
-    //         },
-    //         endDate: {
-    //           [Op.gte]: startOfMonth,
-    //         },
-    //       },
-    //     ],
-    //   },
-    // });
     
-    // console.log("current month", currentMonthPayrolls);
+    const currentMonthPayrolls = await PayrollDefinition.findAll({
+      where: {
+        CompanyId: req.user.id,
+        [Op.or]: [
+          {
+            startDate: {
+              [Op.between]: [startOfMonth, endOfMonth],
+            },
+            endDate: {
+              [Op.between]: [startOfMonth, endOfMonth],
+            },
+          },
+          {
+            startDate: {
+              [Op.lt]: startOfMonth,
+            },
+            endDate: {
+              [Op.gte]: startOfMonth,
+            },
+          },
+        ],
+      },
+    });
     
-    // if (currentMonthPayrolls.length === 0) {
-    //   return res.status(204).json({
-    //     message: "No payrolls defined for this month",
-    //   });
-    // } 
+    console.log("current month", currentMonthPayrolls);
+    
+    if (currentMonthPayrolls.length === 0) {
+      return res.status(204).json({
+        message: "No payrolls defined for this month",
+      });
+    } 
 
-    // return res.json(currentMonthPayrolls)
+    // return res.json(currentMonthPayrolls[0]?.id)
 
 
 
     const payrollData= await Payroll.findAll({
       where:{
         CompanyId:req.user.id,
-        status:  "processed"|| "pending"
+        PayrollDefinitionId:currentMonthPayrolls[0]?.id,
+        status: {
+          [Op.or]: ["processed", "pending"]
+        }
         // isActive:true,
 
       }
