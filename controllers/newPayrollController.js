@@ -643,7 +643,7 @@ if (currentMonthPayrolls.length === 0) {
     message: "No payrolls defined for this month",
   });
 } 
-
+// return res.json({data:currentMonthPayrolls?.[0].id})
 if(approver?.ApprovalMethod?.approvalMethod === 'horizontal'){
   const minimumApprovers=Number(approver.ApprovalMethod.minimumApprover);
   if(approver.isMaster){
@@ -652,8 +652,14 @@ if(approver?.ApprovalMethod?.approvalMethod === 'horizontal'){
         status: {
           [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
         },
+        PayrollDefinitionId:currentMonthPayrolls?.[0]?.id
       },
       include: [
+                { model:Employee,
+           attributes: ['id', 'fullname'] 
+           
+         },
+           
         {
           model: EmployeePayrollApprovement,
           attributes: [
@@ -676,14 +682,24 @@ if(approver?.ApprovalMethod?.approvalMethod === 'horizontal'){
       data:payrolls
     })
   }
+
+
+
+
   const payrolls = await Payroll.findAll({
     where:{
       status: {
         [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
       },
+      PayrollDefinitionId:currentMonthPayrolls?.[0]?.id
     },
     include: [
+     { model:Employee,
+      attributes: ['id', 'fullname'] 
+    },
       {
+        
+                     
         model: EmployeePayrollApprovement,
         attributes: [
           [Sequelize.fn('COUNT', Sequelize.literal('*')), 'approvalCount'],
@@ -722,8 +738,18 @@ if(approver?.ApprovalMethod?.approvalMethod === 'hierarchy'){
         status: {
           [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
         },
+        PayrollDefinitionId:currentMonthPayrolls?.[0]?.id
       },
       include: [
+
+        
+          { model:Employee,
+           attributes: ['id', 'fullname'] 
+           
+         },
+           
+
+
         {
           model: EmployeePayrollApprovement,
            where: {
@@ -748,12 +774,19 @@ if(approvalLevel === 1){
       status: {
         [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
       },
+      PayrollDefinitionId:currentMonthPayrolls?.[0]?.id,
       id: {
         [Sequelize.Op.notIn]: Sequelize.literal(
           '(SELECT "PayrollId" FROM "EmployeePayrollApprovements")'
         ),
       },
     },
+    include:[
+      { model:Employee,
+       attributes: ['id', 'fullname'] 
+       
+     }
+       ]
   });
   // const payrolls = await Payroll.findAll({
   //   where:{
