@@ -10,6 +10,11 @@ router.get(
   middleware.restrictToAll('approver'),
   payroll.getNotApprovedPayroll
 )
+
+router.get("/payroll-draft",
+ middleware.protectAll, 
+ middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+payroll1.payrollDraft1)
 router.get("/payrolldraft",
  middleware.protectAll, 
  middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
