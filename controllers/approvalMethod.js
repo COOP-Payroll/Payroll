@@ -462,10 +462,6 @@ exports.deleteApprovalMethod = async (req, res, next) => {
 };
 
 
-
-
-
-
 exports.reCreateApprovalMethods = async (req, res,next) => {
   try {  
   const CompanyId = req.user.id;

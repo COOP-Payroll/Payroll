@@ -4,6 +4,7 @@ const Payroll = require("../models/Payroll");
 const Employee = require("../models/employee");
 const WebSocket = require("ws");
 const moment = require("moment");
+const { Op } = require("sequelize");
 const Grade = require("../models/grade.js");
 const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition");
@@ -490,5 +491,68 @@ const employer_providentFund=providentFund.employerContribution ?? 0;
   } catch (error) {
     console.log(error)
     return next(createError.createError(500,"Internal server error"))
+  }
+}
+
+
+exports.payrollDraft1= async(req,res,next)=>{
+  try {
+    // const currentDate = new Date();
+    // const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    // const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+    // // return res.josn(startOfMonth)
+    // const currentMonthPayrolls = await PayrollDefinition.findAll({
+    //   where: {
+    //     CompanyId: req.user.CompanyId,
+    //     [Op.or]: [
+    //       {
+    //         startDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //         endDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //       },
+    //       {
+    //         startDate: {
+    //           [Op.lt]: startOfMonth,
+    //         },
+    //         endDate: {
+    //           [Op.gte]: startOfMonth,
+    //         },
+    //       },
+    //     ],
+    //   },
+    // });
+    
+    // console.log("current month", currentMonthPayrolls);
+    
+    // if (currentMonthPayrolls.length === 0) {
+    //   return res.status(204).json({
+    //     message: "No payrolls defined for this month",
+    //   });
+    // } 
+
+    // return res.json(currentMonthPayrolls)
+
+
+
+    const payrollData= await Payroll.findAll({
+      where:{
+        CompanyId:req.user.id,
+        status:  "processed"|| "pending"
+        // isActive:true,
+
+      }
+    })
+
+    return res.status(200).json({
+      success:true,
+      data:payrollData
+    })
+  } catch (error) {
+    return createError.createError(500,"Internal server error")
+    
   }
 }
