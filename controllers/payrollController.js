@@ -551,9 +551,7 @@ exports.payrollDraft1= async(req,res,next)=>{
       },
       include:[
        { model:Employee,
-        include:{
-          model:EmployeeInfo
-        }
+        attributes: ['id', 'fullname'] 
         
       }
         ]
