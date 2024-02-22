@@ -544,10 +544,19 @@ exports.payrollDraft1= async(req,res,next)=>{
         PayrollDefinitionId:currentMonthPayrolls[0]?.id,
         status: {
           [Op.or]: ["processed", "pending"]
-        }
+        },
+        // 
         // isActive:true,
 
+      },
+      include:[
+       { model:Employee,
+        include:{
+          model:EmployeeInfo
+        }
+        
       }
+        ]
     })
 
     return res.status(200).json({
