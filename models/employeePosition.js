@@ -14,6 +14,10 @@ const EmployeePosition = sequelize.define('EmployeePosition', {
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  letter:{
+    type: DataTypes.STRING
+
   }
 })
 // EmployeePosition.sync({ force: true }).then(() => console.log('positon model is ready'));

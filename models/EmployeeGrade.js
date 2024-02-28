@@ -13,6 +13,10 @@ const EmployeeGrade = sequelize.define("EmployeeGrade", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  letter:{
+    type: DataTypes.STRING
+
+  }
 });
 
 Employee.belongsToMany(Grade, {

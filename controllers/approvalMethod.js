@@ -593,12 +593,24 @@ const getAllApprovers= await Approver.findAll({
   }
 })
 const employeeIds = [...new Set(getAllApprovers.map(employee => employee.EmployeeId))];
+if(employeeIds.length > 0){
+  const updatedEmployee= await sequelize.query(`
+  UPDATE "Employees"
+  SET "role" = 'employee'
+  WHERE "id" IN (${employeeIds.join(',')})
+  `,{transaction});
 
-const updatedEmployee= await sequelize.query(`
-UPDATE "Employees"
-SET "role" = 'employee'
-WHERE "id" IN (${employeeIds.join(',')})
-`,{transaction});
+  // const updatedEmployee = await Employee.update(
+  //   { role: 'employee' },
+  //   { 
+  //     where: { 
+  //       id: employeeIds 
+  //     },
+  //     transaction
+  //   }
+  // );
+}
+
      const appMethod = await ApprovalMethod.create({
       minimumApprover,
       approvalLevel,

@@ -782,7 +782,8 @@ if(approvalLevel === 1){
       },
     },
     include:[
-      { model:Employee,
+      {
+         model:Employee,
        attributes: ['id', 'fullname'] 
        
      }
