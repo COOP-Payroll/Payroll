@@ -1140,6 +1140,49 @@ const EmployeeId = Number(req?.params?.id);
               }
             }
           },
+          {
+            model: EmployeeInfo,
+            where:{isActive:false},
+            required: false
+          },
+          {
+            model: Department,
+            required: false,
+            through: {
+              model: EmployeeDepartment,
+              where: {
+                active: false
+              }
+            }
+          },  
+          {
+            model: Grade,  
+            through: {
+              model: EmployeeGrade,
+              where: {
+                active: false,
+              },
+            },
+  
+            // include: [
+            //   {
+            //     model: Allowance, // Use the correct alias defined in the association
+            //     include: [AllowanceDefinition]
+            //   },
+            //   {
+            //     model: Deduction, // Use the correct alias defined in the association
+            //     include: [DeductionDefinition]
+            //   }
+            //   // { model: EmployeeGrade, where: { active: true } },
+            // ]
+          },
+          {
+            model: AccountInfo,
+            required: false,
+            where: {
+              isActive: false
+            }
+          }
         ],
       
       where:{id: EmployeeId},
