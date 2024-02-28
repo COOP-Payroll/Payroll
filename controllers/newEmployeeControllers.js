@@ -19,6 +19,7 @@ const EmployeePosition = require('../models/employeePosition.js')
 const createError = require('../utils/error.js')
 const { Sequelize } = require('sequelize')
 const EmployeePromotion = require('../models/employeePromotion.js')
+const { model } = require('mongoose')
 
 exports.createEmployee = async (req, res) => {
   const {
@@ -509,7 +510,7 @@ const status=false;
   }
 }
 
-exports.getAllEmployee = async (req, res) => {
+exports.getAllEmployee = async (req, res,next) => {
   try {
 
     console.log("hete")
@@ -692,35 +693,35 @@ exports.promotion = async (req, res, next) => {
     const imagePath = data ? data : null
  
 
-    const employee = await Employee.findOne(     
-         {
-        include: [
-          {
-            model: Grade,
-            through: {
-              model: EmployeeGrade,
-              where: {
-                active: true
-              },
-              attributes: []
-            }
-          },
-          {model: Position,
-          through:{
-            model:EmployeePosition,
-            where: {isActive: true}
+    const employee = await Employee.findOne(    
+      {where:{id:Number(req.params.id), CompanyId:req.user.id},
+    
+      include: [
+        {
+          model: Grade,
+          through: {
+            model: EmployeeGrade,
+            where: {
+              active: true
+            },
+            // attributes: []
           }
-          
-          },
-          {
-            model:EmployeeInfo,
-          where: {isActive: true}}
-        ]
-      },
-      {where:{id:Number(req.params.id), CompanyId:req.user.id}},
-      {
-        transaction
-      }
+        },
+        {model: Position,
+        through:{
+          model:EmployeePosition,
+          where: {isActive: true}
+        }
+        
+        },
+        {
+          model:EmployeeInfo,
+        where: {isActive: true}}
+      ],
+       
+    },     
+        
+      
     )
 
 
@@ -729,112 +730,161 @@ exports.promotion = async (req, res, next) => {
       return res.status(404).json({ error: 'Employee not found' })
     }
 
-  if(position){
-    if(employee.Positions?.[0]?.id === position){
-      return res,json("equial")
-    }else{
-      const checkPosition = await Position.findOne({where:{
-        CompanyId:req.user.id,
-        isActive:true,
 
-      }})
-      return next(createError.createError(404,"Position not found"))
+
+//   if(position){
+//     if(employee.Positions?.[0]?.id === Number(position)){
+//       // return res.json("equial")
+//     }
+//     else
+//  { 
+//       const foundPosition = await Position.findOne({where:{
+//         id:position,
+//         CompanyId:req.user.id,
+     
+//         // isActive:true,
+
+//       }})
+//       if(!foundPosition){
+//       return next(createError.createError(404,"Position not found"))
+//     }
+//     if (imagePath ==null){
+//       return next(createError.createError(404,"Please insert Letter of promotion "))
+//     }
+//            const employeePosition = await EmployeePosition.findOne({
+//              where: { EmployeeId: Number(req.params.id),PositionId:employee?.Positions?.[0]?.id
+//              , isActive: true },
+//            });
+          
+//            if (employeePosition) {
+//          await employeePosition.update({ isActive: false }, { transaction });
+
+//                   }
+//            const newEmployeeInfo = await EmployeePosition.create(
+//              {
+//                isActive: true,
+//                EmployeeId: Number(employee.id),
+//                PositionId: Number(position),
+//                letter:imagePath
+//                    },
+                  
+//              { transaction }
+//            );
+
+
+//     }
+//   }
+  
+
+  if(gradeId){
+    if(employee?.Grades?.[0]?.id === Number(gradeId)){
+      return res.json("equial")
     }
+    else{
+    // return res.json(employee?.EmployeeInfos?.[0]?.basicSalary)
+      const employeeBasicsalary= Number(employee?.EmployeeInfos?.[0]?.basicSalary)  === Number(basicSalary) ? Number(employee?.EmployeeInfos?.[0]?.basicSalary): Number(basicSalary)
+ 
+     const grade = await Grade.findOne({where:{id:Number(gradeId),CompanyId:req.user.id}})
+
+      if(!grade){
+        return next( createError.createError(404,"Grade not found"))
+      }
+
+
+        if (employeeBasicsalary < grade.minSalary || employeeBasicsalary > grade.maxSalary) {
+          return res.status(409).json({
+            error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+          })
+        }
+
+        const employeeInfo = await EmployeeInfo.findOne({
+          where: { EmployeeId: req.params.id, isActive: true }
+        })
+     
+        if (employeeInfo) {
+          const updatedData = await employeeInfo.update(
+            { isActive: false },
+            { transaction }
+          )
+        }
+        const newEmployeeInfo = await EmployeeInfo.create(
+          {
+            isActive: true,
+            EmployeeId: Number(req.params.id),
+            basicSalary:employeeBasicsalary,
+            employement_Type: employement_Type ?? employee.EmployeeInfos?.[0]?.employement_Type,            
+            // employeeTIN: employee.EmployeeInfos?.[0]?.employeeTIN,
+            // hireDate: employee.EmployeeInfos?.[0]?.hireDate
+          },
+          { transaction }
+        )
+
+             ///
+        const employeeGrade = await EmployeeGrade.findOne({
+          where: { EmployeeId: req.params.id, active: true }
+        })
+     
+        if (employeeGrade) {
+          const updatedData = await employeeGrade.update(
+            { active: false },
+            { transaction }
+          )
+        }
+        const newEmployeeGrade = await EmployeeGrade.create(
+          {
+            active: true,
+            EmployeeId: Number(req.params.id),
+            GradeId:gradeId,
+          },
+          { transaction }
+        )
+
+       }
   }
 
-    // const employeeInfo = await EmployeeInfo.findOne({
-    //   where: { EmployeeId: Number(employee.id), isActive: true }
-    // })
-
-    console.log("gradeid",gradeId, )
-    console.log("gradeid", employee.Grades?.[0]?.id , )
-
-    // console.log(gradeId !== employee.Grades?.[0]?.id || basicSalary !==employee.EmployeeInfos[0].basicSalary)
-    // if (gradeId  && basicSalary && (gradeId !== employee.Grades?.[0]?.id || basicSalary !==employee.EmployeeInfos[0].basicSalary)) {
-    //       console.log('data')
-
-    //       // const grade1= await Grade
-    //        const grade = await Grade.findOne({where:{id:Number(gradeId),CompanyId:req.user.id}})
-    //     if (basicSalary < grade.minSalary || basicSalary > grade.maxSalary) {
-    //       return res.status(409).json({
-    //         error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
-    //       })
-    //     }
-
-    //     const employeeInfo = await EmployeeInfo.findOne({
-    //       where: { EmployeeId: req.params.id, isActive: true }
-    //     })
-    //     // console.log(employeeInfo)
-
-    //     // return res.json(employeeInfo)
-    //     if (employeeInfo) {
-    //       const updatedData = await employeeInfo.update(
-    //         { isActive: false },
-    //         { transaction }
-    //       )
-    //     }
-    //     // console.log("department",DepartmentId)
-    //     const newEmployeeInfo = await EmployeeInfo.create(
-    //       {
-    //         isActive: true,
-    //         EmployeeId: req.params.id,
-    //         basicSalary,
-    //         employement_Type: employement_Type ?? employee.EmployeeInfos?.[0]?.employement_Type,            
-    //         // employeeTIN: employee.EmployeeInfos?.[0]?.employeeTIN,
-    //         hireDate: employee.EmployeeInfos?.[0]?.hireDate
-    //       },
-    //       { transaction }
-    //     )
-
-
-    //     const employeeGrade= await EmployeeGrade.findOne({where:{ GradeId:employee.Grades?.[0]?.id,EmployeeId: req.params.id}})
-    //     // newEmployeeInfo.save()
-      
-    //     // return res.json(employeeGrade)
-    // }
 
   
        
- if (position) 
- {
+//  if (position) 
+//  {
 
-  if (imagePath ==null){
-    return next(createError.createError(404,"Please insert Letter of promotion "))
-  }
+//   if (imagePath ==null){
+//     return next(createError.createError(404,"Please insert Letter of promotion "))
+//   }
 
 
-  // await transaction.rollback();
-  const foundPosition= await Position.findOne({where: {id:position, CompanyId:req.user.id}})
+//   // await transaction.rollback();
+//   const foundPosition= await Position.findOne({where: {id:position, CompanyId:req.user.id}})
 
-  if(!foundPosition){
-    await transaction.rollback()
-    return next(createError.createError(404, "position not found "))
-  }
-  const checkPosition= await EmployeePosition.findOne({where:{PositionId:position, EmployeeId:Number(req.params.id),isActive:true}})
-//  console.log("checke",employee.Positions)
-  if(!checkPosition) {
-       const employeePosition = await EmployeePosition.findOne({
-         where: { EmployeeId: Number(req.params.id),PositionId:employee.Positions?.[0]?.id
-         , isActive: true },
-       });
+//   if(!foundPosition){
+//     await transaction.rollback()
+//     return next(createError.createError(404, "position not found "))
+//   }
+//   const checkPosition= await EmployeePosition.findOne({where:{PositionId:position, EmployeeId:Number(req.params.id),isActive:true}})
+// //  console.log("checke",employee.Positions)
+//   if(!checkPosition) {
+//        const employeePosition = await EmployeePosition.findOne({
+//          where: { EmployeeId: Number(req.params.id),PositionId:employee.Positions?.[0]?.id
+//          , isActive: true },
+//        });
 
       
-       if (employeePosition) {
-         await employeePosition.update({ isActive: false }, { transaction });
-       }
+//        if (employeePosition) {
+//          await employeePosition.update({ isActive: false }, { transaction });
+//        }
 
-       console.log("newEmployeeInfo",employeePosition)
-       const newEmployeeInfo = await EmployeePosition.create(
-         {
-           isActive: true,
-           EmployeeId: Number(employee.id),
-           PositionId: Number(position),
-           letter:"imagePath"
-               },
+//        console.log("newEmployeeInfo",employeePosition)
+//        const newEmployeeInfo = await EmployeePosition.create(
+//          {
+//            isActive: true,
+//            EmployeeId: Number(employee.id),
+//            PositionId: Number(position),
+//            letter:"imagePath"
+//                },
               
-         { transaction }
-       );
-     }}
+//          { transaction }
+//        );
+//      }}
   
      await transaction.commit()
      return res.status(200).json({
@@ -1072,3 +1122,33 @@ console.log("data",data)
 }
 
 
+
+exports.getEmployeeHistory = async (req,res,next)=>{
+  try {
+const EmployeeId = Number(req?.params?.id);
+    const employeeHistory = await Employee.findOne({
+                
+        include:[
+          {
+            model: Position,
+            required: false,
+            // attributes:[],
+            through: {
+              model: EmployeePosition,
+              where: {
+                isActive: false
+              }
+            }
+          },
+        ],
+      
+      where:{id: EmployeeId},
+    
+    })
+    
+    return res.status(200).json(employeeHistory)
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
+  }
+}
