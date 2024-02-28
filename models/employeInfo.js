@@ -14,10 +14,10 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
     type: DataTypes.DOUBLE,
     allowNull: false,
   },
-  position: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+  // position: {
+  //   type: DataTypes.STRING,
+  //   allowNull: false,
+  // },
   employement_Type: {
     type: DataTypes.ENUM("permanent", "contract", "hourly"),
     allowNull: false,
@@ -39,8 +39,8 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
   terminationNotes: {
     type: DataTypes.STRING,  
   },
-  grossEarning:{
-    type: DataTypes.DOUBLE,   
+  siteLocation:{
+    type: DataTypes.STRING,   
   }
 });
 

@@ -19,6 +19,14 @@ maximumPercentAllocation:{
   type: DataTypes.INTEGER,
   defaultValue:100
 },
+budget:{
+  type: DataTypes.DOUBLE,
+  defaultValue:0
+},
+availableBudget:{
+  type: DataTypes.DOUBLE,
+  defaultValue:0 
+},
 isActive: {
   type: DataTypes.BOOLEAN,
   defaultValue: true

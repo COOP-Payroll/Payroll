@@ -187,6 +187,10 @@ router.put(
     moduleName: "employeeinfo",
     isAccessible: true,
   }),
+  upload.fields([
+    { name: "letter", maxCount: 1 },
+  
+  ]),
   newEmployeeController.promotion
 );
 

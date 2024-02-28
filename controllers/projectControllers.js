@@ -191,6 +191,7 @@ exports.createProjects = async (req, res, next) => {
       numberOfEmployees,
       endDate,
       description,
+      availableBudget:budget
       // accountNumber: accountNumber
     })
     await projects.setSponsor(sponsorId,{transaction})
@@ -261,6 +262,8 @@ exports.assignProjectToEmployee = async (req, res, next) => {
 
      });
 
+
+
 const getAllEmployeeUnderTheProject= await ProjectEmployee.count({where:{ProjectId:Number(projectId)}})
 if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)){
   return next(createError.createError(409, 'Maximum allocation reached'))
@@ -309,11 +312,37 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
     
    ]
     });
-// return res.status(200).json(employee?.Positions?.[0]?.id)
+
     if (!employee) {
       return next(createError.createError(404, 'Employee not found'))
     }
 
+    const getTotalGross = await ProjectEmployee.findAll({
+      where: {
+        ProjectId: Number(projectId),
+      },
+      include: [
+        {
+          model: Employee,
+          required: true,
+          attributes: ['id'], 
+        
+          include: [
+            {
+              model: Positions,
+              attributes: [], 
+              where: {
+                id: Number(employee?.Positions?.[0]?.id),
+              },
+            },
+          ],
+        },
+      ],
+    });
+    // const uniquePositionBudget = Array.from(new Set(budgets))
+    const totalGross = getTotalGross.reduce((total, gross) => total + parseFloat(gross), 0);
+
+     return res.json(getTotalGross)
    
    const chechEmployeAssociation= await ProjectEmployee.findOne({ where:{
     ProjectId: Number(projectId),
@@ -358,6 +387,9 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       ],
     });
   
+
+
+
     if (!positionProjectAssociations) {
       await transaction.rollback();
       return next(createError.createError(404,`Position  is not associated with the project`))
@@ -373,15 +405,6 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       }      
    
       if (Number(employee.totalPercent) + Number(percent) <= 100) {
-//         const pension= await Pension.findOne({
-//           where:{
-//         CompanyId:CompanyId,
-//         isActive:true
-//           }
-//         })
-//         const employee_pension = pension?.employeeContribution ?? 0;
-// const employer_pension = pension?.employerContribution ?? 0;
-        // If not, increment totalPercent
        await employee.increment('totalPercent', { by: percent },{transaction});
 
        if (employee.Grades.length > 0) {
@@ -435,8 +458,9 @@ await positionProjectAssociations.update(
   }}
 
 exports.assignPositionToProject = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
-    const { projectId, positionIds, noOfEmployees,maximumPercentAllocation } = req.body;
+    const { projectId, positionIds, noOfEmployees,maximumPercentAllocation,budgets } = req.body;
 
     if(! projectId || !positionIds || !noOfEmployees || !maximumPercentAllocation){
       return next(createError.createError(400,"please fill all required fields"))
@@ -465,7 +489,7 @@ exports.assignPositionToProject = async (req, res, next) => {
       )
     }
 
-    if (positionIds.length !== noOfEmployees.length    || positionIds.length !== maximumPercentAllocation.length ) {
+    if (positionIds.length !== noOfEmployees.length    || positionIds.length !== maximumPercentAllocation.length  ) {
       return next(
         createError.createError(404, 'No of employee ,maximumPercentAllocation or position mismatch')
       )
@@ -474,6 +498,10 @@ exports.assignPositionToProject = async (req, res, next) => {
     // Ensure unique positionIds
     const uniquePositionIds = Array.from(new Set(positionIds))
 
+    const uniquePositionBudget = Array.from(new Set(budgets))
+    const totalBudget = uniquePositionBudget.reduce((total, budget) => total + parseFloat(budget), 0);
+
+  // return res.json(totalBudget)
     // Check for existing associations
     const existingAssociations = await PositionProjectAssociation.findAll({
       where: {
@@ -496,6 +524,8 @@ exports.assignPositionToProject = async (req, res, next) => {
         )
       )
     }
+// return res.json(projects)
+
 
     // Prepare an array for bulk insertion
     const associations = positionIds.map((positionId, index) => ({
@@ -504,8 +534,17 @@ exports.assignPositionToProject = async (req, res, next) => {
       noOfEmployees: Number(noOfEmployees[index]),
       maximumPercentAllocation: Number(maximumPercentAllocation[index]),
       remainingEmployees:Number(noOfEmployees[index]),
+      budget:parseFloat(budgets),
+      availableBudget:parseFloat(budgets),
       CompanyId: req.user.id
-    }))
+    })
+    
+  
+    )
+
+    // await projects.update({
+    //   availableBudget: 
+    // })
 
   
     const totalNoOfEmployeeForPosition = associations.reduce(
@@ -531,8 +570,14 @@ exports.assignPositionToProject = async (req, res, next) => {
 
     // Bulk insert into PositionProjectAssociations table
     try {
-      await PositionProjectAssociation.bulkCreate(associations)
+      await PositionProjectAssociation.bulkCreate(associations,{transaction})
+      await projects.update({
+        availableBudget:  projects.availableBudget- totalBudget
+      }, { transaction });
+
+      await transaction.commit(); 
     } catch (error) {
+      await transaction.rollback();
       console.error('Error bulk creating PositionProjectAssociations:', error)
       // Handle the error appropriately, e.g., log it or return an error response
       return next(createError.createError(500, 'Internal server Error'))

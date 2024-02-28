@@ -24,8 +24,19 @@ const EmployeePromotion = sequelize.define("EmployeePromotion", {
   grade:{
     type:DataTypes.INTEGER,
     allowNull: false
+  },
+  letter:{
+    type:DataTypes.STRING,
+    allowNull: false
   }
 });
+
+//POSITION
+//GRADE
+//BASICSALARY
+//LETTER
+
+
 
 Employee.belongsToMany( Grade,{
     through: EmployeePromotion,
@@ -35,5 +46,6 @@ Grade.belongsToMany(Employee,{
     through: EmployeePromotion,
     unique: false, // Allow duplicate associations
   });
-      
+
+  
 module.exports = EmployeePromotion;
