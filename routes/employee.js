@@ -68,6 +68,14 @@ router.get(
   newEmployeeController.getAllEmployee
 );
 
+
+router.get(
+  "/employee-history/:id",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  newEmployeeController.getEmployeeHistory
+  
+);
 router.get(
   "/department/:departmentId",
   middleware.protectAll,
