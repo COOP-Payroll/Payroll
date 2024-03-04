@@ -842,7 +842,6 @@ exports.promotion = async (req, res, next) => {
        }
   }
 
-
   
        
 //  if (position) 
@@ -889,13 +888,12 @@ exports.promotion = async (req, res, next) => {
      await transaction.commit()
      return res.status(200).json({
        message: 'Employee fields updated successfully.'
-       // oldEmployee: updateEmployee,
      })
    
 
   } catch (error) {
     await transaction.rollback()
-    // console.error(error)
+    console.error(error)
     next(error)
   }
 }
@@ -1094,7 +1092,6 @@ exports.updateAccountInfo = async (req, res, next) => {
     }
     const data = req?.files?.accountImage?.[0]?.path
     const imagePath = data ? data : null
-console.log("data",data)
     if (imagePath != null) {
       await accountInfo.update({ isActive: false }, { transaction })
       await AccountInfo.create(
@@ -1102,7 +1099,6 @@ console.log("data",data)
         { transaction }
       )
     } else {
-      console.log("im her")
       await accountInfo.update({ isActive: false }, { transaction })
       await AccountInfo.create(
         { isActive: true, accountNumber: accountNumber,isVerified:isVerified?isVerified:false,EmployeeId:employeeId },
@@ -1184,12 +1180,15 @@ const EmployeeId = Number(req?.params?.id);
             }
           }
         ],
-      
+        attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
       where:{id: EmployeeId},
     
     })
     
-    return res.status(200).json(employeeHistory)
+    return res.status(200).json({
+      // success:true,
+      data:employeeHistory
+    })
   } catch (error) {
     console.log(error)
     return next(createError.createError(500, 'Internal Server Error'))
