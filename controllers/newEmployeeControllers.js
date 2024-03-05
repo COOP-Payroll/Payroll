@@ -1123,7 +1123,7 @@ exports.getEmployeeHistory = async (req,res,next)=>{
   try {
 const EmployeeId = Number(req?.params?.id);
     const employeeHistory = await Employee.findOne({
-                
+      where:{id: EmployeeId},        
         include:[
           {
             model: Position,
@@ -1181,16 +1181,57 @@ const EmployeeId = Number(req?.params?.id);
           }
         ],
         attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
-      where:{id: EmployeeId},
+
     
     })
     
-    return res.status(200).json({
-      // success:true,
-      data:employeeHistory
-    })
+    return res.status(200).json([employeeHistory]
+    )
   } catch (error) {
     console.log(error)
     return next(createError.createError(500, 'Internal Server Error'))
+  }
+}
+
+
+exports.updateEmployementInfo= async (req,res,next)=>{
+  const transaction = await sequelize.transaction()
+  try {
+    const {employeeTIN}=req.body;
+
+
+    const employeeInfo = await EmployeeInfo.findOne({
+      where: { EmployeeId: Number(req.params.id), isActive: true }
+    })
+if(employeeInfo.employeeTIN === employeeTIN){
+return next(createError.createError(400,"Employee info already updated"))
+}  
+    if (employeeInfo) {
+      const updatedData = await employeeInfo.update(
+        { isActive: false },
+        { transaction }
+      )
+    }
+    const newEmployeeInfo = await EmployeeInfo.create(
+      {
+        isActive: true,
+        EmployeeId: Number(req.params.id),
+        basicSalary:employeeInfo?.basicSalary,
+        employement_Type: employeeInfo?.employement_Type,            
+        employeeTIN: employeeTIN,
+        hireDate: employeeInfo?.hireDate
+      },
+      { transaction }
+    )
+    await transaction.commit();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Employee information updated successfully'
+    })
+  } catch (error) {
+    console.log(error);
+    await transaction.rollback();
+    next(createError.createError(500,"Internal server error"))
   }
 }
