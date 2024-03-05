@@ -186,6 +186,22 @@ router.put(
 );
 
 
+router.put(
+  "/update-employement-info/:id",
+  // upload.fields([
+  //   { name: "image", maxCount: 1 },
+  //   { name: "id_image", maxCount: 1 },
+  // ]),
+
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
+  newEmployeeController.updateEmployementInfo
+);
+
+
 
 router.put(
   "/promotion/:id",
