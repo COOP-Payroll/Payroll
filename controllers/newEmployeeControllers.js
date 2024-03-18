@@ -1116,82 +1116,178 @@ exports.updateAccountInfo = async (req, res, next) => {
     return next(createError.createError(500, 'Internal Server Error'))
   }
 }
-
-
-
-exports.getEmployeeHistory = async (req,res,next)=>{
+exports.getEmployeeHistory = async (req, res, next) => {
   try {
-const EmployeeId = Number(req?.params?.id);
-    const employeeHistory = await Employee.findOne({
-      where:{id: EmployeeId},        
-        include:[
-          {
-            model: Position,
-            required: false,
-            // attributes:[],
-            through: {
-              model: EmployeePosition,
-              where: {
-                isActive: false
-              }
-            }
-          },
-          {
-            model: EmployeeInfo,
-            where:{isActive:false},
-            required: false
-          },
-          {
-            model: Department,
-            required: false,
-            through: {
-              model: EmployeeDepartment,
-              where: {
-                active: false
-              }
-            }
-          },  
-          {
-            model: Grade,  
-            through: {
-              model: EmployeeGrade,
-              where: {
-                active: false,
-              },
-            },
-  
-            // include: [
-            //   {
-            //     model: Allowance, // Use the correct alias defined in the association
-            //     include: [AllowanceDefinition]
-            //   },
-            //   {
-            //     model: Deduction, // Use the correct alias defined in the association
-            //     include: [DeductionDefinition]
-            //   }
-            //   // { model: EmployeeGrade, where: { active: true } },
-            // ]
-          },
-          {
-            model: AccountInfo,
-            required: false,
-            where: {
-              isActive: false
-            }
-          }
-        ],
-        attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
+    const EmployeeId = Number(req?.params?.id);
+   // Fetch all historical positions for the employee
+   const allHistoricalPositions = await EmployeePosition.findAll({
+    where: {
+      EmployeeId,
+      isActive: false // Assuming 'isActive' field indicates inactive positions
+    },
+    attributes: ['PositionId'], // Fetch only the position IDs
+    order: [['createdAt', 'DESC']], // Order by creation date in descending order
+    raw: true
+  });
 
-    
-    })
-    
-    return res.status(200).json([employeeHistory]
-    )
+  // return res.status(200).json(allHistoricalPositions)
+    // Fetch all historical positions for the employee
+    const filteredPositions = allHistoricalPositions.filter(position => {
+      // Check if the position object has a 'name' property before using the 'includes' method
+      if (position && position.name) {
+        // Example: Filter positions based on position name containing 'Manager'
+        return position.name.includes('Manager');
+      }
+      return false; // Default to false if 'name' property does not exist
+    });
+
+  
+
+    // Further processing or displaying of filtered positions
+    console.log(filteredPositions);
+
+    // Return response with filtered positions
+    return res.status(200).json(filteredPositions);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    console.error(error);
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }
+
+
+// exports.getEmployeeHistory = async (req, res, next) => {
+//   try {
+//     const EmployeeId = Number(req?.params?.id);
+//     const employeeHistory = await Employee.findOne({
+//       where: { id: EmployeeId },
+//       include: [
+//         {
+//           model: Position,
+//           required: false,
+//           through: {
+//             model: EmployeePosition,
+//             where: { isActive: false }
+//           }
+//         },
+//         {
+//           model: EmployeeInfo,
+//           where: { isActive: false },
+//           required: false
+//         },
+//         {
+//           model: Department,
+//           required: false,
+//           through: {
+//             model: EmployeeDepartment,
+//             where: { active: false }
+//           }
+//         },
+//         {
+//           model: Grade,
+//           through: {
+//             model: EmployeeGrade,
+//             where: { active: false }
+//           }
+//         },
+//       ],
+//       // attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
+//       attributes: ['id']
+//     });
+ 
+
+//     if (!employeeHistory || 
+//       (employeeHistory.Positions.length === 0 && 
+//        employeeHistory.EmployeeInfos.length === 0 && 
+//        employeeHistory.Departments.length === 0 && 
+//        employeeHistory.Grades.length === 0)) {
+//     return res.status(404).json({ message: "No previous history found" });
+//   }
+//     return res.status(200).json(employeeHistory);
+//   } catch (error) {
+//     console.error(error);
+//     return next(createError.createError(500, 'Internal Server Error'));
+//   }
+// }
+
+// exports.getEmployeeHistory = async (req,res,next)=>{
+//   try {
+// const EmployeeId = Number(req?.params?.id);
+//     const employeeHistory = await Employee.findOne({
+//       where:{id: EmployeeId},        
+//         include:[
+//           {
+//             model: Position,
+//             required: true,
+//             // attributes:[],
+//             through: {
+//               model: EmployeePosition,
+//               where: {
+//                 isActive: false
+//               }
+//             }
+//           },
+//           {
+//             model: EmployeeInfo,
+//             where:{isActive:false},
+//             required: true
+//           },
+//           {
+//             model: Department,
+//             required: true,
+//             through: {
+//               model: EmployeeDepartment,
+//               where: {
+//                 active: false
+//               }
+//             }
+//           },  
+//           {
+//             model: Grade,  
+//             through: {
+//               model: EmployeeGrade,
+//               where: {
+//                 active: false,
+//               },
+//             },
+  
+//             // include: [
+//             //   {
+//             //     model: Allowance, // Use the correct alias defined in the association
+//             //     include: [AllowanceDefinition]
+//             //   },
+//             //   {
+//             //     model: Deduction, // Use the correct alias defined in the association
+//             //     include: [DeductionDefinition]
+//             //   }
+//             //   // { model: EmployeeGrade, where: { active: true } },
+//             // ]
+//           },
+//           {
+//             model: AccountInfo,
+//             required: false,
+//             where: {
+//               isActive: false
+//             }
+//           }
+//         ],
+//         attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
+
+    
+//     })
+//     return res.status(200).json(employeeHistory === null ? 
+      
+      
+//       res.status(404).json({message:"No previous history found"}) : 
+      
+//        res.status(200).json([employeeHistory]
+//         ))
+//     return res.status(200).json([employeeHistory]
+//     )
+//   } catch (error) {
+//     console.log(error)
+//     return next(createError.createError(500, 'Internal Server Error'))
+//   }
+// }
 
 
 exports.updateEmployementInfo= async (req,res,next)=>{
