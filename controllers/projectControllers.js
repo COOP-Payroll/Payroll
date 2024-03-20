@@ -25,7 +25,7 @@ const EmployeeGrade = require('../models/EmployeeGrade.js');
 const AdditionalAllowance = require('../models/additionalAllowance.js');
 const AdditionalAllowanceDefinition = require('../models/additionalAllowanceDefinition.js');
 
-
+const moment =require('moment')
 // Define controller methods for handling User requests for deduction definition
 exports.getAllProjects = async (req, res, next) => {
   try {
@@ -128,7 +128,15 @@ exports.createProjects = async (req, res, next) => {
       accountNumber
     } = req.body
     console.log('Creating project')
+    // const startDate1 = moment(startDateString, 'YYYY/MM/DD').toDate();
+    
+    // const startDate1 = moment(startDate, 'YYYY/MM/DD').toDate(); // Parse startDate string into a Date object
+    // // const startDateT06 = moment(startDate).utcOffset('+06:00');
+    // const startDateT06 = moment(startDate).tz('UTC+6');
+    // return res.json(startDateT06) 
+// Convert startDate to UTC+6 (T06)
 
+    // moment.utc(startDate);
     if (
       !projectName ||
       !sponsorId ||
@@ -187,6 +195,7 @@ exports.createProjects = async (req, res, next) => {
       projectName,
       location,
       budget,
+      
       startDate,
       numberOfEmployees,
       endDate,
@@ -313,6 +322,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
    ]
     });
 
+
     if (!employee) {
       return next(createError.createError(404, 'Employee not found'))
     }
@@ -340,9 +350,10 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       ],
     });
     // const uniquePositionBudget = Array.from(new Set(budgets))
-    const totalGross = getTotalGross.reduce((total, gross) => total + parseFloat(gross), 0);
+    // const totalGross = getTotalGross.reduce((total, gross) => total + parseFloat(gross), 0);
+    
 
-     return res.json(getTotalGross)
+    //  return res.json(getTotalGross)
    
    const chechEmployeAssociation= await ProjectEmployee.findOne({ where:{
     ProjectId: Number(projectId),
@@ -353,8 +364,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
    if (chechEmployeAssociation) {
     await transaction.rollback();
     return next(createError.createError(404,`Employee already  associated with the project`))
- 
-    }
+     }
  
     const positionProjectAssociations = await PositionProjectAssociation.findOne({
       where: {
@@ -363,6 +373,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       },
     });    
     
+
    
    const count= await ProjectEmployee.count({
       where: {
@@ -388,6 +399,11 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
     });
   
 
+    const checkAvailableBudget= await PositionProjectAssociation.findOne(
+      {
+        where:{PositionId:Number(employee?.Positions?.[0]?.id)}
+      }
+    );
 
 
     if (!positionProjectAssociations) {
@@ -395,7 +411,7 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
       return next(createError.createError(404,`Position  is not associated with the project`))
       // console.error(`Position with ID  is not associated with the project`);
         }
-        if(Number(percent) > positionProjectAssociations?.maximumPercentAllocation){
+    if(Number(percent) > positionProjectAssociations?.maximumPercentAllocation){
           return next(createError.createError(400,`percent cannot exceeds  ${positionProjectAssociations.maximumPercentAllocation} %`)
         )}
       if(Number(positionProjectAssociations?.noOfEmployees)  <= count){
@@ -403,16 +419,29 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
         return next(createError.createError(409, "The maximum number of employees for the project for this position has been reached"));
 
       }      
+   ////
    
+   
+
+
+    // return res.json(checkAvailableBudget?.availableBudget)
+
+
+
+
+
+
+
       if (Number(employee.totalPercent) + Number(percent) <= 100) {
+
+
        await employee.increment('totalPercent', { by: percent },{transaction});
 
        if (employee.Grades.length > 0) {
         employee.Grades[0].Allowances.forEach(allowance => {
             totalAllowance += parseFloat(allowance.amount);
           });
-     
-      }
+           }
       console.log(totalAllowance)
       if(employee.AdditionalAllowances.length>0){
   
@@ -421,6 +450,17 @@ if(Number(getAllEmployeeUnderTheProject ) >= Number(projects?.numberOfEmployees)
         });
       }
        const grossValue=employee?.EmployeeInfos[0]?.basicSalary +totalAllowance +additionalAllowance;
+
+       if (parseFloat(checkAvailableBudget?.availableBudget) < grossValue *(Number(percent)/100))
+       {
+        //  return res.json("not correct")
+        return next(createError.createError(400," Employee budget exceeds available budget"))
+       }
+
+        // return res.json((parseFloat(checkAvailableBudget?.availableBudget) < grossValue *(Number(percent)/100)))
+
+        
+
         await ProjectEmployee.create({
           ProjectId:  Number(projectId),
           EmployeeId:Number(employeeId),
@@ -500,8 +540,12 @@ exports.assignPositionToProject = async (req, res, next) => {
 
     const uniquePositionBudget = Array.from(new Set(budgets))
     const totalBudget = uniquePositionBudget.reduce((total, budget) => total + parseFloat(budget), 0);
+  
+    if(totalBudget>projects.availableBudget){
+      return next(createError.createError(400,"Budget it exceeds available budgets"))
+    }
 
-  // return res.json(totalBudget)
+  // return res.json(projects?.availableBudget)
     // Check for existing associations
     const existingAssociations = await PositionProjectAssociation.findAll({
       where: {
