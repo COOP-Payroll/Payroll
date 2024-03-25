@@ -20,8 +20,7 @@ const createError = require('../utils/error.js')
 const { Sequelize } = require('sequelize')
 const EmployeePromotion = require('../models/employeePromotion.js')
 const { model } = require('mongoose')
-
-exports.createEmployee = async (req, res) => {
+exports.createEmployee = async (req, res,next) => {
   const {
     address,
     employeeInfo,
@@ -30,8 +29,11 @@ exports.createEmployee = async (req, res) => {
     accountInformation
   } = req.body
 
-  if (!accountInformation) {
-    return res.status(400).json({ message: 'Please provide account number' })
+
+  
+  if (!accountInformation || accountInformation?.accountNumber=== undefined) {
+  return next(createError.createError(400,"Account number is required"))
+
   }
 
   const accountNumbers = accountInformation?.map(acct => acct.accountNumber)

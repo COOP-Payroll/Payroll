@@ -300,7 +300,8 @@ exports.createCompany = async (req, res, next) => {
 
 
     const company = await Company.create(
-      { ...companyData, companyLogo: imagePath, companyBanner: bannerPath },
+      { ...companyData, companyLogo: imagePath, 
+companyBanner: bannerPath },
       { transaction }
     );
 
@@ -795,22 +796,43 @@ exports.resetPasswordToken = async(req, res,next) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
+
+   
   
     // Find the user by the token
     const user = await Company.findOne({ where: { resetPasswordToken: token } });
 
     if (!user) {
-      return res.status(404).json({ error: 'Invalid or expired token' });
+
+      return next(createError.createError(404,"Invalid or expired token"))
     }
 
+ // Check if the token is expired (you may adjust the expiration time as needed)
+ const tokenCreationTime = user.resetPasswordTokenCreatedAt;
+ const tokenExpirationTime = new Date(tokenCreationTime.getTime() + (24 * 60 * 60 * 1000)); // 24 hours expiration
+ const currentTime = new Date();
+
+ if (currentTime > tokenExpirationTime) {
+
+  return next(createError.createError(401,'Token has expired'))
+ }
+
+
+ 
+
+user.password=password;
+
     // Update the user's password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    user.password = hashedPassword;
+    // const hashedPassword = await bcrypt.hash(password, 10);
+
+    
+    // user.password = hashedPassword;
     user.resetPasswordToken = null;
+    user.resetPasswordTokenCreatedAt=null;
     await user.save();
 
     res.json({ message: 'Password set successfully' });
-  } catch (error) {
+  } catch (error) { 
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -878,5 +900,52 @@ const logo = req.files?.logo?.[0]?.path
 }catch (error) {
     console.log(error)
     return next(createError.createError(500,"Internal server error"))
+  }
+}
+
+
+exports.resetTodefauldCompanyProfiles= async(req,res,next)=>{
+  try {
+   
+    const data = await Company.update(
+      {
+        primary_Color: "#1234",
+        primary_Font_Color: "123456", // Assuming primary_Font_Color is a string
+        primary_Gradient_Color: "#fff",
+        secondary_Color: "#fff",
+        secondary_Font_Color: "#fff",
+        secondary_Gradient_Color: "#fff",
+        social_Media_Images: true
+      },
+      {
+        where: { id: req?.user?.id }
+      }
+    );
+
+    return res.json({
+      success:true,
+      message:"Reset do default successfully",
+    })
+
+    
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500,"Internal server Error"))
+  }
+}
+exports.createPassword = async (req,res,next)=> {
+  try {
+
+const password= req.body.password;
+const token= req.params.token;
+    // await sendEmail({
+    //   company.email,
+    //   subject: subject,
+    //   text,
+    // });
+    return res.json(password)
+  } catch (error) {
+console.log(error)
+return next(createError.createError(500,"Internal server error"))    
   }
 }

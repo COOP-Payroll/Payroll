@@ -110,7 +110,9 @@ exports.restrictToAdmin = (role) => {
 
 //Restricted to
 exports.restrictToAll = (...roles) => {
+ 
   return (req, res, next) => {
+    // return res.json(req.user.role)
     if (!roles.includes(req.user?.role)) {
       return res.status(403).json({
         message: "You do not have permission to perform this action",
@@ -163,6 +165,7 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
 
 //Restricted to
 
+
 exports.restrictApprover = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
 
@@ -177,6 +180,7 @@ exports.restrictApprover = ({ moduleName, isAccessible }) => {
             model: CustomRole,
             include: [{ model: Permission }],
           },
+          
         ],
       });
 

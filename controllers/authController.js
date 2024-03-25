@@ -6,6 +6,7 @@ const Employee = require("../models/employee");
 const CustomRole = require("../models/customRole");
 const Permission = require("../models/permission");
 const cookieParser = require("cookie-parser");
+const  createError  = require("../utils/error");
 
 const signToken = (id, role) => {
   try {
@@ -69,6 +70,7 @@ const createSendTokenCompany = async (company, statusCode, res) => {
       refreshToken
     });
   } catch (error) {
+    // return next(createError.createError(500,"data"))
     return res.status(500).json({ message: error.name });
   }
 };
@@ -112,6 +114,24 @@ exports.login = async (req, res, next) => {
     //check if user exists and password is correct
     company = await Company.findOne({ where: { email } });
 
+    
+    // return res.json({
+    //   body: req.body,
+
+    //   company: company
+    // })
+// const pass = await bcrypt.compare(password,"$2b$10$DiAP7zjLHOLzccgiviB8W.BZS4YJvXApvYPmDjW5CpAKDeFdwki2S");
+
+// return res.json({
+//   hashed:"$2b$10$pfYPL9dwFeug/kZbU1o6F.Be.hEUzhNRY8jiXq.cFrs1j8mFdurXC",
+//   password:company.password,
+//   pass
+//  })
+
+
+
+
+
     if (company === null) {
      
       company = await Employee.findOne({
@@ -125,6 +145,14 @@ exports.login = async (req, res, next) => {
       });
     }
 
+    if(company?.status === 'pending'){
+      return next(createError.createError(401,"your request is being processed please stay tune"))
+    }
+
+
+    // const data=await bcrypt.compare("test", company.password)
+    // return res.json(data)
+    // const bcrypt.compare()
     if (!company || !(await bcrypt.compare(password, company.password))) {
       return res.status(401).json({
         message:
@@ -160,9 +188,11 @@ exports.login = async (req, res, next) => {
     }
   } catch (err) {
     //next(createError.createError(404, 'failed'));
-    res.status(500).json({
-      message: err.name,
-    });
+
+    return next(createError.createError(500, err.message));
+    // res.status(500).json({
+    //   message: err.name,
+    // });
   }
 };
 

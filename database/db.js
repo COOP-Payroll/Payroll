@@ -68,13 +68,13 @@
 //     console.error("Error connecting",error);
 //   }
 // }
-// sequelize.sync({ alter: true }) // Use force: true carefully, as it drops existing tables
-//   .then(() => {
-//     console.log('Database synchronized successfully.');
-//   })
-//   .catch((error) => {
-//     console.error('Error synchronizing database:', error);
-//   });
+// // sequelize.sync({ alter: true }) // Use force: true carefully, as it drops existing tables
+// //   .then(() => {
+// //     console.log('Database synchronized successfully.');
+// //   })
+// //   .catch((error) => {
+// //     console.error('Error synchronizing database:', error);
+// //   });
 // testConnection();
 // module.exports = sequelize;
 
@@ -109,6 +109,8 @@
 
 
 
+//Local server
+
 
 
 require("dotenv").config();
@@ -130,16 +132,16 @@ async function testConnection() {
   } catch (error) {
     console.log(error)
     console.log(process.env.DB_HOST)
-    console.error("Error connecting");
+    console.error("Error connecting ");
   }
 }
-sequelize.sync({ alter: false }) // Use force: true carefully, as it drops existing tables
-  .then(() => {
-    console.log('Database synchronized successfully.');
-  })
-  .catch((error) => {
-    console.error('Erro r synchronizing database:', error);
-  });
+// sequelize.sync({ alter: false }) // Use force: true carefully, as it drops existing tables
+//   .then(() => {
+//     console.log('Database synchronized successfully.');
+//   })
+//   .catch((error) => {
+//     console.error('Erro r synchronizing database:', error);
+//   });
   
 testConnection();
 module.exports = sequelize;

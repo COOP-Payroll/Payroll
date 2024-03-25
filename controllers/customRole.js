@@ -6,9 +6,7 @@ const createError = require("../utils/error.js");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllCustomRole = async (req, res) => {
-  // const customRoles = await CustomRole.findAll({
-  //   where: { companyId: req.user.id },
-  // });
+
 
   try {
     const customRole = await CustomRole.findAll({
@@ -21,6 +19,7 @@ exports.getAllCustomRole = async (req, res) => {
     });
   } catch (error) {
     console.error("Error retrieving permissions:", error);
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -31,23 +30,8 @@ exports.getCustomRoleById = async (req, res) => {
     const customRole = await CustomRole.findByPk(id);
     res.status(200).json(customRole);
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+   return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -83,23 +67,7 @@ exports.createCustomRole = async (req, res, next) => {
     }
   } catch (error) {
     console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 exports.updateCustomRole = async (req, res, next) => {
@@ -158,23 +126,7 @@ exports.updateCustomRole = async (req, res, next) => {
     }
   } catch (error) {
     console.log(error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -200,23 +152,7 @@ exports.deleteCustomRole = async (req, res, next) => {
         .json({ message: "There is no Deduction Definition with this ID" });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
