@@ -26,6 +26,7 @@ const sendEmail = async (options) => {
       to: options.email,
       subject: options.subject,
       text: options.text,
+      html: options.html
     };
 
     const info = await sendMailAsync(mailOptions);

@@ -607,8 +607,7 @@ exports.assignPositionToProject = async (req, res, next) => {
     {
       return next(createError.createError(400,`You can't assign the maximum allocation under this project is   ${projects.numberOfEmployees} employees currently ${totalNoOfEmployees} employees assigned to the project`))
     }
-    
-
+        
     // return res.json({data:totalNoOfEmployeeForPosition+totalNoOfEmployees,
     // data1: projects.numberOfEmployees})
 

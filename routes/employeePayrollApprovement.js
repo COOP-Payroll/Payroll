@@ -18,7 +18,7 @@ employeePayrollApprovementController.getApprovementByPayrollId);
 router.post(
   "/",
   middleware.protectAll,
-  middleware.restrictToAll("companyAdmin", "approver"),
+  middleware.restrictToAll("approver", "companyAdmin"),
   middleware.restrictALL({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
@@ -30,10 +30,10 @@ router.post(
   "/approve",
   middleware.protectAll,
   middleware.restrictToAll("approver"),
-  middleware.restrictALL({
-    moduleName: "PayrollPublishedReport",
-    isAccessible: true,
-  }),
+  // middleware.restrictALL({
+  //   moduleName: "PayrollPublishedReport",
+  //   isAccessible: true,
+  // }),
   employeePayrollApprovementController.approveStatusOfPayroll
   // employeePayrollApprovementController.arrayApprove2Approvement
 );

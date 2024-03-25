@@ -11,30 +11,13 @@ exports.getAllDeductionDefinition = async (req, res) => {
     const deductionDefinitions = await DeductionDefinition.findAll({
       where: criteria,
     });
-    // console.log("same deductionDefinitions",deductionDefinitions)
-    //const grades = await Grade.findAll();
     res.status(200).json({
       count: deductionDefinitions.length,
       deductionDefinitions,
     });
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+   console.log(error)
+   return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -44,23 +27,8 @@ exports.getDeductionDefinitionById = async (req, res) => {
     const deductionDefinition = await DeductionDefinition.findByPk(id);
     return res.json(deductionDefinition);
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -102,23 +70,8 @@ exports.createDeductionDefinition = async (req, res, next) => {
 
     //console.log(deductionDefinition)
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 exports.updateDeductionDefinition = async (req, res, next) => {
@@ -131,12 +84,7 @@ exports.updateDeductionDefinition = async (req, res, next) => {
     if (name) {
       updates.name = name;
     }
-    // if (startingAmount) {
-    //   updates.startingAmount = startingAmount;
-    // }
-    // if (ispercent) {
-    //   updates.ispercent = ispercent;
-    // }
+ 
 
     const result = await DeductionDefinition.update(updates, {
       where: { id: id },
@@ -146,23 +94,8 @@ exports.updateDeductionDefinition = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -182,22 +115,7 @@ exports.deleteDeductionDefinition = async (req, res, next) => {
         .json({ message: "There is no Deduction Definition with this ID" });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };

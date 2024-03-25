@@ -1520,3 +1520,14 @@ async function runForProjectBasedPayroll(
     // });
   }
 }
+
+
+exports.approvePayrolls = async (req,res,next)=>{
+  try {
+    
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
+    
+  }
+}

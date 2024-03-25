@@ -831,6 +831,7 @@ exports.updateApprover = async (req, res, next) => {
     }
     approver.level = level
     approver.role = role
+    
     approver.isActive = isActive
     approver.isMaster = isMaster
     approver.EmployeeId = EmployeeId

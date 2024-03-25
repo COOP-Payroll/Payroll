@@ -31,7 +31,7 @@ const Company = sequelize.define("Company", {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: false,
+    // allowNull: false,
   },
   color: {
     type: DataTypes.STRING,
@@ -74,21 +74,27 @@ const Company = sequelize.define("Company", {
   },
   primary_Color: {
     type: DataTypes.STRING,
+    defaultValue:'#1234'
   },
   primary_Font_Color: {
     type: DataTypes.STRING,
+    defaultValue:'123456'
   },
   primary_Gradient_Color: {
     type: DataTypes.STRING,
+    defaultValue:'#fff'
   },
   secondary_Color: {
     type: DataTypes.STRING,
+    defaultValue:'#fff'
   },
   secondary_Font_Color: {
     type: DataTypes.STRING,
+    defaultValue:'#fff'
   },
   secondary_Gradient_Color: {
     type: DataTypes.STRING,
+    defaultValue:'#fff'
   },
   social_Media_Images: {
     type: DataTypes.BOOLEAN,
@@ -123,11 +129,16 @@ const Company = sequelize.define("Company", {
   },
   resetPasswordToken:{
     type:DataTypes.STRING,
+  },
+  resetPasswordTokenCreatedAt:{
+    type:DataTypes.DATE,
   }
+  
 });
 
 Company.beforeCreate((company, options) => {
   const saltRounds = 10;
+  if(company.password!=null && company.password === ''){
   return bcrypt
     .hash(company.password, saltRounds)
     .then((hash) => {
@@ -135,7 +146,7 @@ Company.beforeCreate((company, options) => {
     })
     .catch((err) => {
       throw new Error(err);
-    });
+    });}
 });
 
 Company.beforeUpdate((company, options) => {

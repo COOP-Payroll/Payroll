@@ -37,7 +37,7 @@ router.get("/", companyController.getAllCompany);
 router.get("/:id", companyController.getCompanyById);
 router.post("/", companyController.createCompany);
 
-
+router.put("/set")
 router.post("/set-password/:token", companyController.resetPasswordToken);
 router.get('/get/companyprofile',
   middleware.protectAll, 
@@ -54,6 +54,14 @@ router.put(
   ]),
   companyController.updateCompanyProfile
 );
+
+router.put(
+  "/profile/reset-to-default",
+  middleware.protectAll,
+  middleware.restrictALL('companyAdmin'),
+ companyController.resetTodefauldCompanyProfiles
+
+)
 
 router.put(
   "/update-account-info/",

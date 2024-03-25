@@ -27,19 +27,8 @@ exports.createEmployeeAccountInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating company account info:", error);
-
-    if (
-      error.name === "SequelizeValidationError" ||
-      error.name === "SequelizeUniqueConstraintError"
-    ) {
-      const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`];
-        return acc;
-      }, {});
-      return res.status(404).json({message:errors});
-    } else {
-      res.status(500).json({ error: "Failed to create account info" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -58,7 +47,8 @@ exports.getAllEmployeeAccountInfo = async (req, res) => {
     employeeAccountInfo.dataValues.imageUrl = imageUrl;
     return res.status(200).json(employeeAccountInfo);
   } catch (error) {
-    return res.json(error);
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -75,7 +65,8 @@ exports.deleteEmployeeAccountInfo = async (req, res) => {
       return res.json("employee Account Info deleted successfully");
     }
   } catch (error) {
-    return res.json(error);
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -97,18 +88,8 @@ exports.updateEmployeeAccountInfo = async (req, res) => {
       .status(200)
       .json({ message: "account updated successfully", data: updatedAccount });
   } catch (error) {
-    console.error(error);
-    if (
-      error.name === "SequelizeValidationError" ||
-      error.name === "SequelizeUniqueConstraintError"
-    ) {
-      const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`];
-        return acc;
-      }, {});
-      return res.status(404).json({message:errors});
-    }
-    return res.status(500).json({ message: "Internal server error" });
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -117,6 +98,7 @@ exports.verifyAccountNumber = (req, res) => {
     const { accountNumber } = req.body;
     res.status(200).json({ fullName: "boo faz baz", accountType: "Saving" });
   } catch (error) {
-    res.json(error);
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
