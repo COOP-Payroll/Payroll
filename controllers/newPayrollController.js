@@ -536,12 +536,12 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
 
     const employees = await Employee.findAll({
       where: {
-        id: employeeID,
+        id: employeeIds,
       },
     });
     const existingEmployeeIds = employees.map((employee) => employee.id);
     console.log("existiongEmployeeIds: " + existingEmployeeIds);
-    const nonExistingEmployeeIds = employeeID.filter(
+    const nonExistingEmployeeIds = employeeIds.filter(
       (id) => !existingEmployeeIds.includes(id)
     );
 
@@ -553,7 +553,7 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
     }
     let payrollDestroyed = false;
     await Promise.all(
-      employeeID.map(async (employeeId) => {
+      employeeIds.map(async (employeeId) => {
         try {
           const payroll = await Payroll.findOne({
             where: {

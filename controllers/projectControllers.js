@@ -254,6 +254,9 @@ exports.createProjects = async (req, res, next) => {
     return next(createError.createError(500, 'Internal server error'))
   }
 }
+
+
+
 exports.assignProjectToEmployee = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
@@ -822,8 +825,6 @@ exports.deassignPositionFromProject  = async (req, res, next) => {
   }
 }
 
-
-
 exports.qassignEmployeesToProject = async (req,res,next) => {
   try {
     console.log("helloo");
@@ -1222,7 +1223,6 @@ if(!positionProjectAssociation){
     return next(createError.createError(500, 'Internal server error'));
   }
 };
-
 
 exports.updateProjectEmployeeAssocitation= async(req,res,next)=>{
   const transaction = await sequelize.transaction();
