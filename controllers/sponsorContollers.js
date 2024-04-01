@@ -120,7 +120,6 @@ exports.createSponsors = async (req, res, next) => {
     if (!accountInfo) {
    
    
-  // console.log("data",data)
       
         // await accountInfo.update({ isActive: false }, { transaction })
         await AccountInfo.create(
@@ -131,6 +130,7 @@ exports.createSponsors = async (req, res, next) => {
       //   accountNumber,referenceLetter,referenceNumber,image
       );
     
+
     }
     else{
     await accountInfo.update({ isActive: false }, { transaction });
