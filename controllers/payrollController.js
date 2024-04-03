@@ -30,6 +30,8 @@ const Taxslab = require("../models/taxslab.js");
 const Pension = require("../models/pension.js");
 const ProvidentFund = require("../models/providentFund.js");
 const Sponsor = require("../models/sponsor.js");
+const ProjectEmployee = require("../models/project-employee.js");
+const ProjectEmployeeHistory = require("../models/projectEmployeeHistory.js");
 let totalWorkers = 0;
 let completedWorkers = 0;
 let clients = [];
@@ -564,5 +566,72 @@ exports.payrollDraft1= async(req,res,next)=>{
   } catch (error) {
     return createError.createError(500,"Internal server error")
     
+  }
+}
+
+
+exports.getPayrollPerProject= async (req,res,next)=>{
+  try {
+
+    const projectId= req?.params?.projectId
+    const payrollDefinitionId=req?.body?.payrollDefinitionId;
+
+    if(!payrollDefinitionId){
+      return next(createError.createError(400, "payroll Definition id is required"))
+    }
+
+
+    // const payroll= await ProjectEmployee.findOne(
+    // {
+    // where:{ProjectId: projectId},
+    // include: {
+    //   model: Employee,
+    //   attributes: { exclude: ['password'] },
+    // }
+    // }
+    // )
+
+    // const responseData = {
+    //   fullname: payroll.Employee.fullname,
+    //   email: payroll.Employee.email,
+    //   gross: payroll.gross,
+    // };
+
+const payroll1= await Payroll.findAll({
+  attributes:['id'],  
+  where:{
+    PayrollDefinitionId:payrollDefinitionId,
+  },
+  include:[
+   { model:Employee,
+    attributes:['id'],
+     include: [
+      {
+        model:ProjectEmployee,
+        where:{
+          ProjectId:projectId
+        },
+        attributes:['id']
+      },
+      {
+        model:ProjectEmployeeHistory,
+        where:{
+          ProjectId:projectId
+        },
+        attributes:['id']
+      }
+     ]
+  }]
+})
+
+
+
+    return res.status(200).json({
+      success:true,
+      data:payroll1
+    })
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500,"Internal server error") )
   }
 }
