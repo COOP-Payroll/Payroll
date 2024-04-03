@@ -93,7 +93,10 @@ exports.getOneProject = async (req, res, next) => {
       include: [
         {
           model: Positions,
-          through: { attributes:['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation'] }, // Include any additional attributes you need
+          through: {
+          //  attributes:['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation'] 
+          attributes: ['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation','budget','availableBudget']
+          }, // Include any additional attributes you need
         },
         {
           model:Sponsor
