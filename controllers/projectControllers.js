@@ -36,7 +36,10 @@ console.log("proje",req.user.id)
       include: [
         {
           model: Positions,
-          through: { attributes: ['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation','budget'] }, // Include any additional attributes you need
+          through: { 
+           attributes: ['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation','budget','availableBudget']
+          
+          }, // Include any additional attributes you need
         },
          {model:AccountInfo},
         {
