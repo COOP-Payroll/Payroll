@@ -20,7 +20,7 @@ const ProjectEmployeeHistory = sequelize.define("ProjectEmployeeHistory", {
     },
     gross: {
       type: DataTypes.STRING,
-      allowNull: false,
+      // allowNull: false,
     },
     isActive: {
       type: DataTypes.BOOLEAN,

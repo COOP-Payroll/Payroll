@@ -36,7 +36,7 @@ console.log("proje",req.user.id)
       include: [
         {
           model: Positions,
-          through: { attributes: ['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation'] }, // Include any additional attributes you need
+          through: { attributes: ['noOfEmployees','noOfAssignedEmployees','maximumPercentAllocation','budget'] }, // Include any additional attributes you need
         },
          {model:AccountInfo},
         {
@@ -62,7 +62,7 @@ console.log("proje",req.user.id)
           ...projects1,
           "totalAssignedEmployees": totalAssignedEmployees,
           "totalRemainingEmployee" :totalRemainingEmployee,
-          "totalAssignedPercent":Number(totalAssignedPercent.toFixed(2))
+          "totalAssignedPercent":Number(totalAssignedPercent.toFixed(2)),
           // "data": "data"
       };
   });
@@ -1121,6 +1121,7 @@ return res.status(200).json(filteredProjects)
 exports.deSelectEmployeeFromProject = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
+
     const { employeeId, projectId } = req.body;
 
     if (!employeeId || !projectId)
@@ -1210,14 +1211,14 @@ if(!positionProjectAssociation){
       { transaction }
     )
     await transaction.commit(); // Commit the transaction if everything is successful
-
+    
     return res.status(200).json({
       success: true,
       message: 'Successfully unassigned from the project',
       // data: projectEmployee.gross,
     });
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
     await transaction.rollback();
     console.error(error.message);
     return next(createError.createError(500, 'Internal server error'));

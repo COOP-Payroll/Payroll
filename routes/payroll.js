@@ -3,7 +3,7 @@ const payroll = require("../controllers/payrollController");
 const middleware = require("../middleware/auth");
 const router = express.Router();
 
-router.get("/:id", payroll.getAllPayrollByCompanyId);
+
 
 router.post(
   "/par",
@@ -31,4 +31,12 @@ router.get(
   payroll.employeePaySlip
 );
 
+
+router.get('/per-project/:projectId',
+middleware.protectAll,
+middleware.restrictToAll("companyAdmin", "approver"),
+payroll.getPayrollPerProject
+
+)
+router.get("/:id", payroll.getAllPayrollByCompanyId);
 module.exports = router;
