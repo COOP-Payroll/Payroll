@@ -9,6 +9,8 @@ router.get(
     projects.getAllProjects
   );
 
+ 
+
   router.get(
     "/total-percent-assigned/:id",
     middleware.protectAll,

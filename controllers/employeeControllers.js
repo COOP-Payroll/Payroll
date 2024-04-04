@@ -1676,3 +1676,61 @@ await transaction.commit();
     return next(createError.createError(500, 'Internal Server error'));
   }
 }
+
+
+
+exports.employeesCurrentProject= async (req,res,next)=>{
+  try {
+
+    const employeeId= req.params?.employeeId;
+
+    const employee= await ProjectEmployee.findAll({
+      where:{
+        EmployeeId: employeeId,
+        isActive:true
+      },
+       
+    })
+
+    // if(employee === null){
+    //   return next(createError.createError(404,"Employee not assigned to project"))
+    // }
+
+
+
+    return res.json({data: employee})
+    
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500,"Internal server Error"))    
+  }
+} 
+
+
+
+exports.employeesPreviousProject= async (req,res,next)=>{
+  try {
+
+    const employeeId= req.params?.employeeId;
+
+    const employee= await ProjectEmployee.findAll({
+      where:{
+        EmployeeId: employeeId,
+        isActive:false
+      },
+       
+    })
+
+    // if(employee === null){
+    //   return next(createError.createError(404,"Employee not assigned to project"))
+    // }
+
+
+
+    return res.json({data: employee})
+    
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500,"Internal server Error"))    
+  }
+} 
