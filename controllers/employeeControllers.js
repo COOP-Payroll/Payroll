@@ -874,6 +874,7 @@ const Sponsor = require("../models/sponsor.js");
 const EmployeePosition = require("../models/employeePosition.js");
 const Approver = require("../models/approver.js");
 const ApprovalMethod = require("../models/approvalMethod.js");
+const { model } = require("mongoose");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -1683,12 +1684,17 @@ exports.employeesCurrentProject= async (req,res,next)=>{
   try {
 
     const employeeId= req.params?.employeeId;
-
-    const employee= await ProjectEmployee.findAll({
-      where:{
-        EmployeeId: employeeId,
-        isActive:true
-      },
+    const employee= await Projects.findAll({
+      include:[{
+        model: ProjectEmployee,
+        where:{
+          EmployeeId: employeeId,
+          isActive:true
+        },
+        attributes:[ 'gross','percent']
+      
+      }
+      ]
        
     })
 
@@ -1713,11 +1719,17 @@ exports.employeesPreviousProject= async (req,res,next)=>{
 
     const employeeId= req.params?.employeeId;
 
-    const employee= await ProjectEmployee.findAll({
-      where:{
-        EmployeeId: employeeId,
-        isActive:false
-      },
+    const employee= await Projects.findAll({
+      include:[{
+        model: ProjectEmployee,
+        where:{
+          EmployeeId: employeeId,
+          isActive:false
+        },
+        attributes:[ 'gross','percent']
+      
+      }
+      ]
        
     })
 
