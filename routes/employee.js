@@ -69,6 +69,19 @@ router.get(
 );
 
 
+
+ router.get(
+    "/current-project/:employeeId",
+    middleware.protectAll,
+    employeeController.employeesCurrentProject
+  );
+  router.get(
+    "/previous-project/:employeeId",
+    middleware.protectAll,
+    employeeController.employeesPreviousProject
+    
+  );
+
 router.get(
   "/employee-history/:id",
   middleware.protectAll,
