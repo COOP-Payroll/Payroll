@@ -44,7 +44,7 @@ const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefin
 const additionalAllowance = require("./routes/additionalAllowance.js");
 const providentFund = require("./routes/providentFund.js");
 const newPayroll = require("./routes/newPayroll.js");
-// const Payroll = require("./models/Payroll");
+
 const PayrollDefinition = require("./models/payrollDefinition");
 const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
