@@ -44,7 +44,7 @@ const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefin
 const additionalAllowance = require("./routes/additionalAllowance.js");
 const providentFund = require("./routes/providentFund.js");
 const newPayroll = require("./routes/newPayroll.js");
-const Payroll = require("./models/Payroll");
+// const Payroll = require("./models/Payroll");
 const PayrollDefinition = require("./models/payrollDefinition");
 const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
@@ -54,6 +54,7 @@ const position=require("./routes/postionRoutes.js");
 const Sponsors=require("./routes/sponsors.js");
 const Projects=require("./routes/projectRoutes.js");
 const packageRoutes=require("./routes/packageRoutes.js");
+const ReportRoutes= require("./routes/reportingRoutes.js");
 // const stripePayment = require("./routes/stripePayment.js");
 
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
@@ -102,6 +103,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/user", userRouter);
 app.use("/company", companyRouter);
+app.use("/reports", ReportRoutes);
 app.use("/package", packageRouter);
 app.use("/packages",packageRoutes)
 app.use("/taxslab", taxslabRouter);
