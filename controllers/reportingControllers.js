@@ -3,8 +3,14 @@ const Payroll = require('../models/payroll')
 const Employee = require('../models/employee.js')
 const ProjectEmployee= require("../models/project-employee.js")
 const PayrollDefinition= require("../models/payrollDefinition.js")
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
 
 const createError = require('../utils/error.js')
+const Position = require('../models/position.js')
+const Grade =require("../models/grade.js")
+const Allowance= require('../models/allowance.js');
+const AdditionalAllowance=require("../models/additionalAllowance.js")
 exports.generateProjectSalaryReport = async (req, res, next) => {
   try {
     const { projectId, payrollDefinitionId } = req.body
@@ -79,28 +85,50 @@ exports.generateProjectSalaryReport = async (req, res, next) => {
 exports.getPayrollPublishedReport = async (req, res, next) => {
   try {
 
-
     const payrollPublishedReport = await PayrollDefinition.findAll({
       where: { status: 'created' },
       include: [
         {
           model: Payroll,
-          where: { status: 'processed' }, // Additional condition for Payroll status
-          required: false,// Use required: false to include Payroll even if there are no associated records
-
-          include:[Employee]
+          where: { status: 'processed' },
+          required: false,
+          include: [
+            
+            {model:Employee,
+            
+            include:[{model: Position},
+            
+            {model: Grade,
+              include:[{model:Allowance}]
+            },
+            {model: AdditionalAllowance}
+            ]
+            }
+          
+          
+          ]
         }
       ]
     });
-    
-    // Extract unique payrollName values
-    const uniquePayrollNames = [...new Set(payrollPublishedReport.map(payroll => payroll.payrollName))];
 
-    // Map over each unique payrollName and populate payrolls under it
-    const formattedData = uniquePayrollNames.map(payrollName => {
-      // Filter payrolls for the current payrollName
+    // return res.status(200).json(payrollPublishedReport)
+
+    // Extract unique payrollName, startDate, and endDate values
+    const uniqueData = [...new Set(payrollPublishedReport.map(payroll => ({
+      payrollName: payroll.payrollName,
+      startDate: payroll.startDate,
+      endDate: payroll.endDate
+    })))];
+
+    // Map over each unique data entry
+    const formattedData = uniqueData.map(({ payrollName, startDate, endDate }) => {
+      // Filter payrolls for the current payrollName, startDate, and endDate
       const payrolls = payrollPublishedReport
-        .filter(payroll => payroll.payrollName === payrollName)
+        .filter(payroll =>
+          payroll.payrollName === payrollName &&
+          payroll.startDate === startDate &&
+          payroll.endDate === endDate
+        )
         .map(payroll => {
           // Check if Payroll exists and has associated Employee
           if (payroll.Payroll && payroll.Payroll.Employee) {
@@ -125,12 +153,14 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
             } = payroll.Payroll;
     
             // Include fullname from the Employee object
-            const fullname = payroll.Payroll.Employee.fullname;
-    
+            const fullname = payroll?.Payroll?.Employee?.fullname;
+            const position= payroll?.Payroll?.Employee?.Positions?.[0]?.positionName;
+          
             // Return the structured payroll entry with fullname included
             return {
               id,
               fullname,
+              position,
               grossSalary,
               basicSalary,
               taxableIncome,
@@ -156,19 +186,137 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
     
       return {
         payrollName,
+        startDate,
+        endDate,
         payrolls
       };
     });
-    
-    // Now formattedData contains the data grouped by unique payroll names with payrolls populated under each payroll name
-    // console.log(formattedData);
-    
-    return res.status(200).json({
-      success:true,
 
-      data:formattedData});
+    return res.status(200).json(formattedData);
   } catch (error) {
     console.error('Error fetching payroll published report:', error);
    return next(createError.createError(500,"Internal server Error"))
   }
+}
+
+
+// Your controller function
+exports.downloadPayrollPublishedReport= async (req, res,next)=> {
+  try {
+    const payrollPublishedReport = await PayrollDefinition.findAll({
+      where: { status: 'created' },
+      include: [
+        {
+          model: Payroll,
+          where: { status: 'processed' }, // Additional condition for Payroll status
+          required: false,// Use required: false to include Payroll even if there are no associated records
+
+          include:[Employee]
+        }
+      ]
+    });
+    res.setHeader('Coop-payroll', 'software as a service');
+      // Your existing code to fetch and format data
+      const uniquePayrollNames = [...new Set(payrollPublishedReport.map(payroll => payroll.payrollName))];
+      const formattedData = uniquePayrollNames.map(payrollName => {
+          const payrolls = payrollPublishedReport
+              .filter(payroll => payroll.payrollName === payrollName)
+              .map(payroll => {
+                  if (payroll.Payroll && payroll.Payroll.Employee) {
+                      const {
+                          id,
+                          grossSalary,
+                          basicSalary,
+                          taxableIncome,
+                          incomeTax,
+                          totalDeduction,
+                          totalAllowance,
+                          NetSalary,
+                          employee_pension_amount,
+                          employer_pension_amount,
+                          status,
+                          isPaid,
+                          createdAt,
+                          updatedAt,
+                          EmployeeId,
+                          CompanyId
+                      } = payroll.Payroll;
+
+                      const fullname = payroll.Payroll.Employee.fullname;
+
+                      return {
+                          id,
+                          fullname,
+                          grossSalary,
+                          basicSalary,
+                          taxableIncome,
+                          incomeTax,
+                          totalDeduction,
+                          totalAllowance,
+                          NetSalary,
+                          employee_pension_amount,
+                          employer_pension_amount,
+                          status,
+                          isPaid,
+                          createdAt,
+                          updatedAt,
+                          EmployeeId,
+                          CompanyId
+                      };
+                  } else {
+                      return null;
+                  }
+              })
+              .filter(entry => entry !== null);
+
+          return {
+              payrollName,
+              payrolls
+          };
+      });
+
+      // Generate PDF
+      const pdfFilename = generatePDF(formattedData);
+
+      // Respond with the PDF filename or send the PDF as a response
+      return res.status(200).json({ 
+        formattedData,
+        
+        pdfFilename });
+  } catch (error) {
+      console.error('Error fetching payroll published report:', error);
+      return next(createError.createError(500, 'Internal server error'))
+  }
+}
+
+// Function to generate PDF from formatted data
+function generatePDF(data) {
+  const doc = new PDFDocument();
+  const filename = 'payroll_report.pdf';
+  const outputStream = fs.createWriteStream(filename);
+
+  doc.pipe(outputStream);
+
+  data.forEach(payroll => {
+
+    // Add header to each page
+
+      doc.fontSize(19).text(`Month: ${payroll.payrollName}`, { underline: true });
+      doc.moveDown();
+      payroll.payrolls.forEach(entry => {
+          // doc.fontSize(12).text(`ID: ${entry.id}`);
+          doc.fontSize(12).text(`Fullname: ${entry.fullname}`);
+          doc.fontSize(12).text(`Gross Salary: ${entry.grossSalary}`);
+          doc.fontSize(12).text(`Basic Salary: ${entry.basicSalary}`);
+          doc.fontSize(12).text(`Net Salary: ${entry.NetSalary}`);
+          // Add more fields as needed
+
+          doc.moveDown();
+      });
+      doc.moveDown();
+  });
+
+  doc.end();
+
+  return filename;
 }

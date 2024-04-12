@@ -6,6 +6,7 @@ const reportController = require("../controllers/reportingControllers.js");
 
 router.get('/project-salary-report', reportController.generateProjectSalaryReport);
 router.get('/payroll-published-report', reportController.getPayrollPublishedReport);
+router.get('/payroll-published-report/pdf', reportController.downloadPayrollPublishedReport);
 
 
 module.exports = router;
