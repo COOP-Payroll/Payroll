@@ -1,11 +1,11 @@
 const Projecs = require('../models/projects')
-const Payroll = require('../models/payroll')
+const Payroll = require('../models/Payroll.js')
 const Employee = require('../models/employee.js')
 const ProjectEmployee= require("../models/project-employee.js")
 const PayrollDefinition= require("../models/payrollDefinition.js")
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-
+const XLSX = require('xlsx');
 const createError = require('../utils/error.js')
 const Position = require('../models/position.js')
 const Grade =require("../models/grade.js")
@@ -320,3 +320,118 @@ function generatePDF(data) {
 
   return filename;
 }
+
+exports.downloadExcelReport = async (req, res, next) => {
+  try {
+    // Fetch data from the database
+    const payrollPublishedReport = await PayrollDefinition.findAll({
+      where: { status: 'created' },
+      include: [
+        {
+          model: Payroll,
+          where: { status: 'processed' }, // Additional condition for Payroll status
+          required: false, // Use required: false to include Payroll even if there are no associated records
+          include: [{model:Employee,
+          
+          
+            include:[{model: Position}],
+          }          
+          ]
+        }
+
+      ]
+    });
+    // return res.json(payrollPublishedReport)
+
+    console.log('payrollPublishedReport:', payrollPublishedReport); // Add this line for logging
+
+    // Ensure payrollPublishedReport is not undefined
+    if (!payrollPublishedReport) {
+      return res.status(404).json({ error: 'Payroll report not found' });
+    }
+
+    // Extract unique payroll names
+    const uniquePayrollNames = [...new Set(payrollPublishedReport.map(payroll => payroll.payrollName))];
+
+    // Format data with unique payroll names and associated payrolls
+    const formattedData = uniquePayrollNames.map(payrollName => {
+      const payrolls = payrollPublishedReport
+          .filter(payroll => payroll.payrollName === payrollName)
+          .map(payroll => {
+              if (payroll.Payroll && payroll.Payroll.Employee) {
+                  const {
+                      id,
+                      grossSalary,
+                      basicSalary,
+                      taxableIncome,
+                      incomeTax,
+                      totalDeduction,
+                      totalAllowance,
+                      NetSalary,
+                      employee_pension_amount,
+                      employer_pension_amount,
+                      status,
+                      isPaid,
+                      createdAt,
+                      updatedAt,
+                      EmployeeId,
+                      CompanyId
+                  } = payroll.Payroll;
+
+                  const fullname = payroll.Payroll.Employee.fullname;
+
+                  return {
+                      id,
+                      fullname,
+                      grossSalary,
+                      basicSalary,
+                      taxableIncome,
+                      incomeTax,
+                      totalDeduction,
+                      totalAllowance,
+                      NetSalary,
+                      employee_pension_amount,
+                      employer_pension_amount,
+                      status,
+                      isPaid,
+                      createdAt,
+                      updatedAt,
+                      EmployeeId,
+                      CompanyId
+                  };
+              } else {
+                  return null;
+              }
+          })
+          .filter(entry => entry !== null);
+
+      return {
+          payrollName,
+          payrolls
+      };
+  });
+
+    // return res.json(formattedData)
+    // Create Excel workbook and add worksheets
+    const workbook = XLSX.utils.book_new();
+    formattedData.forEach(data => {
+      const worksheet = XLSX.utils.json_to_sheet(data.payrolls);
+      XLSX.utils.book_append_sheet(workbook, worksheet, data.payrollName);
+    });
+
+    // Convert workbook to buffer
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+    // Set headers for the response
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=payroll_report.xlsx');
+
+    // Send Excel buffer as response
+    res.send(excelBuffer);
+
+    // return res.json(excelBuffer)
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500, 'Internal server error'));
+  }
+};

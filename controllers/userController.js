@@ -106,7 +106,7 @@ exports.updateCompanyStatus = async (req, res,next) => {
     });
     const token = crypto.randomBytes(32).toString('hex');
     console.log(`createCompany's ,token`, token);
-    const passwordCreationLink='http://localhost:4400/company/set-password/'+token;
+    const passwordCreationLink = `http://10.2.125.124/setpassword?${token}`;
     if (!company){
     return next(createError.createError(404, "company does not exist"));
     }
