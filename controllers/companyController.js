@@ -800,7 +800,7 @@ exports.resetPasswordToken = async(req, res,next) => {
    
   
     // Find the user by the token
-    const user = await Company.findOne({ where: { resetPasswordToken: token } });
+    const user = await Company.findOne({ where: { resetPasswordToken: "token" } });
 
     if (!user) {
 
@@ -808,7 +808,7 @@ exports.resetPasswordToken = async(req, res,next) => {
     }
 
  // Check if the token is expired (you may adjust the expiration time as needed)
- const tokenCreationTime = user.resetPasswordTokenCreatedAt;
+ const tokenCreationTime = user?.resetPasswordTokenCreatedAt;
  const tokenExpirationTime = new Date(tokenCreationTime.getTime() + (24 * 60 * 60 * 1000)); // 24 hours expiration
  const currentTime = new Date();
 

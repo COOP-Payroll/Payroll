@@ -11,6 +11,12 @@ router.get(
   payroll.getNotApprovedPayroll
 )
 
+router.get(
+  '/get-processed-payrolls',
+  middleware.protectAll,
+  middleware.restrictToAll('companyAdmin'),
+  payroll.getProcessedPayroll
+)
 router.get("/payroll-draft",
  middleware.protectAll, 
  middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),

@@ -32,6 +32,7 @@ const ProvidentFund = require("../models/providentFund.js");
 const Sponsor = require("../models/sponsor.js");
 const ProjectEmployee = require("../models/project-employee.js");
 const ProjectEmployeeHistory = require("../models/projectEmployeeHistory.js");
+const Payroll = require("../models/Payroll.js");
 let totalWorkers = 0;
 let completedWorkers = 0;
 let clients = [];
@@ -207,23 +208,12 @@ exports.getAllPayroll = async (req, res, next) => {
   } catch (error) {
     console.error("Error creating company account info:", error);
 
-    if (
-      error.name === "SequelizeValidationError" ||
-      error.name === "SequelizeUniqueConstraintError"
-    ) {
-      const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`];
-        return acc;
-      }, {});
-      return res.status(404).json({ message: errors });
-    } else {
-      // Handle other errors
-      res.status(500).json({ error: "Failed to create account info" });
-    }
+ return next(createError.createError(500,"Internal server Error"))
   }
 };
 
-exports.getAllEmployeePayroll = async (req, res) => {
+
+exports.getAllEmployeePayroll = async (req, res,next) => {
   try {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
@@ -231,7 +221,7 @@ exports.getAllEmployeePayroll = async (req, res) => {
       return res.status(404).json({ error: "Payroll is not found" });
     // Fetch employees with and without payroll information for the specific month
     const employees = await Employee.findAll({
-      include: [
+         include: [
         {
           model: Payroll,
           required: false,
@@ -242,11 +232,14 @@ exports.getAllEmployeePayroll = async (req, res) => {
       ],
     });
     return res.json({
-      count: employees.length,
-      employees,
+      status:"true",
+     data: employees,
     });
   } catch (error) {
-    res.json(error);
+    console.log(error);
+return next(createError.createError(500,"Internal server Error")
+)
+
   }
 };
 
