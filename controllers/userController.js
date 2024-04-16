@@ -4,6 +4,7 @@ const createError = require('.././utils/error.js');
 const AccountInfo = require("../models/accountInfo.js");
 const sequelize = require('../database/db')
 const sendEmail = require("../utils/sendEmail.js");
+const axios = require('axios');
 const crypto = require('crypto');
 // const jwt = require('jsonwebtoken');
 // create User
@@ -94,7 +95,7 @@ exports.deleteUser = async (req, res,next) => {
   }
 };
 
-exports.updateCompanyStatus = async (req, res,next) => {
+exports.updateCompanyStatus1 = async (req, res,next) => {
 
   const transaction = await sequelize.transaction();
   const { id, status } = req.body;
@@ -160,7 +161,84 @@ exports.updateCompanyStatus = async (req, res,next) => {
   }
 };
 
+exports.updateCompanyStatus = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+  const { id, status } = req.body;
+  
+  try {
+    const expirationHours = 24;
+    const company = await Company.findByPk(Number(id), {
+      attributes: { exclude: ["password"] },
+    });
 
+    if (!company) {
+      return next(createError(404, "Company does not exist"));
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+
+    const passwordCreationLink = `http://localhost:4400/company/setpassword`;
+    axios.post(apiUrl, requestData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(response => {
+      // Handle response
+      console.log(response.data);
+    })
+    .catch(error => {
+      // Handle error
+      console.error(error);
+    });
+
+
+    var text = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to ${company.name}</title>
+      </head>
+      <body>
+        <p>Dear ${company.name},</p>
+        <p>Thank you for registering with <strong>our platform</strong>! We're excited to have you on board.</p>
+        <p>To complete your account setup, please click on the link below to create your account password:</p>
+        <p><a href="#" id="passwordLink" onclick="setAuthorizationHeader('${passwordCreationLink}', '${token}')">Create Your Password</a></p>
+        <p>This link will expire in <strong>${expirationHours}</strong> hours for security reasons, so be sure to create your password as soon as possible.</p>
+        <p>Welcome again, and thank you for choosing <strong>our platform</strong>.</p>
+        <p>Best regards,</p>
+        <p><strong>CoopPayroll Software as a Service Team</strong></p>
+      </body>
+      </html>
+    `;
+
+    // if (company.status === status) {
+    //   return next(createError.createError(409, `Company is already ${status}`));
+    // }
+
+    await company.update({ 
+      status,
+      resetPasswordTokenCreatedAt: new Date(), 
+      resetPasswordToken: token 
+    }, { transaction });
+
+    await sendEmail({
+      email: company.email,
+      subject: "Create Your Account Password.",
+      html: text
+    }, { transaction });
+
+    await transaction.commit();
+
+    return res.status(200).json({ message: "Company status activated successfully" });
+  } catch (error) {
+    console.error(error);
+    await transaction.rollback();
+    return next(createError.createError(500, "Internal server error"));
+  }
+};
 exports.verifyCompanyAccount = async (req, res, next) => {
   const transaction = await sequelize.transaction()
   try {

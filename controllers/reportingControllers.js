@@ -320,7 +320,6 @@ function generatePDF(data) {
 
   return filename;
 }
-
 exports.downloadExcelReport = async (req, res, next) => {
   try {
     // Fetch data from the database
@@ -329,21 +328,20 @@ exports.downloadExcelReport = async (req, res, next) => {
       include: [
         {
           model: Payroll,
-          where: { status: 'processed' }, // Additional condition for Payroll status
-          required: false, // Use required: false to include Payroll even if there are no associated records
-          include: [{model:Employee,
-          
-          
-            include:[{model: Position}],
-          }          
+          where: { status: 'processed' },
+          required: false,
+          include: [
+            {
+              model: Employee,
+              include: [Position] // Include the Position model under Employee
+            }
           ]
         }
-
-      ]
+      ],
+      raw: true, // Retrieve raw data
+      nest: true, // Nesting the data properly
+      includeAll: true // Include all associations in a single query
     });
-    // return res.json(payrollPublishedReport)
-
-    console.log('payrollPublishedReport:', payrollPublishedReport); // Add this line for logging
 
     // Ensure payrollPublishedReport is not undefined
     if (!payrollPublishedReport) {
@@ -353,70 +351,86 @@ exports.downloadExcelReport = async (req, res, next) => {
     // Extract unique payroll names
     const uniquePayrollNames = [...new Set(payrollPublishedReport.map(payroll => payroll.payrollName))];
 
-    // Format data with unique payroll names and associated payrolls
-    const formattedData = uniquePayrollNames.map(payrollName => {
-      const payrolls = payrollPublishedReport
-          .filter(payroll => payroll.payrollName === payrollName)
-          .map(payroll => {
-              if (payroll.Payroll && payroll.Payroll.Employee) {
-                  const {
-                      id,
-                      grossSalary,
-                      basicSalary,
-                      taxableIncome,
-                      incomeTax,
-                      totalDeduction,
-                      totalAllowance,
-                      NetSalary,
-                      employee_pension_amount,
-                      employer_pension_amount,
-                      status,
-                      isPaid,
-                      createdAt,
-                      updatedAt,
-                      EmployeeId,
-                      CompanyId
-                  } = payroll.Payroll;
-
-                  const fullname = payroll.Payroll.Employee.fullname;
-
-                  return {
-                      id,
-                      fullname,
-                      grossSalary,
-                      basicSalary,
-                      taxableIncome,
-                      incomeTax,
-                      totalDeduction,
-                      totalAllowance,
-                      NetSalary,
-                      employee_pension_amount,
-                      employer_pension_amount,
-                      status,
-                      isPaid,
-                      createdAt,
-                      updatedAt,
-                      EmployeeId,
-                      CompanyId
-                  };
-              } else {
-                  return null;
-              }
-          })
-          .filter(entry => entry !== null);
-
-      return {
-          payrollName,
-          payrolls
-      };
-  });
-
-    // return res.json(formattedData)
-    // Create Excel workbook and add worksheets
+    // Create a new workbook
     const workbook = XLSX.utils.book_new();
-    formattedData.forEach(data => {
-      const worksheet = XLSX.utils.json_to_sheet(data.payrolls);
-      XLSX.utils.book_append_sheet(workbook, worksheet, data.payrollName);
+let i=0;
+    uniquePayrollNames.forEach(payrollName => {
+      const payrolls = payrollPublishedReport
+        .filter(payroll => payroll.payrollName === payrollName)
+        .map(payroll => {
+          if (payroll.Payroll && payroll.Payroll.Employee) {
+            // Extract payroll data
+            i=i+1;
+            const {
+              id,
+              grossSalary,
+              basicSalary,
+              taxableIncome,
+              incomeTax,
+              totalDeduction,
+              totalAllowance,
+              NetSalary,
+              employee_pension_amount,
+              employer_pension_amount,
+            } = payroll.Payroll;
+
+            // Extract employee data
+            const fullname = payroll.Payroll.Employee.fullname;
+            const position = payroll.Payroll.Employee.Positions.positionName;
+
+            // Format the row data
+            return {
+              "No": i,
+              'Full Name': fullname,
+              Position: position,
+              'Gross Salary': grossSalary,
+              'Basic Salary': basicSalary,
+              'Taxable Income': taxableIncome,
+              'Income Tax': incomeTax,
+              'Total Deduction': totalDeduction,
+              'Total Allowance': totalAllowance,
+              'Net Salary': NetSalary,
+              'Employee Pension': employee_pension_amount,
+              'Employer Pension': employer_pension_amount
+            };
+          } else {
+            return null;
+          }
+        })
+        .filter(entry => entry !== null);
+
+      // Create the worksheet
+      const worksheet = XLSX.utils.json_to_sheet(payrolls);
+
+      // Insert the "Monthly Salary" header at the beginning of the worksheet
+      const monthlySalary = [['Monthly Salary']];
+      XLSX.utils.sheet_add_aoa(worksheet, monthlySalary, { origin: 'A1' });
+
+      // Add custom column styles
+      const style = {
+        alignment: {
+          horizontal: 'center'
+        }
+      };
+
+      const wscols = [
+        { wch: 20, style: style }, // Full Name
+        { wch: 20, style: style }, // Position
+        { wch: 20, style: style }, // Gross Salary
+        { wch: 20, style: style }, // Basic Salary
+        { wch: 20, style: style }, // Taxable Income
+        { wch: 20, style: style }, // Income Tax
+        { wch: 20, style: style }, // Total Deduction
+        { wch: 20, style: style }, // Total Allowance
+        { wch: 20, style: style }, // Net Salary
+        { wch: 20, style: style }, // Employee Pension Amount
+        { wch: 20, style: style } // Employer Pension Amount
+      ];
+
+      worksheet['!cols'] = wscols;
+
+      // Append the worksheet to the workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, payrollName);
     });
 
     // Convert workbook to buffer
@@ -428,8 +442,6 @@ exports.downloadExcelReport = async (req, res, next) => {
 
     // Send Excel buffer as response
     res.send(excelBuffer);
-
-    // return res.json(excelBuffer)
   } catch (error) {
     console.log(error);
     return next(createError.createError(500, 'Internal server error'));
