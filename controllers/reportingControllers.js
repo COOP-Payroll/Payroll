@@ -4,6 +4,7 @@ const Employee = require('../models/employee.js')
 const ProjectEmployee= require("../models/project-employee.js")
 const PayrollDefinition= require("../models/payrollDefinition.js")
 const PDFDocument = require('pdfkit');
+const ExcelJS = require('exceljs');
 const fs = require('fs');
 const XLSX = require('xlsx');
 const createError = require('../utils/error.js')
@@ -82,7 +83,7 @@ exports.generateProjectSalaryReport = async (req, res, next) => {
 }
 
 
-exports.getPayrollPublishedReport = async (req, res, next) => {
+exports.getPayrollPublishedReport2 = async (req, res, next) => {
   try {
 
     const payrollPublishedReport = await PayrollDefinition.findAll({
@@ -95,16 +96,9 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
           include: [
             
             {model:Employee,
+              include: [Position] 
             
-            include:[{model: Position},
-            
-            {model: Grade,
-              include:[{model:Allowance}]
-            },
-            {model: AdditionalAllowance}
-            ]
             }
-          
           
           ]
         }
@@ -198,6 +192,192 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
    return next(createError.createError(500,"Internal server Error"))
   }
 }
+exports.getPayrollPublishedReport1 = async (req, res, next) => {
+  try {
+    // Fetch data from the database
+    const payrollPublishedReport = await PayrollDefinition.findAll({
+      where: { status: 'created' },
+      include: [
+        {
+          model: Payroll,
+          where: { status: 'processed' },
+          required: false,
+          include: [
+            {
+              model: Employee,
+              include: [Position] // Include the Position model under Employee
+            }
+          ]
+        }
+      ],
+      raw: true, // Retrieve raw data
+      nest: true, // Nesting the data properly
+      includeAll: true // Include all associations in a single query
+    });
+
+    // Ensure payrollPublishedReport is not undefined
+    if (!payrollPublishedReport) {
+      return res.status(404).json({ error: 'Payroll report not found' });
+    }
+
+    // Extract unique payroll names
+    const uniquePayrollNames = [...new Set(payrollPublishedReport.map(payroll => payroll.payrollName))];
+
+    // Create an empty array to store formatted payroll data
+    const formattedData = [];
+
+    uniquePayrollNames.forEach((payrollName, index) => {
+      // Reset the counter for each payroll name
+      let i = 0;
+
+      // Filter and map payroll data for the current payroll name
+      const payrolls = payrollPublishedReport
+        .filter(payroll => payroll.payrollName === payrollName)
+        .map(payroll => {
+          if (payroll.Payroll && payroll.Payroll.Employee) {
+            // Increment the counter
+            i++;
+
+            // Extract payroll and employee data
+            const {
+              id,
+              grossSalary,
+              basicSalary,
+              taxableIncome,
+              incomeTax,
+              totalDeduction,
+              totalAllowance,
+              NetSalary,
+              employee_pension_amount,
+              employer_pension_amount,
+            } = payroll.Payroll;
+            const fullname = payroll.Payroll.Employee.fullname;
+            const position = payroll.Payroll.Employee.Positions.positionName;
+
+            // Format the row data and push it to the formattedData array
+            formattedData.push({
+              payrollName,
+              startDate: payroll.startDate,
+              endDate: payroll.endDate,
+              id,
+              fullname,
+              position,
+              grossSalary,
+              basicSalary,
+              taxableIncome,
+              incomeTax,
+              totalDeduction,
+              totalAllowance,
+              NetSalary,
+              employee_pension_amount,
+              employer_pension_amount
+            });
+          }
+        });
+    });
+
+    // Return the formatted data as JSON response
+    return res.status(200).json(formattedData);
+  } catch (error) {
+    console.error(error);
+    return next(createError.createError(500, 'Internal server error'));
+  }
+};
+exports.getPayrollPublishedReport = async (req, res, next) => {
+  try {
+    // Fetch data from the database
+    const payrollPublishedReport = await PayrollDefinition.findAll({
+      where: { status: 'created' },
+      include: [
+        {
+          model: Payroll,
+          where: { status: 'processed' },
+          required: true,
+          include: [
+            {
+              model: Employee,
+              include: [Position] // Include the Position model under Employee
+            }
+          ]
+        }
+      ],
+      raw: true, // Retrieve raw data
+      nest: true, // Nesting the data properly
+      includeAll: true // Include all associations in a single query
+    });
+
+    // Ensure payrollPublishedReport is not undefined
+    if (!payrollPublishedReport) {
+      return res.status(404).json({ error: 'Payroll report not found' });
+    }
+
+    // Create an empty object to store the formatted payroll data
+    const formattedData = {};
+
+    // Iterate over each payroll entry and group employees by payroll name
+    payrollPublishedReport.forEach(payroll => {
+      const { payrollName, startDate, endDate } = payroll;
+      if (!formattedData[payrollName]) {
+        formattedData[payrollName] = { payrollName, startDate, endDate, payrolls: [] };
+      }
+
+      const payrollEntry = formattedData[payrollName];
+
+      if (payroll.Payroll && payroll.Payroll.Employee) {
+        const {
+          id,
+          grossSalary,
+          basicSalary,
+          taxableIncome,
+          incomeTax,
+          totalDeduction,
+          totalAllowance,
+          NetSalary,
+          employee_pension_amount,
+          employer_pension_amount,
+        } = payroll.Payroll;
+        const fullname = payroll.Payroll.Employee.fullname;
+        const position = payroll.Payroll.Employee.Positions.positionName;
+
+        // Add the employee details to the payrolls array under the payroll entry
+        payrollEntry.payrolls.push({
+          id,
+          fullname,
+          position,
+          grossSalary,
+          basicSalary,
+          taxableIncome,
+          incomeTax,
+          totalDeduction,
+          totalAllowance,
+          NetSalary,
+          employee_pension_amount,
+          employer_pension_amount
+        });
+      }
+    });
+
+    // Convert the object values to an array
+    let result = Object.values(formattedData);
+
+    // Sort the result array by start date in ascending order
+    result.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+    // Check if payrolls array is empty and set it to an empty array explicitly
+    result.forEach(entry => {
+      if (entry.payrolls.length === 0) {
+        entry.payrolls = [];
+      }
+    });
+
+    // Return the sorted array as JSON response
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    return next(createError.createError(500, 'Internal server error'));
+  }
+};
+
 
 
 // Your controller function
@@ -320,6 +500,120 @@ function generatePDF(data) {
 
   return filename;
 }
+
+// exports.downloadExcelReport = async (req, res, next) => {
+//   try {
+//     // Fetch data from the database
+//     const payrollPublishedReport = await PayrollDefinition.findAll({
+//       where: { status: 'created' },
+//       include: [
+//         {
+//           model: Payroll,
+//           where: { status: 'processed' },
+//           required: false,
+//           include: [
+//             {
+//               model: Employee,
+//               include: [Position] // Include the Position model under Employee
+//             }
+//           ]
+//         }
+//       ],
+//       raw: true, // Retrieve raw data
+//       nest: true, // Nesting the data properly
+//       includeAll: true // Include all associations in a single query
+//     });
+
+
+//     // return res.json(payrollPublishedReport)
+//     // Ensure payrollPublishedReport is not undefined
+//     if (!payrollPublishedReport) {
+//       return res.status(404).json({ error: 'Payroll report not found' });
+//     }
+
+//     // Extract data for Excel
+//     const excelData = payrollPublishedReport.map(payroll => {
+//       if (payroll.Payroll && payroll.Payroll.Employee) {
+//         const {
+//           id,
+//           grossSalary,
+//           basicSalary,
+//           taxableIncome,
+//           incomeTax,
+//           totalDeduction,
+//           totalAllowance,
+//           NetSalary,
+//           employee_pension_amount,
+//           employer_pension_amount,
+//         } = payroll.Payroll;
+
+//         // Extract employee data
+//         const fullname = payroll.Payroll.Employee.fullname;
+//         const position = payroll.Payroll.Employee.Positions.positionName;
+
+//         return {
+//           'Name': fullname,
+//           'Age': payroll.Payroll.Employee.age, // Assuming age is a property of the Employee model
+//           'Email': payroll.Payroll.Employee.email, // Assuming email is a property of the Employee model
+//           'Position': position,
+//           'Gross Salary': grossSalary,
+//           'Basic Salary': basicSalary,
+//           'Taxable Income': taxableIncome,
+//           'Income Tax': incomeTax,
+//           'Total Deduction': totalDeduction,
+//           'Total Allowance': totalAllowance,
+//           'Net Salary': NetSalary,
+//           'Employee Pension': employee_pension_amount,
+//           'Employer Pension': employer_pension_amount
+//         };
+//       } else {
+//         return null;
+//       }
+//     }).filter(entry => entry !== null);
+
+//     // Create a new workbook
+//     const workbook = XLSX.utils.book_new();
+
+//     // Add a worksheet
+//     const worksheet = XLSX.utils.json_to_sheet([]);
+
+//     // Set the main header value and styling
+//     worksheet['A1'] = { v: 'Payroll Report', s: { font: { bold: true }, alignment: { horizontal: 'center' } } };
+
+//     // Merge cells to create the main header spanning multiple columns
+//     worksheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 12 } }];
+
+//     // Apply font and alignment to the main header cell
+//     worksheet['A1'].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
+
+//     // Add the month and year suggestion header on row 2
+//     const monthYearHeader = ['Month', 'Year'];
+//     XLSX.utils.sheet_add_aoa(worksheet, [monthYearHeader], { origin: 'A2' });
+
+//     // Add the data starting from the third row
+//     XLSX.utils.sheet_add_json(worksheet, excelData, { origin: 'A3' });
+
+//     // Add the worksheet to the workbook
+//     XLSX.utils.book_append_sheet(workbook, worksheet, 'Payroll Report');
+
+//     // Write the workbook to a buffer
+//     const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+//     // Set the response headers
+//     res.set({
+//       'Content-Disposition': 'attachment; filename="payroll_report.xlsx"',
+//       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//     });
+
+//     // Send the Excel file as a response
+//     res.send(excelBuffer);
+//   } catch (error) {
+//     console.error(error);
+//     return next(createError.createError(500, 'Internal server error'));
+//   }
+// };
+
+
 exports.downloadExcelReport = async (req, res, next) => {
   try {
     // Fetch data from the database
@@ -353,14 +647,20 @@ exports.downloadExcelReport = async (req, res, next) => {
 
     // Create a new workbook
     const workbook = XLSX.utils.book_new();
-let i=0;
-    uniquePayrollNames.forEach(payrollName => {
+
+    uniquePayrollNames.forEach((payrollName, index) => {
+      // Reset the counter for each payroll name
+      let i = 0;
+
+      // Filter and map payroll data for the current payroll name
       const payrolls = payrollPublishedReport
         .filter(payroll => payroll.payrollName === payrollName)
         .map(payroll => {
           if (payroll.Payroll && payroll.Payroll.Employee) {
-            // Extract payroll data
-            i=i+1;
+            // Increment the counter
+            i++;
+
+            // Extract payroll and employee data
             const {
               id,
               grossSalary,
@@ -373,8 +673,6 @@ let i=0;
               employee_pension_amount,
               employer_pension_amount,
             } = payroll.Payroll;
-
-            // Extract employee data
             const fullname = payroll.Payroll.Employee.fullname;
             const position = payroll.Payroll.Employee.Positions.positionName;
 
@@ -430,7 +728,8 @@ let i=0;
       worksheet['!cols'] = wscols;
 
       // Append the worksheet to the workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, payrollName);
+      const worksheetName = `${payrollName}`;
+      XLSX.utils.book_append_sheet(workbook, worksheet, worksheetName);
     });
 
     // Convert workbook to buffer
@@ -443,7 +742,103 @@ let i=0;
     // Send Excel buffer as response
     res.send(excelBuffer);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return next(createError.createError(500, 'Internal server error'));
   }
 };
+
+// exports.downloadExcelReport = async (req, res, next) => {
+//   try {
+//     // Fetch data from the database
+//     const payrollPublishedReport = await PayrollDefinition.findAll({
+//       where: { status: 'created' },
+//       include: [
+//         {
+//           model: Payroll,
+//           where: { status: 'processed' },
+//           required: false,
+//           include: [
+//             {
+//               model: Employee,
+//               include: [Position] // Include the Position model under Employee
+//             }
+//           ]
+//         }
+//       ],
+//       raw: true, // Retrieve raw data
+//       nest: true, // Nesting the data properly
+//       includeAll: true // Include all associations in a single query
+//     });
+
+//     // Ensure payrollPublishedReport is not undefined
+//     if (!payrollPublishedReport) {
+//       return res.status(404).json({ error: 'Payroll report not found' });
+//     }
+
+//     // Extract unique payroll names
+//     const uniquePayrollNames = [...new Set(payrollPublishedReport.map(payroll => payroll.payrollName))];
+
+//     // Create an object to hold the payroll data under each unique payroll name
+//     const payrollDataByUniqueNames = {};
+
+//     uniquePayrollNames.forEach(payrollName => {
+//       // Filter payroll data by payrollName
+//       const payrollData = payrollPublishedReport.filter(payroll => payroll.payrollName === payrollName);
+
+//       // Store the filtered payroll data under the payroll name
+//       payrollDataByUniqueNames[payrollName] = payrollData;
+//     });
+
+//     // Respond with the uniqueness information and payroll data
+//     return res.json({ uniqueness: payrollDataByUniqueNames });
+
+//   } catch (error) {
+//     console.log(error);
+//     return next(createError.createError(500, 'Internal server error'));
+//   }
+// };
+
+
+exports.downloadExcelReport4 = async (req, res, next) => {
+  try {
+    const userData = [{ name: 'John', age: 30, email: 'john@example.com' }];
+
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Add a worksheet
+    const worksheet = XLSX.utils.json_to_sheet([]);
+
+    // Set the value and styling for the header cell
+    worksheet['A1'] = { v: 'Employee Data', s: { font: { bold: true }, alignment: { horizontal: 'center' } } };
+
+    // Merge cells to create the header spanning multiple columns
+    worksheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
+
+    // Apply font and alignment to the merged cell
+    worksheet['A1'].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
+
+    // Add the data starting from the second row
+    XLSX.utils.sheet_add_json(worksheet, userData, { origin: 'A2' });
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+
+    // Write the workbook to a buffer
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // Set the response headers
+    res.set({
+      'Content-Disposition': 'attachment; filename="users.xlsx"',
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    // Send the Excel file as a response
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error(error);
+    return next(createError.createError(500, 'Internal server error'));
+  }
+};
+
+
