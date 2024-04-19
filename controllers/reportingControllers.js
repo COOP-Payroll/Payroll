@@ -339,21 +339,25 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
         const fullname = payroll.Payroll.Employee.fullname;
         const position = payroll.Payroll.Employee.Positions.positionName;
 
-        // Add the employee details to the payrolls array under the payroll entry
-        payrollEntry.payrolls.push({
-          id,
-          fullname,
-          position,
-          grossSalary,
-          basicSalary,
-          taxableIncome,
-          incomeTax,
-          totalDeduction,
-          totalAllowance,
-          NetSalary,
-          employee_pension_amount,
-          employer_pension_amount
-        });
+        // Check if the employee ID has already been included
+        const employeeIds = payrollEntry.payrolls.map(p => p.id);
+        if (!employeeIds.includes(id)) {
+          // Add the employee details to the payrolls array under the payroll entry
+          payrollEntry.payrolls.push({
+            id,
+            fullname,
+            position,
+            grossSalary,
+            basicSalary,
+            taxableIncome,
+            incomeTax,
+            totalDeduction,
+            totalAllowance,
+            NetSalary,
+            employee_pension_amount,
+            employer_pension_amount
+          });
+        }
       }
     });
 
@@ -377,6 +381,7 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
     return next(createError.createError(500, 'Internal server error'));
   }
 };
+
 
 
 
