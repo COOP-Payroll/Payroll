@@ -14,6 +14,7 @@ router.get(
 
 router.get("/trial",
 packageController.getTrial)
+
 router.get("/monthlyPackages",
 packageController.getMonthlyPackages
 );

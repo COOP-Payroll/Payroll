@@ -31,7 +31,7 @@ exports.createEmployee = async (req, res,next) => {
 
 
   
-  if (!accountInformation || accountInformation?.accountNumber=== undefined) {
+  if (!accountInformation || accountInformation?.[0]?.accountNumber=== undefined) {
   return next(createError.createError(400,"Account number is required"))
 
   }
