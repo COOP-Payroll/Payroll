@@ -31,8 +31,13 @@ exports.createEmployee = async (req, res,next) => {
 
 
   try {
-    
-  if(!basicInfo?.DepartmentId  || !basicInfo?.GradeId || !basicInfo?.employeeInfo){
+    // return res.json(req.basicInfo)
+
+    console.log("department",!basicInfo?.DepartmentId)
+    console.log("department",!basicInfo?.GradeId)
+    console.log("department",!basicInfo?.emergencyInfo)
+
+  if(!basicInfo?.DepartmentId  || !basicInfo?.GradeId ){
     return next(createError.createError(400,"Please provide all required information"))
 
   }
