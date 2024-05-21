@@ -1,6 +1,7 @@
 
 const Modules = require("../models/addModules.js");
 const Employee = require("../models/employee.js");
+const createError= require("../utils/error.js")
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllModules = async (req, res, next) => {
@@ -14,23 +15,7 @@ exports.getAllModules = async (req, res, next) => {
     });
   } catch (error) {
     console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -41,23 +26,7 @@ exports.getAllowanceById = async (req, res) => {
     const module = await Modules.findByPk(id);
     res.json(module);
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
@@ -66,42 +35,27 @@ exports.createModules = async (req, res, next) => {
     //insert required field
     const name = req.body.name;
 const getAllModules = await Modules.findAll({where:{name:name}});
-console.log(getAllModules)
-if(!getAllModules)
-{ 
+console.log(!getAllModules)
+
+
+if(getAllModules.length != 0 ){
+  return next(createError.createError(400,"Module already Registered"))
+}
+
       const Moduless = await Modules.create({ name });
  
       res.status(200).json({
         message: "Successfully Registered",
         Moduless,
       });
-      // Handle the case where the company with the given ID is not found
- }
-else{
-  return res.status(404).json("Already Registered")
-}
+
+
 
 
 }
    catch (error) {
     console.log(error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return next(createError.createError(500,"Internal server error"));
   }
 };
 exports.updateModules = async (req, res, next) => {
@@ -129,27 +83,12 @@ exports.updateModules = async (req, res, next) => {
         message: "updated successfully",
         result,
       });
-    } else {
+      } else {
       res.status(404).json("No such Id");
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+     console.log(error);
+     return next(createError.createError(500,"Internal server error"));
   }
 };
 
@@ -168,45 +107,9 @@ exports.deleteModules = async (req, res, next) => {
       });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
 
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  }
-};
-exports.detlete= async(req,res,next)=>{
-  try {
-
-    const {id}=req.params.id;
-
-    const module = await Modules.findOne({
-      where: { id: id, CompanyId: req.user.id },
-    });
-    if (module) {
-      await module.destroy({ where: { id } });
-      res.status(200).json({ message: "Deleted successfully" });
-    } else {
-      res.status(409).json({
-        message: "There is no Modules  with this ID",
-      });
-    }
-    
-  } catch (error) {
-    console.log("error ", error)
-    
+    console.log(error);
+    return next(createError.createError(500,"Internal server error"));
   }
 }
 

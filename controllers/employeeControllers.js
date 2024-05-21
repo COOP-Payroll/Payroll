@@ -1660,16 +1660,19 @@ const isMaster=approvers?.isMaster
 const ApprovalMethodId=approvers?.ApprovalMethodId
 const approvalMethodType= approvalMethods?.approvalMethod
 const isCompleted=approvalMethods.isCompleted;
-res.status(200).json(approvalMethods)
 if(approvalMethodType){
 if(isCompleted){
 
 }
 }
 
-return res.status(200).json(approvalMethodType)
+// return res.status(200).json(approvalMethodType)
 
-await employee.update({role:"employee"},{transaction})
+await employee.update({role:"employee"},{transaction});
+
+return res.status(200).json({
+  sta
+})
 await transaction.commit();
   } catch (error) {
     console.log(error);
