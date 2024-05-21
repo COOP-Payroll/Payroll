@@ -30,15 +30,21 @@ exports.createEmployee = async (req, res,next) => {
   } = req.body
 
 
+  try {
+    
+  if(!basicInfo?.DepartmentId  || !basicInfo?.GradeId || !basicInfo?.employeeInfo){
+    return next(createError.createError(400,"Please provide all required information"))
+
+  }
   
   if (!accountInformation || accountInformation?.[0]?.accountNumber=== undefined) {
   return next(createError.createError(400,"Account number is required"))
 
   }
 
+
   const accountNumbers = accountInformation?.map(acct => acct.accountNumber)
   console.log('employeIfo', employeeInfo.position)
-  try {
     const [position, grade, department, employee, accountInfos, idformat] =
       await Promise.all([
         Position.findOne({where:{id:Number(employeeInfo.position), CompanyId:req.user.id}}),
@@ -49,43 +55,53 @@ exports.createEmployee = async (req, res,next) => {
         IdFormat.findOne({
           where: { CompanyId: Number(req.user.id), isActive: true }
         })
-      ])
+      ]);
+
     const errors = []
     if (!position) {
-      errors.push({ error: 'Position does not exist.' })
+
+      return next(createError.createError(404,"Position not found"))
+      // errors.push({ error: 'Position does not exist.' })
     }
     if (!grade) {
-      errors.push({ error: 'Grade does not exist.' })
+      return next(createError.createError(404,"Grade not found"))
+      // errors.push({ error: 'Grade does not exist.' })
     }
 
     if (!department) {
-      errors.push({ error: 'Department does not exist.' })
+      return next(createError.createError(404,"Department not found"))
+      // errors.push({ error: 'Department does not exist.' })
     }
     if (
       employeeInfo.basicSalary < grade?.minSalary ||
       employeeInfo.basicSalary > grade?.maxSalary
     ) {
-      errors.push({
-        error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
-      })
+
+      return next(createError.createError(404,`Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`))
+      // errors.push({
+        
+      //   error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+      // })
     }
 
     if (employee) {
-      errors.push({
-        error: `Employee already exists with ${basicInfo?.email} email.`
-      })
+      return next(createError.createError(404,`Employee already exists with ${basicInfo?.email} email.`))
+      // errors.push({
+      //   error: `Employee already exists with ${basicInfo?.email} email.`
+      // })
     }
 
     if (accountInfos.length > 0) {
-      errors.push({ error: 'Account infos already exist.' })
+      return next(createError.createError(404,'Account infos already exist.'))
+      // errors.push({ error: 'Account infos already exist.' })
     }
 
     // if (!idformat) {
     //   errors.push({ error: 'ID format does not exist.' })
     // }
-    if (errors.length > 0) {
-      return res.status(404).json({ message: errors })
-    }
+    // if (errors.length > 0) {
+    //   return res.status(404).json({ message: errors })
+    // }
 
     let password = req?.user?.companyCode?.substring(0, 4) + '0000'
     await sequelize.transaction(async t => {
@@ -253,9 +269,11 @@ console.log("data")
   } catch (error) {
     console.log("eror")
     console.error('Error creating records:', error)
-    return res
-      .status(500)
-      .json({ error: 'An error occurred while creating the records.' })
+
+    return next(createError.createError(500,"An error occurred while creating the records."))
+    // return res
+    //   .status(500)
+    //   .json({ error: 'An error occurred while creating the records.' })
   }
 }
 
