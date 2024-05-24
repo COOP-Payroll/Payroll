@@ -14,6 +14,8 @@ const middleware=require("../middleware/auth.js")
  *       200:
  *         description: Successful response
  */
+
+router.put("/setpassword/:token", companyController.resetPasswordToken);
 router.post(
   "/",
   upload.fields([
@@ -34,11 +36,12 @@ router.post(
  *         description: Successful response
  */
 router.get("/", companyController.getAllCompany);
+
 router.get("/:id", companyController.getCompanyById);
 router.post("/", companyController.createCompany);
 
 router.put("/set")
-router.get("/setpassword/", companyController.resetPasswordToken);
+
 router.get('/get/companyprofile',
   middleware.protectAll, 
   companyController.getcompanyProfiles

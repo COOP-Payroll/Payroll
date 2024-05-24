@@ -178,19 +178,19 @@ exports.updateCompanyStatus = async (req, res, next) => {
     const token = crypto.randomBytes(32).toString('hex');
 
     const passwordCreationLink = `http://localhost:4400/company/setpassword`;
-    axios.post(apiUrl, requestData, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(response => {
-      // Handle response
-      console.log(response.data);
-    })
-    .catch(error => {
-      // Handle error
-      console.error(error);
-    });
+    // axios.post(apiUrl, requestData, {
+    //   headers: {
+    //     'Authorization': `Bearer ${token}`
+    //   }
+    // })
+    // .then(response => {
+    //   // Handle response
+    //   console.log(response.data);
+    // })
+    // .catch(error => {
+    //   // Handle error
+    //   console.error(error);
+    // });
 
 
     var text = `

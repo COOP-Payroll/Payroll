@@ -1535,7 +1535,7 @@ exports.approvePayrolls = async (req,res,next)=>{
 
 
 
-
+//PROCESSED PAYROLL
 exports.getProcessedPayroll= async (req,res,next)=>{
   try {
  
@@ -1595,9 +1595,7 @@ const employees = await Employee.findAll({
 });
 
 
-// Map the result to transform it
 const transformedEmployees = employees.map(employee => {
-  // Extract necessary fields from the employee object
   const {
       id,
       fullname,
@@ -1636,7 +1634,6 @@ const transformedEmployees = employees.map(employee => {
       isPaid: employee.Payroll.isPaid,
   } : {};
 
-  // Combine the extracted fields into a single object
   return {
       id,
       fullname,
@@ -1655,7 +1652,136 @@ const transformedEmployees = employees.map(employee => {
       id_type,
       ...payrollInfo,
     
-       // Include payroll info if available
+  };
+});
+
+return res.status(200).json({
+  status:"true",
+
+data:transformedEmployees})
+
+
+  } catch (error) {
+    console.log("error", error);
+    return next(createError.createError(500,"Internal server error"))
+    
+  }
+}
+
+//UNPROCESSED PAYROLL
+exports.getUnprocessedPayroll= async (req,res,next)=>{
+  try { 
+const currentDate = new Date();
+const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+const currentMonthPayrolls = await PayrollDefinition.findAll({
+  where: {
+    CompanyId: req.user.id,
+    [Op.or]: [
+      {
+        startDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
+        endDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
+      },
+      {
+        startDate: {
+          [Op.lt]: startOfMonth,
+        },
+        endDate: {
+          [Op.gte]: startOfMonth,
+        },
+      },
+    ],
+  },
+});
+
+console.log("current month", currentMonthPayrolls.length);
+// return res.json(currentMonthPayrolls?.[0]?.id);
+
+if (currentMonthPayrolls.length === 0) {
+  return res.status(204).json({
+    message: "No payrolls defined for this month",
+  });
+} 
+
+ 
+const employees = await Employee.findAll({
+  include: [
+
+    {model:Position},
+      {
+          model: Payroll,
+          // required: true,
+          where: {
+              PayrollDefinitionId: currentMonthPayrolls?.[0]?.id, 
+            },
+      },
+
+      
+  ],
+});
+
+
+const transformedEmployees = employees.map(employee => {
+  const {
+      id,
+      fullname,
+      image,
+      sex,
+      date_of_birth,
+      role,
+      nationality,
+      marriageStatus,
+      employee_id_number,
+      email,
+      phoneNumber,
+      optionalNumber,
+      id_image,
+      id_type,
+  } = employee;
+
+  const positions= employee.Positions ?{
+    positionName: employee?.Positions[0].positionName,
+  
+  }:{}
+
+
+  const payrollInfo = employee.Payroll ? {
+      grossSalary: employee.Payroll.grossSalary,
+      basicSalary: employee.Payroll.basicSalary,
+      taxableIncome: employee.Payroll.taxableIncome,
+      incomeTax: employee.Payroll.incomeTax,
+      totalDeduction: employee.Payroll.totalDeduction,
+      totalAllowance: employee.Payroll.totalAllowance,
+      NetSalary: employee.Payroll.NetSalary,
+      employee_pension_amount: employee.Payroll.employee_pension_amount,
+      employer_pension_amount: employee.Payroll.employer_pension_amount,
+      status: employee.Payroll.status,
+      isPaid: employee.Payroll.isPaid,
+  } : {};
+
+  return {
+      id,
+      fullname,
+      ...positions,
+      image,
+      sex,
+      date_of_birth,
+      role,
+      nationality,
+      marriageStatus,
+      employee_id_number,
+      email,
+      phoneNumber,
+      optionalNumber,
+      id_image,
+      id_type,
+      ...payrollInfo,
+    
   };
 });
 

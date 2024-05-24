@@ -594,6 +594,7 @@ exports.updateCompany = async (req, res, next) => {
       // return res.json(updatedData)
     }
   } catch (error) {
+    console.log(error)
     return next(createError.createError(500, 'Internal server error'))
   }
 }
@@ -794,13 +795,14 @@ exports.updateAccountInfo= async(req,res,next)=>{
 exports.resetPasswordToken = async(req, res,next) => {
  
   try {
+    
     const { token } = req.params;
     const { password } = req.body;
 
    
-  
-    // Find the user by the token
-    const user = await Company.findOne({ where: { resetPasswordToken: "token" } });
+  // return res.json("password")
+    // Find the user by the toke  n
+    const user = await Company.findOne({ where: { resetPasswordToken: token } });
 
     if (!user) {
 
@@ -818,18 +820,27 @@ exports.resetPasswordToken = async(req, res,next) => {
  }
 
 
- 
+ await user.update({
+  password,
+  resetPasswordToken :null,
+  resetPasswordTokenCreatedAt:null
+  
+ })
 
-user.password=password;
+// user.password=password;
 
     // Update the user's password
     // const hashedPassword = await bcrypt.hash(password, 10);
-
+    // //  user
     
     // user.password = hashedPassword;
-    user.resetPasswordToken = null;
-    user.resetPasswordTokenCreatedAt=null;
-    await user.save();
+
+
+
+
+    // user.resetPasswordToken = null;
+    // user.resetPasswordTokenCreatedAt=null;
+    // await user.save();
 
     res.json({ message: 'Password set successfully' });
   } catch (error) { 

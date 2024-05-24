@@ -9,7 +9,7 @@ router.get(
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
 
   loanControllers.getAllLoan
-);
+);  
 
 router.get(
   "/:id",

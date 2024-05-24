@@ -1668,7 +1668,11 @@ if(isCompleted){
 
 // return res.status(200).json(approvalMethodType)
 
-await employee.update({role:"employee"},{transaction});
+// await employee.update({role:"employee"},{transaction});
+return res.status(200).json({
+  status:true,
+  message:"unassigned successfully "
+})
 
 return res.status(200).json({
   sta
