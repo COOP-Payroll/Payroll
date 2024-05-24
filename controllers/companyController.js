@@ -809,7 +809,6 @@ exports.resetPasswordToken = async(req, res,next) => {
       return next(createError.createError(404,"Invalid or expired token"))
     }
 
- // Check if the token is expired (you may adjust the expiration time as needed)
  const tokenCreationTime = user?.resetPasswordTokenCreatedAt;
  const tokenExpirationTime = new Date(tokenCreationTime.getTime() + (24 * 60 * 60 * 1000)); // 24 hours expiration
  const currentTime = new Date();
@@ -827,20 +826,7 @@ exports.resetPasswordToken = async(req, res,next) => {
   
  })
 
-// user.password=password;
 
-    // Update the user's password
-    // const hashedPassword = await bcrypt.hash(password, 10);
-    // //  user
-    
-    // user.password = hashedPassword;
-
-
-
-
-    // user.resetPasswordToken = null;
-    // user.resetPasswordTokenCreatedAt=null;
-    // await user.save();
 
     res.json({ message: 'Password set successfully' });
   } catch (error) { 
