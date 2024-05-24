@@ -42,10 +42,10 @@
 // module.exports = sequelize; 
 
 
-// require("dotenv").config();
+require("dotenv").config();
 // const { Sequelize } = require("sequelize");
-// // const CustomError = require("../utils/ErrorHandler");
-// // const { Sequelize } = require('sequelize');
+// const CustomError = require("../utils/ErrorHandler");
+// const { Sequelize } = require('sequelize');
 
 // const sequelize = new Sequelize('postgres://pgdb_1cwn_user:IVlhbD6rRoHWqVQtiDQpUyfNSQ6AAQQB@dpg-cmntv9o21fec73ctip3g-a.oregon-postgres.render.com/pgdb_1cwn', {
 //   dialect: 'postgres',
@@ -83,7 +83,7 @@
 
 
 
-///LOCAL DATABASE
+// /LOCAL DATABASE
 
 // const { Sequelize } = require("sequelize");
 
@@ -114,16 +114,56 @@
 
 
 
+// require("dotenv").config();
+// const { Sequelize } = require("sequelize");
+// // const CustomError = require("../utils/ErrorHandler");
+// const sequelize = new Sequelize({
+//   host: process.env.DB_HOST || "localhost",
+//   port: process.env.DB_PORT || "5432",
+//   database: process.env.DB_NAME || "",
+//   username: process.env.DB_USER  ||"",
+//   password: process.env.DB_PASSWORD || "",
+//   dialect: "postgres",
+// });
+// // Test the database connection
+// async function testConnection() {
+//   try {
+//     await sequelize.authenticate();
+//     console.log("Database connection has been established successfully.");
+//   } catch (error) {
+//     console.log(error)
+//     console.log(process.env.DB_HOST)
+//     console.error("Error connecting");
+//   }
+// }
+// // sequelize.sync({ alter: true }) // Use force: true carefully, as it drops existing tables
+// //   .then(() => {
+// //     console.log('Database synchronized successfully.');
+// //   })
+// //   .catch((error) => {
+// //     console.error('Erro r synchronizing database:', error);
+// //   });
+  
+// testConnection();
+// module.exports = sequelize;
+
+
+
+
+///RENDER
+
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
 // const CustomError = require("../utils/ErrorHandler");
-const sequelize = new Sequelize({
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || "5432",
-  database: process.env.DB_NAME || "",
-  username: process.env.DB_USER  ||"",
-  password: process.env.DB_PASSWORD || "",
+const sequelize = new Sequelize('postgres://ct_user:y3sNLAB4dr7pcq8pCBqwMtoCzMsvrZq1@dpg-cp3gmi7sc6pc73foh22g-a.oregon-postgres.render.com/ct',{
+ 
   dialect: "postgres",
+  dialectOptions: {
+    ssl: {
+      require: true, // This will help in ensuring SSL connection
+      rejectUnauthorized: false // This might be necessary for some providers like Heroku
+    }
+  }
 });
 // Test the database connection
 async function testConnection() {
@@ -146,4 +186,3 @@ async function testConnection() {
   
 testConnection();
 module.exports = sequelize;
-
