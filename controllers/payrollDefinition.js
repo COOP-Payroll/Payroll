@@ -18,12 +18,13 @@ exports.getAllPayroll = async (req, res, next) => {
       count: payroll.length,
       payroll,
     });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrongi");
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 //get by id
-exports.getPayrollDefinitionById = async (req, res) => {
+exports.getPayrollDefinitionById = async (req, res,next) => {
   const { id } = req.params;
 
   try {
@@ -34,10 +35,11 @@ exports.getPayrollDefinitionById = async (req, res) => {
       return res.json(payroll);
     }
   } catch (error) {
-    return res.json(error);
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
-exports.getLatestPayroll = async (req, res) => {
+exports.getLatestPayroll = async (req, res,next) => {
   try{
     console.log("Getting latest payroll");
     const latestPayroll = await Payroll.findOne({
@@ -51,8 +53,9 @@ exports.getLatestPayroll = async (req, res) => {
       lat:lat
     })
     res.json(latestPayroll);
-  }catch(err){
-
+  }catch(error){
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 exports.createPayroll = async (req, res,next) => {
@@ -139,7 +142,8 @@ exports.updatePayrollDefinition = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    return res.status(500).json("Something gonna wrong");
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -155,8 +159,9 @@ exports.deletePayrollDefinition = async (req, res, next) => {
         .status(409)
         .json({ message: "There is no  such payroll with this ID" });
     }
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 exports.deletePayrolldefinition= async(req,res,next)=>{
@@ -180,25 +185,9 @@ else{
 
 
 
-  } catch (err) {
-     console.log("first", err);
-     if (error.name === "SequelizeValidationError") {
-       const errors = {};
-       error.errors.forEach((err) => {
-         errors[err.path] = [`${err.path} is required`];
-       });
-
-       return res.status(404).json({message:errors});
-     } else if (error.name === "SequelizeUniqueConstraintError") {
-       const errors = {};
-       error.errors.forEach((err) => {
-         errors[err.path] = [`${err.path} must be unique`];
-       });
-
-       return res.status(404).json({message:errors});
-     } else {
-       return res.status(500).json({ message: "Internal server error" });
-     }
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }
 
@@ -234,23 +223,7 @@ else{
 
     
   } catch (error) {
-    console.log("error",error)
-        if (error.name === "SequelizeValidationError") {
-          const errors = {};
-          error.errors.forEach((err) => {
-            errors[err.path] = [`${err.path} is required`];
-          });
-
-          return res.status(404).json({ message: errors });
-        } else if (error.name === "SequelizeUniqueConstraintError") {
-          const errors = {};
-          error.errors.forEach((err) => {
-            errors[err.path] = [`${err.path} must be unique`];
-          });
-
-          return res.status(404).json({ message: errors });
-        } else {
-          return res.status(500).json({ message: "Internal server error" });
-        }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }

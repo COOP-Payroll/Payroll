@@ -5,7 +5,7 @@ const Company = require("../models/company.js");
 const createError =require("../utils/error.js")
 
 // Define controller methods for handling User requests for deduction definition
-exports.getAllDeduction = async (req, res) => {
+exports.getAllDeduction = async (req, res,next) => {
   try {
     const deductions = await Deduction.findAll({
       where: { CompanyId: req.user.id },
@@ -20,7 +20,7 @@ exports.getAllDeduction = async (req, res) => {
   }
 };
 
-exports.getDeductionById = async (req, res) => {
+exports.getDeductionById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const deduction = await Deduction.findByPk(id);

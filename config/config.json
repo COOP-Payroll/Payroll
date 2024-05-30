@@ -1,32 +1,44 @@
 {
-
-"development": 
-
-{
-    "dialect": "sqlite",
-    "storage": "payroll.db",
-    "logging": false
- 
-},
-
-"test": 
-
-{
-    "username": "root",
-    "password": null,
-    "database": "database_test",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
-
-},
-
-"production": 
-
-{
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
-}
-}
+    "development": {
+      "username": "ct_user",
+      "password": "y3sNLAB4dr7pcq8pCBqwMtoCzMsvrZq1",
+      "database": "ct",
+      "host": "dpg-cp3gmi7sc6pc73foh22g-a.oregon-postgres.render.com",
+      "port": 5432,
+      "dialect": "postgres",
+      "dialectOptions": {
+        "ssl": {
+          "require": true,
+          "rejectUnauthorized": false
+        }
+      }
+    },
+    "test": {
+      "username": "ct_user",
+      "password": "y3sNLAB4dr7pcq8pCBqwMtoCzMsvrZq1",
+      "database": "ct_test",
+      "host": "dpg-cp3gmi7sc6pc73foh22g-a.oregon-postgres.render.com",
+      "port": 5432,
+      "dialect": "postgres",
+      "dialectOptions": {
+        "ssl": {
+          "require": true,
+          "rejectUnauthorized": false
+        }
+      }
+    },
+    "production": {
+      "username": "ct_user",
+      "password": "y3sNLAB4dr7pcq8pCBqwMtoCzMsvrZq1",
+      "database": "ct",
+      "host": "dpg-cp3gmi7sc6pc73foh22g-a.oregon-postgres.render.com",
+      "port": 5432,
+      "dialect": "postgres",
+      "dialectOptions": {
+        "ssl": {
+          "require": true,
+          "rejectUnauthorized": false
+        }
+      }
+    }
+  }

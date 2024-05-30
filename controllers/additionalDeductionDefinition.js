@@ -1,8 +1,9 @@
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
+const createError = require('../utils/error')
 
 const Company = require("../models/company");
 // Define controller methods for handling User requests
-exports.getAllAdditionalDeductionDefinition = async (req, res) => {
+exports.getAllAdditionalDeductionDefinition = async (req, res,next) => {
   const Company = req.user.id;
 
   try {
@@ -16,28 +17,12 @@ exports.getAllAdditionalDeductionDefinition = async (req, res) => {
       AdditionalDeductionDefinitions,
     });
   } catch (error) {
-    console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
-exports.getAdditionalDeductionDefinition = ById = async (req, res) => {
+exports.getAdditionalDeductionDefinition = ById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const AdditionalDeductionDefinition =
@@ -46,23 +31,8 @@ exports.getAdditionalDeductionDefinition = ById = async (req, res) => {
       AdditionalDeductionDefinition,
     });
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -96,7 +66,8 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -122,7 +93,8 @@ exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
       //   result,
     });
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -143,9 +115,8 @@ exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
       res.status(409).json({ message: "There is no such ID" });
     }
   } catch (error) {
-    console.log("first", error);
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
-//name,isTaxable,isExempted,exemptedAmount,startingAmount

@@ -31,7 +31,6 @@ exports.getAllApprovers = async (req, res, next) => {
   } catch (error) {
     console.error('Error retrieving Approvers:', error)
     return next(createError.createError(500, 'Internal server error'))
-    // res.status(500).json({ error: "Failed to retrieve Approvers" });
   }
 }
 //get all active approver
@@ -128,7 +127,6 @@ exports.getApproverByEmployeeId = async (req, res, next) => {
     // res.status(500).json({ error: "Failed to retrieve Approver" });
   }
 }
-//function used here tomanipulate the approved
 
 async function saveApprover (
   CompanyId,

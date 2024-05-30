@@ -35,12 +35,19 @@ exports.createUser = async (req, res,next) => {
 
 // get AllUser
 exports.getAllUser = async (req, res,next) => {
-  const users = await User.findAll({
-    attributes: { exclude: ["password"] },
-  });
-  delete users.createdAt;
-  delete users.updatedAt;
-  return res.status(200).json(users);
+
+  try {
+    const users = await User.findAll({
+      attributes: { exclude: ["password"] },
+    });
+    delete users.createdAt;
+    delete users.updatedAt;
+    return res.status(200).json(users);
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
+  }
+
 };
 
 // get only one user

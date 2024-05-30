@@ -1,7 +1,8 @@
 const AccountInfo = require("../models/accountInfo");
 const Employee = require("../models/employee");
+const createError= require("../utils/error")
 
-exports.createEmployeeAccountInfo = async (req, res) => {
+exports.createEmployeeAccountInfo = async (req, res,next) => {
   try {
     const { employeeId, accountNumber } = req.body;
     const [employee, account] = await Promise.all([
@@ -32,7 +33,7 @@ exports.createEmployeeAccountInfo = async (req, res) => {
   }
 };
 
-exports.getAllEmployeeAccountInfo = async (req, res) => {
+exports.getAllEmployeeAccountInfo = async (req, res,next) => {
   try {
     const { id } = req.params;
     const employeeeAccountInfos = await AccountInfo.findAll({
@@ -52,7 +53,7 @@ exports.getAllEmployeeAccountInfo = async (req, res) => {
   }
 };
 
-exports.deleteEmployeeAccountInfo = async (req, res) => {
+exports.deleteEmployeeAccountInfo = async (req, res,next) => {
   try {
     const { id } = req.params;
     const companyAccountInfos = await AccountInfo.findOne({
@@ -70,7 +71,7 @@ exports.deleteEmployeeAccountInfo = async (req, res) => {
   }
 };
 
-exports.updateEmployeeAccountInfo = async (req, res) => {
+exports.updateEmployeeAccountInfo = async (req, res,next) => {
   try {
     const account = await AccountInfo.findByPk(Number(req.params.id));
     if (!account) return res.status(404).json({ error: "Account not found" });
@@ -93,7 +94,7 @@ exports.updateEmployeeAccountInfo = async (req, res) => {
   }
 };
 
-exports.verifyAccountNumber = (req, res) => {
+exports.verifyAccountNumber = (req, res,next) => {
   try {
     const { accountNumber } = req.body;
     res.status(200).json({ fullName: "boo faz baz", accountType: "Saving" });

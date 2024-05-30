@@ -11,18 +11,18 @@ const { Sequelize } = require('sequelize')
 const sequelize = require('../database/db')
 const { exit } = require('shelljs')
 // Controller actions
-const getAllApprovements = async (req, res) => {
+const getAllApprovements = async (req, res,next) => {
   try {
     const approvements = await EmployeePayrollApprovement.findAll()
     res.json(approvements)
     console.log('approvements')
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }
 
-const getApprovementById = async (req, res) => {
+const getApprovementById = async (req, res,next) => {
   const { id } = req.params
   try {
     const approvement = await Payroll.findAll({
@@ -35,8 +35,8 @@ const getApprovementById = async (req, res) => {
     }
     res.json(approvement)
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }
 
@@ -279,11 +279,11 @@ const createApprovement = async (req, res, next) => {
       return res.json('your approval method is not active')
     }
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({ message: 'Internal server error' })
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }
-const getApprovementByPayrollId = async (req, res) => {
+const getApprovementByPayrollId = async (req, res,next) => {
   const { id } = req.params
   try {
     const approvement = await Payroll.findAll({
@@ -310,12 +310,12 @@ const getApprovementByPayrollId = async (req, res) => {
 
     res.json(payrolls)
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }
 
-const updateApprovement = async (req, res) => {
+const updateApprovement = async (req, res,next) => {
   try {
     const approvement = await EmployeePayrollApprovement.findByPk(id)
     if (!approvement) {
@@ -645,15 +645,14 @@ const arrayApproveApprovement = async (req, res, next) => {
         }
       } catch (error) {
         console.error(`Error processing payroll with ID ${payrollId}:`, error)
-        continue // Skip to the next iteration
+        continue 
       }
     }
 
-    console.log('For loop finished')
     return res.status(200).json(results)
   } catch (error) {
-    console.error(error)
-    // return res.status(500).json({ message: 'Internal server error' });
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 }
 

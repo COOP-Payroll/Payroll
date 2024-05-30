@@ -159,8 +159,9 @@ exports.updatePackage = async (req, res, next) => {
     return res.status(200).json({
       message: "updated successfully",
     });
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -177,8 +178,9 @@ exports.deletePackage = async (req, res, next) => {
         .status(409)
         .json({ message: "There is no package with this ID" });
     }
-  } catch (err) {
-    return res.status(500).json("Something gonna wrong");
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -197,7 +199,6 @@ exports.getTrial = async (req, res,next) => {
   } catch (error) {
     console.log(error);
     return next(createError.createError(500,"Internal server error"))
-    next(error);
   }
   
   }

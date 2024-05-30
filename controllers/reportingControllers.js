@@ -59,26 +59,6 @@ exports.generateProjectSalaryReport = async (req, res, next) => {
       ...Employee.toJSON(),
     }));
 
-    // const payroll = await Payroll.findAll({
-    //     where:{ PayrollDefinitionId: payrollDefinitionId},
-    //     include:[
-    //         { model:Employee,
-    //             required: true,
-    //          attributes:['id'],
-    //           include: [
-    //            {
-    //              model:ProjectEmployee,
-    //              where:{
-    //                ProjectId:projectId
-    //              },
-    //              attributes:['id']
-    //            },
-
-    //           ]
-
-    //         }]
-
-    // })
     return res.status(200).json({ data: formattedData });
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -127,7 +107,6 @@ exports.getPayrollPublishedReport2 = async (req, res, next) => {
           .map((payroll) => {
             // Check if Payroll exists and has associated Employee
             if (payroll.Payroll && payroll.Payroll.Employee) {
-              // Extract necessary information for each payroll entry
               const {
                 id,
                 grossSalary,
@@ -1018,57 +997,7 @@ exports.downloadExcelReport = async (req, res, next) => {
     return next(createError.createError(500, "Internal server error"));
   }
 };
-exports.downloadExcelReport4 = async (req, res, next) => {
-  try {
-    const userData = [{ name: "John", age: 30, email: "john@example.com" }];
 
-    // Create a new workbook
-    const workbook = XLSX.utils.book_new();
-
-    // Add a worksheet
-    const worksheet = XLSX.utils.json_to_sheet([]);
-
-    // Set the value and styling for the header cell
-    worksheet["A1"] = {
-      v: "Employee Data",
-      s: { font: { bold: true }, alignment: { horizontal: "center" } },
-    };
-
-    // Merge cells to create the header spanning multiple columns
-    worksheet["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
-
-    // Apply font and alignment to the merged cell
-    worksheet["A1"].s = {
-      font: { bold: true },
-      alignment: { horizontal: "center" },
-    };
-
-    // Add the data starting from the second row
-    XLSX.utils.sheet_add_json(worksheet, userData, { origin: "A2" });
-
-    // Add the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
-
-    // Write the workbook to a buffer
-    const excelBuffer = XLSX.write(workbook, {
-      type: "buffer",
-      bookType: "xlsx",
-    });
-
-    // Set the response headers
-    res.set({
-      "Content-Disposition": 'attachment; filename="users.xlsx"',
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    // Send the Excel file as a response
-    res.send(excelBuffer);
-  } catch (error) {
-    console.error(error);
-    return next(createError.createError(500, "Internal server error"));
-  }
-};
 
 exports.getPayrollPublishedReportPerMonth = async (req, res, next) => {
   try {

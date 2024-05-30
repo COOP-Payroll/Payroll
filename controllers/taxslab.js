@@ -31,10 +31,7 @@ exports.getAllTaxslabs = async (req, res,next) => {
         taxslab,
       });
 
-      // return res.status(200).json({
-      //   count: taxslab.length,
-      //   taxslab,
-      // });
+  
     } else {
       const taxslabs = await Taxslab.findAll({
         where: { CompanyId: req.user.id, isActive: true },
@@ -66,12 +63,6 @@ exports.getTaxslabById = async (req, res,next) => {
     const { id } = req.params;
     const taxslab = await Taxslab.findOne({ where: { id: id } });
 
-    //  const taxslab = taxslabs.map((taxslab) => {
-    //    return {
-    //      ...taxslab.toJSON(),
-    //      to_Salary: parseInfinityBack(taxslab.to_Salary),
-    //    };
-    //  });
 
     if (!taxslab) {
       return res.status(404).json({ message: "TaxSlab not found" });
@@ -82,24 +73,8 @@ exports.getTaxslabById = async (req, res,next) => {
       return res.json(taxslab);
     }
   } catch (error) {
-    console.log("first error: " + error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -298,8 +273,8 @@ exports.assignTaxruleToCompany = async (req, res, next) => {
 
     return res.json(taxRule);
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -440,7 +415,8 @@ exports.createNewTaxslab= async(req,res,next)=>{
 
 
   } catch (error) {
-    console.log("error is ", error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
     
   }
 }

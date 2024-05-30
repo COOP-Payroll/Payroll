@@ -19,7 +19,7 @@ exports.getAllModules = async (req, res, next) => {
   }
 };
 
-exports.getAllowanceById = async (req, res) => {
+exports.getAllowanceById = async (req, res,next) => {
   try {
     const { id } = req.params;
 

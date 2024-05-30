@@ -3,6 +3,7 @@ const AdditionalpayDefinition = require("../models/additionalPayDefinition.js");
 const Grade = require("../models/grade");
 const Company = require("../models/company.js");
 const Employee = require("../models/employee.js");
+const createError = require('../utils/error')
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllAdditionalPay = async (req, res,next) => {
@@ -14,7 +15,8 @@ exports.getAllAdditionalPay = async (req, res,next) => {
         additionalPay,
       });
     } catch (error) {
-      next(error)
+      console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
     }
   };
 
@@ -28,7 +30,8 @@ exports.getAdditionalPayById = async (req, res,next) => {
      return  res.json(additionalPay);
     }
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -115,8 +118,8 @@ exports.createAdditionalPay = async (req, res, next) => {
       
     }
   } catch (error) {
-    console.log("error",error)
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -136,7 +139,8 @@ exports.updateAdditionalPay = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -153,6 +157,7 @@ exports.deleteAdditionalPay = async (req, res, next) => {
         .json({ message: "There is no Deduction Definition with this ID" });
     }
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };

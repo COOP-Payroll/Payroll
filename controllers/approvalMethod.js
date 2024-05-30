@@ -23,7 +23,6 @@ exports.getAllApprovalMethod = async (req, res,next) => {
     });
   } catch (err) {
     return next(createError.createError(500,"Internal server error"))
-    // res.status(500).json("Something gonna wrong");
   }
 };
 exports.getAllActiveApprovalMethod = async (req, res,next) => {
@@ -42,7 +41,6 @@ exports.getAllActiveApprovalMethod = async (req, res,next) => {
     });
   } catch (err) {
     return next(createError.createError(500,"Internal server error"))
-    // res.status(500).json("Something gonna wrong");
   }
 };
 exports.getAllInActiveApprovalMethod = async (req, res,next) => {
@@ -61,10 +59,8 @@ exports.getAllInActiveApprovalMethod = async (req, res,next) => {
     });
   } catch (err) {
     return next(createError.createError(500,"Internal server error"))
-    // res.status(500).json("Something gonna wrong");
   }
 };
-//save approval method
 async function saveApprovalMethod(
   CompanyId,
   minimumApprover,
@@ -123,7 +119,6 @@ exports.createApprovalMethod = async (req, res,next) => {
 
   if (isExist >= 1) {
     return next(createError.createError(409,"Approval method already setted"))
-    // return res.json("this company setted approval method");
   }
 
 
@@ -185,7 +180,6 @@ exports.createApprovalMethod = async (req, res,next) => {
   } catch (error) {
     console.log("first", error);
     return next(createError.createError(500,"Internal server error"))
-    // res.status(500).json("Something gonna wrong");
   }
 };
 async function reSaveApprovalMethod(
@@ -210,7 +204,6 @@ async function reSaveApprovalMethod(
     lastUpdated,
     isActive
   });
-  // return res.json(appMethod)
   const company = await Company.findByPk(Number(CompanyId));
 
   if (company) {
@@ -226,18 +219,11 @@ async function reSaveApprovalMethod(
   });
 
 
-  // await Employee.update({role:'employee'},{
-  //   where:{id:approver.EmployeeId}
-  // })
   const result = await ApprovalMethod.update({isActive:false}, {
     where: { id: oldId },
   });
   console.log(result);
-  // return {
-  //   success: true,
-  //   Message: "Successfully defined approvel method",
-  //   created: appMethod,
-  // };
+
 }
 exports.reCreateApprovalMethods = async(req,res,next)=>{
   const CompanyId = req.user.id;
@@ -279,25 +265,14 @@ exports.reCreateApprovalMethods = async(req,res,next)=>{
         isOldActive,
         isOldThereMasterApprover
       );
-       // check type of new and old approval are the same
-      //  if(approvalLevel>3){
-      //   console.log("approval level can only be upto three")
-      //   return next(createError.createError(400,"approval level can only be upto three level"))
-      //   // return res.json("approval level can only be upto three level")
-      //  }
-      
+    
 
         if((oldApprovalMethod===approvalMethod&&oldMinimumApprover===minimumApprover&&isOldThereMasterApprover===isThereMasterApprover&&CompanyId===req.user.id)||
           (oldApprovalMethod===approvalMethod&&oldApprovalLevel===approvalLevel&&isOldThereMasterApprover===isThereMasterApprover&&CompanyId===req.user.id)){
             
             console.log("This is the same with your previous approval method",oldApprovalMethod,approvalMethod)
             return next(createError.createError(409,"This is the same with your previous approval method"))
-            // return res.status(409).json({
-            //   message:"this is the same with your previous approval method",
-            //   oldApprovalMethod:oldApprovalMethod,
-            //   approvalMethod:approvalMethod
-            // })
-            
+         
           }else{
             if(oldApprovalMethod==='horizontal' && approvalMethod==='horizontal'){
               approvalLevel = 0;
@@ -376,19 +351,16 @@ exports.reCreateApprovalMethods = async(req,res,next)=>{
               }else{
                 console.log("undefined approval relationship")
                 return next(createError.createError(400,"undefined approval relationship"))
-                // return res.json("undefined approval relationship");
               }
             }else{
               console.log("undefined approval method")
               return next(createError.createError(404,"undefined approval methodp"))
-              // return res.json("undefined approval method");
             }
           }
       
     }else{
         console.log("define your  approval method first")
         return next(createError.createError(404,"define your  approval method first"))
-        // return res.statusjson("define your  approval method first");
     }
 
 }
@@ -439,7 +411,6 @@ exports.updateApprovalMethod = async (req, res, next) => {
     }
   } catch (error) {
     return next(createError.createError(500,"Internal server error"))
-    // res.status(500).json("Something gonna wrong");
   }
 };
 

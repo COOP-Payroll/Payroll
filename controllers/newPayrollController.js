@@ -1,7 +1,4 @@
 const Grade = require("../models/grade.js");
-
-// const AllowanceDefinition = require("../models/allowanceDefinition.js");
-
 const DeductionDefinition = require("../models/deductionDefinition.js");
 const { Op } = require("sequelize");
 const sequelize = require('../database/db');

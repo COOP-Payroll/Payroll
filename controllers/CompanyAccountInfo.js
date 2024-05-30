@@ -2,8 +2,9 @@
 // const CompanyAccountInfo = require("../models/companyAccountInfo");
 
 const CompanyAccountInfo = require("../models/companyAccountInfo");
+const createError= require("../utils/error")
 
-exports.createCompanyAccountInfo = async (req, res) => {
+exports.createCompanyAccountInfo = async (req, res,next) => {
   try {
     const CompanyId = Number(req.user.id);
 
@@ -50,25 +51,12 @@ exports.createCompanyAccountInfo = async (req, res) => {
       accountInfo: newAccountInfo,
     });
   } catch (error) {
-    console.error("Error creating company account info:", error);
-
-    if (
-      error.name === "SequelizeValidationError" ||
-      error.name === "SequelizeUniqueConstraintError"
-    ) {
-      const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`];
-        return acc;
-      }, {});
-      return res.status(404).json({message:errors});
-    } else {
-      // Handle other errors
-      res.status(500).json({ error: "Failed to create account info" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
-exports.getAllCompanyAccountInfo = async (req, res) => {
+exports.getAllCompanyAccountInfo = async (req, res,next) => {
   try {
     const CompanyId = Number(req.user.id);
     const companyAccountInfo = await CompanyAccountInfo.findOne({
@@ -87,11 +75,12 @@ exports.getAllCompanyAccountInfo = async (req, res) => {
 
     return res.status(200).json(companyAccountInfo);
   } catch (error) {
-    return res.json(error);
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
-exports.deleteCompanyAccountInfo = async (req, res) => {
+exports.deleteCompanyAccountInfo = async (req, res,next) => {
   try {
     const CompanyId = Number(req.user.id);
     const { id } = req.params;
@@ -105,11 +94,12 @@ exports.deleteCompanyAccountInfo = async (req, res) => {
       return res.json("company Account Info deleted successfully");
     }
   } catch (error) {
-    return res.json(error);
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
-exports.updateCompanyAccountInfo = async (req, res) => {
+exports.updateCompanyAccountInfo = async (req, res,next) => {
   try {
     const CompanyId = Number(req.user.id);
     const { isVerified, accountNumber } = req.body;
@@ -134,15 +124,17 @@ exports.updateCompanyAccountInfo = async (req, res) => {
       });
     }
   } catch (error) {
-    res.json(error);
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
-exports.verifyAccountNumber = (req, res) => {
+exports.verifyAccountNumber = (req, res,next) => {
   try {
     const { accountNumber } = req.body;
     res.status(200).json({ fullName: "boo faz baz", accountType: "Saving" });
   } catch (error) {
-    res.json(error);
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };

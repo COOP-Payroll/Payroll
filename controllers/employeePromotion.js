@@ -1,8 +1,8 @@
 const EmployeePromotion = require('../models/employeePromotion');
 const Employee = require('../models/employee');
 const Grade = require('../models/grade')
-
-const createPromotion = async (req, res) => {
+const createError= require("../utils/error")
+const createPromotion = async (req, res,next) => {
   try {
     const { employeeId, position, salary, gradeId } = req.body;
 
@@ -36,14 +36,14 @@ const createPromotion = async (req, res) => {
 
     return res.status(201).json(promotion);
   } catch (error) {
-    console.error('Error creating promotion:', error);
-    return res.status(500).json({ error: 'An error occurred' });
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
 
   
-  const getEmployeePromotion = async (req, res) => {
+  const getEmployeePromotion = async (req, res,next) => {
     try {
       const employeeId = req.params.employeeId; // Assuming you're passing employeeId in the route parameters
   
@@ -54,12 +54,12 @@ const createPromotion = async (req, res) => {
       
       return res.status(200).json(promotions);
     } catch (error) {
-      console.error('Error fetching promotions:', error);
-      return res.status(500).json({ error: 'An error occurred' });
+      console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
     }
   };
 
-  const getActiveEmployeePromotion = async (req, res) => {
+  const getActiveEmployeePromotion = async (req, res,next) => {
     try {
       const employeeId = req.params.employeeId; // Assuming you're passing employeeId in the route parameters
   
@@ -70,8 +70,8 @@ const createPromotion = async (req, res) => {
   
       return res.status(200).json(promotions);
     } catch (error) {
-      console.error('Error fetching promotions:', error);
-      return res.status(500).json({ error: 'An error occurred' });
+      console.log(error)
+      return next(createError.createError(500, 'Internal Server Error'));
     }
   };
   

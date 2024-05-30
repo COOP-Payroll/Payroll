@@ -1,7 +1,8 @@
 const Address = require("../models/address");
 const Employee = require("../models/employee");
+const createError = require('../utils/error.js')
 
-exports.updateAddress = async (req, res) => {
+exports.updateAddress = async (req, res,next) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
     if (!employee) return res.status(404).json({ message: "employee not found" });
@@ -29,17 +30,7 @@ exports.updateAddress = async (req, res) => {
         .json({ message: "can't find active employee address!" });
     }
   } catch (error) {
-    console.error(error);
-    if (
-      error.name === "SequelizeValidationError" ||
-      error.name === "SequelizeUniqueConstraintError"
-    ) {
-      const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`];
-        return acc;
-      }, {});
-      return res.status(400).json({message:errors});
-    }
-    return res.status(500).json({ message: "Internal server error" });
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };

@@ -19,9 +19,9 @@ const signToken = (id, role) => {
       expiresIn: '90d' // Set your desired expiration time for refresh tokens
     })
     return  { token, refreshToken }
-  } catch (err) {
-    // res.json(err);
-    return err;
+  } catch (error) {
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 

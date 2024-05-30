@@ -63,7 +63,6 @@ exports.getOne = async (req, res, next) => {
 }
 exports.createPositions = async (req, res, next) => {
   try {
-    //insert required field
 
     const { positionName, description } = req.body
 

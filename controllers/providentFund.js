@@ -1,8 +1,8 @@
 const ProvidentFund = require("../models/providentFund.js");
-const createError=require("../utils/error.js");
+const createError = require("../utils/error.js");
 const { Op, where } = require('sequelize');
 // Define controller methods for handling User requests
-exports.getAllProvidentFund = async (req, res) => {
+exports.getAllProvidentFund = async (req, res, next) => {
   try {
     if (req.user.role === "superAdmin") {
       const ProvidentFunds = await ProvidentFund.findAll({
@@ -22,49 +22,19 @@ exports.getAllProvidentFund = async (req, res) => {
       });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
-exports.getProvidentFundById = async (req, res) => {
+exports.getProvidentFundById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const providentFunds = await ProvidentFund.findByPk(id);
     res.json(providentFunds);
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -77,7 +47,7 @@ exports.createProvidentFund = async (req, res, next) => {
         where: { userId: req.user.id },
       });
 
-     if (!getAllProvidentFund || getAllProvidentFund.length == 0){
+      if (!getAllProvidentFund || getAllProvidentFund.length == 0) {
         const ProvidentFunds = await ProvidentFund.create({
           employerContribution,
           employeeContribution,
@@ -94,7 +64,7 @@ exports.createProvidentFund = async (req, res, next) => {
       const getAllProvidentFund = await ProvidentFund.findAll({
         CompanyId: req.user.id,
       });
-   
+
       if (!getAllProvidentFund || getAllProvidentFund.length == 0) {
         const ProvidentFunds = await ProvidentFund.create({
           employerContribution,
@@ -112,23 +82,8 @@ exports.createProvidentFund = async (req, res, next) => {
       }
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -184,24 +139,8 @@ exports.updateProvidentFund = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -213,7 +152,7 @@ exports.deleteProvidentFund = async (req, res, next) => {
       const providentFund = await ProvidentFund.findOne({
         where: { id: id, UserId: req.user.id },
       });
-      if (!providentFund ) {
+      if (!providentFund) {
         await ProvidentFund.destroy({ where: { id: id, UserId: req.user.id } });
         return res.status(200).json({ message: "Deleted successfully" });
       } else {
@@ -222,12 +161,12 @@ exports.deleteProvidentFund = async (req, res, next) => {
           .json({ message: "There is no ProvidentFund with this ID" });
       }
     } else if (req.user.role === "companyAdmin") {
-        
+
       const providentFund = await ProvidentFund.findOne({
         where: { id: id, CompanyId: req.user.id },
       });
-      console.log("provident fund",providentFund === null)
-      if ( !providentFund || providentFund.length === 0 || providentFund ===null) {
+      console.log("provident fund", providentFund === null)
+      if (!providentFund || providentFund.length === 0 || providentFund === null) {
         return res
           .status(409)
           .json({ message: "There is no ProvidentFund with this ID" });
@@ -237,23 +176,8 @@ exports.deleteProvidentFund = async (req, res, next) => {
       }
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'));
   }
 };
 
@@ -262,15 +186,7 @@ exports.deleteProvidentFund = async (req, res, next) => {
 
 exports.restoreToDefault = async (req, res, next) => {
   try {
-    // const superAdmin = await User.findAll({ where: { role: "superAdmin" } });
 
-    // 
-    // const providentFunds = await ProvidentFund.findAll({
-    //   where: {  UserId: { [Op.ne]: null },isActive:true },
-    // });
-    // if(providentFunds.length === 0){
-    //   return next(createError.createError(404,"providentFunds is not Defined define your own"))
-    // }
     const deletedData = await ProvidentFund.update(
       {
         isActive: false,
@@ -285,33 +201,22 @@ exports.restoreToDefault = async (req, res, next) => {
 
 
 
- const PF=  await ProvidentFund.create({         
+    const PF = await ProvidentFund.create({
       employeeContribution: 0,
       employerContribution: 0,
       CompanyId: Number(req.user.id),
-      isActive:true,
+      isActive: true,
       UserId: null,
     });
-    // const providentFund = await Promise.all(
-    //   providentFunds.map((providentFund) => {
-    //     return ProvidentFund.create({         
-    //       employeeContribution: Number(providentFund.employeeContribution),
-    //       employerContribution: Number(providentFund.employerContribution),
-    //       CompanyId: Number(req.user.id),
-    //       isActive:true,
-    //       UserId: null,
-    //     });
-    //   })
-    // );
-   
-    
+
+
     res.status(200).json({
-      success:true,
+      success: true,
       message: "Restored to default",
-      data:PF,
+      data: PF,
     });
   } catch (error) {
     console.log(error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(500, "Internal server error"))
   }
 };

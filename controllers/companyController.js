@@ -71,20 +71,11 @@ exports.createCompany1 = async (req, res, next) => {
       )
     }
 
-    // const existingAccount = await CompanyAccountInfo.findOne({
-    //   where: { accountNumber },
-    //   transaction,
-    // });
-
-    // if (existingAccount) {
-    //   await transaction.rollback();
-    //   return res.status(409).json({ error: "Account Info already exists" });
-    // }
+  
 
     const package = await Package.findByPk(packageId, { transaction })
 
     if (!package) {
-      // await transaction.rollback()
       return next(createError.createError(404, 'Package does not exist'))
     }
 

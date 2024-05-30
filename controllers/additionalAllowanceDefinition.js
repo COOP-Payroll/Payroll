@@ -1,5 +1,7 @@
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const Company = require("../models/company");
+const createError = require('../utils/error')
+
 // Define controller methods for handling User requests
 exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
   const Company = req.user.id;
@@ -15,35 +17,20 @@ exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
       AdditionalAllowanceDefinitions,
     });
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
-exports.getAdditionalAllowanceDefinitionById = async (req, res) => {
+exports.getAdditionalAllowanceDefinitionById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const AdditionalAllowanceDefinition =
       await AdditionalAllowanceDefinition.findByPk(id);
     res.json(AdditionalAllowanceDefinition);
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))}
 };
 
 exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
@@ -79,23 +66,8 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
@@ -123,24 +95,8 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log("first", error);
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -161,24 +117,8 @@ exports.deleteAdditionalAllowanceDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({message:errors});
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
-//name,isTaxable,isExempted,exemptedAmount,startingAmount

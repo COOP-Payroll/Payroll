@@ -29,6 +29,26 @@ const { Op } = require("sequelize");
 const createError= require('../utils/error.js')
 // Define controller methods for handling User requests
 const Position=require("../models/position.js")
+
+const xlsx = require("xlsx");
+const AdditionalAllowance = require("../models/additionalAllowance.js");
+const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
+const AdditionalDeduction = require("../models/additionalDeduction.js");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
+const EmployeeGrade = require("../models/EmployeeGrade.js");
+const EmployeeDepartment = require("../models/EmployeeDepartment.js");
+const Sponsor = require("../models/sponsor.js");
+const EmployeePosition = require("../models/employeePosition.js");
+const Approver = require("../models/approver.js");
+const ApprovalMethod = require("../models/approvalMethod.js");
+const { model } = require("mongoose");
+
+const storage4 = multer.memoryStorage();
+// create instance of multer and specify storage engine
+const upload4 = multer({ storage: storage4 }).single("file");
+
+
+
 exports.getAllEmployee = async (req, res,next) => {
   try {
     const Employees = await Employee.findAll({
@@ -863,22 +883,6 @@ exports.findByDepartment = async (req, res, next) => {
 };
 
 //Import from Excel
-const xlsx = require("xlsx");
-const AdditionalAllowance = require("../models/additionalAllowance.js");
-const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
-const AdditionalDeduction = require("../models/additionalDeduction.js");
-const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
-const EmployeeGrade = require("../models/EmployeeGrade.js");
-const EmployeeDepartment = require("../models/EmployeeDepartment.js");
-const Sponsor = require("../models/sponsor.js");
-const EmployeePosition = require("../models/employeePosition.js");
-const Approver = require("../models/approver.js");
-const ApprovalMethod = require("../models/approvalMethod.js");
-const { model } = require("mongoose");
-
-const storage4 = multer.memoryStorage();
-// create instance of multer and specify storage engine
-const upload4 = multer({ storage: storage4 }).single("file");
 
 exports.createEmployeeFile = async (req, res, next) => {
   upload4(req, res, async (err) => {
@@ -1305,7 +1309,7 @@ function generateUniqueCode() {
 }
 
 
-exports.createEmployee_new = async (req, res) => {
+exports.createEmployee_new = async (req, res,next) => {
   const {
     address,
     employeeInfo,

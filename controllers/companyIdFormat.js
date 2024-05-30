@@ -3,7 +3,7 @@ const createError = require('.././utils/error.js')
 const successResponse = require('.././utils/successResponse.js')
 
 // create CompanyIdFormat
-exports.createCompanyIdFormat = async (req, res) => {
+exports.createCompanyIdFormat = async (req, res,next) => {
   // const { companyCode, year, department, separator, order } = req.body;
   try {
     const companyIds = await IdFormat.findAll({
@@ -22,7 +22,7 @@ exports.createCompanyIdFormat = async (req, res) => {
 };
 
 // get all companyIdFormat
-exports.getAllCompanyIdFormat = async (req, res) => {
+exports.getAllCompanyIdFormat = async (req, res,next) => {
   try {
     const IdFormates = await IdFormat.findAll({
       where: { CompanyId: Number(req.user.id) },
@@ -45,7 +45,7 @@ exports.getAllCompanyIdFormat = async (req, res) => {
 };
 
 // delete Company
-exports.deleteCompanyIdFormat = async (req, res) => {
+exports.deleteCompanyIdFormat = async (req, res,next) => {
   const { id } = req.params;
   try {
     const company = await IdFormat.findByPk(Number(id));
@@ -60,7 +60,7 @@ exports.deleteCompanyIdFormat = async (req, res) => {
   }
 };
 
-exports.updateCompanyIdFormat = async (req, res) => {
+exports.updateCompanyIdFormat = async (req, res,next) => {
   try {
     const { id } = req.params;
     const { data } = req.body;
@@ -69,22 +69,20 @@ exports.updateCompanyIdFormat = async (req, res) => {
     if (!idFormat)
       return res.status(404).json({ error: "Id format not found" });
     // idFormat.isActive = false;
-    try {
+
   const updatedIdFormat=    await idFormat.update(req.body);
 
         return res.status(200).json({ msg: "id format updated successfully" ,
         updatedIdFormat
       });
    
-    } catch (error) {
-      return next(createError.createError(500, 'Internal server error'));
-    }
+  
   } catch (error) {
     return next(createError.createError(500, 'Internal server error'));
   }
 };
 
-exports.getActiveCompany = async (req, res) => {
+exports.getActiveCompany = async (req, res,next) => {
   try {
     const activeCompanyId = await IdFormat.findOne({
       where: { isActive: true, CompanyId: Number(req.user.id) },

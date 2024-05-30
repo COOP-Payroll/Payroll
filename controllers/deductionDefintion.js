@@ -1,7 +1,9 @@
 const DeductionDefinition = require("../models/deductionDefinition");
 const Company = require("../models/company");
+
+const createError= require("../utils/error")
 // Define controller methods for handling User requests for deduction definition
-exports.getAllDeductionDefinition = async (req, res) => {
+exports.getAllDeductionDefinition = async (req, res,next) => {
   const Company = req.user.id;
   console.log(Company);
   try {
@@ -21,7 +23,7 @@ exports.getAllDeductionDefinition = async (req, res) => {
   }
 };
 
-exports.getDeductionDefinitionById = async (req, res) => {
+exports.getDeductionDefinitionById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const deductionDefinition = await DeductionDefinition.findByPk(id);

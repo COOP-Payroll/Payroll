@@ -1,5 +1,6 @@
 const AdditionalPayDefinition = require("../models/additionalPayDefinition");
 const Company = require("../models/company");
+const createError = require('../utils/error')
 // Define controller methods for handling User requests
 exports.getAllAdditionalPayDefinition = async (req, res,next) => {
   const Company = req.user.id;
@@ -16,7 +17,8 @@ exports.getAllAdditionalPayDefinition = async (req, res,next) => {
       AdditionalPayDefinitions,
     });
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -26,7 +28,8 @@ exports.getAdditionalPayDefinitionById = async (req, res,next) => {
     const AdditionalPayDefinitions = await AdditionalPayDefinition.findByPk(id);
     res.json(AdditionalPayDefinitions);
   } catch (error) {
-    next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -55,7 +58,8 @@ exports.createAdditionalPayDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    next(error);
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -97,7 +101,8 @@ exports.updateAdditionalPayDefinition = async (req, res, next) => {
       }
     }
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };
 
@@ -116,6 +121,7 @@ exports.deleteAdditionalPayDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-   next(error)
+    console.log(error)
+    return next(createError.createError(500, 'Internal Server Error'))
   }
 };

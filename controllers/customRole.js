@@ -5,7 +5,7 @@ const Employee = require("../models/employee.js");
 const createError = require("../utils/error.js");
 
 // Define controller methods for handling User requests for deduction definition
-exports.getAllCustomRole = async (req, res) => {
+exports.getAllCustomRole = async (req, res,next) => {
 
 
   try {
@@ -23,7 +23,7 @@ exports.getAllCustomRole = async (req, res) => {
   }
 };
 
-exports.getCustomRoleById = async (req, res) => {
+exports.getCustomRoleById = async (req, res,next) => {
   try {
     const { id } = req.params;
 
