@@ -181,19 +181,19 @@ console.log()
 // sequelize.sync({ logging: console.log });
 // sequelize.sync({ alter: false }).then(() => console.log("db is ready"));
   
-const runWorker = (employeeId, payrollDefinitionId, user) => {
-  const worker = new Worker("./controllers/newWorker.js", {
-    workerData: { employeeId, user, payrollDefinitionId },
-  });
-};
+// const runWorker = (employeeId, payrollDefinitionId, user) => {
+//   const worker = new Worker("./controllers/newWorker.js", {
+//     workerData: { employeeId, user, payrollDefinitionId },
+//   });
+// };
 
-const runComputation = async (payrolls) => {
-  payrolls.forEach((payroll) => {
-    const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
-    runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.CompanyId);
+// const runComputation = async (payrolls) => {
+//   payrolls.forEach((payroll) => {
+//     const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
+//     runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.CompanyId);
   
-  });
-};
+//   });
+// };
 
 let isRunning = false;
 console.log(process.env.PORT)
@@ -212,5 +212,5 @@ app.listen(process.env.PORT ||4400, () => {
   //     isRunning = true;
   //   }
   // });
-  console.log(`Server is running on port: ${process.env.PORT}`);
+  console.log(`Server is running on port: ${process.env.DB_PORT}`);
 });

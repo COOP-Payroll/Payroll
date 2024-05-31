@@ -185,5 +185,5 @@ module.exports = sequelize;
 //     console.error('Erro r synchronizing database:', error);
 //   });
   
-testConnection();
-module.exports = sequelize;
+// testConnection();
+// module.exports = sequelize;
