@@ -101,53 +101,53 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser());
-app.use("/user", userRouter);
-app.use("/company", companyRouter);
-app.use("/reports", ReportRoutes);
-app.use("/package", packageRouter);
-app.use("/packages",packageRoutes)
-app.use("/taxslab", taxslabRouter);
-app.use("/pension", pensionRouter);
-app.use("/department", deptRouter);
-app.use("/subscription", subscriptionRouter);
-app.use("/", authRouter);
-app.use("/employee", employeeRouter);
-app.use("/companyIdFormat", companyIdRouter);
-app.use("/allowancedefinition", allowanceDefinition);
-app.use("/allowance", allowance);
-app.use("/deductiondefinition", deductionDefinition);
-app.use("/loanDefinition", loanDefinition);
-app.use("/loan", loanRoute);
-app.use("/deduction", deduction);
-app.use("/grade", grade);
-app.use("/approver", approver);
-app.use("/payroll", payrollRouter);
-app.use("/positions", position);
-app.use("/approvalmethod", approvalMethod);
-app.use("/payrollDefinition", payrollDefinition);
-app.use("/PayrollApprovement", payrollApprovement);
-app.use("/customRole", customRoleRouter);
-app.use("/companyAccInfo", companyAccountInfoRouter);
-app.use("/employeeAccInfo", employeeAccountInfoRouter);
-app.use("/additionalDeductionDefinition", additionalDeductionDefinition);
-app.use("/additionalDeduction", additionalDeduction);
-app.use("/additionalAllowanceDefinition", additionalAllowanceDefinition);
-app.use("/additionalAllowance", additionalAllowance);
-app.use("/providentFund", providentFund);
-app.use("/newPayroll", newPayroll);
-app.use("/module", moduleRoute);
-app.use("/address", addressRoute);
-app.use("/sponsors",Sponsors)
-app.use("/projects", Projects)
+app.use("/api/user", userRouter);
+app.use("/api/company", companyRouter);
+app.use("/api/reports", ReportRoutes);
+app.use("/api/package", packageRouter);
+app.use("/api/packages",packageRoutes)
+app.use("/api/taxslab", taxslabRouter);
+app.use("/api/pension", pensionRouter);
+app.use("/api/department", deptRouter);
+app.use("/api/subscription", subscriptionRouter);
+app.use("/api", authRouter);
+app.use("/api/employee", employeeRouter);
+app.use("/api/companyIdFormat", companyIdRouter);
+app.use("/api/allowancedefinition", allowanceDefinition);
+app.use("/api/allowance", allowance);
+app.use("/api/deductiondefinition", deductionDefinition);
+app.use("/api/loanDefinition", loanDefinition);
+app.use("/api/loan", loanRoute);
+app.use("/api/deduction", deduction);
+app.use("/api/grade", grade);
+app.use("/api/approver", approver);
+app.use("/api/payroll", payrollRouter);
+app.use("/api/positions", position);
+app.use("/api/approvalmethod", approvalMethod);
+app.use("/api/payrollDefinition", payrollDefinition);
+app.use("/api/PayrollApprovement", payrollApprovement);
+app.use("/api/customRole", customRoleRouter);
+app.use("/api/companyAccInfo", companyAccountInfoRouter);
+app.use("/api/employeeAccInfo", employeeAccountInfoRouter);
+app.use("/api/additionalDeductionDefinition", additionalDeductionDefinition);
+app.use("/api/additionalDeduction", additionalDeduction);
+app.use("/api/additionalAllowanceDefinition", additionalAllowanceDefinition);
+app.use("/api/additionalAllowance", additionalAllowance);
+app.use("/api/providentFund", providentFund);
+app.use("/api/newPayroll", newPayroll);
+app.use("/api/module", moduleRoute);
+app.use("/api/address", addressRoute);
+app.use("/api/sponsors",Sponsors)
+app.use("/api/projects", Projects)
 
-app.use("/employeePayrollApprovement", employeePayrollApprovement);
-app.use("/payment", ebirrPayment);
+app.use("/api/employeePayrollApprovement", employeePayrollApprovement);
+app.use("/api/payment", ebirrPayment);
 // app.use("/s1", stripePayment);
-app.use("/employeePayrollApprovement", employeePayrollApprovement);
-app.use("/additionalPay", additionalPayDefinition);
-app.use("/additionalpayment", additionalPay);
-app.use("/payment", ebirrPayment);
-app.use("/accountNumber/verify",checkAccountNumber)
+app.use("/api/employeePayrollApprovement", employeePayrollApprovement);
+app.use("/api/additionalPay", additionalPayDefinition);
+app.use("/api/additionalpayment", additionalPay);
+app.use("/api/payment", ebirrPayment);
+app.use("/api/accountNumber/verify",checkAccountNumber)
 // app.use("/employeePromotion", employeePromotion);
 
 const swaggerOptions = {
@@ -156,7 +156,7 @@ const swaggerOptions = {
   },
 };
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec,swaggerOptions));
+app.use('/api/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec,swaggerOptions));
 
 
 app.use((req, res, next) => {
@@ -169,7 +169,7 @@ app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;
   const errorMessage = err.message || "Something went Wrong";
-console.log()
+// console.log()
   return res.status(errorStatus).json({
     success: false,
     status: errorStatus,
@@ -212,5 +212,5 @@ app.listen(process.env.PORT ||4400, () => {
   //     isRunning = true;
   //   }
   // });
-  console.log(`Server is running on port: ${process.env.DB_PORT}`);
+  console.log(`Server is running on port: ${process.env.PORT}`);
 });
