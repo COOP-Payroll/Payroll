@@ -8,10 +8,10 @@ const Permission = require("../models/permission");
 const cookieParser = require("cookie-parser");
 const  createError  = require("../utils/error");
 
-const signToken = (id, role) => {
+const signToken = (id, role,fullName,phoneNumber) => {
   try {
 
-    const token = jwt.sign({ id, role }, 'secret', {
+    const token = jwt.sign({ id, role ,fullName,phoneNumber}, 'secret', {
       expiresIn: '7d'
     })
 
@@ -76,7 +76,7 @@ const createSendTokenCompany = async (company, statusCode, res) => {
 };
 const createSendToken = async (company, statusCode, res) => {
   try {
-    const {token,refreshToken} = signToken(company.id, company.role);
+    const {token,refreshToken} = signToken(company.id, company.role,company.fullName,company.phoneNumber);
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
@@ -86,10 +86,10 @@ const createSendToken = async (company, statusCode, res) => {
     company.password = undefined
     res.cookie('jwt', token, cookieOptions)
     res.status(statusCode).json({
-       data: {
-        company,
-        // refreshToken
-      },
+      //  data: {
+      //   company,
+      //   // refreshToken
+      // },
       token,
       refreshToken  
     })
