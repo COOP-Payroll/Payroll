@@ -1,103 +1,120 @@
-const sequelize = require('../database/db')
-const AccountInfo = require('../models/accountInfo')
-const IdFormat = require('../models/companyIdFormat')
-const Department = require('../models/department')
-const Employee = require('../models/employee')
-const Grade = require('../models/grade')
-const Address = require('../models/address')
-const EmployeeInfo = require('../models/employeInfo')
-const EmergencyContact = require('../models/emergency_Contact')
-const EmployeeDepartment = require('../models/EmployeeDepartment')
-const EmployeeGrade = require('../models/EmployeeGrade')
-const sendEmail = require('../utils/sendEmail.js')
-const { v4: uuidv4 } = require('uuid')
-const crypto = require('crypto')
-const Projects = require('../models/projects.js')
-const ProjectEmployee = require('../models/project-employee.js')
-const Position = require('../models/position.js')
-const EmployeePosition = require('../models/employeePosition.js')
-const createError = require('../utils/error.js')
-const { Sequelize } = require('sequelize')
-const EmployeePromotion = require('../models/employeePromotion.js')
-const { model } = require('mongoose')
-exports.createEmployee = async (req, res,next) => {
+const sequelize = require("../database/db");
+const AccountInfo = require("../models/accountInfo");
+const IdFormat = require("../models/companyIdFormat");
+const Department = require("../models/department");
+const Employee = require("../models/employee");
+const Grade = require("../models/grade");
+const Address = require("../models/address");
+const EmployeeInfo = require("../models/employeInfo");
+const EmergencyContact = require("../models/emergency_Contact");
+const EmployeeDepartment = require("../models/EmployeeDepartment");
+const EmployeeGrade = require("../models/EmployeeGrade");
+const sendEmail = require("../utils/sendEmail.js");
+const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
+const Projects = require("../models/projects.js");
+const ProjectEmployee = require("../models/project-employee.js");
+const Position = require("../models/position.js");
+const EmployeePosition = require("../models/employeePosition.js");
+const createError = require("../utils/error.js");
+const { Sequelize } = require("sequelize");
+const EmployeePromotion = require("../models/employeePromotion.js");
+const { model } = require("mongoose");
+const xlsx = require("xlsx");
+const ExcelJS = require("exceljs");
+const fs = require("fs");
+const path = require("path");
+exports.createEmployee = async (req, res, next) => {
   const {
     address,
     employeeInfo,
     emergencyInfo,
     basicInfo,
-    accountInformation
-  } = req.body
-
+    accountInformation,
+  } = req.body;
 
   try {
     // return res.json(req.basicInfo)
 
-    console.log("department",!basicInfo?.DepartmentId)
-    console.log("department",!basicInfo?.GradeId)
-    console.log("department",!basicInfo?.emergencyInfo)
+    console.log("department", !basicInfo?.DepartmentId);
+    console.log("department", !basicInfo?.GradeId);
+    console.log("department", !basicInfo?.emergencyInfo);
 
-  if(!basicInfo?.DepartmentId  || !basicInfo?.GradeId ){
-    return next(createError.createError(400,"Please provide all required information"))
+    if (!basicInfo?.DepartmentId || !basicInfo?.GradeId) {
+      return next(
+        createError.createError(400, "Please provide all required information")
+      );
+    }
 
-  }
-  
-  if (!accountInformation || accountInformation?.[0]?.accountNumber=== undefined) {
-  return next(createError.createError(400,"Account number is required"))
+    if (
+      !accountInformation ||
+      accountInformation?.[0]?.accountNumber === undefined
+    ) {
+      return next(createError.createError(400, "Account number is required"));
+    }
 
-  }
-
-
-  const accountNumbers = accountInformation?.map(acct => acct.accountNumber)
-  console.log('employeIfo', employeeInfo.position)
+    const accountNumbers = accountInformation?.map(
+      (acct) => acct.accountNumber
+    );
+    // console.log('employeIfo', employeeInfo.position)
     const [position, grade, department, employee, accountInfos, idformat] =
       await Promise.all([
-        Position.findOne({where:{id:Number(employeeInfo.position), CompanyId:req.user.id}}),
+        Position.findOne({
+          where: { id: Number(employeeInfo.position), CompanyId: req.user.id },
+        }),
         Grade.findByPk(Number(basicInfo?.GradeId)),
         Department.findByPk(Number(basicInfo?.DepartmentId)),
         Employee.findOne({ where: { email: basicInfo?.email } }),
         AccountInfo.findAll({ where: { accountNumber: accountNumbers } }),
         IdFormat.findOne({
-          where: { CompanyId: Number(req.user.id), isActive: true }
-        })
+          where: { CompanyId: Number(req.user.id), isActive: true },
+        }),
       ]);
 
-    const errors = []
+    const errors = [];
     if (!position) {
-
-      return next(createError.createError(404,"Position not found"))
+      return next(createError.createError(404, "Position not found"));
       // errors.push({ error: 'Position does not exist.' })
     }
     if (!grade) {
-      return next(createError.createError(404,"Grade not found"))
+      return next(createError.createError(404, "Grade not found"));
       // errors.push({ error: 'Grade does not exist.' })
     }
 
     if (!department) {
-      return next(createError.createError(404,"Department not found"))
+      return next(createError.createError(404, "Department not found"));
       // errors.push({ error: 'Department does not exist.' })
     }
     if (
       employeeInfo.basicSalary < grade?.minSalary ||
       employeeInfo.basicSalary > grade?.maxSalary
     ) {
-
-      return next(createError.createError(404,`Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`))
+      return next(
+        createError.createError(
+          404,
+          `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+        )
+      );
       // errors.push({
-        
+
       //   error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
       // })
     }
 
     if (employee) {
-      return next(createError.createError(404,`Employee already exists with ${basicInfo?.email} email.`))
+      return next(
+        createError.createError(
+          404,
+          `Employee already exists with ${basicInfo?.email} email.`
+        )
+      );
       // errors.push({
       //   error: `Employee already exists with ${basicInfo?.email} email.`
       // })
     }
 
     if (accountInfos.length > 0) {
-      return next(createError.createError(404,'Account infos already exist.'))
+      return next(createError.createError(404, "Account infos already exist."));
       // errors.push({ error: 'Account infos already exist.' })
     }
 
@@ -108,47 +125,50 @@ exports.createEmployee = async (req, res,next) => {
     //   return res.status(404).json({ message: errors })
     // }
 
-    let password = req?.user?.companyCode?.substring(0, 4) + '0000'
-    await sequelize.transaction(async t => {
-      const imagePath = req?.files?.['basicInfo[image]']?.[0]?.path || null
-      const idImagePath = req?.files?.['basicInfo[id_image]']?.[0]?.path || null
+    let password = req?.user?.companyCode?.substring(0, 4) + "0000";
+    await sequelize.transaction(async (t) => {
+      const imagePath = req?.files?.["basicInfo[image]"]?.[0]?.path || null;
+      const idImagePath =
+        req?.files?.["basicInfo[id_image]"]?.[0]?.path || null;
 
-      const formatElements = idformat?.order?.split(',')
+      const formatElements = idformat?.order?.split(",");
       const lastEmployee = await Employee.findOne({
-        order: [['createdAt', 'DESC']]
-      })
-      let paddedEmployeeCode = '00001'
+        order: [["createdAt", "DESC"]],
+      });
+      let paddedEmployeeCode = "00001";
 
       if (lastEmployee) {
-        const lastEmployeeId = lastEmployee.employee_id_number
-        const lastEmployeeCode = lastEmployeeId.split(idformat?.separator)?.pop()
-        const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1
+        const lastEmployeeId = lastEmployee.employee_id_number;
+        const lastEmployeeCode = lastEmployeeId
+          .split(idformat?.separator)
+          ?.pop();
+        const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1;
         paddedEmployeeCode = incrementedEmployeeCode
           .toString()
-          .padStart(idformat?.digitLength, '0')
+          .padStart(idformat?.digitLength, "0");
       }
 
-      let employeeId = ''
+      let employeeId = "";
       for (let i = 0; i < formatElements.length; i++) {
-        const element = formatElements[i]
+        const element = formatElements[i];
         switch (element) {
-          case 'companyCode':
-            employeeId += idformat?.companyCode
-            break
-          case 'year':
-            employeeId += employeeInfo.hireDate.split('-')[0]
-            break
-          case 'department':
-            employeeId += department.shorthandRepresentation
-            break
+          case "companyCode":
+            employeeId += idformat?.companyCode;
+            break;
+          case "year":
+            employeeId += employeeInfo.hireDate.split("-")[0];
+            break;
+          case "department":
+            employeeId += department.shorthandRepresentation;
+            break;
         }
 
         if (i !== formatElements.length - 1) {
-          employeeId += idformat?.separator
+          employeeId += idformat?.separator;
         }
       }
 
-      employeeId += idformat?.separator + paddedEmployeeCode
+      employeeId += idformat?.separator + paddedEmployeeCode;
       const createEmployee = await Employee.create(
         {
           ...basicInfo,
@@ -157,94 +177,94 @@ exports.createEmployee = async (req, res,next) => {
           image: imagePath,
           id_image: idImagePath,
           CompanyId: Number(req.user.id),
-          employee_id_number: employeeId
+          employee_id_number: employeeId,
         },
         { transaction: t }
-      )
-console.log("data")
+      );
+      // console.log("data")
       const junctionCreate = await EmployeeDepartment.create(
         {
           EmployeeId: Number(createEmployee.id),
           DepartmentId: Number(department.id),
-          active: true
+          active: true,
         },
         { transaction: t }
-      )
+      );
 
       const junctionGrade = await EmployeeGrade.create(
         {
           EmployeeId: Number(createEmployee.id),
           GradeId: Number(grade.id),
-          active: true
+          active: true,
         },
         { transaction: t }
-      )
+      );
 
       const junctionPosition = await EmployeePosition.create(
         {
           EmployeeId: Number(createEmployee.id),
-          PositionId: Number(position.id)
+          PositionId: Number(position.id),
         },
         { transaction: t }
-      )
+      );
       const createAddress = await Address.create(
         { ...address, EmployeeId: createEmployee.id, isActive: true },
         { transaction: t }
-      )
+      );
 
       const createEmployeeInfo = await EmployeeInfo.create(
         { ...employeeInfo, isActive: true, EmployeeId: createEmployee.id },
         { transaction: t }
-      )
+      );
 
       const createdEmergencyInfos = await EmergencyContact.bulkCreate(
-        emergencyInfo.map(info => ({
+        emergencyInfo.map((info) => ({
           ...info,
           isActive: true,
-          EmployeeId: createEmployee.id
+          EmployeeId: createEmployee.id,
         })),
         { transaction: t }
-      )
+      );
 
       const accountImages = accountInformation.map((info, index) => {
-        const key = `accountInformation[${index}][image]`
-        return req?.files?.[key]?.[0]?.path || null
-      })
+        const key = `accountInformation[${index}][image]`;
+        return req?.files?.[key]?.[0]?.path || null;
+      });
 
       const createdAccountInformations = await AccountInfo.bulkCreate(
         accountInformation.map((info, index) => ({
           ...info,
           EmployeeId: createEmployee.id,
           isActive: info.isActive || true,
-          image: accountImages[index]
+          image: accountImages[index],
         })),
         { transaction: t }
-      )
+      );
 
       const generateConfirmationToken = () => {
-        return crypto.randomBytes(20).toString('hex')
-      }
-      const token = generateConfirmationToken()
-      const expirationDate = new Date()
-      expirationDate.setDate(expirationDate.getDate() + 7)
+        return crypto.randomBytes(20).toString("hex");
+      };
+      const token = generateConfirmationToken();
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 7);
 
       // Format the expiration date as a string
-      const formattedExpirationDate = expirationDate.toDateString()
+      const formattedExpirationDate = expirationDate.toDateString();
 
       // Generate unique acceptance and rejection codes
-      const acceptanceCode = token
-      const rejectionCode = expirationDate
-      console.log('generateUniqueCode', acceptanceCode)
-      console.log('rejection code', rejectionCode)
+      const acceptanceCode = token;
+      const rejectionCode = expirationDate;
+      // console.log('generateUniqueCode', acceptanceCode)
+      // console.log('rejection code', rejectionCode)
 
-      const URL = 'https://payroll-production.up.railway.app'
-      createEmployee.acceptanceCode = acceptanceCode
-      createEmployee.rejectionCode = rejectionCode
+      const URL = "https://payroll-production.up.railway.app";
+      createEmployee.acceptanceCode = acceptanceCode;
+      createEmployee.rejectionCode = rejectionCode;
       // createEmployee.save();
       const message1 = {
-        from: 'your-email@gmail.com',
+        from: "your-email@gmail.com",
         to: createEmployee.email,
-        subject: 'Employee Registration Confirmation',
+        subject: "Employee Registration Confirmation",
         html: `
              
       <p>Dear ${createEmployee.fullname},</p>
@@ -258,32 +278,37 @@ console.log("data")
       <p>Click this link to reject the registration</p>
        <p>If you wish to reject the confirmation, click the following button:</p>
      
-    `
-      }
+    `,
+      };
 
       //  await sendEmail({ message1 });
 
       return res.status(201).json({
         success: true,
-        message: 'created successfully',
+        message: "created successfully",
         basicInfo: createEmployee,
         address: createAddress,
-        employeeInfo: createEmployeeInfo
-      })
-    })
+        employeeInfo: createEmployeeInfo,
+      });
+    });
   } catch (error) {
-    console.log("eror")
-    console.error('Error creating records:', error)
+    console.log("eror");
+    console.error("Error creating records:", error);
 
-    return next(createError.createError(500,"An error occurred while creating the records."))
+    return next(
+      createError.createError(
+        500,
+        "An error occurred while creating the records."
+      )
+    );
     // return res
     //   .status(500)
     //   .json({ error: 'An error occurred while creating the records.' })
   }
-}
+};
 
-exports.updateEmployee = async (req, res,next) => {
-  const transaction = await sequelize.transaction()
+exports.updateEmployee = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
 
   try {
     const {
@@ -292,10 +317,10 @@ exports.updateEmployee = async (req, res,next) => {
       grossEarning,
       DepartmentId,
       GradeId,
-      employement_Type
-    } = req.body
-const status=false;
-    console.log('GradeID ', grossEarning)
+      employement_Type,
+    } = req.body;
+    const status = false;
+    console.log("GradeID ", grossEarning);
 
     const employee = await Employee.findByPk(
       Number(req.params.id),
@@ -306,121 +331,120 @@ const status=false;
             through: {
               model: EmployeeGrade,
               where: {
-                active: true
+                active: true,
               },
-              attributes: []
-            }
+              attributes: [],
+            },
           },
           {
             model: Department,
             through: {
               model: EmployeeDepartment,
               where: {
-                active: true
+                active: true,
               },
-              attributes: []
-            }
+              attributes: [],
+            },
           },
           {
             model: Position,
             through: {
               model: EmployeePosition,
               where: {
-                isActive: true
+                isActive: true,
               },
               // attributes: []
-            }
+            },
           },
-        ]
+        ],
       },
       {
-        transaction
+        transaction,
       }
-    )
-// return res.json(employee)
+    );
+    // return res.json(employee)
     // console.log('employee',employee)
     if (!employee) {
-      await transaction.rollback()
-      return res.status(404).json({ error: 'Employee not found' })
+      await transaction.rollback();
+      return res.status(404).json({ error: "Employee not found" });
     }
 
-    const errors = []
-    let department ,grade,positionID
-    
-   
-// if (GradeId) {
-  
-//    grade = await Grade.findOne({ where: { id: GradeId } })
+    const errors = [];
+    let department, grade, positionID;
 
-//      if (!grade) {
-//     status=true
-//   }
-//   if (basicSalary) {
-//     if (basicSalary < grade?.minSalary || basicSalary > grade?.maxSalary) {
-//       return next(
-//         createError.createError(
-//           409,
-//           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
-//         )
-//       )
-//     }
-//   } else {if(employee.basicSalary < grade?.minSalary || employee.basicSalary > grade?.maxSalary) {
-//       return next(
-//         createError.createError(
-//           409,
-//           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
-//         )
-//       )
-//     }
-//   }
-// }
-//     if (basicSalary) {
-//       if(status){
-//         console.log('basicsalary', basicSalary)
-//         if (
-//           basicSalary < employee.Grades[0]?.minSalary ||
-//           basicSalary > employee.Grades[0]?.maxSalary
-//         ) {
+    // if (GradeId) {
 
-//        return next(createError.createError(400, `Basic salary must be between ${employee.Grades[0]?.minSalary} and ${employee.Grades[0]?.maxSalary}`
-//           ))
-//         } 
-//       }
-        
-//       else {
-        
-//         const employeeInfo = await EmployeeInfo.findOne({
-//           where: { EmployeeId: Number(employee.id), isActive: true }
-//         },{transaction})
-//         // return res.status(200).json({data:employeeInfo.basicSalary
-//         // })
-//         if (employeeInfo) {
-//           const updatedData = await employeeInfo.update(
-//             { isActive: false },
-//             { transaction }
-//           )
-//         }
-//         // console.log("department",DepartmentId)
-//         const newEmployeeInfo = await EmployeeInfo.create(
-//           {
-//             isActive: true,
-//             EmployeeId: Number(employee.id),
-//             basicSalary: basicSalary ? basicSalary : employeeInfo?.basicSalary,
-//             grossEarning: grossEarning
-//               ? grossEarning
-//               : employeeInfo?.grossEarning,
-//             position: employeeInfo?.position,
-//             employement_Type: employeeInfo?.employement_Type,
-//             employeeTIN: employeeInfo?.employeeTIN,
+    //    grade = await Grade.findOne({ where: { id: GradeId } })
 
-//             hireDate: employeeInfo?.hireDate
-//           },
-//           { transaction }
-//         )
+    //      if (!grade) {
+    //     status=true
+    //   }
+    //   if (basicSalary) {
+    //     if (basicSalary < grade?.minSalary || basicSalary > grade?.maxSalary) {
+    //       return next(
+    //         createError.createError(
+    //           409,
+    //           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+    //         )
+    //       )
+    //     }
+    //   } else {if(employee.basicSalary < grade?.minSalary || employee.basicSalary > grade?.maxSalary) {
+    //       return next(
+    //         createError.createError(
+    //           409,
+    //           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+    //         )
+    //       )
+    //     }
+    //   }
+    // }
+    //     if (basicSalary) {
+    //       if(status){
+    //         console.log('basicsalary', basicSalary)
+    //         if (
+    //           basicSalary < employee.Grades[0]?.minSalary ||
+    //           basicSalary > employee.Grades[0]?.maxSalary
+    //         ) {
 
-//         // newEmployeeInfo.save();
-//       }
-//     }
+    //        return next(createError.createError(400, `Basic salary must be between ${employee.Grades[0]?.minSalary} and ${employee.Grades[0]?.maxSalary}`
+    //           ))
+    //         }
+    //       }
+
+    //       else {
+
+    //         const employeeInfo = await EmployeeInfo.findOne({
+    //           where: { EmployeeId: Number(employee.id), isActive: true }
+    //         },{transaction})
+    //         // return res.status(200).json({data:employeeInfo.basicSalary
+    //         // })
+    //         if (employeeInfo) {
+    //           const updatedData = await employeeInfo.update(
+    //             { isActive: false },
+    //             { transaction }
+    //           )
+    //         }
+    //         // console.log("department",DepartmentId)
+    //         const newEmployeeInfo = await EmployeeInfo.create(
+    //           {
+    //             isActive: true,
+    //             EmployeeId: Number(employee.id),
+    //             basicSalary: basicSalary ? basicSalary : employeeInfo?.basicSalary,
+    //             grossEarning: grossEarning
+    //               ? grossEarning
+    //               : employeeInfo?.grossEarning,
+    //             position: employeeInfo?.position,
+    //             employement_Type: employeeInfo?.employement_Type,
+    //             employeeTIN: employeeInfo?.employeeTIN,
+
+    //             hireDate: employeeInfo?.hireDate
+    //           },
+    //           { transaction }
+    //         )
+
+    //         // newEmployeeInfo.save();
+    //       }
+    //     }
 
     // if (position) {
 
@@ -450,60 +474,59 @@ const status=false;
     // }
 
     if (DepartmentId) {
-      department = await Department.findByPk(Number(DepartmentId))
-      console.log('new department', department)
+      department = await Department.findByPk(Number(DepartmentId));
+      console.log("new department", department);
       if (!department) {
-        errors.push('Department does not exist.')
+        errors.push("Department does not exist.");
       }
     }
 
-
-    const imagePath = req.files?.['image']
-      ? req.files?.['image']?.[0]?.path
-      : employee.image
-    const idImagePath = req.files?.['id_image']
-      ? req.files?.['id_image']?.[0]?.path
-      : employee.id_image
+    const imagePath = req.files?.["image"]
+      ? req.files?.["image"]?.[0]?.path
+      : employee.image;
+    const idImagePath = req.files?.["id_image"]
+      ? req.files?.["id_image"]?.[0]?.path
+      : employee.id_image;
 
     if (department) {
       const jointData = await EmployeeDepartment.findOne({
-        where: { EmployeeId: employee.id, active: true }
-      })
-      console.log('joint data', jointData)
+        where: { EmployeeId: employee.id, active: true },
+      });
+      console.log("joint data", jointData);
 
       if (jointData) {
-        await jointData.update({ active: false }, { transaction })
+        await jointData.update({ active: false }, { transaction });
       }
 
       const createdJointData = await EmployeeDepartment.create(
         {
           active: true,
           EmployeeId: employee.id,
-          DepartmentId: department.id
+          DepartmentId: department.id,
         },
         {
-          transaction
+          transaction,
         }
-      )
+      );
     }
 
     if (grade) {
       const jointData = await EmployeeGrade.findOne({
-        where: { EmployeeId: employee.id, active: true }
-      })
+        where: { EmployeeId: employee.id, active: true },
+      });
       if (jointData) {
-        await jointData.update({ active: false }, { transaction })
+        await jointData.update({ active: false }, { transaction });
       }
       const createdJointData = await EmployeeGrade.create(
         {
           active: true,
           EmployeeId: employee.id,
-          GradeId: grade.id
+          GradeId: grade.id,
         },
         {
-          transaction
+          transaction,
         }
-      )
+      );
     }
 
     // const updateEmployee = await employee.update(
@@ -511,46 +534,45 @@ const status=false;
     //   { transaction }
     // );
 
-    await transaction.commit()
+    await transaction.commit();
     //////////////////////
     return res.status(200).json({
-      message: 'Employee fields updated successfully.'
+      message: "Employee fields updated successfully.",
       // oldEmployee: updateEmployee,
-    })
+    });
   } catch (error) {
-    await transaction.rollback()
-    console.error(error)
+    await transaction.rollback();
+    console.error(error);
     if (
-      error.name === 'SequelizeValidationError' ||
-      error.name === 'SequelizeUniqueConstraintError'
+      error.name === "SequelizeValidationError" ||
+      error.name === "SequelizeUniqueConstraintError"
     ) {
       const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`]
-        return acc
-      }, {})
-      return res.status(404).json({ message: errors })
+        acc[err.path] = [`${err.path} is required`];
+        return acc;
+      }, {});
+      return res.status(404).json({ message: errors });
     }
-    console.log(error)
-    return res.status(500).json({ message: 'Internal server error' })
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
-exports.getAllEmployee = async (req, res,next) => {
+exports.getAllEmployee = async (req, res, next) => {
   try {
-
-    console.log("hete")
+    console.log("hete");
     const employees = await Employee.findAll({
       where: { CompanyId: Number(req.user.id) },
-      exclude: ['password'],
+      exclude: ["password"],
 
       include: [
         {
           model: Address,
-          required: false
+          required: false,
         },
         {
           model: Company,
-          required: false
+          required: false,
         },
         {
           model: Position,
@@ -558,13 +580,13 @@ exports.getAllEmployee = async (req, res,next) => {
           through: {
             model: EmployeePosition,
             where: {
-              active: true
-            }
-          }
+              active: true,
+            },
+          },
         },
         {
           model: EmployeeInfo,
-          required: false
+          required: false,
         },
         {
           model: Department,
@@ -572,25 +594,25 @@ exports.getAllEmployee = async (req, res,next) => {
           through: {
             model: EmployeeDepartment,
             where: {
-              active: true
-            }
-          }
+              active: true,
+            },
+          },
         },
 
         {
           model: AccountInfo,
           required: false,
           where: {
-            isActive: true
-          }
+            isActive: true,
+          },
         },
         {
           model: CustomRole,
-          required: false
+          required: false,
         },
         {
           model: Loan,
-          required: false
+          required: false,
         },
 
         {
@@ -606,14 +628,14 @@ exports.getAllEmployee = async (req, res,next) => {
           include: [
             {
               model: Allowance, // Use the correct alias defined in the association
-              include: [AllowanceDefinition]
+              include: [AllowanceDefinition],
             },
             {
               model: Deduction, // Use the correct alias defined in the association
-              include: [DeductionDefinition]
-            }
+              include: [DeductionDefinition],
+            },
             // { model: EmployeeGrade, where: { active: true } },
-          ]
+          ],
         },
 
         // {
@@ -622,20 +644,20 @@ exports.getAllEmployee = async (req, res,next) => {
         // },
         {
           model: EmergencyContact,
-          required: false
+          required: false,
         },
         {
           model: CustomRole,
-          include: [Permission]
+          include: [Permission],
         },
         {
           model: AdditionalAllowance,
-          include: [AdditionalAllowanceDefinition]
+          include: [AdditionalAllowanceDefinition],
         },
         {
           model: AdditionalDeduction,
-          include: [AdditionalDeductionDefinition]
-        }
+          include: [AdditionalDeductionDefinition],
+        },
         //Address,
         // EmployeeInfo,
         // EmergencyContact,
@@ -645,33 +667,32 @@ exports.getAllEmployee = async (req, res,next) => {
 
         // // Company,
         // CustomRole,
-      ]
-    })
-    return res.status(200).json({ count: employees.length, employees })
+      ],
+    });
+    return res.status(200).json({ count: employees.length, employees });
   } catch (error) {
-
     // con=
     return res
       .status(500)
-      .json({ error: 'there is a problem fetching employees' })
+      .json({ error: "there is a problem fetching employees" });
   }
-}
+};
 
-function generateUniqueCode () {
+function generateUniqueCode() {
   // Implement your own logic to generate a unique code
   // For example, you can use a UUID library
-  return uuidv4()
+  return uuidv4();
 }
 
 exports.confirmaRegistration = async (req, res, next) => {
   try {
-    const employeeId = req.params.employeeId
-    const token = req.query.token
-    const expirationDate = new Date(req.query.expiry)
-    const employee = await Employee.findByPk(employeeId)
+    const employeeId = req.params.employeeId;
+    const token = req.query.token;
+    const expirationDate = new Date(req.query.expiry);
+    const employee = await Employee.findByPk(employeeId);
 
     if (!employee) {
-      return res.status(404).send('Employee not found')
+      return res.status(404).send("Employee not found");
     }
 
     //  // Check if the confirmation token is valid and not expired
@@ -688,11 +709,11 @@ exports.confirmaRegistration = async (req, res, next) => {
     //  else {
     //    res.status(400).send("Invalid or expired confirmation link");
     //  }
-    res.status(200).json('employee', employee)
+    res.status(200).json("employee", employee);
   } catch (error) {
-    console.log('error', error)
+    console.log("error", error);
   }
-}
+};
 
 //   <p>Dear ${createEmployee.fullname},</p>
 // <p>Thank you for registering as an employee.</p>
@@ -709,271 +730,261 @@ exports.confirmaRegistration = async (req, res, next) => {
 //PROMOTION
 
 exports.promotion = async (req, res, next) => {
-  const transaction = await sequelize.transaction()
+  const transaction = await sequelize.transaction();
 
   try {
-    const { basicSalary, position, gradeId, employement_Type } = req.body
+    const { basicSalary, position, gradeId, employement_Type } = req.body;
 
-   const data = req.files?.letter?.[0]?.path
-    const imagePath = data ? data : null
- 
+    const data = req.files?.letter?.[0]?.path;
+    const imagePath = data ? data : null;
 
-    const employee = await Employee.findOne(    
-      {where:{id:Number(req.params.id), CompanyId:req.user.id},
-    
+    const employee = await Employee.findOne({
+      where: { id: Number(req.params.id), CompanyId: req.user.id },
+
       include: [
         {
           model: Grade,
           through: {
             model: EmployeeGrade,
             where: {
-              active: true
+              active: true,
             },
             // attributes: []
-          }
-        },
-        {model: Position,
-        through:{
-          model:EmployeePosition,
-          where: {isActive: true}
-        }
-        
+          },
         },
         {
-          model:EmployeeInfo,
-        where: {isActive: true}}
+          model: Position,
+          through: {
+            model: EmployeePosition,
+            where: { isActive: true },
+          },
+        },
+        {
+          model: EmployeeInfo,
+          where: { isActive: true },
+        },
       ],
-       
-    },     
-        
-      
-    )
-
+    });
 
     if (!employee) {
-      await transaction.rollback()
-      return res.status(404).json({ error: 'Employee not found' })
+      await transaction.rollback();
+      return res.status(404).json({ error: "Employee not found" });
     }
 
+    //   if(position){
+    //     if(employee.Positions?.[0]?.id === Number(position)){
+    //       // return res.json("equial")
+    //     }
+    //     else
+    //  {
+    //       const foundPosition = await Position.findOne({where:{
+    //         id:position,
+    //         CompanyId:req.user.id,
 
+    //         // isActive:true,
 
-//   if(position){
-//     if(employee.Positions?.[0]?.id === Number(position)){
-//       // return res.json("equial")
-//     }
-//     else
-//  { 
-//       const foundPosition = await Position.findOne({where:{
-//         id:position,
-//         CompanyId:req.user.id,
-     
-//         // isActive:true,
+    //       }})
+    //       if(!foundPosition){
+    //       return next(createError.createError(404,"Position not found"))
+    //     }
+    //     if (imagePath ==null){
+    //       return next(createError.createError(404,"Please insert Letter of promotion "))
+    //     }
+    //            const employeePosition = await EmployeePosition.findOne({
+    //              where: { EmployeeId: Number(req.params.id),PositionId:employee?.Positions?.[0]?.id
+    //              , isActive: true },
+    //            });
 
-//       }})
-//       if(!foundPosition){
-//       return next(createError.createError(404,"Position not found"))
-//     }
-//     if (imagePath ==null){
-//       return next(createError.createError(404,"Please insert Letter of promotion "))
-//     }
-//            const employeePosition = await EmployeePosition.findOne({
-//              where: { EmployeeId: Number(req.params.id),PositionId:employee?.Positions?.[0]?.id
-//              , isActive: true },
-//            });
-          
-//            if (employeePosition) {
-//          await employeePosition.update({ isActive: false }, { transaction });
+    //            if (employeePosition) {
+    //          await employeePosition.update({ isActive: false }, { transaction });
 
-//                   }
-//            const newEmployeeInfo = await EmployeePosition.create(
-//              {
-//                isActive: true,
-//                EmployeeId: Number(employee.id),
-//                PositionId: Number(position),
-//                letter:imagePath
-//                    },
-                  
-//              { transaction }
-//            );
+    //                   }
+    //            const newEmployeeInfo = await EmployeePosition.create(
+    //              {
+    //                isActive: true,
+    //                EmployeeId: Number(employee.id),
+    //                PositionId: Number(position),
+    //                letter:imagePath
+    //                    },
 
+    //              { transaction }
+    //            );
 
-//     }
-//   }
-  
+    //     }
+    //   }
 
-  if(gradeId){
-    if(employee?.Grades?.[0]?.id === Number(gradeId)){
-      return res.json("equial")
-    }
-    else{
-    // return res.json(employee?.EmployeeInfos?.[0]?.basicSalary)
-      const employeeBasicsalary= Number(employee?.EmployeeInfos?.[0]?.basicSalary)  === Number(basicSalary) ? Number(employee?.EmployeeInfos?.[0]?.basicSalary): Number(basicSalary)
- 
-     const grade = await Grade.findOne({where:{id:Number(gradeId),CompanyId:req.user.id}})
+    if (gradeId) {
+      if (employee?.Grades?.[0]?.id === Number(gradeId)) {
+        return res.json("equial");
+      } else {
+        // return res.json(employee?.EmployeeInfos?.[0]?.basicSalary)
+        const employeeBasicsalary =
+          Number(employee?.EmployeeInfos?.[0]?.basicSalary) ===
+          Number(basicSalary)
+            ? Number(employee?.EmployeeInfos?.[0]?.basicSalary)
+            : Number(basicSalary);
 
-      if(!grade){
-        return next( createError.createError(404,"Grade not found"))
-      }
+        const grade = await Grade.findOne({
+          where: { id: Number(gradeId), CompanyId: req.user.id },
+        });
 
+        if (!grade) {
+          return next(createError.createError(404, "Grade not found"));
+        }
 
-        if (employeeBasicsalary < grade.minSalary || employeeBasicsalary > grade.maxSalary) {
+        if (
+          employeeBasicsalary < grade.minSalary ||
+          employeeBasicsalary > grade.maxSalary
+        ) {
           return res.status(409).json({
-            error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
-          })
+            error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`,
+          });
         }
 
         const employeeInfo = await EmployeeInfo.findOne({
-          where: { EmployeeId: req.params.id, isActive: true }
-        })
-     
+          where: { EmployeeId: req.params.id, isActive: true },
+        });
+
         if (employeeInfo) {
           const updatedData = await employeeInfo.update(
             { isActive: false },
             { transaction }
-          )
+          );
         }
         const newEmployeeInfo = await EmployeeInfo.create(
           {
             isActive: true,
             EmployeeId: Number(req.params.id),
-            basicSalary:employeeBasicsalary,
-            employement_Type: employement_Type ?? employee.EmployeeInfos?.[0]?.employement_Type,            
+            basicSalary: employeeBasicsalary,
+            employement_Type:
+              employement_Type ?? employee.EmployeeInfos?.[0]?.employement_Type,
             // employeeTIN: employee.EmployeeInfos?.[0]?.employeeTIN,
             // hireDate: employee.EmployeeInfos?.[0]?.hireDate
           },
           { transaction }
-        )
+        );
 
-             ///
+        ///
         const employeeGrade = await EmployeeGrade.findOne({
-          where: { EmployeeId: req.params.id, active: true }
-        })
-     
+          where: { EmployeeId: req.params.id, active: true },
+        });
+
         if (employeeGrade) {
           const updatedData = await employeeGrade.update(
             { active: false },
             { transaction }
-          )
+          );
         }
         const newEmployeeGrade = await EmployeeGrade.create(
           {
             active: true,
             EmployeeId: Number(req.params.id),
-            GradeId:gradeId,
+            GradeId: gradeId,
           },
           { transaction }
-        )
+        );
+      }
+    }
 
-       }
-  }
+    //  if (position)
+    //  {
 
-  
-       
-//  if (position) 
-//  {
+    //   if (imagePath ==null){
+    //     return next(createError.createError(404,"Please insert Letter of promotion "))
+    //   }
 
-//   if (imagePath ==null){
-//     return next(createError.createError(404,"Please insert Letter of promotion "))
-//   }
+    //   // await transaction.rollback();
+    //   const foundPosition= await Position.findOne({where: {id:position, CompanyId:req.user.id}})
 
+    //   if(!foundPosition){
+    //     await transaction.rollback()
+    //     return next(createError.createError(404, "position not found "))
+    //   }
+    //   const checkPosition= await EmployeePosition.findOne({where:{PositionId:position, EmployeeId:Number(req.params.id),isActive:true}})
+    // //  console.log("checke",employee.Positions)
+    //   if(!checkPosition) {
+    //        const employeePosition = await EmployeePosition.findOne({
+    //          where: { EmployeeId: Number(req.params.id),PositionId:employee.Positions?.[0]?.id
+    //          , isActive: true },
+    //        });
 
-//   // await transaction.rollback();
-//   const foundPosition= await Position.findOne({where: {id:position, CompanyId:req.user.id}})
+    //        if (employeePosition) {
+    //          await employeePosition.update({ isActive: false }, { transaction });
+    //        }
 
-//   if(!foundPosition){
-//     await transaction.rollback()
-//     return next(createError.createError(404, "position not found "))
-//   }
-//   const checkPosition= await EmployeePosition.findOne({where:{PositionId:position, EmployeeId:Number(req.params.id),isActive:true}})
-// //  console.log("checke",employee.Positions)
-//   if(!checkPosition) {
-//        const employeePosition = await EmployeePosition.findOne({
-//          where: { EmployeeId: Number(req.params.id),PositionId:employee.Positions?.[0]?.id
-//          , isActive: true },
-//        });
+    //        console.log("newEmployeeInfo",employeePosition)
+    //        const newEmployeeInfo = await EmployeePosition.create(
+    //          {
+    //            isActive: true,
+    //            EmployeeId: Number(employee.id),
+    //            PositionId: Number(position),
+    //            letter:"imagePath"
+    //                },
 
-      
-//        if (employeePosition) {
-//          await employeePosition.update({ isActive: false }, { transaction });
-//        }
+    //          { transaction }
+    //        );
+    //      }}
 
-//        console.log("newEmployeeInfo",employeePosition)
-//        const newEmployeeInfo = await EmployeePosition.create(
-//          {
-//            isActive: true,
-//            EmployeeId: Number(employee.id),
-//            PositionId: Number(position),
-//            letter:"imagePath"
-//                },
-              
-//          { transaction }
-//        );
-//      }}
-  
-     await transaction.commit()
-     return res.status(200).json({
-       message: 'Employee fields updated successfully.'
-     })
-   
-
+    await transaction.commit();
+    return res.status(200).json({
+      message: "Employee fields updated successfully.",
+    });
   } catch (error) {
-    await transaction.rollback()
-    console.error(error)
-    next(error)
+    await transaction.rollback();
+    console.error(error);
+    next(error);
   }
-}
+};
 
 exports.updatedBasicInfo = async (req, res, next) => {
-  const transaction = await sequelize.transaction()
+  const transaction = await sequelize.transaction();
   try {
-    const id = req.params.id
-    const { fullname, marriageStatus, id_type,id_Number, id_image } = req.body
-    let imagePath = null
+    const id = req.params.id;
+    const { fullname, marriageStatus, id_type, id_Number, id_image } = req.body;
+    let imagePath = null;
 
-    const employee = await Employee.findByPk(Number(id))
+    const employee = await Employee.findByPk(Number(id));
     if (!employee) {
       return res.status(404).json({
-        error: 'Employee does not exist.'
-      })
+        error: "Employee does not exist.",
+      });
     }
-    console.log('data', req?.files?.id_image?.[0]?.path || null)
+    console.log("data", req?.files?.id_image?.[0]?.path || null);
 
-    const data = req?.files?.id_image?.[0]?.path
-    const idImagePath = data ? data : null
+    const data = req?.files?.id_image?.[0]?.path;
+    const idImagePath = data ? data : null;
 
     if (idImagePath != null) {
       const updateEmployee = await employee.update(
         {
           id_image: idImagePath,
           id_type: id_type ? id_type : employee.id_type,
-          id_Number:id_Number?id_Number:employee.id_Number,
+          id_Number: id_Number ? id_Number : employee.id_Number,
           fullname: fullname ? fullname : employee.fullname,
           marriageStatus: marriageStatus
             ? marriageStatus
-            : employee.marriageStatus
+            : employee.marriageStatus,
         },
         { transaction }
-      )
+      );
     } else {
       const updateEmployee = await employee.update(
         {
           id_type: id_type ? id_type : employee.id_type,
-          id_Number:id_Number?id_Number:employee.id_Number,
+          id_Number: id_Number ? id_Number : employee.id_Number,
           fullname: fullname ? fullname : employee.fullname,
           marriageStatus: marriageStatus
             ? marriageStatus
-            : employee.marriageStatus
+            : employee.marriageStatus,
         },
         { transaction }
-      )
+      );
     }
-    await transaction.commit()
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: 'Employee basic information updated successfully'
-      })
+    await transaction.commit();
+    return res.status(200).json({
+      success: true,
+      message: "Employee basic information updated successfully",
+    });
   } catch (error) {
     // console.log(req?.files?.idImage[0].path? req?.files?.idImage[0].path: null );
 
@@ -982,43 +993,43 @@ exports.updatedBasicInfo = async (req, res, next) => {
     // ? req.files?.['image']?.[0]?.path
     // : employee.image
 
-    console.log(error)
-    await transaction.rollback()
-    return next(createError.createError(500, 'Internal server error'))
+    console.log(error);
+    await transaction.rollback();
+    return next(createError.createError(500, "Internal server error"));
   }
-}
+};
 
 exports.updateTermination = async (req, res, next) => {
-  const transaction = await sequelize.transaction()
+  const transaction = await sequelize.transaction();
   try {
-    const id = req.params.id
-    const { terminantionDate, terminationReason, terminationNotes } = req.body
+    const id = req.params.id;
+    const { terminantionDate, terminationReason, terminationNotes } = req.body;
 
-    console.log(id, terminantionDate, terminationReason, terminationNotes)
+    console.log(id, terminantionDate, terminationReason, terminationNotes);
     if (!terminantionDate || !terminationReason) {
       return next(
         createError.createError(
           500,
-          'Please enter a valid termination date and  termination reason'
+          "Please enter a valid termination date and  termination reason"
         )
-      )
+      );
     }
 
     const employeeInfo = await EmployeeInfo.findOne({
-      where: { EmployeeId: id }
-    })
+      where: { EmployeeId: id },
+    });
 
     if (!employeeInfo) {
-      return next(createError.createError(404, 'Employee not found'))
+      return next(createError.createError(404, "Employee not found"));
     }
 
     if (employeeInfo) {
       const updatedData = await employeeInfo.update(
         { isActive: false },
         { transaction }
-      )
+      );
     }
-    console.log('department', employeeInfo)
+    console.log("department", employeeInfo);
     const newEmployeeInfo = await EmployeeInfo.create(
       {
         isActive: true,
@@ -1037,136 +1048,145 @@ exports.updateTermination = async (req, res, next) => {
         terminationNotes: terminationNotes
           ? terminationNotes
           : employeeInfo.terminationNotes,
-        hireDate: employeeInfo.hireDate
+        hireDate: employeeInfo.hireDate,
       },
       { transaction }
-    )
-    await transaction.commit()
+    );
+    await transaction.commit();
     // newEmployeeInfo.save();
 
     return res.status(200).json({
       success: true,
-      message: 'Employee basic information updated successfully'
-    })
+      message: "Employee basic information updated successfully",
+    });
   } catch (error) {
-    console.log(error)
-    await transaction.rollback()
-    return next(createError.createError(500, 'Internal Server Error'))
+    console.log(error);
+    await transaction.rollback();
+    return next(createError.createError(500, "Internal Server Error"));
   }
-}
+};
 
 exports.updateEmergencyContact = async (req, res, next) => {
-  const transaction = await sequelize.transaction()
+  const transaction = await sequelize.transaction();
   try {
-    const employeeId = req.params.employeeId
-    const updatedEmergencyInfo = req.body.EmergencyInfo
-    const updatedRecords = []
+    const employeeId = req.params.employeeId;
+    const updatedEmergencyInfo = req.body.EmergencyInfo;
+    const updatedRecords = [];
 
     for (const item of updatedEmergencyInfo) {
-      const { id, ...updatedData } = item
+      const { id, ...updatedData } = item;
 
       // Check if a record with the given id exists
       const existingRecord = await EmergencyContact.findOne(
         { where: { id: id, EmployeeId: employeeId } },
         { transaction }
-      )
+      );
 
       if (existingRecord) {
         // If the record exists, update it with the provided data
-        await existingRecord.update(updatedData, { transaction })
-        updatedRecords.push(existingRecord)
+        await existingRecord.update(updatedData, { transaction });
+        updatedRecords.push(existingRecord);
       } else {
         // If the record doesn't exist, throw an error or handle it accordingly
         // throw new Error(`Record with ID ${id} does not exist.`);
-        await transaction.rollback()
+        await transaction.rollback();
         return next(
           createError.createError(404, `Record with ID ${id} does not exist`)
-        )
+        );
       }
     }
-    await transaction.commit()
+    await transaction.commit();
     return res.status(200).json({
       success: true,
-      message: 'updated successfully',
-      updatedRecords
-    })
+      message: "updated successfully",
+      updatedRecords,
+    });
     // The updatedRecords array now contains the updated records
     // console.log(updatedRecords);
   } catch (error) {
-    console.log(error)
-    await transaction.rollback()
-    return next(createError.createError(500, 'Internal Server Error'))
+    console.log(error);
+    await transaction.rollback();
+    return next(createError.createError(500, "Internal Server Error"));
   }
-}
+};
 
 exports.updateAccountInfo = async (req, res, next) => {
-  const transaction = await sequelize.transaction()
+  const transaction = await sequelize.transaction();
   try {
-    const employeeId = req.params.employeeId
-    const { accountId, accountNumber, accountImage, isVerified } = req.body
+    const employeeId = req.params.employeeId;
+    const { accountId, accountNumber, accountImage, isVerified } = req.body;
     if (!accountNumber) {
-      return next(createError.createError(400, 'please insert account number'))
+      return next(createError.createError(400, "please insert account number"));
     }
 
     const accountInfo = await AccountInfo.findOne({
-      where: { id: accountId, EmployeeId: employeeId ,isActive: true}
-    })
+      where: { id: accountId, EmployeeId: employeeId, isActive: true },
+    });
 
     if (!accountInfo) {
-      return next(createError.createError(404, 'Account not found'))
+      return next(createError.createError(404, "Account not found"));
     }
-    const data = req?.files?.accountImage?.[0]?.path
-    const imagePath = data ? data : null
+    const data = req?.files?.accountImage?.[0]?.path;
+    const imagePath = data ? data : null;
     if (imagePath != null) {
-      await accountInfo.update({ isActive: false }, { transaction })
+      await accountInfo.update({ isActive: false }, { transaction });
       await AccountInfo.create(
-        { isActive: true, accountNumber: accountNumber, image: imagePath,isVerified:isVerified?isVerified:false,EmployeeId:employeeId },
+        {
+          isActive: true,
+          accountNumber: accountNumber,
+          image: imagePath,
+          isVerified: isVerified ? isVerified : false,
+          EmployeeId: employeeId,
+        },
         { transaction }
-      )
+      );
     } else {
-      await accountInfo.update({ isActive: false }, { transaction })
+      await accountInfo.update({ isActive: false }, { transaction });
       await AccountInfo.create(
-        { isActive: true, accountNumber: accountNumber,isVerified:isVerified?isVerified:false,EmployeeId:employeeId },
+        {
+          isActive: true,
+          accountNumber: accountNumber,
+          isVerified: isVerified ? isVerified : false,
+          EmployeeId: employeeId,
+        },
         { transaction }
-      )
+      );
     }
-    await transaction.commit()
+    await transaction.commit();
     return res.status(200).json({
       success: true,
-      message: 'Account information updated successfully'
-    })
+      message: "Account information updated successfully",
+    });
   } catch (error) {
-    console.log(error)
-    await transaction.rollback()
-    return next(createError.createError(500, 'Internal Server Error'))
+    console.log(error);
+    await transaction.rollback();
+    return next(createError.createError(500, "Internal Server Error"));
   }
-}
+};
 exports.getEmployeeHistory = async (req, res, next) => {
   try {
     const EmployeeId = Number(req?.params?.id);
-   // Fetch all historical positions for the employee
-   const allHistoricalPositions = await EmployeePosition.findAll({
-    where: {
-      EmployeeId,
-      isActive: false // Assuming 'isActive' field indicates inactive positions
-    },
-    attributes: ['PositionId'], // Fetch only the position IDs
-    order: [['createdAt', 'DESC']], // Order by creation date in descending order
-    raw: true
-  });
-
-  // return res.status(200).json(allHistoricalPositions)
     // Fetch all historical positions for the employee
-    const filteredPositions = allHistoricalPositions.filter(position => {
+    const allHistoricalPositions = await EmployeePosition.findAll({
+      where: {
+        EmployeeId,
+        isActive: false, // Assuming 'isActive' field indicates inactive positions
+      },
+      attributes: ["PositionId"], // Fetch only the position IDs
+      order: [["createdAt", "DESC"]], // Order by creation date in descending order
+      raw: true,
+    });
+
+    // return res.status(200).json(allHistoricalPositions)
+    // Fetch all historical positions for the employee
+    const filteredPositions = allHistoricalPositions.filter((position) => {
       // Check if the position object has a 'name' property before using the 'includes' method
       if (position && position.name) {
         // Example: Filter positions based on position name containing 'Manager'
-        return position.name.includes('Manager');
+        return position.name.includes("Manager");
       }
       return false; // Default to false if 'name' property does not exist
     });
-
-  
 
     // Further processing or displaying of filtered positions
     console.log(filteredPositions);
@@ -1175,10 +1195,9 @@ exports.getEmployeeHistory = async (req, res, next) => {
     return res.status(200).json(filteredPositions);
   } catch (error) {
     console.error(error);
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(500, "Internal Server Error"));
   }
-}
-
+};
 
 // exports.getEmployeeHistory = async (req, res, next) => {
 //   try {
@@ -1218,12 +1237,11 @@ exports.getEmployeeHistory = async (req, res, next) => {
 //       // attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
 //       attributes: ['id']
 //     });
- 
 
-//     if (!employeeHistory || 
-//       (employeeHistory.Positions.length === 0 && 
-//        employeeHistory.EmployeeInfos.length === 0 && 
-//        employeeHistory.Departments.length === 0 && 
+//     if (!employeeHistory ||
+//       (employeeHistory.Positions.length === 0 &&
+//        employeeHistory.EmployeeInfos.length === 0 &&
+//        employeeHistory.Departments.length === 0 &&
 //        employeeHistory.Grades.length === 0)) {
 //     return res.status(404).json({ message: "No previous history found" });
 //   }
@@ -1238,7 +1256,7 @@ exports.getEmployeeHistory = async (req, res, next) => {
 //   try {
 // const EmployeeId = Number(req?.params?.id);
 //     const employeeHistory = await Employee.findOne({
-//       where:{id: EmployeeId},        
+//       where:{id: EmployeeId},
 //         include:[
 //           {
 //             model: Position,
@@ -1265,16 +1283,16 @@ exports.getEmployeeHistory = async (req, res, next) => {
 //                 active: false
 //               }
 //             }
-//           },  
+//           },
 //           {
-//             model: Grade,  
+//             model: Grade,
 //             through: {
 //               model: EmployeeGrade,
 //               where: {
 //                 active: false,
 //               },
 //             },
-  
+
 //             // include: [
 //             //   {
 //             //     model: Allowance, // Use the correct alias defined in the association
@@ -1297,13 +1315,11 @@ exports.getEmployeeHistory = async (req, res, next) => {
 //         ],
 //         attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
 
-    
 //     })
-//     return res.status(200).json(employeeHistory === null ? 
-      
-      
-//       res.status(404).json({message:"No previous history found"}) : 
-      
+//     return res.status(200).json(employeeHistory === null ?
+
+//       res.status(404).json({message:"No previous history found"}) :
+
 //        res.status(200).json([employeeHistory]
 //         ))
 //     return res.status(200).json([employeeHistory]
@@ -1314,45 +1330,168 @@ exports.getEmployeeHistory = async (req, res, next) => {
 //   }
 // }
 
-
-exports.updateEmployementInfo= async (req,res,next)=>{
-  const transaction = await sequelize.transaction()
+exports.updateEmployementInfo = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
-    const {employeeTIN}=req.body;
-
+    const { employeeTIN } = req.body;
 
     const employeeInfo = await EmployeeInfo.findOne({
-      where: { EmployeeId: Number(req.params.id), isActive: true }
-    })
-if(employeeInfo.employeeTIN === employeeTIN){
-return next(createError.createError(400,"Employee info already updated"))
-}  
+      where: { EmployeeId: Number(req.params.id), isActive: true },
+    });
+    if (employeeInfo.employeeTIN === employeeTIN) {
+      return next(
+        createError.createError(400, "Employee info already updated")
+      );
+    }
     if (employeeInfo) {
       const updatedData = await employeeInfo.update(
         { isActive: false },
         { transaction }
-      )
+      );
     }
     const newEmployeeInfo = await EmployeeInfo.create(
       {
         isActive: true,
         EmployeeId: Number(req.params.id),
-        basicSalary:employeeInfo?.basicSalary,
-        employement_Type: employeeInfo?.employement_Type,            
+        basicSalary: employeeInfo?.basicSalary,
+        employement_Type: employeeInfo?.employement_Type,
         employeeTIN: employeeTIN,
-        hireDate: employeeInfo?.hireDate
+        hireDate: employeeInfo?.hireDate,
       },
       { transaction }
-    )
+    );
     await transaction.commit();
 
     return res.status(200).json({
       success: true,
-      message: 'Employee information updated successfully'
-    })
+      message: "Employee information updated successfully",
+    });
   } catch (error) {
     console.log(error);
     await transaction.rollback();
-    next(createError.createError(500,"Internal server error"))
+    next(createError.createError(500, "Internal server error"));
   }
-}
+};
+
+// BULK EMPLOYEE REGISTRATION
+exports.bulkEmployeeRegistration = async (req, res, next) => {
+  try {
+    return res.status(200).json(req.body);
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500, "Internal server error"));
+  }
+};
+
+exports.downloadEmployeeTemplate = async (req, res, next) => {
+  try {
+    const departments = await Department.findAll();
+    const positions = await Position.findAll();
+    const grades = await Grade.findAll();
+    const workbook = new ExcelJS.Workbook();
+
+    // Employee data sheet
+    const employeeSheet = workbook.addWorksheet("Employees");
+    employeeSheet.columns = [
+      { header: "fullname", key: "fullname", width: 30 },
+      // { header: "images", key: "images", width: 30 },
+      { header: "sex", key: "sex", width: 10 },
+      { header: "date_of_birth", key: "date_of_birth", width: 15,type: "date" },
+      { header: "DepartmentId", key: "DepartmentId", width: 15 },
+      { header: "GradeId", key: "GradeId", width: 15 },
+      { header: "marriageStatus", key: "marriageStatus", width: 15 },
+      { header: "isActive", key: "isActive", width: 10 },
+      { header: "nationality", key: "nationality", width: 15 },
+      { header: "password", key: "password", width: 15 },
+      { header: "email", key: "email", width: 30 },
+      { header: "phoneNumber", key: "phoneNumber", width: 20 },
+      { header: "optionalPhoneNumber", key: "optionalPhoneNumber", width: 20 },
+      { header: "id_type", key: "id_type", width: 15, dataValidation: { formulae: ['"kebele","passport"'] } }, 
+      { header: "id_Number", key: "id_Number", width: 20 },
+      { header: "country", key: "country", width: 15 },
+      { header: "state", key: "state", width: 15 },
+      { header: "zone_or_city", key: "zone_or_city", width: 15 },
+      { header: "woreda", key: "woreda", width: 15 },
+      { header: "kebele", key: "kebele", width: 15 },
+      { header: "houseNumber", key: "houseNumber", width: 15 },
+      { header: "employeeTIN", key: "employeeTIN", width: 20 },
+      { header: "hireDate", key: "hireDate", width: 20 },
+      { header: "employee_Code", key: "employee_Code", width: 20 },
+      { header: "basicSalary", key: "basicSalary", width: 20 },
+      { header: "position", key: "position", width: 15 },
+      { header: "siteLocation", key: "siteLocation", width: 15 },
+      { header: "emergency_relation", key: "emergency_relation", width: 20 },
+      {
+        header: "emergency_phoneNumber",
+        key: "emergency_phoneNumber",
+        width: 20,
+      },
+      { header: "emergency_fullname", key: "emergency_fullname", width: 30 },
+      { header: "accountNumber", key: "accountNumber", width: 30 },
+      { header: "isVerified", key: "isVerified", width: 10 },
+    ];
+
+    // Department data sheet
+    const departmentSheet = workbook.addWorksheet("Departments");
+    // departmentSheet.columns = [
+    //   { header: 'Department ID', key: 'id', width: 15 },
+    //   { header: 'Department Name', key: 'name', width: 30 }
+    // ];
+    // departments.forEach(department => {
+    //   departmentSheet.addRow({ id: department.id, name: department.name });
+    // });
+
+    departmentSheet.columns = [
+      { header: "Department ID", key: "id", width: 15 },
+      { header: "Department Name", key: "deptName", width: 30 }, // Use 'deptName' instead of 'name'
+    ];
+    departments.forEach((department) => {
+      departmentSheet.addRow({
+        id: department.id,
+        deptName: department.deptName,
+      }); // Use 'deptName' instead of 'name'
+    });
+
+    // Position data sheet
+    const positionSheet = workbook.addWorksheet("Positions");
+    positionSheet.columns = [
+      { header: "Position ID", key: "id", width: 15 },
+      { header: "Position Name", key: "name", width: 30 },
+    ];
+    positions.forEach((position) => {
+      positionSheet.addRow({ id: position.id, name: position.positionName });
+    });
+
+    // Grade data sheet
+    const gradeSheet = workbook.addWorksheet("Grades");
+    gradeSheet.columns = [
+      { header: "Grade ID", key: "id", width: 15 },
+      { header: "Grade Name", key: "name", width: 20 },
+      { header: "minSalary", key: "minSalary", width: 20 },
+      { header: "maxSalary", key: "maxSalary", width: 20 },
+    ];
+    grades.forEach((grade) => {
+      gradeSheet.addRow({
+        id: grade.id,
+        name: grade.name,
+        minSalary: grade.minSalary,
+        maxSalary: grade.maxSalary,
+      });
+    });
+    // Set the response content type
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=employee_template.xlsx"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Error generating template:", error);
+    next(createError.createError(500, "Internal Server Error"));
+  }
+};

@@ -793,7 +793,9 @@ exports.resetPasswordToken = async(req, res,next) => {
    
   // return res.json("password")
     // Find the user by the toke  n
-    const user = await Company.findOne({ where: { resetPasswordToken: token } });
+    const user = await Company.findOne({ where: { resetPasswordToken: token,
+     
+     } });
 
     if (!user) {
 

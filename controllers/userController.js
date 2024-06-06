@@ -6,6 +6,7 @@ const sequelize = require('../database/db')
 const sendEmail = require("../utils/sendEmail.js");
 const axios = require('axios');
 const crypto = require('crypto');
+
 // const jwt = require('jsonwebtoken');
 // create User
 exports.createUser = async (req, res,next) => {
@@ -114,7 +115,7 @@ exports.updateCompanyStatus1 = async (req, res,next) => {
     });
     const token = crypto.randomBytes(32).toString('hex');
     console.log(`createCompany's ,token`, token);
-    const passwordCreationLink = `http://localhost:4400/setpassword/${token}`;
+    const passwordCreationLink = `http://10.101.200.91:4400/api/company/setpassword/${token}`;
     if (!company){
     return next(createError.createError(404, "company does not exist"));
     }
@@ -131,7 +132,10 @@ exports.updateCompanyStatus1 = async (req, res,next) => {
     <p>Dear ${company.name},</p>
     <p>Thank you for registering with <strong>on our platform.</strong>! We're excited to have you on board.</p>
     <p>To complete your account setup, please click on the link below to create your account password:</p>
-    <p><a href="${passwordCreationLink}">Create Your Password</a></p>
+    <form action="${passwordCreationLink}" method="POST">
+    <input type="hidden" name="token" value="${token}" />
+    <button type="submit">Create Your Password</button>
+  </form>
     <p>This link will expire in <strong>${expirationHours}</strong> hours for security reasons, so be sure to create your password as soon as possible.</p>
     
     <p>Welcome again, and thank you for choosing <strong> our platform </strong>.</p>
@@ -145,10 +149,12 @@ exports.updateCompanyStatus1 = async (req, res,next) => {
 
     }
 
-        await company.update({ status ,
+        await company.update({ 
+          status ,
           resetPasswordTokenCreatedAt:new Date(), 
           resetPasswordToken:token},
           {transaction});
+
           await sendEmail({
             email: company.email,
             subject: "Create Your Account Password.",
@@ -184,7 +190,7 @@ exports.updateCompanyStatus = async (req, res, next) => {
 
     const token = crypto.randomBytes(32).toString('hex');
 
-    const passwordCreationLink = `http://localhost:4400/company/setpassword`;
+    const passwordCreationLink = `http://10.101.200.91:4400/api/company/setpassword`;
     // axios.post(apiUrl, requestData, {
     //   headers: {
     //     'Authorization': `Bearer ${token}`

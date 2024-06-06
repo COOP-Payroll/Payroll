@@ -38,7 +38,9 @@ exports.getCustomRoleById = async (req, res,next) => {
 exports.createCustomRole = async (req, res, next) => {
   try {
     const { name, permission } = req.body;
-
+   if (permission.length ===0 || !permission){
+    return next(createError.createError(400, "Please select atleast on permission"))
+   }
     const checkrole = await CustomRole.findOne({
       where: { CompanyId: req.user.id, name: name },
     });

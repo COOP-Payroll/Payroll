@@ -9,7 +9,6 @@ const createError = require('.././utils/error.js');
 
 exports.protectAll = async (req, res, next) => {
   try {
-    //getting token check if its there
     let token;
 
     if (
@@ -23,14 +22,10 @@ exports.protectAll = async (req, res, next) => {
     if (!token || token === "expiredtoken") {
       return next(createError.createError(401,  "You are not logged in, please log in to get access" ));
     
-      // return res.status(401).json({
-      //   message: "You are not logged in, please log in to get access",
-      // });
+   
     }
-    //verification token
     const decoded = await promisify(jwt.verify)(token, "secret");
 
-    //check if user still exists
     let currentUser;
 
     if (decoded.role === "superAdmin") {
@@ -43,18 +38,11 @@ exports.protectAll = async (req, res, next) => {
       currentUser = await Employee.findByPk(Number(decoded.id));
     }
 
-    // console.log(JSON.stringify(currentUser), null, 4);
     if (!currentUser) {
       return next(createError.createError(401,  `currentUserdoes not longer exists ` ));
       
     }
-    //check if user change password after jwt was issued
-    // if (currentUser.changedPasswordAfter(decoded.iat)) {
-    //   return res.status(401).json({
-    //     message: "Company recently changed password! please log in again.",
-    //   });
-    // }
-    //grant access to protected route
+  
     else {
       req.user = currentUser;
 
@@ -70,7 +58,6 @@ exports.protectAll = async (req, res, next) => {
 
 exports.isLoggedIN=async(req, res, next) =>{
   if (req.isAuthenticated()) {
-    // Adjust this condition based on your authentication mechanism
     return next(); // User is logged in, proceed to logout
   } else {
     return next(createError.createError(401,  "You are not logged in, please log in to get access" ));
@@ -148,7 +135,6 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
             permission.module === moduleName &&
             permission.isAccessible === true
         );
-        // return res.json({ hasPermission });
         console.log("haspermission", hasPermission);
       
       if (hasPermission) {
@@ -164,8 +150,6 @@ exports.restrictALL = ({ moduleName, isAccessible }) => {
 
 
 //Restricted to
-
-
 exports.restrictApprover = ({ moduleName, isAccessible }) => {
   return async (req, res, next) => {
 

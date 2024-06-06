@@ -34,7 +34,16 @@ router.get(
   employeeController.getAllProjectEmployeeInvolded
 );
 
+router.get(
+  "/bulk-registration",
 
+  // middleware.protectAll,
+  // middleware.restrictALL({
+  //   moduleName: "employeeinfo",
+  //   isAccessible: true,
+  // }),
+  newEmployeeController.downloadEmployeeTemplate
+);
 
 
 router.get(
@@ -60,6 +69,7 @@ router.post(
   // employeeController.createEmployee
   newEmployeeController.createEmployee
 );
+
 
 router.get(
   "/company/employees",

@@ -1,9 +1,9 @@
 {
     "development": {
-      "username": "ct_user",
-      "password": "y3sNLAB4dr7pcq8pCBqwMtoCzMsvrZq1",
-      "database": "ct",
-      "host": "dpg-cp3gmi7sc6pc73foh22g-a.oregon-postgres.render.com",
+      "username": "payroll",
+      "password": "payroll@123",
+      "database": "payrolldb",
+      "host": "10.1.152.35",
       "port": 5432,
       "dialect": "postgres",
       "dialectOptions": {
@@ -14,10 +14,10 @@
       }
     },
     "test": {
-      "username": "ct_user",
-      "password": "y3sNLAB4dr7pcq8pCBqwMtoCzMsvrZq1",
-      "database": "ct_test",
-      "host": "dpg-cp3gmi7sc6pc73foh22g-a.oregon-postgres.render.com",
+      "username": "payroll",
+      "password": "payroll@123",
+      "database": "payrolldb",
+      "host": "10.1.152.35",
       "port": 5432,
       "dialect": "postgres",
       "dialectOptions": {
@@ -28,10 +28,10 @@
       }
     },
     "production": {
-      "username": "ct_user",
-      "password": "y3sNLAB4dr7pcq8pCBqwMtoCzMsvrZq1",
-      "database": "ct",
-      "host": "dpg-cp3gmi7sc6pc73foh22g-a.oregon-postgres.render.com",
+      "username": "payroll",
+      "password": "payroll@123",
+      "database": "payrolldb",
+      "host": "10.1.152.35",
       "port": 5432,
       "dialect": "postgres",
       "dialectOptions": {
@@ -42,3 +42,4 @@
       }
     }
   }
+
