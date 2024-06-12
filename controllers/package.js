@@ -78,7 +78,6 @@ exports.createPackage = async (req, res, next) => {
       discount,
       isTrial,
     } = req.body;
-
     const existingPackage = await Package.findOne({
       where: {
         packageType:packageType,

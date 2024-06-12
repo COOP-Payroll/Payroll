@@ -6,8 +6,9 @@ const { Op, where } = require('sequelize');
 exports.getAllPension = async (req, res,next) => {
   try {
     if (req.user.role === "superAdmin") {
+
       const pensions = await Pension.findAll({
-        where: { userId: req.user.id, isActive: true },
+        where: { UserId: req.user.id, isActive: true },
       });
       res.status(200).json({
         total: pensions.length,
@@ -47,7 +48,7 @@ exports.createPension = async (req, res, next) => {
 
     if (req.user.role === "superAdmin") {
       const getAllPension = await Pension.findAll({
-        where: { userId: req.user.id },
+        where: { UserId: req.user.id },
       });
 
       if (getAllPension.length != 0) {
@@ -183,7 +184,7 @@ exports.getAllPensionIncludingInActive = async (req, res,next) => {
   try {
     if (req.user.role === "superAdmin") {
       const pensions = await Pension.findAll({
-        where: { userId: req.user.id },
+        where: { UserId: req.user.id },
       });
       res.status(200).json({
         count: pensions.length,

@@ -49,7 +49,7 @@ const PackageInfo = sequelize.define("PackageInfo", {
 
 // Define a one-to-many association between PackageModel and ServiceModel
 // Package.hasMany(ServiceModel, { as: 'services' });
-PackageInfo.hasMany(Services);
+// PackageInfo.hasMany(Services);
 // Service.belongsTo(Packages);
 // Services.sync({ force: true }).then(() => console.log('positon model is ready'));
 // PackageInfo.sync({ force: true }).then(() => console.log('positon model is ready'));

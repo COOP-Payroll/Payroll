@@ -11,6 +11,8 @@ router.get(
   pensionController.getAllPension
 );
 
+
+
 router.get(
   "/all",
   middleware.protectAll,

@@ -1390,23 +1390,28 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
     const grades = await Grade.findAll();
     const workbook = new ExcelJS.Workbook();
 
+    // Define your dropdown options
+    const idTypeOptions = {
+      "Driving License": "Driving License",
+      "Passport": "Passport",
+      // Add more options as needed
+    };
+
     // Employee data sheet
     const employeeSheet = workbook.addWorksheet("Employees");
     employeeSheet.columns = [
       { header: "fullname", key: "fullname", width: 30 },
-      // { header: "images", key: "images", width: 30 },
       { header: "sex", key: "sex", width: 10 },
-      { header: "date_of_birth", key: "date_of_birth", width: 15,type: "date" },
+      { header: "date_of_birth", key: "date_of_birth", width: 15 },
       { header: "DepartmentId", key: "DepartmentId", width: 15 },
       { header: "GradeId", key: "GradeId", width: 15 },
       { header: "marriageStatus", key: "marriageStatus", width: 15 },
       { header: "isActive", key: "isActive", width: 10 },
       { header: "nationality", key: "nationality", width: 15 },
-      { header: "password", key: "password", width: 15 },
       { header: "email", key: "email", width: 30 },
       { header: "phoneNumber", key: "phoneNumber", width: 20 },
       { header: "optionalPhoneNumber", key: "optionalPhoneNumber", width: 20 },
-      { header: "id_type", key: "id_type", width: 15, dataValidation: { formulae: ['"kebele","passport"'] } }, 
+      { header: "id_type", key: "id_type", width: 15 },
       { header: "id_Number", key: "id_Number", width: 20 },
       { header: "country", key: "country", width: 15 },
       { header: "state", key: "state", width: 15 },
@@ -1421,35 +1426,49 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
       { header: "position", key: "position", width: 15 },
       { header: "siteLocation", key: "siteLocation", width: 15 },
       { header: "emergency_relation", key: "emergency_relation", width: 20 },
-      {
-        header: "emergency_phoneNumber",
-        key: "emergency_phoneNumber",
-        width: 20,
-      },
+      { header: "emergency_phoneNumber", key: "emergency_phoneNumber", width: 20 },
       { header: "emergency_fullname", key: "emergency_fullname", width: 30 },
       { header: "accountNumber", key: "accountNumber", width: 30 },
-      { header: "isVerified", key: "isVerified", width: 10 },
     ];
+
+    // Apply data validation for the id_type column using dropdown with mapped options
+    employeeSheet.getColumn('id_type').eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header row
+      cell.dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formula1: Object.values(idTypeOptions), // Using Object.values to get the values array
+        showErrorMessage: true,
+        errorTitle: 'Invalid Option',
+        error: 'Please select a valid option',
+      };
+    });
+
+    // Apply date format for the date_of_birth column
+    employeeSheet.getColumn('date_of_birth').eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header row
+      cell.numFmt = 'mm/dd/yyyy'; // Apply date format
+      cell.dataValidation = {
+        type: 'date',
+        operator: 'greaterThan',
+        formula1: '1900-01-01', // Date must be after this date
+        showErrorMessage: true,
+        errorTitle: 'Invalid Date',
+        error: 'Please enter a valid date',
+      };
+    });
 
     // Department data sheet
     const departmentSheet = workbook.addWorksheet("Departments");
-    // departmentSheet.columns = [
-    //   { header: 'Department ID', key: 'id', width: 15 },
-    //   { header: 'Department Name', key: 'name', width: 30 }
-    // ];
-    // departments.forEach(department => {
-    //   departmentSheet.addRow({ id: department.id, name: department.name });
-    // });
-
     departmentSheet.columns = [
       { header: "Department ID", key: "id", width: 15 },
-      { header: "Department Name", key: "deptName", width: 30 }, // Use 'deptName' instead of 'name'
+      { header: "Department Name", key: "deptName", width: 30 },
     ];
     departments.forEach((department) => {
       departmentSheet.addRow({
         id: department.id,
         deptName: department.deptName,
-      }); // Use 'deptName' instead of 'name'
+      });
     });
 
     // Position data sheet
@@ -1478,6 +1497,7 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
         maxSalary: grade.maxSalary,
       });
     });
+
     // Set the response content type
     res.setHeader(
       "Content-Type",
@@ -1495,3 +1515,142 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
     next(createError.createError(500, "Internal Server Error"));
   }
 };
+
+// exports.downloadEmployeeTemplate = async (req, res, next) => {
+//   try {
+//     const departments = await Department.findAll();
+//     const positions = await Position.findAll();
+//     const grades = await Grade.findAll();
+//     const workbook = new ExcelJS.Workbook();
+
+//     // Employee data sheet
+//     const employeeSheet = workbook.addWorksheet("Employees");
+//     employeeSheet.columns = [
+//       { header: "fullname", key: "fullname", width: 30 },
+//       { header: "sex", key: "sex", width: 10 },
+//       { header: "date_of_birth", key: "date_of_birth", width: 15 },
+//       { header: "DepartmentId", key: "DepartmentId", width: 15 },
+//       { header: "GradeId", key: "GradeId", width: 15 },
+//       { header: "marriageStatus", key: "marriageStatus", width: 15 },
+//       { header: "isActive", key: "isActive", width: 10 },
+//       { header: "nationality", key: "nationality", width: 15 },
+//       { header: "email", key: "email", width: 30 },
+//       { header: "phoneNumber", key: "phoneNumber", width: 20 },
+//       { header: "optionalPhoneNumber", key: "optionalPhoneNumber", width: 20 },
+//       { header: "id_type", key: "id_type", width: 15 },
+//       { header: "id_Number", key: "id_Number", width: 20 },
+//       { header: "country", key: "country", width: 15 },
+//       { header: "state", key: "state", width: 15 },
+//       { header: "zone_or_city", key: "zone_or_city", width: 15 },
+//       { header: "woreda", key: "woreda", width: 15 },
+//       { header: "kebele", key: "kebele", width: 15 },
+//       { header: "houseNumber", key: "houseNumber", width: 15 },
+//       { header: "employeeTIN", key: "employeeTIN", width: 20 },
+//       { header: "hireDate", key: "hireDate", width: 20 },
+//       { header: "employee_Code", key: "employee_Code", width: 20 },
+//       { header: "basicSalary", key: "basicSalary", width: 20 },
+//       { header: "position", key: "position", width: 15 },
+//       { header: "siteLocation", key: "siteLocation", width: 15 },
+//       { header: "emergency_relation", key: "emergency_relation", width: 20 },
+//       { header: "emergency_phoneNumber", key: "emergency_phoneNumber", width: 20 },
+//       { header: "emergency_fullname", key: "emergency_fullname", width: 30 },
+//       { header: "accountNumber", key: "accountNumber", width: 30 },
+//     ];
+
+//     worksheet.getCell('A1').names = ['thing1', 'thing2'];
+//     expect(worksheet.getCell('A1').names).to.have.members(['thing1', 'thing2']);
+//       // Apply data validation for the id_type column using dropdown with mapped options
+//       employeeSheet.getColumn('id_type').eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//         if (rowNumber === 1) return; // Skip header row
+//         cell.dataValidation = {
+//           type: 'list',
+//           allowBlank: true,
+//           formula1: `=INDIRECT("${Object.keys(idTypeOptions).join(',')}")`, // Use INDIRECT for dynamic options
+//           showErrorMessage: true,
+//           errorTitle: 'Invalid Option',
+//           error: 'Please select a valid option',
+//         };
+//       });
+//     // employeeSheet.getColumn('id_type').eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//     //   cell.dataValidation = {
+//     //     type: 'list',
+//     //     allowBlank: true,
+//     //     formula1: '= "driving_license,passport"', // Use formula prefix for Excel
+//     //     showErrorMessage: true,
+//     //     errorTitle: 'Invalid Option',
+//     //     error: 'Please select a valid option',
+//     //   };
+//     // });
+
+//     // Apply date format for the date_of_birth column
+//     employeeSheet.getColumn('date_of_birth').eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//       if (rowNumber === 1) return; // Skip header row
+//       cell.numFmt = 'mm/dd/yyyy'; // Apply date format
+//       cell.dataValidation = {
+//         type: 'date',
+//         operator: 'greaterThan',
+//         formula1: '1900-01-01', // Date must be after this date
+//         showErrorMessage: true,
+//         errorTitle: 'Invalid Date',
+//         error: 'Please enter a valid date',
+//       };
+//     });
+
+//     // Department data sheet
+//     const departmentSheet = workbook.addWorksheet("Departments");
+//     departmentSheet.columns = [
+//       { header: "Department ID", key: "id", width: 15 },
+//       { header: "Department Name", key: "deptName", width: 30 },
+//     ];
+//     departments.forEach((department) => {
+//       departmentSheet.addRow({
+//         id: department.id,
+//         deptName: department.deptName,
+//       });
+//     });
+
+//     // Position data sheet
+//     const positionSheet = workbook.addWorksheet("Positions");
+//     positionSheet.columns = [
+//       { header: "Position ID", key: "id", width: 15 },
+//       { header: "Position Name", key: "name", width: 30 },
+//     ];
+//     positions.forEach((position) => {
+//       positionSheet.addRow({ id: position.id, name: position.positionName });
+//     });
+
+//     // Grade data sheet
+//     const gradeSheet = workbook.addWorksheet("Grades");
+//     gradeSheet.columns = [
+//       { header: "Grade ID", key: "id", width: 15 },
+//       { header: "Grade Name", key: "name", width: 20 },
+//       { header: "minSalary", key: "minSalary", width: 20 },
+//       { header: "maxSalary", key: "maxSalary", width: 20 },
+//     ];
+//     grades.forEach((grade) => {
+//       gradeSheet.addRow({
+//         id: grade.id,
+//         name: grade.name,
+//         minSalary: grade.minSalary,
+//         maxSalary: grade.maxSalary,
+//       });
+//     });
+
+//     // Set the response content type
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+//     res.setHeader(
+//       "Content-Disposition",
+//       "attachment; filename=employee_template.xlsx"
+//     );
+
+//     await workbook.xlsx.write(res);
+//     res.end();
+//   } catch (error) {
+//     console.error("Error generating template:", error);
+//     next(createError.createError(500, "Internal Server Error"));
+//   }
+// };
+

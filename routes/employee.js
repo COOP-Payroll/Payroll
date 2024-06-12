@@ -35,7 +35,7 @@ router.get(
 );
 
 router.get(
-  "/bulk-registration",
+  "/download-excel",
 
   // middleware.protectAll,
   // middleware.restrictALL({
@@ -44,6 +44,8 @@ router.get(
   // }),
   newEmployeeController.downloadEmployeeTemplate
 );
+
+
 
 
 router.get(

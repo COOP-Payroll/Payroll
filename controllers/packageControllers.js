@@ -1,128 +1,107 @@
 const Package = require("../models/packages.js");
 const Service = require("../models/services.js");
-const sequelize = require('../database/db.js')
-const createError = require('.././utils/error.js');
+const sequelize = require("../database/db.js");
+const createError = require(".././utils/error.js");
 
-const successResponse = require('.././utils/successResponse.js')
+const successResponse = require(".././utils/successResponse.js");
+const Services = require("../models/services.js");
+const PackageInfo = require("../models/packages.js");
+const PackageServices = require("../models/packageService.js");
 
 // Define controller methods for handling User requests
 exports.getAllPackages = async (req, res, next) => {
   try {
-    const packages = await Package.findAll(
-      {
-        include: [
-          {
-            model: Service,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', "PackageId"],
-            },
+    const packages = await Package.findAll({
+      include: [
+        {
+          model: Service,
+          attributes: {
+            exclude: ["createdAt", "updatedAt", "PackageId"],
           },
-        ],
-      }
-    );
+        },
+      ],
+    });
 
     return res.status(200).json({
       success: true,
       message: "Data Found",
-      data:  packages 
-      ,
+      data: packages,
     });
-  }
-  catch (error) {
+  } catch (error) {
     console.log(error);
     return next(createError.createError(500, "Internal server Error"));
-
   }
 };
 
 exports.getMonthlyPackages = async (req, res, next) => {
   try {
+    const monthlyPackages = await Package.findAll({
+      where: { packageType: "Monthly" },
 
-    const monthlyPackages = await Package.findAll(
-      { where: { packageType: "Monthly" } ,
-      
-        include: [
-          {
-            model: Service,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', "PackageId"],
-            },
+      include: [
+        {
+          model: Service,
+          attributes: {
+            exclude: ["createdAt", "updatedAt", "PackageId"],
           },
-        ],
-      }
-    );
-
- 
+        },
+      ],
+    });
 
     res.status(200).json({
-      count: monthlyPackages.length
-      , monthlyPackages
-    }
-
-    );
-
-
+      count: monthlyPackages.length,
+      monthlyPackages,
+    });
   } catch (error) {
     console.log(error);
     return next(createError.createError(500, "Internal server Error"));
   }
-
-}
-
+};
 
 exports.getYearlyPackages = async (req, res, next) => {
   try {
-   
-    const yearlyPackages = await Package.findAll(
-      { where: { packageType: "Yearly" } ,
-      
-        include: [
-          {
-            model: Service,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', "PackageId"],
-            },
+    const yearlyPackages = await Package.findAll({
+      where: { packageType: "Yearly" },
+
+      include: [
+        {
+          model: Service,
+          attributes: {
+            exclude: ["createdAt", "updatedAt", "PackageId"],
           },
-        ],
-      }
-    );
+        },
+      ],
+    });
     res.status(200).json({
-      count: yearlyPackages.length
-      , yearlyPackages
-    }
-
-    );
-
-
+      count: yearlyPackages.length,
+      yearlyPackages,
+    });
   } catch (error) {
     console.log(error);
     return next(createError.createError(500, "Internal server Error"));
   }
-
-}
+};
 
 exports.getpackageById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const package = await Package.findByPk(id,
-      {
-        include: [
-          {
-            model: Service,
-            attributes: {
-              exclude: ['createdAt', 'updatedAt', "PackageId"],
-            },
+    const package = await Package.findByPk(id, {
+      include: [
+        {
+          model: Service,
+          attributes: {
+            exclude: ["createdAt", "updatedAt", "PackageId"],
           },
-        ],
-      });
+        },
+      ],
+    });
     if (!package) {
       return next(createError.createError(404, "Package not found"));
-    }
-    else {
+    } else {
       return res.status(200).json({
         success: true,
         message: "Data found",
-        data: { package }
+        data: { package },
       });
     }
   } catch (error) {
@@ -130,9 +109,9 @@ exports.getpackageById = async (req, res, next) => {
   }
 };
 
+//CREAT PACKAGE
 exports.createPackage = async (req, res, next) => {
   try {
-
     const {
       packageType,
       packageName,
@@ -143,7 +122,6 @@ exports.createPackage = async (req, res, next) => {
       discount,
       isTrial,
     } = req.body;
-
 
     // console.log("service data:", service.length)
     const existingPackage = await Package.findOne({
@@ -170,29 +148,88 @@ exports.createPackage = async (req, res, next) => {
       });
       console.log(packages.length);
       if (packages) {
-
-        const services = Service.bulkCreate(service).then(
-          (createdService) => {
-            packages.setServices(createdService);
-          }
-        );
+        const services = Service.bulkCreate(service).then((createdService) => {
+          packages.setServices(createdService);
+        });
 
         return res.status(200).json({
           success: true,
           message: "Successfully Registered",
           data: { packages },
         });
-
       }
-
     }
   } catch (error) {
     console.log(error);
     next(error);
   }
 };
+exports.createPackageWithServie = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+  const {
+    packageName,
+    packageType,
+    price,
+    min_employee,
+    max_employee,
+    discount,
+    isTrial,
+    services,
+  } = req.body;
 
+  try {
+    // Create the package within a transaction
+    const newPackage = await PackageInfo.create(
+      {
+        packageName,
+        packageType,
+        price,
+        min_employee,
+        max_employee,
+        discount,
+        isTrial,
+      },
+      { transaction }
+    );
 
+   
+    // Convert service IDs from strings to numbers
+    const serviceIds = services.map(service => Number(service));
+
+    // Validate that all service IDs exist
+    const serviceInstances = await Services.findAll({
+      where: {
+        id: serviceIds,
+      },
+    }, { transaction });
+
+    if (serviceInstances.length !== serviceIds.length) {
+      throw createError(409, "One or more services not found");
+    }
+
+    // Create entries in the join table
+    const packageServiceEntries = serviceIds.map(serviceId => ({
+      PackageInfoId: newPackage.id,
+      ServiceId:serviceId,
+      isActive: true,
+    }));
+
+    await PackageServices.bulkCreate(packageServiceEntries, { transaction });
+
+    // Commit the transaction
+    await transaction.commit();
+
+    res.status(201).json({
+      message: "Package and services created and associated successfully",
+      package: newPackage,
+    });
+  } catch (error) {
+    console.error(error);
+    // Rollback the transaction in case of error
+    await transaction.rollback();
+    return next(createError.createError(500, "Internal server error"));
+  }
+};
 exports.updatePackage = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -249,7 +286,7 @@ exports.updatePackage = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Updated successfully",
-      data:  updatedPackage ,
+      data: updatedPackage,
     });
   } catch (err) {
     console.error(err);
@@ -257,54 +294,57 @@ exports.updatePackage = async (req, res, next) => {
   }
 };
 
-
-exports.updateService= async(req,res,next) => 
-{
+exports.updateService = async (req, res, next) => {
   try {
-    const { packageId,serviceId } = req.params;
-    const {serviceName}=req.body;
+    const { packageId, serviceId } = req.params;
+    const { serviceName } = req.body;
 
-    const existingServices = await Service.findOne({where:{
-      id:serviceId,
-      PackageInfoId:packageId
-    }});
-    if(!existingServices){
-      return next(createError.createError(404,"Service not found"));
+    const existingServices = await Service.findOne({
+      where: {
+        id: serviceId,
+        PackageInfoId: packageId,
+      },
+    });
+    if (!existingServices) {
+      return next(createError.createError(404, "Service not found"));
     }
 
-     const updatedServices = await existingServices.update({serviceName:serviceName});
-     res.status(200).json({
-      success:true,
-      message:"updated successfully"
-     });
-    
-  } catch (error) {``
+    const updatedServices = await existingServices.update({
+      serviceName: serviceName,
+    });
+    res.status(200).json({
+      success: true,
+      message: "updated successfully",
+    });
+  } catch (error) {
+    ``;
     console.log(error);
     return next(createError.createError(500, "Internal Server Error"));
   }
 };
 
-exports.deleteService= async(req,res,next) => 
-{
+exports.deleteService = async (req, res, next) => {
   try {
-    const { packageId,serviceId } = req.params;
-    const {serviceName}=req.body;
+    const { packageId, serviceId } = req.params;
+    const { serviceName } = req.body;
 
-    const existingServices = await Service.findOne({where:{
-      id:serviceId,
-      PackageInfoId:packageId
-    }});
-    if(!existingServices){
-      return next(createError.createError(404,"Service not found"));
+    const existingServices = await Service.findOne({
+      where: {
+        id: serviceId,
+        PackageInfoId: packageId,
+      },
+    });
+    if (!existingServices) {
+      return next(createError.createError(404, "Service not found"));
     }
 
-     const updatedServices = await existingServices.destroy();
-     res.status(200).json({
-      success:true,
-      message:"Deleted successfully"
-     });
-    
-  } catch (error) {``
+    const updatedServices = await existingServices.destroy();
+    res.status(200).json({
+      success: true,
+      message: "Deleted successfully",
+    });
+  } catch (error) {
+    ``;
     console.log(error);
     return next(createError.createError(500, "Internal Server Error"));
   }
@@ -330,7 +370,6 @@ exports.deleteService= async(req,res,next) =>
 //       isTrial,
 //     } = req.body;
 //     const updates = {};
- 
 
 //     if (packageName) {
 //       updates.packageName = packageName;
@@ -350,7 +389,7 @@ exports.deleteService= async(req,res,next) =>
 //     if (isTrial) {
 //       updates.isTrial = isTrial;
 //     }
-    
+
 //     if(service){
 //       const services = Service.bulkCreate(service).then(
 //         (createdService) => {
@@ -375,7 +414,6 @@ exports.deleteService= async(req,res,next) =>
 exports.deletePackage = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-
     const { id } = req.params;
 
     const packageInstance = await Package.findByPk(id, { include: Service });
@@ -383,12 +421,11 @@ exports.deletePackage = async (req, res, next) => {
       return res
         .status(409)
         .json({ message: "There is no package with this ID" });
-
     } else {
-      console.log(packageInstance)
+      console.log(packageInstance);
       // Delete associated services
       const serviceIds = Array.isArray(packageInstance.services)
-        ? packageInstance.services.map(service => service.id)
+        ? packageInstance.services.map((service) => service.id)
         : [];
 
       // Delete associated services
@@ -403,15 +440,13 @@ exports.deletePackage = async (req, res, next) => {
 
       res.json({
         success: true,
-        message: 'Package and associated services deleted successfully',
-        data: packageInstance 
+        message: "Package and associated services deleted successfully",
+        data: packageInstance,
       });
     }
   } catch (error) {
-
     await t.rollback();
     console.log(error);
     return next(createError.createError(500, "Internal Server Error "));
-
   }
 };

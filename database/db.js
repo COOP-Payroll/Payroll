@@ -112,8 +112,6 @@ require("dotenv").config();
 //Local server
 
 
-
-
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
 // const CustomError = require("../utils/ErrorHandler");
@@ -148,6 +146,7 @@ async function testConnection() {
   
 testConnection();
 module.exports = sequelize;
+
 
 
 

@@ -154,7 +154,7 @@ router.post(
   "/",
   middleware.protectAll,
   middleware.restrictToAdmin("superAdmin"),
-  packageController.createPackage
+  packageController.createPackageWithServie
 );
 router.delete(
   "/:id",

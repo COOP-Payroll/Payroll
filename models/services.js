@@ -7,8 +7,10 @@ const Services = sequelize.define("Services", {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    description: {
+        type: DataTypes.STRING,
+        // allowNull: false,
+    },
 });
 
-// Package.hasMany("Services")
-// Services.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Services;

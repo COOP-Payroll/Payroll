@@ -60,7 +60,7 @@ const ReportRoutes= require("./routes/reportingRoutes.js");
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
 const additionalPay = require("./routes/AdditionalPay");
 const checkAccountNumber=require("./routes/accountChecker.js");
-// const employeePromotion = require("./routes/employeePromotion");
+const serviceRoutes=require("./routes/serviceRoutes.js")
 
 const app = express();
 
@@ -139,17 +139,15 @@ app.use("/api/newPayroll", newPayroll);
 app.use("/api/module", moduleRoute);
 app.use("/api/address", addressRoute);
 app.use("/api/sponsors",Sponsors)
-app.use("/api/projects", Projects)
-
+app.use("/api/projects", Projects);
 app.use("/api/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/api/payment", ebirrPayment);
-// app.use("/s1", stripePayment);
 app.use("/api/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/api/additionalPay", additionalPayDefinition);
 app.use("/api/additionalpayment", additionalPay);
 app.use("/api/payment", ebirrPayment);
 app.use("/api/accountNumber/verify",checkAccountNumber)
-// app.use("/employeePromotion", employeePromotion);
+app.use("/api/services",serviceRoutes)
 
 const swaggerOptions = {
   swaggerOptions: {
