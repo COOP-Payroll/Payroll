@@ -1,6 +1,6 @@
 const User = require("../models/user.js");
 const Company = require("../models/company.js");
-const createError = require('.././utils/error.js');
+const createError = require('../utils/error.js');
 const AccountInfo = require("../models/accountInfo.js");
 const sequelize = require('../database/db')
 const sendEmail = require("../utils/sendEmail.js");
@@ -10,15 +10,26 @@ const crypto = require('crypto');
 // const jwt = require('jsonwebtoken');
 // create User
 exports.createUser = async (req, res,next) => {
-  const body = req.body;
+  // const body = req.body;
 
   try {
-    const existingUser = await User.findOne({ where: { email: body.email } });
+
+    const {fullName, email,password,AccountNumber,phoneNumber,role}= req.body;
+
+    const existingUser = await User.findOne({ where: { email: email } });
     if (existingUser) {
       return next(createError.createError(409, "User with this email is already registered."));
 
     } else {
-      const user = await User.create({ ...body });
+      const user = await User.create({ 
+       fullName,
+       email,
+       phoneNumber:phoneNumber,
+       AccountNumber:AccountNumber,
+       password:'pass',
+       role: role?? 'superAdmin'
+
+       });
       return res.status(200).json({
         status: 'true',
         message: "User successfully registered.",
@@ -30,6 +41,7 @@ exports.createUser = async (req, res,next) => {
       });
     }
   } catch (error) {
+    console.log(error)
     return next(createError.createError(500, "Internal server error"));
   }
 };
@@ -289,3 +301,65 @@ exports.verifyCompanyAccount = async (req, res, next) => {
     return next(createError.createError(500, 'Internal server error'))
   }
 }
+
+
+//Activate and deactivate user
+
+
+//ACTIVATE || DEACTIVATE USER
+exports.activateUser = async (req, res, next) => {
+  try {
+    //insert required field
+    const updates = {};
+
+    const { id, action } = req.body;
+
+    const validActions = ["activate", "deactivate"];
+
+    // Check if the action is valid
+    if (!validActions.includes(action)) {
+      return next(createError.createError(400, "Invalid action specified."));
+    }
+
+    if (!id || !action) {
+      return next(createError.createError(400, "Provide required fields"));
+    }
+
+    const user = await User.findOne({
+      where: { id: Number(id) },
+    });
+    if (!user) {
+      return next(createError.createError(404, "User not found"));
+    }
+    if (action === "activate") {
+      if (user.isActive) {
+        return next(
+          createError.createError(400, "The user  is already active")
+        );
+      } else {
+        const result = await user.update({ isActive: true });
+        res.status(200).json({
+          message: "User Activated successfully",
+        });
+      }
+    } else if (action === "deactivate") {
+    
+      if (!user.isActive) {
+        return next(
+          createError.createError(
+            400,
+            "The user  is already deactiveted"
+          )
+        );
+      } else {
+        const result = await user.update({ isActive: false });
+        res.status(200).json({
+          message: "User deactivated successfully.",
+        });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500, "Internal server Error"));
+  }
+};

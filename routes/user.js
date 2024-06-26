@@ -6,6 +6,8 @@ const router = express.Router();
 router.get("/", userController.getAllUser);
 router.get("/:id", userController.getUserById);
 router.post("/", userController.createUser);
+
+router.put("/change-status", userController.activateUser)
 router.put('/verify-account/:id', userController.verifyCompanyAccount)
 router.put("/:id", userController.updateUser);
 router.put("/CompanyStatus/update", userController.updateCompanyStatus1);

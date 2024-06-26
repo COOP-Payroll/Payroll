@@ -17,16 +17,27 @@ const User = sequelize.define("User", {
   },
   phoneNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
+    // allowNull: false,
   },
   AccountNumber: {
     type: DataTypes.STRING,
-    allowNull: false,
+    // allowNull: false,
   },
   role: {
-    type: DataTypes.STRING,
+
+    type: DataTypes.ENUM('superAdmin', 'approver','manager'),
     defaultValue: "superAdmin",
+    // type: DataTypes.STRING,
+    // defaultValue: "superAdmin",
   },
+  isActive:{
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
+  lastLoggedIn: {
+    type: DataTypes.DATE,
+    // defaultValue: Date.now()
+  }
 });
 
 User.beforeCreate((user, options) => {
