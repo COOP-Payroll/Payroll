@@ -5,10 +5,10 @@ const User = require("../models/user");
 const Employee = require("../models/employee");
 const CustomRole = require("../models/customRole");
 const Permission = require("../models/permission");
-
-const cookieParser = require("cookie-parser");
 const  createError  = require("../utils/error");
 
+
+// SIGNTOKEN
 const signToken = (id, role,fullName,phoneNumber) => {
   try {
 
@@ -17,7 +17,7 @@ const signToken = (id, role,fullName,phoneNumber) => {
     })
 
     const refreshToken = jwt.sign({ id, role }, 'refreshSecret', {
-      expiresIn: '90d' // Set your desired expiration time for refresh tokens
+      expiresIn: '90d' 
     })
     return  { token, refreshToken }
   } catch (error) {
@@ -26,7 +26,7 @@ const signToken = (id, role,fullName,phoneNumber) => {
   }
 };
 
-
+//SIGNTOKEN FOR COMPANY
 const signTokenCompany = (company) => {
   try {
   
@@ -61,16 +61,14 @@ const signTokenCompany = (company) => {
   }
 };
 
-
+//CREATESENDTOKEN FOR COMPANY
 const createSendTokenCompany = async (company, statusCode, res) => {
   try {
-
-   
+  
 
      const {token,refreshToken} = signTokenCompany(company);
      console.log("refreshToken")
 
-    //  return res.json(token)
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
@@ -83,16 +81,18 @@ const createSendTokenCompany = async (company, statusCode, res) => {
 
       data: {
         company,
-        // refreshToken
       },
       token,
       refreshToken
     });
   } catch (error) {
-    // return next(createError.createError(500,"data"))
+
+    console.log(error)
     return res.status(500).json({ message: error.name });
   }
 };
+
+// CREATESEND TOKEN
 const createSendToken = async (company, statusCode, res) => {
   try {
 
@@ -107,15 +107,13 @@ const createSendToken = async (company, statusCode, res) => {
     company.password = undefined
     res.cookie('jwt', token, cookieOptions)
     res.status(statusCode).json({
-      //  data: {
-      //   company,
-      //   // refreshToken
-      // },
+  
       token,
       refreshToken  
     })
   } catch (error) {
-    return res.status(500).json({ message: error.name });
+    console.log(error)
+    return next(createError.createError(500,error.message))
   }
 };
 
@@ -125,38 +123,23 @@ exports.login = async (req, res, next) => {
     let company;
     const { email, password, companyCode } = req.body;
 
-    //check if email and password exist company code
     if (!email || !password || !companyCode) {
       return res
         .status(404)
         .json({ message: "please provide email, password or company code" });
     }
 
-    //check if user exists and password is correct
     company = await Company.findOne({ where: { email } ,
       include:[
     
       {model: Permission,
         attributes:['id', 'module','isAccessible'],
         through: {
-          attributes: [] // Ensure no attributes from the junction table are included
+          attributes: [] 
         }
-        // attributes: []
       }
       ]
     });
-
-// const pass = await bcrypt.compare(password,"$2b$10$DiAP7zjLHOLzccgiviB8W.BZS4YJvXApvYPmDjW5CpAKDeFdwki2S");
-
-// return res.json({
-//   hashed:"$2b$10$pfYPL9dwFeug/kZbU1o6F.Be.hEUzhNRY8jiXq.cFrs1j8mFdurXC",
-//   password:company.password,
-//   pass
-//  })
-
-
-
-
 
     if (company === null) {
      
@@ -176,9 +159,7 @@ exports.login = async (req, res, next) => {
     }
 
 
-    // const data=await bcrypt.compare("test", company.password)
-    // return res.json(data)
-    // const bcrypt.compare()
+   
     if (!company || !(await bcrypt.compare(password, company.password))) {
       return res.status(401).json({
         message:
@@ -190,7 +171,6 @@ exports.login = async (req, res, next) => {
     } else {
       if (company.status === "active") {
 
-        // return res.json(company)     
         createSendTokenCompany(company, 200, res);
       } else {
         switch (company.status) {
@@ -214,96 +194,60 @@ exports.login = async (req, res, next) => {
       }
     }
   } catch (err) {
-    //next(createError.createError(404, 'failed'));
+   
 
     return next(createError.createError(500, err.message));
-    // res.status(500).json({
-    //   message: err.name,
-    // });
+ 
   }
 };
 
-///super admin login
+// SUPER ADMIN LOGIN
 exports.superAdminLogin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    //check if email and password exist company code
-    if (!email || !password) {
-      return res.status(404).json({ error: "please provide email, password" });
+       if (!email || !password) {
+
+        return next(createError.createError(400,"Please enter email or password"))
+      // return res.status(404).json({ error: "please provide email, password" });
     }
-    //check if user exists and password is correct
     const user = await User.findOne({ where: { email } });
     if (
       !user ||
-      user.role != "superAdmin" ||
+     
       !(await bcrypt.compare(password, user.password))
     ) {
       return res.status(401).json({ message: "Incorrect email, password" });
-      //next(createError.createError(401,'Incorrect email, password or company Code'))
     } else {
       return createSendToken(user, 200, res);
     }
 
-    //if everything is ok send token to the client
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    console.log(error)
+    return next(createError.createError(500,"Internal server error"))
   }
 };
 
+
+//LOGOUT
 exports.logout = async (req, res, next) => {
   try {
     if (req.cookies && req.cookies.jwt) {
-      // Access the JWT cookie
       const jwtCookie = req.cookies.jwt;
 
-      // Clear the JWT cookie
       res.clearCookie("jwt");
 
-      // Send a JSON response for successful logout
       res.status(200).json({ message: "Logout successful" });
     } else {
-      // Handle the case where the JWT cookie is not present
       res.status(401).json({ message: "User is not logged in" });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(500).json({ message: "Internal server error" });
-    }
+   console.log(error)
+   return next(createError.createError(500,"Internal server error"))
   }
 };
 
-
+//VERIFYREFRESH TOKEN
 const verifyRefreshToken = refreshToken => {
   try {
     const decoded = jwt.verify(refreshToken, 'refreshSecret')
@@ -314,7 +258,7 @@ const verifyRefreshToken = refreshToken => {
   }
 }
 
-
+// REFRESHTOKEN
 exports.refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.body
@@ -325,7 +269,6 @@ exports.refreshToken = async (req, res, next) => {
 
     const decoded = verifyRefreshToken(refreshToken)
 
-    // Use the decoded information to generate a new access token
     const newAccessToken = jwt.sign(
       { id: decoded.id, role: decoded.role },
       'secret',
@@ -338,7 +281,7 @@ exports.refreshToken = async (req, res, next) => {
       token: newAccessToken
     })
   } catch (error) {
-    next(createError.createError(500, error.message))
+   return  next(createError.createError(500, error.message))
   }
 }
 
