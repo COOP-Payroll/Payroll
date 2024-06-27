@@ -131,40 +131,27 @@ exports.deleteUser = async (req, res,next) => {
   }
 };
 
-exports.updateCompanyStatus1 = async (req, res,next) => {
 
+exports.updateCompanyStatus1 = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   const { id, status } = req.body;
+
   try {
-   
-
-
-
-    const expirationHours=24;
+    const expirationHours = 24;
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
     });
+
     const token = crypto.randomBytes(32).toString('hex');
-    console.log(`createCompany's ,token`, token);
-    const passwordCreationLink = `http://10.1.151.45:4400/api/setpassword/`;
-    if (!company){
-    return next(createError.createError(404, "company does not exist"));
+    console.log("createCompany's token:", token);
+
+    const passwordCreationLink = `http://10.101.200.91/#/setpassword?${token}`;
+
+    if (!company) {
+      return next(createError(404, "Company does not exist"));
     }
-const params='';
 
-    const baseUrl= `http:10.1.151.45:4400/api/setPassword`
-    const handleClick = () => {
-        baseUrl 
-       params = new URLSearchParams({
-        param1: token,
-        // param2: 'value2'
-      }).toString();
-  
-      const url = `${baseUrl} ? ${params}`
-      window.open(url, '_blank'); // Open in a new tab
-    };
-
-    var text =`
+    const text = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -173,50 +160,114 @@ const params='';
       <title>Welcome to ${company.name}</title>
     </head>
     <body>
-    <p>Dear ${company.name},</p>
-    <p>Thank you for registering with <strong>on our platform.</strong>! We're excited to have you on board.</p>
-    <p>To complete your account setup, please click on the link below to create your account password:</p>
-    <form action="${handleClick}" method="POST">
-    <input  name="token" value="${token}" />
-    <button type="submit">Create Your Password</button>
-  </form>
-    <p>This link will expire in <strong>${expirationHours}</strong> hours for security reasons, so be sure to create your password as soon as possible.</p>
-    
-    <p>Welcome again, and thank you for choosing <strong> our platform </strong>.</p>
-    <p>Best regards,</p>
-    <p><strong> CoopPayroll Software as a Service Team</strong></p>
+      <p>Dear ${company.name},</p>
+      <p>Thank you for registering with <strong>our platform</strong>! We're excited to have you on board.</p>
+      <p>To complete your account setup, please click on the link below to create your account password:</p>
+      <p><a href="${passwordCreationLink}">Create Your Password</a></p>
+      <p>This link will expire in <strong>${expirationHours}</strong> hours for security reasons, so be sure to create your password as soon as possible.</p>
+      <p>Welcome again, and thank you for choosing <strong>our platform</strong>.</p>
+      <p>Best regards,</p>
+      <p><strong>CoopPayroll Software as a Service Team</strong></p>
     </body>
     </html>
     `;
-    if(company.status  == status ){
-      // return next(createError.createError(409,`Company is already ${status}`))
 
+    if (company.status === status) {
+      // return next(createError(409, Company is already ${status}));
     }
 
-        await company.update({ 
-          status ,
-          resetPasswordTokenCreatedAt:new Date(), 
-          resetPasswordToken:token},
-          {transaction});
+    await company.update(
+      {
+        status,
+        resetPasswordTokenCreatedAt: new Date(),
+        resetPasswordToken: token,
+      },
+      { transaction }
+    );
 
-          await sendEmail({
-            email: company.email,
-            subject: "Create Your Account Password.",
-            // text,
-            html:text
-          },{transaction});
+    await sendEmail({
+      email: company.email,
+      subject: "Create Your Account Password.",
+      html: text,
+    });
 
-          await transaction.commit();
-        
-    return res
-      .status(200)
-      .json({ message: "Company status Activated successfully" });
+    await transaction.commit();
+
+    return res.status(200).json({ message: "Company status Activated successfully" });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError(500, "Internal server error"));
   }
 };
+// exports.updateCompanyStatus1 = async (req, res, next) => {
+//   const transaction = await sequelize.transaction();
+//   const { id, status } = req.body;
+
+//   try {
+//     const expirationHours = 24;
+//     const company = await Company.findByPk(Number(id), {
+//       attributes: { exclude: ["password"] },
+//     });
+
+//     const token = crypto.randomBytes(32).toString('hex');
+//     console.log("createCompany's token:", token);
+
+//     const passwordCreationLink = `http://10.1.151.45:4400/api/setpassword?token=${token}`;
+
+//     if (!company) {
+//       return next(createError(404, "Company does not exist"));
+//     }
+
+//     const text = `
+//     <!DOCTYPE html>
+//     <html lang="en">
+//     <head>
+//       <meta charset="UTF-8">
+//       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//       <title>Welcome to ${company.name}</title>
+//     </head>
+//     <body>
+//       <p>Dear ${company.name},</p>
+//       <p>Thank you for registering with <strong>our platform</strong>! We're excited to have you on board.</p>
+//       <p>To complete your account setup, please click on the link below to create your account password:</p>
+//       <p><a href="${passwordCreationLink}">Create Your Password</a></p>
+//       <p>This link will expire in <strong>${expirationHours}</strong> hours for security reasons, so be sure to create your password as soon as possible.</p>
+//       <p>Welcome again, and thank you for choosing <strong>our platform</strong>.</p>
+//       <p>Best regards,</p>
+//       <p><strong>CoopPayroll Software as a Service Team</strong></p>
+//     </body>
+//     </html>
+//     `;
+
+//     if (company.status === status) {
+//       // return next(createError(409, Company is already ${status}));
+//     }
+
+//     await company.update(
+//       {
+//         status,
+//         resetPasswordTokenCreatedAt: new Date(),
+//         resetPasswordToken: token,
+//       },
+//       { transaction }
+//     );
+
+//     await sendEmail({
+//       email: company.email,
+//       subject: "Create Your Account Password.",
+//       html: text,
+//     });
+
+//     await transaction.commit();
+
+//     return res.status(200).json({ message: "Company status Activated successfully" });
+//   } catch (error) {
+//     console.log(error);
+//     await transaction.rollback();
+//     return next(createError(500, "Internal server error"));
+//   }
+// };
 
 exports.updateCompanyStatus = async (req, res, next) => {
   const transaction = await sequelize.transaction();
