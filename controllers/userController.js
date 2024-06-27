@@ -7,8 +7,7 @@ const sendEmail = require("../utils/sendEmail.js");
 const axios = require('axios');
 const crypto = require('crypto');
 
-// const jwt = require('jsonwebtoken');
-// create User
+// CREATE USER
 exports.createUser = async (req, res,next) => {
   // const body = req.body;
 
@@ -46,7 +45,7 @@ exports.createUser = async (req, res,next) => {
   }
 };
 
-// get AllUser
+// GET ALL USER
 exports.getAllUser = async (req, res,next) => {
 
   try {
@@ -63,7 +62,7 @@ exports.getAllUser = async (req, res,next) => {
 
 };
 
-// get only one user
+//GET ONE
 exports.getUserById = async (req, res,next) => {
   const { id } = req.params;
 
@@ -80,23 +79,40 @@ exports.getUserById = async (req, res,next) => {
   }
 };
 
-// update User
+// UPDATE USER
 exports.updateUser = async (req, res,next) => {
   const { id } = req.params;
-  const body = req.body;
+  const {fullName, email,password,AccountNumber,phoneNumber,role}= req.body;
 
   try {
     const user = await User.findByPk(Number(id));
     if (!user) return next(createError.createError(404, "User does not exist"));
-
-    if (body.password) {
-      delete body.password;
+    const updates = {};
+    if (fullName) {
+      updates.fullName = fullName;
+    }
+    if (email) {
+      updates.email = email;
     }
 
-    await user.validate();
-    await user.update({ ...body });
-    return res.json(user);
+    if (AccountNumber) {
+      updates.AccountNumber = AccountNumber;
+    }
+    if (phoneNumber) {
+      updates.phoneNumber = phoneNumber;
+    }
+    if (role) {
+      updates.role = role;
+    }
+   
+
+    const result = await user.update(updates);
+
+    res.status(200).json({
+      message: "updated successfully",
+    });
   } catch (error) {
+    console.log(error)
     return next(createError.createError(500, "Internal server error"));
   }
 };

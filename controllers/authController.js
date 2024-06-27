@@ -27,13 +27,27 @@ const signToken = (id, role,fullName,phoneNumber) => {
 };
 
 
-const signTokenCompany = (id, isProjectBased,isSetted,role,permissions) => {
+const signTokenCompany = (company) => {
   try {
-      
-    const token = jwt.sign({ id, isProjectBased,isSetted, role,permissions },'secret', {
+  
+
+    console.log("data1")
+
+
+
+    const { id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
+      primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
+      Permissions } = company;
+
+
+    const token = jwt.sign({  id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
+      primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
+      Permissions},'secret', {
       expiresIn: '7d'
     })
-    const refreshToken = jwt.sign({ id, isProjectBased,isSetted, role ,permissions},'refreshSecret', {
+    const refreshToken = jwt.sign({  id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
+      primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
+      Permissions},'refreshSecret', {
       expiresIn: '90d' // Set your desired expiration time for refresh tokens
     })
    
@@ -51,7 +65,9 @@ const signTokenCompany = (id, isProjectBased,isSetted,role,permissions) => {
 const createSendTokenCompany = async (company, statusCode, res) => {
   try {
 
-     const {token,refreshToken} = signTokenCompany(company.id, company.isProjectBased,company.isSetted,company.role,company.Permissions);
+   
+
+     const {token,refreshToken} = signTokenCompany(company);
      console.log("refreshToken")
 
     //  return res.json(token)
@@ -173,7 +189,8 @@ exports.login = async (req, res, next) => {
       createSendToken(company, 200, res);
     } else {
       if (company.status === "active") {
-     
+
+        // return res.json(company)     
         createSendTokenCompany(company, 200, res);
       } else {
         switch (company.status) {
