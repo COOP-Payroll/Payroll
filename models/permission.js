@@ -33,8 +33,8 @@ const Permission = sequelize.define("Permission", {
   ///Employee ID
 });
 
-Company.hasMany(Permission);
-Permission.belongsTo(Company);
+// Company.hasMany(Permission);
+// Permission.belongsTo(Company);
 
 CustomRole.hasMany(Permission);
 Permission.belongsTo(CustomRole);

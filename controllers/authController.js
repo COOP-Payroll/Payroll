@@ -5,6 +5,7 @@ const User = require("../models/user");
 const Employee = require("../models/employee");
 const CustomRole = require("../models/customRole");
 const Permission = require("../models/permission");
+
 const cookieParser = require("cookie-parser");
 const  createError  = require("../utils/error");
 
@@ -26,13 +27,13 @@ const signToken = (id, role,fullName,phoneNumber) => {
 };
 
 
-const signTokenCompany = (id, isProjectBased,isSetted,role) => {
+const signTokenCompany = (id, isProjectBased,isSetted,role,permissions) => {
   try {
-
-    const token = jwt.sign({ id, isProjectBased,isSetted, role },'secret', {
+      
+    const token = jwt.sign({ id, isProjectBased,isSetted, role,permissions },'secret', {
       expiresIn: '7d'
     })
-    const refreshToken = jwt.sign({ id, isProjectBased,isSetted, role },'refreshSecret', {
+    const refreshToken = jwt.sign({ id, isProjectBased,isSetted, role ,permissions},'refreshSecret', {
       expiresIn: '90d' // Set your desired expiration time for refresh tokens
     })
    
@@ -50,8 +51,10 @@ const signTokenCompany = (id, isProjectBased,isSetted,role) => {
 const createSendTokenCompany = async (company, statusCode, res) => {
   try {
 
-     const {token,refreshToken} = signTokenCompany(company.id, company.isProjectBased,company.isSetted,company.role);
+     const {token,refreshToken} = signTokenCompany(company.id, company.isProjectBased,company.isSetted,company.role,company.Permissions);
      console.log("refreshToken")
+
+    //  return res.json(token)
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
@@ -76,6 +79,8 @@ const createSendTokenCompany = async (company, statusCode, res) => {
 };
 const createSendToken = async (company, statusCode, res) => {
   try {
+
+    
     const {token,refreshToken} = signToken(company.id, company.role,company.fullName,company.phoneNumber);
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
@@ -112,14 +117,19 @@ exports.login = async (req, res, next) => {
     }
 
     //check if user exists and password is correct
-    company = await Company.findOne({ where: { email } });
-
+    company = await Company.findOne({ where: { email } ,
+      include:[
     
-    // return res.json({
-    //   body: req.body,
+      {model: Permission,
+        attributes:['id', 'module','isAccessible'],
+        through: {
+          attributes: [] // Ensure no attributes from the junction table are included
+        }
+        // attributes: []
+      }
+      ]
+    });
 
-    //   company: company
-    // })
 // const pass = await bcrypt.compare(password,"$2b$10$DiAP7zjLHOLzccgiviB8W.BZS4YJvXApvYPmDjW5CpAKDeFdwki2S");
 
 // return res.json({

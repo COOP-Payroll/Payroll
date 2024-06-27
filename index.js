@@ -61,7 +61,7 @@ const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
 const additionalPay = require("./routes/AdditionalPay");
 const checkAccountNumber=require("./routes/accountChecker.js");
 const serviceRoutes=require("./routes/serviceRoutes.js")
-
+const per= require("./models/companyPermission.js")
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));

@@ -9,12 +9,14 @@ const CustomRole = sequelize.define("CustomRole", {
     allowNull: false,
   },
 });
-CustomRole.hasMany(Employee)
-Employee.belongsTo(CustomRole)
-// Employee.hasOne(CustomRole);
-// CustomRole.belongsTo(Employee);
-
-Company.hasMany(CustomRole);
-CustomRole.belongsTo(Company);
 
 module.exports = CustomRole;
+
+
+// Employee.hasMany(CustomRole)
+// CustomRole.belongsTo(Employee)
+// // Employee.hasOne(CustomRole);
+// // CustomRole.belongsTo(Employee);
+
+// Company.hasMany(CustomRole);
+// CustomRole.belongsTo(Company);

@@ -22,8 +22,15 @@ const sendEmail=require('.././utils/sendEmail.js');
 const AccountInfo = require('../models/accountInfo.js')
 const { create } = require('domain')
 const ProvidentFund = require('../models/providentFund.js')
+const CustomRole = require('../models/customRole.js')
+const { all } = require('axios')
+const CompanyCustomRole = require('../models/companyCustomRole.js')
 // const createError=require("../utils/error.js")
 
+const Permissions= require("../models/permission.js")
+
+
+// GET COMPANY PROFILES
 exports.getcompanyProfiles= async (req, res, next)=>{
   try {
     const company= await Company.findByPk(req.user.id,
@@ -250,11 +257,17 @@ exports.createCompany1 = async (req, res, next) => {
   }
 }
 
+
+// CREATE COMPANY
 exports.createCompany = async (req, res, next) => {
   const transaction = await sequelize.transaction();
 
   try {
     const { packageId, duration, ...companyData } = req.body;
+
+   
+   
+
   
     const existingCompany = await Company.findOne({
       where: {
@@ -409,6 +422,18 @@ companyBanner: bannerPath },
       UserId: null,
     },{transaction});
 
+
+    // ASSIGN CUSTOM Permission TO ADMIN
+    // const allRoles= await CustomRole.findAll();
+    
+    const permissions= await Permissions.findAll();
+  
+    // Assign roles to the company
+
+  
+    // Assign permissions to the company using the junction table
+    await company.setPermissions(permissions, { transaction });
+    console.log('Permissions assigned to company:', permissions.map(permission => permission.id));
    
     await transaction.commit();
 
@@ -459,11 +484,25 @@ companyBanner: bannerPath },
   }
 };
 
+
+//GET ALL COMPANY
 exports.getAllCompany = async (req, res, next) => {
   try {
+
     const companys = await Company.findAll({
       attributes: { exclude: ['password'] },
-      include: [Subscription, Taxslab, Department]
+      include: [Subscription, Taxslab, Department,
+        {model: Permissions,
+          attributes:['id', 'module','isAccessible'],
+          through: {
+            attributes: [] // Ensure no attributes from the junction table are included
+          }
+          // attributes: []
+        }
+
+
+
+      ]
     })
 
     // const baseUrl = "https://localhost:6000/";
@@ -552,6 +591,8 @@ exports.getCompanyById = async (req, res, next) => {
   }
 }
 
+
+//UPDATE COMPANY
 exports.updateCompany = async (req, res, next) => {
   const { id } = req.params
   const body = req.body
@@ -710,6 +751,8 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
   }
 }
 
+
+//UPDATE ACCOUNT INFO
 exports.updateAccountInfo= async(req,res,next)=>{
 
   const transaction = await sequelize.transaction()
@@ -781,8 +824,7 @@ exports.updateAccountInfo= async(req,res,next)=>{
 
 
 
-
-
+//RESET PASSWORD
 exports.resetPasswordToken = async(req, res,next) => {
  
   try {
@@ -844,7 +886,7 @@ const sendActivationEmail = async (email, subject,text,next) => {
     // return next(createError.createError(500, "Error sending activation email. Company status not updated"));
   }
 };
-
+//UPDATE COMPANY PROFILE
 exports.updateCompanyProfile= async(req,res,next)=>{
   try {
     const {
@@ -893,7 +935,7 @@ const logo = req.files?.logo?.[0]?.path
   }
 }
 
-
+//RESET TO DEFAULT COMPANY PROFILE
 exports.resetTodefauldCompanyProfiles= async(req,res,next)=>{
   try {
    
@@ -923,6 +965,8 @@ exports.resetTodefauldCompanyProfiles= async(req,res,next)=>{
     return next(createError.createError(500,"Internal server Error"))
   }
 }
+
+//CREATE PASSWORD
 exports.createPassword = async (req,res,next)=> {
   try {
 
