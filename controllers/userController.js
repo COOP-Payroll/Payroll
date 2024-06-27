@@ -137,16 +137,32 @@ exports.updateCompanyStatus1 = async (req, res,next) => {
   const { id, status } = req.body;
   try {
    
+
+
+
     const expirationHours=24;
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
     });
     const token = crypto.randomBytes(32).toString('hex');
     console.log(`createCompany's ,token`, token);
-    const passwordCreationLink = `http://10.101.200.91:4400/api/company/setpassword/${token}`;
+    const passwordCreationLink = `http://10.1.151.45:4400/api/setpassword/`;
     if (!company){
     return next(createError.createError(404, "company does not exist"));
     }
+const params='';
+
+    const baseUrl= `http:10.1.151.45:4400/api/setPassword`
+    const handleClick = () => {
+        baseUrl 
+       params = new URLSearchParams({
+        param1: token,
+        // param2: 'value2'
+      }).toString();
+  
+      const url = `${baseUrl} ? ${params}`
+      window.open(url, '_blank'); // Open in a new tab
+    };
 
     var text =`
     <!DOCTYPE html>
@@ -160,8 +176,8 @@ exports.updateCompanyStatus1 = async (req, res,next) => {
     <p>Dear ${company.name},</p>
     <p>Thank you for registering with <strong>on our platform.</strong>! We're excited to have you on board.</p>
     <p>To complete your account setup, please click on the link below to create your account password:</p>
-    <form action="${passwordCreationLink}" method="POST">
-    <input type="hidden" name="token" value="${token}" />
+    <form action="${handleClick}" method="POST">
+    <input  name="token" value="${token}" />
     <button type="submit">Create Your Password</button>
   </form>
     <p>This link will expire in <strong>${expirationHours}</strong> hours for security reasons, so be sure to create your password as soon as possible.</p>
@@ -207,6 +223,7 @@ exports.updateCompanyStatus = async (req, res, next) => {
   const { id, status } = req.body;
   
   try {
+    
     const expirationHours = 24;
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },

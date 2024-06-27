@@ -37,17 +37,17 @@ const signTokenCompany = (company) => {
 
     const { id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
       primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
-      Permissions } = company;
+      Permissions ,isProjectBased,isSetted} = company;
 
 
     const token = jwt.sign({  id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
       primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
-      Permissions},'secret', {
+      Permissions,isProjectBased,isSetted},'secret', {
       expiresIn: '7d'
     })
     const refreshToken = jwt.sign({  id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
       primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
-      Permissions},'refreshSecret', {
+      Permissions,isProjectBased,isSetted},'refreshSecret', {
       expiresIn: '90d' // Set your desired expiration time for refresh tokens
     })
    
@@ -208,8 +208,8 @@ exports.superAdminLogin = async (req, res, next) => {
 
        if (!email || !password) {
 
-        return next(createError.createError(400,"Please enter email or password"))
-      // return res.status(404).json({ error: "please provide email, password" });
+        return next(createError.createError(400,"Please provide email or password"))
+      return res.status(404).json({ error: "please provide email, password" });
     }
     const user = await User.findOne({ where: { email } });
     if (
