@@ -54,6 +54,15 @@ exports.getcompanyProfiles= async (req, res, next)=>{
   
   }
 }
+
+
+
+
+
+
+
+
+
 exports.createCompany1 = async (req, res, next) => {
   const transaction = await sequelize.transaction()
 
@@ -698,6 +707,25 @@ exports.getAllBlockedCompany = async (req, res, next) => {
       blockedCompany
     })
   } catch (error) {
+    return next(createError.createError(500, 'Internal server error'))
+  }
+}
+
+
+
+//DEACTIVATED COMPANY
+exports.getDeactivatedCompany = async (req, res, next) => {
+  try {
+    const deactiveCompany = await Company.findAll({
+      where: {   status: {
+        [Op.or]: ['reject', 'denied']
+      }}
+    })
+    res.status(200).json({
+      deactiveCompany
+    })
+  } catch (error) {
+    console.log(error)
     return next(createError.createError(500, 'Internal server error'))
   }
 }

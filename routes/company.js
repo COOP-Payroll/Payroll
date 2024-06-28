@@ -97,6 +97,8 @@ router.get("/all/activeCompany", companyController.getAllActiveCompany);
 router.get("/all/blockedCompany", companyController.getAllBlockedCompany);
 router.get("/all/deniedCompany", companyController.getAllDeniedCompany);
 router.get("/all/pendingCompany", companyController.getAllPendingCompany);
+
+router.get("/all/deactiveCompany", companyController.getDeactivatedCompany)
 router.get("/subscriptionLeftDate/:companyId", companyController.getSubscriptionLeftDate);
 
 

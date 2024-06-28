@@ -13,7 +13,7 @@ const Company = sequelize.define("Company", {
   },
   status: {
     type: DataTypes.ENUM,
-    values: ["pending", "active", "blocked", "denied"],
+    values: ["pending", "active", "reject", "denied"],
     defaultValue: "pending",
   },
   organizationName: {
