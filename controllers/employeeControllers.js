@@ -42,6 +42,7 @@ const EmployeePosition = require("../models/employeePosition.js");
 const Approver = require("../models/approver.js");
 const ApprovalMethod = require("../models/approvalMethod.js");
 const { model } = require("mongoose");
+const CreateCustomRole = require("../models/createCustomRole.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -106,7 +107,7 @@ exports.getAllEmployee = async (req, res,next) => {
           where:{isActive:true}
         },
         {
-          model: CustomRole,
+          model: CreateCustomRole,
           required: false,
         },
         {
@@ -143,10 +144,10 @@ exports.getAllEmployee = async (req, res,next) => {
           model: EmergencyContact,
           required: false,
         },
-        {
-          model: CustomRole,
-          include: [Permission],
-        },
+        // {
+        //   model: CustomRole,
+        //   include: [Permission],
+        // },
         {
           model: AdditionalAllowance,
           include: [AdditionalAllowanceDefinition],

@@ -160,7 +160,7 @@ exports.login = async (req, res, next) => {
 
 
    
-    if (!company || !(await bcrypt.compare(password, company.password))) {
+    if (!company ||   company.companyCode != companyCode|| !(await bcrypt.compare(password, company.password))) {
       return res.status(401).json({
         message:
           "Unauthorized access - Invalid email, password or company code",
