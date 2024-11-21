@@ -21,7 +21,7 @@ exports.getAllGrade = async (req, res, next) => {
       where: criteria,
       include: [
         {
-          model: Allowance, // Use the correct alias defined in the association
+          model: Allowance, 
           include: [AllowanceDefinition]
         }
       ]
@@ -40,10 +40,14 @@ exports.getAllGrade = async (req, res, next) => {
   }
 }
 
+
+//GET BY ID
 exports.getGradeById = async (req, res, next) => {
   try {
     const id = req.params.id
-    const grade = await Grade.findByPk(id)
+    const grade = await Grade.findOne({
+      where:{id, CompanyId: req.user.id}
+    })
     if (!grade) {
       return next(
         createError.createError(404, 'There is no Grade with this ID')
@@ -56,9 +60,11 @@ exports.getGradeById = async (req, res, next) => {
   }
 }
 
+
+//CREATE GRADE
 exports.createGrade = async (req, res, next) => {
   try {
-    //insert required field
+
 
     const { name, minSalary, maxSalary } = req.body
 

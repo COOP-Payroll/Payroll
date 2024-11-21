@@ -4,13 +4,15 @@ const Company = require("../models/company.js");
 const Employee = require("../models/employee.js");
 const createError = require("../utils/error.js");
 
-// Define controller methods for handling User requests for deduction definition
+
+
+//GET ALL CUSTOM ROLE
 exports.getAllCustomRole = async (req, res,next) => {
-
-
   try {
+
+    // return res.json("data")
     const customRole = await CustomRole.findAll({
-      where: { CompanyId: req.user.id },
+      // where: { CompanyId: req.user.id },
       include: [Permission],
     });
     res.status(200).json({
@@ -18,11 +20,11 @@ exports.getAllCustomRole = async (req, res,next) => {
       customRole,
     });
   } catch (error) {
-    console.error("Error retrieving permissions:", error);
     return next(createError.createError(500,"Internal server error"))
   }
 };
 
+//GET CUSTOM ROLE BY ID
 exports.getCustomRoleById = async (req, res,next) => {
   try {
     const { id } = req.params;
@@ -30,26 +32,32 @@ exports.getCustomRoleById = async (req, res,next) => {
     const customRole = await CustomRole.findByPk(id);
     res.status(200).json(customRole);
   } catch (error) {
-    console.log(error)
    return next(createError.createError(500,"Internal server error"))
   }
 };
 
+//CREATE CUSTOM ROLE
 exports.createCustomRole = async (req, res, next) => {
+
   try {
     const { name, permission } = req.body;
    if (permission.length ===0 || !permission){
     return next(createError.createError(400, "Please select atleast on permission"))
    }
+
     const checkrole = await CustomRole.findOne({
-      where: { CompanyId: req.user.id, name: name },
+      where: {  name: name },
     });
 
+
+    
+   
     if (checkrole) {
-      res.status(409).json("This Role is defined already ");
+
+      return next(createError.createError(400,"The role is already defined"));
     } else {
       const customRole = await CustomRole.create({ name: name });
-      await customRole.setCompany(req.user.id);
+      // await customRole.setCompany(req.user.id);
 
       const permissions = await Promise.all(
         permission.map((emer) => Permission.create(emer))
@@ -58,7 +66,6 @@ exports.createCustomRole = async (req, res, next) => {
       const ss = await Promise.all(
         permissions.map((emer) => {
           emer.setCustomRole(customRole);
-          emer.setCompany(req.user.id);
         })
       );
 
@@ -68,10 +75,11 @@ exports.createCustomRole = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log("first", error);
     return next(createError.createError(500,"Internal server error"))
   }
 };
+
+// UPDATE CUSTOM ROLE
 exports.updateCustomRole = async (req, res, next) => {
   try {
     const customRoleName = req.body.name;

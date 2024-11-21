@@ -25,7 +25,7 @@ const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail.js");
-const { Op } = require("sequelize");
+const { Op, json } = require("sequelize");
 const createError= require('../utils/error.js')
 // Define controller methods for handling User requests
 const Position=require("../models/position.js")
@@ -42,7 +42,7 @@ const EmployeePosition = require("../models/employeePosition.js");
 const Approver = require("../models/approver.js");
 const ApprovalMethod = require("../models/approvalMethod.js");
 const { model } = require("mongoose");
-const CreateCustomRole = require("../models/createCustomRole.js");
+const EmployeeCustomRole = require("../models/employeeCustomRole.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -107,7 +107,7 @@ exports.getAllEmployee = async (req, res,next) => {
           where:{isActive:true}
         },
         {
-          model: CreateCustomRole,
+          model: CustomRole,
           required: false,
         },
         {
@@ -206,9 +206,9 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
     
       where:{
         CompanyId:req.user.id,
-        CustomRoleId: {
-          [Op.not]: null,  // Exclude payrolls with status 'approved'
-        },
+        // CustomRoleId: {
+        //   [Op.not]: null,  // Exclude payrolls with status 'approved'
+        // },
         
       },
       include: [
@@ -263,10 +263,15 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
           required: false,
           where:{isActive:true}
         },
-        {
-          model: CustomRole,
-          required: false,
-        },
+        // {
+        //   model: CustomRole,
+        //   through:{
+        //   model: EmployeeCustomRole,
+       
+        //   },
+        //   include: [Permission],
+        //   required: false,
+        // },
         {
           model: Loan,
           required: false,
@@ -293,10 +298,7 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
             // { model: EmployeeGrade, where: { active: true } },
           ],
         },
-        // {
-        //   model: EmployeeGrade,
-        //   where: { active: true },
-        // },
+    
         {
           model: EmergencyContact,
           required: false,

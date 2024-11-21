@@ -4,6 +4,9 @@
 const CompanyAccountInfo = require("../models/companyAccountInfo");
 const createError= require("../utils/error")
 
+
+
+// CREATE COMPANY ACCOUNT INFO
 exports.createCompanyAccountInfo = async (req, res,next) => {
   try {
     const CompanyId = Number(req.user.id);

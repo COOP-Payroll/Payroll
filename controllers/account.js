@@ -1,5 +1,8 @@
 const createError = require('../utils/error')
 const { default: axios } = require('axios')
+
+
+//CHECK ACCOUNT  NUMBER
 exports.checkAccountNumber = async (req, res, next) => {
   try {
     const { accountNumber } = req.body
@@ -7,18 +10,7 @@ exports.checkAccountNumber = async (req, res, next) => {
     // const url = 'http://10.1.245.150:7081/v1/cbo/'
     const url= 'http://10.1.245.150:7081/v1/cbo/'
     const response = await axios.post(url, {
-      // CustomerInfoRequest: {
-      //   ESBHeader: {
-      //     serviceCode: '040000',
-      //     channel: 'USSD',
-      //     Service_name: 'customerInfo',
-      //     Message_Id: 'Mmr2qyutr82729'
-      //   },
-      //   CusomerInfo: {
-      //     AccountId: accountNumber
-      //   }
-      // }
-
+    
       AccountDetailsRequest: {
         ESBHeader: {
             serviceCode: "180000",
@@ -34,9 +26,7 @@ exports.checkAccountNumber = async (req, res, next) => {
     }
     })
     console.log(response) 
-// return res.status(200).json({
-//   data:response?.data?.AccountDetailsResponse?.ESBStatus?.Status === 'Failure'
-// })
+
     if (response?.data?.AccountDetailsResponse?.ESBStatus?.Status === 'Failure') {
       return next(createError.createError(404, 'Account number not found'))
     }

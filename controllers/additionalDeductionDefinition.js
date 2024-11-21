@@ -2,11 +2,12 @@ const AdditionalDeductionDefinition = require("../models/additionlDeductionDefin
 const createError = require('../utils/error')
 
 const Company = require("../models/company");
-// Define controller methods for handling User requests
+// GET ALL ADDITIONAL DEDUCTION DEFINITION
 exports.getAllAdditionalDeductionDefinition = async (req, res,next) => {
-  const Company = req.user.id;
 
+ 
   try {
+    const Company = req.user.id;
     const criteria = {
       CompanyId: req.user.id,
     };
@@ -22,13 +23,18 @@ exports.getAllAdditionalDeductionDefinition = async (req, res,next) => {
   }
 };
 
-exports.getAdditionalDeductionDefinition = ById = async (req, res,next) => {
+
+//GET BY ID
+exports.getAdditionalDeductionDefinitionById = async (req, res,next) => {
   try {
     const { id } = req.params;
-    const AdditionalDeductionDefinition =
-      await AdditionalDeductionDefinition.findByPk(id);
+    const additionalDeductionDefinition =   await AdditionalDeductionDefinition.findByPk(id);
+
+    if(!additionalDeductionDefinition){
+      return next(createError.createError(404,"There is no additional deduction definition with this Id"))
+    }
     res.status(200).json({
-      AdditionalDeductionDefinition,
+      additionalDeductionDefinition,
     });
   } catch (error) {
     console.log(error)
@@ -36,6 +42,7 @@ exports.getAdditionalDeductionDefinition = ById = async (req, res,next) => {
   }
 };
 
+// CREATE
 exports.createAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     //insert required field
@@ -53,7 +60,8 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
       });
 
     if (checkAdditionalDeductionDefinition) {
-      res.status(409).json("Already defined");
+
+      return next(createError.createError(409,"Aready defined"))
     } else {
       const AdditionalDeductionDefinitions =
         await AdditionalDeductionDefinition.create({
@@ -71,6 +79,8 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
   }
 };
 
+
+//UPDATE
 exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     const { name } = req.body;
@@ -80,7 +90,14 @@ exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
     if (name) {
       updates.name = name;
     }
-    console.log("name", req.body.name);
+    const additionalDeductionDefinitions =
+    await AdditionalDeductionDefinition.findOne({
+      where: { id: id, CompanyId: req.user.id },
+    });
+    if(!additionalDeductionDefinitions){
+      return next(createError.createError(404,"There is no additional deduction definition with this ID"))
+    }
+
     const result = await AdditionalDeductionDefinition.update(
       { name: req.body.name },
       {
@@ -98,6 +115,8 @@ exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
   }
 };
 
+
+//DELETE
 exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -112,7 +131,8 @@ exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
       });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res.status(409).json({ message: "There is no such ID" });
+
+      return next(createError.createError(404, "There is no such Id"))
     }
   } catch (error) {
     console.log(error)

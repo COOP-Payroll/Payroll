@@ -2,7 +2,8 @@ const DeductionDefinition = require("../models/deductionDefinition");
 const Company = require("../models/company");
 
 const createError= require("../utils/error")
-// Define controller methods for handling User requests for deduction definition
+
+//GET ALL DEDUCTION DEFINITION
 exports.getAllDeductionDefinition = async (req, res,next) => {
   const Company = req.user.id;
   console.log(Company);
@@ -22,7 +23,7 @@ exports.getAllDeductionDefinition = async (req, res,next) => {
    return next(createError.createError(500,"Internal server error"))
   }
 };
-
+//GET BY ID
 exports.getDeductionDefinitionById = async (req, res,next) => {
   try {
     const { id } = req.params;
@@ -34,13 +35,12 @@ exports.getDeductionDefinitionById = async (req, res,next) => {
   }
 };
 
+
+//CREATE DEDUCTION DEFINITION
 exports.createDeductionDefinition = async (req, res, next) => {
   const companyId = req.user.id;
   try {
-    //insert required field
 
-    // const { name,startingAmount, ispercent} = req.body;
-    // console.log("Company", companyId);
     const name = req.body.name;
 
     const checkDeductionDefinition = await DeductionDefinition.findAll({
@@ -48,20 +48,20 @@ exports.createDeductionDefinition = async (req, res, next) => {
     });
 
     if (checkDeductionDefinition.length != 0 ) {
-      res.status(404).json({ error: "Already defined" });
+
+      return next(createError.createError(404,"Already defined"))
     } else {
       const deductionDefinition = await DeductionDefinition.create({
         name: name,
-        // startingAmount: startingAmount,
-        // isPercent: isPercent,
+      
       });
 
       const company = await Company.findByPk(companyId);
       if (company) {
         await deductionDefinition.setCompany(company);
       } else {
-        // Handle the case where the company with the given ID is not found
-        return res.json("no company with this id");
+
+        return next(createError.createError(404,"Company not found"))
       }
 
       res.status(200).json({
@@ -70,15 +70,15 @@ exports.createDeductionDefinition = async (req, res, next) => {
       });
     }
 
-    //console.log(deductionDefinition)
   } catch (error) {
     console.log(error)
     return next(createError.createError(500,"Internal server error"))
   }
 };
+
+//UPDATE
 exports.updateDeductionDefinition = async (req, res, next) => {
   try {
-    //insert required field
     const { name } = req.body;
     const updates = {};
     const { id } = req.params;
@@ -86,11 +86,15 @@ exports.updateDeductionDefinition = async (req, res, next) => {
     if (name) {
       updates.name = name;
     }
- 
+ const deductionDefinition= await DeductionDefinition.findOne({
+  where:{id}
+ })
 
-    const result = await DeductionDefinition.update(updates, {
-      where: { id: id },
-    });
+
+ if(!deductionDefinition){
+  return next(createError.createError(404, "Deduction definition not found "))
+ }
+    const result = await deductionDefinition.update(updates);
 
     return res.status(200).json({
       message: "updated successfully",
@@ -101,6 +105,8 @@ exports.updateDeductionDefinition = async (req, res, next) => {
   }
 };
 
+
+//DELETE
 exports.deleteDeductionDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -113,7 +119,7 @@ exports.deleteDeductionDefinition = async (req, res, next) => {
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
       return res
-        .status(409)
+        .status(404)
         .json({ message: "There is no Deduction Definition with this ID" });
     }
   } catch (error) {

@@ -5,7 +5,7 @@ const Company = require("../models/company.js");
 const Employee = require("../models/employee.js");
 const createError = require('../utils/error')
 
-// Define controller methods for handling User requests for deduction definition
+//GET ALL ADDITIONAL PAY
 exports.getAllAdditionalPay = async (req, res,next) => {
     try {
       const CompanyId = req.user.id;
@@ -20,12 +20,14 @@ exports.getAllAdditionalPay = async (req, res,next) => {
     }
   };
 
+  //GET ADDITIONALPAYBYID 
 exports.getAdditionalPayById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const additionalPay = await AdditionalPay.findByPk(id);
     if (!additionalPay) {
-      return res.status(404).json({ message: "There is no allowance id" });
+
+      return next(createError.createError(404,"Allowance not found"))
     } else {
      return  res.json(additionalPay);
     }
@@ -35,22 +37,26 @@ exports.getAdditionalPayById = async (req, res,next) => {
   }
 };
 
+//CREATE ADDITIONAL PAY
 exports.createAdditionalPay = async (req, res, next) => {
   try {
-    console.log("create additional pay");
-    //insert required field
+  
     const amount = req.body.amount;
     const employeeId = req.body.employeeId;
     const additionalPayDefinitionId = req.body.additionalPayDefinitionId;
     const payrollDefinitionId = req.body.payrollDefinitionId;
-
-    const employee = await Employee.findByPk(employeeId);
-    const emp2 = await Employee.findAll({
-      where: { id: employeeId },
-      include: {
-        model: AdditionalPay,
-      },
+    const CompanyId = req.user.id;
+    const employee = await Employee.findOne({
+      where:{id: employeeId,
+        CompanyId
+      }
     });
+
+ 
+    if(!employee){
+      return next(createError.createError(404,'Employee not found'))
+    }
+  
 
     const additionalPayDefinition1 = await AdditionalpayDefinition.findByPk(
         additionalPayDefinitionId,
@@ -68,16 +74,16 @@ exports.createAdditionalPay = async (req, res, next) => {
     const allDefinition = await AdditionalpayDefinition.findByPk(
       additionalPayDefinitionId,
     );
-    // console.log("first",allowanceDefinitionId)
     if (!employee) {
-      res.status(404).json("Employee is not defined");
+
+      return next(createError.createError(404,"Employee not found"))
     } else if (!allDefinition) {
       res.status(404).json({
         message: "additional payment definition is not defined",
         additionalPayDefinition1,
       });
 
-      // await allowance.setCompany(Number(req.user.id))
+   
     }
     else if (additionalPayDefinition1) {
       res.status(404).json({
@@ -123,17 +129,23 @@ exports.createAdditionalPay = async (req, res, next) => {
   }
 };
 
+// UPDATE
 exports.updateAdditionalPay = async (req, res, next) => {
   try {
-    //insert required field
     const { amount } = req.body;
     const updates = {};
     const { id } = req.params;
+    const CompanyId = req.user.id;
     if (amount) {
       updates.amount = amount;
     }
+    const addAddionalPay= await AdditionalPay.findOne({where:{id,CompanyId }})
 
-    const result = await AdditionalPay.update({ amount }, { where: { id: id } });
+    if(!addAddionalPay){
+      return next(createError.createError(404,"Additional pay not found"))
+    }
+
+    const result = await addAddionalPay.update({ amount },);
 
     res.status(200).json({
       message: "updated successfully",
@@ -144,6 +156,7 @@ exports.updateAdditionalPay = async (req, res, next) => {
   }
 };
 
+//DELETE
 exports.deleteAdditionalPay = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -153,7 +166,7 @@ exports.deleteAdditionalPay = async (req, res, next) => {
       res.status(200).json({ message: "Deleted successfully" });
     } else {
       res
-        .status(409)
+        .status(404)
         .json({ message: "There is no Deduction Definition with this ID" });
     }
   } catch (error) {

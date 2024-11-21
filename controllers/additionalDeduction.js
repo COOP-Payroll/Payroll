@@ -1,14 +1,15 @@
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 const AdditionalDeduction = require("../models/additionalDeduction.js");
 const Employee = require("../models/employee.js");
-const createError = require('../utils/error')
-
-// Define controller methods for handling User requests for deduction definition
+const createError = require('../utils/error');
+const { all } = require("axios");
+//GET ALL
 exports.getAllAdditionalDeduction = async (req, res, next) => {
   try {
     const criteria = {
       CompanyId: req.user.id,
     };
+
     const AdditionalDeductions = await AdditionalDeduction.findAll({
       where: criteria,
     });
@@ -22,12 +23,21 @@ exports.getAllAdditionalDeduction = async (req, res, next) => {
   }
 };
 
-exports.getAllowanceById = async (req, res,next) => {
+
+
+// GET BY ID
+exports.getAdditionalDeductionById = async (req, res,next) => {
   try {
     const { id } = req.params;
 
+
+
     const allowance = await Allowance.findByPk(id);
-    res.json(allowance);
+
+    if(!allowance){
+      return next(createError.createError(404," Allowance not found"))
+    }
+    res.status(200).json(allowance);
   } catch (error) {
     console.log(error)
     return next(createError.createError(500, 'Internal Server Error'))

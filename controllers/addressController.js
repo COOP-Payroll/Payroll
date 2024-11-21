@@ -2,6 +2,8 @@ const Address = require("../models/address");
 const Employee = require("../models/employee");
 const createError = require('../utils/error.js')
 
+
+//UPDATE ADDRESS
 exports.updateAddress = async (req, res,next) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
@@ -24,11 +26,7 @@ exports.updateAddress = async (req, res,next) => {
         houseNumber: houseNumber || address.houseNumber,
       });
       return res.status(200).json({ data: newAddress });
-    } else {
-      return res
-        .status(500)
-        .json({ message: "can't find active employee address!" });
-    }
+    } 
   } catch (error) {
     console.log(error)
     return next(createError.createError(500, 'Internal Server Error'))

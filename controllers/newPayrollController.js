@@ -1,10 +1,10 @@
 const Grade = require("../models/grade.js");
 const DeductionDefinition = require("../models/deductionDefinition.js");
 const { Op } = require("sequelize");
-const sequelize = require('../database/db');
-const { Sequelize } = require('sequelize');
+const sequelize = require("../database/db");
+const { Sequelize } = require("sequelize");
 const Pension = require("../models/pension");
-const ProvidentFund=require("../models/providentFund.js")
+const ProvidentFund = require("../models/providentFund.js");
 const Taxslab = require("../models/taxslab");
 const Employee = require("../models/employee");
 const Loan = require("../models/loan");
@@ -17,8 +17,8 @@ const EmployeeInfo = require("../models/employeInfo");
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition");
 const AdditionalDeduction = require("../models/additionalDeduction");
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
-const AdditionalPayDefinition=require("../models/additionalPayDefinition.js");
-const AdditionalPay=require("../models/additionalPay.js")
+const AdditionalPayDefinition = require("../models/additionalPayDefinition.js");
+const AdditionalPay = require("../models/additionalPay.js");
 const PayrollDefinition = require("../models/payrollDefinition");
 const EmployeeGrade = require("../models/EmployeeGrade");
 const { run } = require("../utils/checkSubscriptionPlan.js");
@@ -40,12 +40,12 @@ const Sponsor = require("../models/sponsor.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 
-exports.createPayroll1 = async (req, res,next) => {
+exports.createPayroll1 = async (req, res, next) => {
   try {
-    const isProjectBased=req.user.isProjectBased;
+    const isProjectBased = req.user.isProjectBased;
     const { payrollDefinitionId, employeeIds } = req.body;
 
-    const employeeID =employeeIds.map(id => parseInt(id));
+    const employeeID = employeeIds.map((id) => parseInt(id));
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
     const company = req.user.id;
 
@@ -58,9 +58,9 @@ exports.createPayroll1 = async (req, res,next) => {
       where: {
         id: employeeID,
       },
-    });   
+    });
     const existingEmployeeIds = employees.map((employee) => employee.id);
-  
+
     const nonExistingEmployeeIds = employeeID.filter(
       (id) => !existingEmployeeIds.includes(id)
     );
@@ -72,13 +72,20 @@ exports.createPayroll1 = async (req, res,next) => {
       });
     }
     const errors = [];
-    if(isProjectBased){
-      const isTotalPercentEqual100= employees.every(employee => employee?.totalPercent === 100);
-       if(!isTotalPercentEqual100){
-         return next(createError.createError(400, "Some employees have not been fully assigned projects. Please ensure all employees are assigned projects totaling 100%."));
-       }
+    if (isProjectBased) {
+      const isTotalPercentEqual100 = employees.every(
+        (employee) => employee?.totalPercent === 100
+      );
+      if (!isTotalPercentEqual100) {
+        return next(
+          createError.createError(
+            400,
+            "Some employees have not been fully assigned projects. Please ensure all employees are assigned projects totaling 100%."
+          )
+        );
+      }
 
-       const payroll = await Payroll.findOne({
+      const payroll = await Payroll.findOne({
         where: {
           EmployeeId: employeeID,
           PayrollDefinitionId: payrollDefinitionId,
@@ -87,70 +94,70 @@ exports.createPayroll1 = async (req, res,next) => {
 
       if (payroll != null) {
         // return res.json("data")
-        return next(createError.createError(409, "Payroll has already been run for one or more employees1."));
-       
+        return next(
+          createError.createError(
+            409,
+            "Payroll has already been run for one or more employees1."
+          )
+        );
       }
-       for (const employeeId of employeeID) {
+      for (const employeeId of employeeID) {
         try {
-        
-  
           const resp = await runForProjectBasedPayroll(req, res, {
             employeeId,
             company,
             payrollDefinitionId,
           });
-        
         } catch (error) {
           errors.push(error);
         }
       }
-  
-     }
-    if(!isProjectBased){
-    let payrollCount = 0;
-    await payrolldef.update({ status: "ordered" });
-    for (const employeeId of employeeID) {
-      try {
-        const payroll = await Payroll.findOne({
-          where: {
-            EmployeeId: employeeID,
-            PayrollDefinitionId: payrollDefinitionId,
-          },
-        });
+    }
+    if (!isProjectBased) {
+      let payrollCount = 0;
+      await payrolldef.update({ status: "ordered" });
+      for (const employeeId of employeeID) {
+        try {
+          const payroll = await Payroll.findOne({
+            where: {
+              EmployeeId: employeeID,
+              PayrollDefinitionId: payrollDefinitionId,
+            },
+          });
 
-        if (payroll != null) {
-          // return res.json("data")
-          return next(createError.createError(409, "Payroll has already been run for one or more employees."));
-         
+          if (payroll != null) {
+            // return res.json("data")
+            return next(
+              createError.createError(
+                409,
+                "Payroll has already been run for one or more employees."
+              )
+            );
+          }
+
+          const resp = await runPayroll(req, res, {
+            employeeId,
+            company,
+            payrollDefinitionId,
+          });
+        } catch (error) {
+          errors.push(error);
         }
-
-        const resp = await runPayroll(req, res, {
-          employeeId,
-          company,
-          payrollDefinitionId,
-        });
-    
-      } catch (error) {
-        errors.push(error);
       }
+
+      if (errors.length > 0) {
+        console.log("error", errors);
+        return next(createError(500, "There is a problem creating payroll "));
+      }
+      ///
+      // // Update total payroll count in the database
+      // payrolldef.totalNoOfEmployee =
+      //   Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
+      // await payrolldef.save();
     }
 
-    if (errors.length > 0) {
-      console.log("error", errors);
-      return next(createError(500, "There is a problem creating payroll " ));
-    
-    }
-    ///
-    // // Update total payroll count in the database
-    // payrolldef.totalNoOfEmployee =
-    //   Number(payrolldef.totalNoOfEmployee) + Number(payrollCount);
-    // await payrolldef.save();
-
-   
-  }
-
-  return res.status(201).json({ msg: "Payroll created successfully!  " });
-} catch (error) {
+    return res.status(201).json({ msg: "Payroll created successfully!  " });
+  } catch (error) {
     console.log("err", error);
     return res
       .status(500)
@@ -158,7 +165,7 @@ exports.createPayroll1 = async (req, res,next) => {
   }
 };
 
-exports.getPayrollByPayrollDefId = async (req, res,next) => {
+exports.getPayrollByPayrollDefId = async (req, res, next) => {
   try {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
@@ -171,11 +178,11 @@ exports.getPayrollByPayrollDefId = async (req, res,next) => {
 
     return res.json({ count: payrolls.length, payrolls });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
-exports.getNonPayrollEmployee = async (req, res,next) => {
+exports.getNonPayrollEmployee = async (req, res, next) => {
   try {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
@@ -213,7 +220,7 @@ exports.getNonPayrollEmployee = async (req, res,next) => {
       employees,
     });
   } catch (error) {
-  next(error)
+    next(error);
   }
 };
 //update payroll data
@@ -236,7 +243,7 @@ exports.updatePayrollData = async (req, res, next) => {
     }
   } catch (error) {
     console.log("first", error);
-    next(error)
+    next(error);
   }
 };
 
@@ -306,7 +313,6 @@ async function runPayroll(
       }),
       AdditionalPay.findAll({
         where: { CompanyId: company, EmployeeId: employeeId },
-        
       }),
     ]);
     const employee_pension = pension?.employeeContribution ?? 0;
@@ -315,7 +321,7 @@ async function runPayroll(
     const taxslabs = await Taxslab.findAll({
       where: { CompanyId: company, isActive: true },
     });
-    console.log("taxslabs",taxslabs);
+    console.log("taxslabs", taxslabs);
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -325,7 +331,7 @@ async function runPayroll(
     let totalTaxableIncome = 0;
     let overallTotalDeduction = 0;
     let totalLoan = 0;
-    let totalAdditionalPay=0;
+    let totalAdditionalPay = 0;
     // Calculate total allowances
     allowances?.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
@@ -349,8 +355,8 @@ async function runPayroll(
         totalTaxable += Number(allowance?.amount);
       }
     });
-    additionalPay.forEach((additionalPay)=>{
-    totalAdditionalPay+= Number(additionalPay?.amount)
+    additionalPay.forEach((additionalPay) => {
+      totalAdditionalPay += Number(additionalPay?.amount);
     });
     // Calculate total additional allowances
     additionalAllowances.forEach((allowance) => {
@@ -381,7 +387,7 @@ async function runPayroll(
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
-    console.log("addional pay",additionalPay)
+    console.log("addional pay", additionalPay);
     if (taxslab) {
       deductible_Fee = taxslab?.deductible_Fee;
       income_tax_payable = taxslab?.income_tax_payable;
@@ -392,7 +398,7 @@ async function runPayroll(
     } else {
       totalTaxableIncome = 0;
     }
-  
+
     loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
@@ -433,7 +439,7 @@ async function runPayroll(
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
     });
-    await data.setCompany(Number(req.user.id))
+    await data.setCompany(Number(req.user.id));
     console.log("payroll data", payrollData);
     // const payroll = await oldPayroll.update(payrollData);
     // await payrollDefinition.increment("totalNoOfprocessedEmployee");
@@ -452,17 +458,38 @@ async function runPayroll(
     });
   }
 }
-
+//EMPLOYEE WITH NO PAYROLL ON CURRENT MONTH
 exports.getNonPayrollEmployee1 = async (req, res) => {
   try {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
     if (!payrollDef)
       return res.status(404).json({ error: "payroll not found" });
-    console.log("0i mhere from")
+    console.log("0i mhere from");
     const employees = await Employee.findAll({
-    
-      where:{CompanyId: req.user.id},
+      attributes: [
+        "id",
+        "fullname",
+        "image",
+        "sex",
+        "date_of_birth",
+        "role",
+        "nationality",
+        "marriageStatus",
+        "employee_id_number",
+        "email",
+        "phoneNumber",
+        "optionalNumber",
+        "id_image",
+        "id_type",
+        "id_Number",
+        "isDeactivated",
+        "hireDate",
+        "joiningDate",
+        "isActive",
+        "CompanyId",
+      ],
+      where: { CompanyId: req.user.id },
       include: [
         {
           model: Payroll,
@@ -475,11 +502,12 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
           model: EmployeeInfo,
           // attributes:['id',"basicSalary","grossEarning"],
           where: { isActive: true },
-          required: false
+          required: false,
         },
 
         {
           model: Grade,
+          through: { model: EmployeeGrade },
           include: [
             {
               model: Allowance, // Use the correct alias defined in the association
@@ -493,27 +521,27 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
         },
         {
           model: AccountInfo,
-          where:{isActive:true},
+          where: { isActive: true },
           required: false,
           // attributes:['accountNumber','id']
         },
         {
           model: Loan,
-          required: false
+          required: false,
         },
-       
+
         {
           model: AdditionalAllowances,
-          include: [AdditionalAllowanceDefinition]
+          include: [AdditionalAllowanceDefinition],
         },
         {
           model: AdditionalDeduction,
-          include: [AdditionalDeductionDefinition]
-        }
+          include: [AdditionalDeductionDefinition],
+        },
       ],
       where: {
         "$Payroll.id$": null, // Filter for records where the payroll ID is null
-        CompanyId:req.user.id
+        CompanyId: req.user.id,
       },
     });
     return res.status(200).json({ count: employees.length, employees });
@@ -534,6 +562,7 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
     const employees = await Employee.findAll({
       where: {
         id: employeeIds,
+        CompanyId: req.user.id,
       },
     });
     const existingEmployeeIds = employees.map((employee) => employee.id);
@@ -583,301 +612,293 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
   }
 };
 
-
-exports.getNotApprovedPayroll= async (req,res,next)=>{
+exports.getNotApprovedPayroll = async (req, res, next) => {
   try {
- 
-const approver= await Approver.findOne({
-  where:{EmployeeId:req.user.id,
-  isActive:true},
-  include:{
-    model: ApprovalMethod,
-    as:"ApprovalMethod",
-    where:{
-      CompanyId:req.user.CompanyId,
-      isActive:true,
+    const approver = await Approver.findOne({
+      where: { EmployeeId: req.user.id, isActive: true },
+      include: {
+        model: ApprovalMethod,
+        as: "ApprovalMethod",
+        where: {
+          CompanyId: req.user.CompanyId,
+          isActive: true,
+        },
+      },
+    });
+
+    if (approver?.ApprovalMethod === null) {
+      return next(createError.createError(400, "Define approval method first"));
     }
 
-  }
-})
+    const currentDate = new Date();
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
 
-if(approver?.ApprovalMethod === null){
-  return next(createError.createError(400,'Define approval method first'))
-}
-
-const currentDate = new Date();
-const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-const currentMonthPayrolls = await PayrollDefinition.findAll({
-  where: {
-    CompanyId: req.user.CompanyId,
-    [Op.or]: [
-      {
-        startDate: {
-          [Op.between]: [startOfMonth, endOfMonth],
-        },
-        endDate: {
-          [Op.between]: [startOfMonth, endOfMonth],
-        },
-      },
-      {
-        startDate: {
-          [Op.lt]: startOfMonth,
-        },
-        endDate: {
-          [Op.gte]: startOfMonth,
-        },
-      },
-    ],
-  },
-});
-
-console.log("current month", currentMonthPayrolls.length);
-
-if (currentMonthPayrolls.length === 0) {
-  return res.status(204).json({
-    message: "No payrolls defined for this month",
-  });
-} 
-// return res.json({data:currentMonthPayrolls?.[0].id})
-if(approver?.ApprovalMethod?.approvalMethod === 'horizontal'){
-  const minimumApprovers=Number(approver.ApprovalMethod.minimumApprover);
-  if(approver.isMaster){
-    const payrolls = await Payroll.findAll({
-      where:{
-        status: {
-          [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
-        },
-        PayrollDefinitionId:currentMonthPayrolls?.[0]?.id
-      },
-      include: [
-                { model:Employee,
-           attributes: ['id', 'fullname'] 
-           
-         },
-           
-        {
-          model: EmployeePayrollApprovement,
-          attributes: [
-            [Sequelize.fn('COUNT', Sequelize.literal('*')), 'approvalCount'],
-          ],
-          where: {
-            status: 'approved',
+    const currentMonthPayrolls = await PayrollDefinition.findAll({
+      where: {
+        CompanyId: req.user.CompanyId,
+        [Op.or]: [
+          {
+            startDate: {
+              [Op.between]: [startOfMonth, endOfMonth],
+            },
+            endDate: {
+              [Op.between]: [startOfMonth, endOfMonth],
+            },
           },
-          required: false, // Keep this line
-          duplicating: false,
-        },
-      ],
-      group: ['Payroll.id'], // Add this line
-      having: Sequelize.literal(`COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`),
-      raw: true,
-    });
-
-    return res.status(200).json({
-      success:true,
-      data:payrolls
-    })
-  }
-
-
-
-
-  const payrolls = await Payroll.findAll({
-    where:{
-      status: {
-        [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
-      },
-      PayrollDefinitionId:currentMonthPayrolls?.[0]?.id
-    },
-    include: [
-     { model:Employee,
-      attributes: ['id', 'fullname'] 
-    },
-      {
-        
-                     
-        model: EmployeePayrollApprovement,
-        attributes: [
-          [Sequelize.fn('COUNT', Sequelize.literal('*')), 'approvalCount'],
+          {
+            startDate: {
+              [Op.lt]: startOfMonth,
+            },
+            endDate: {
+              [Op.gte]: startOfMonth,
+            },
+          },
         ],
-        where: {
-          status: 'approved',
-        },
-        required: false, // Keep this line
-        duplicating: false,
       },
-    ],
-    group: ['Payroll.id'], // Add this line
-    having: Sequelize.literal(`COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < ${minimumApprovers}`),
-    raw: true,
-  });
-
-  return res.status(200).json({
-    success:true,
-    data:payrolls
-  })
-
-  
-return res.status(200).json({
-  success:true,
-  data:payrolls
-})
-
-}
-if(approver?.ApprovalMethod?.approvalMethod === 'hierarchy'){
-  const approvalLevel=Number(approver?.level);
-  
-  const companyApprovalLevel=approver?.ApprovalMethod?.approvalLevel;
-  if(approver.isMaster){
-    const payrolls = await Payroll.findAll({
-      where:{
-        status: {
-          [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
-        },
-        PayrollDefinitionId:currentMonthPayrolls?.[0]?.id
-      },
-      include: [
-
-        
-          { model:Employee,
-           attributes: ['id', 'fullname'] 
-           
-         },
-           
-
-
-        {
-          model: EmployeePayrollApprovement,
-           where: {
-            status: 'approved',
-            level:companyApprovalLevel
-          },
-          required: true, // Keep this line
-          duplicating: false,
-        },
-      ],
-      raw: true,
     });
-  
-    return res.status(200).json({
-      success:true,
-      data:payrolls
-    })
-  }
-if(approvalLevel === 1){
-  const payrolls= await Payroll.findAll({
-    where: {
-      status: {
-        [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
-      },
-      PayrollDefinitionId:currentMonthPayrolls?.[0]?.id,
-      id: {
-        [Sequelize.Op.notIn]: Sequelize.literal(
-          '(SELECT "PayrollId" FROM "EmployeePayrollApprovements")'
-        ),
-      },
-    },
-    include:[
-      {
-         model:Employee,
-       attributes: ['id', 'fullname'] 
-       
-     }
-       ]
-  });
-  // const payrolls = await Payroll.findAll({
-  //   where:{
-  //     status: {
-  //       [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
-  //     },
-  //   },
-  //   include: [
-  //     {
-  //       model: EmployeePayrollApprovement,
-  //        where: {
-  //         status: 'approved',
-  //         level:1
-  //       },
-  //       required: true, // Keep this line
-  //       duplicating: false,
-  //     },
-  //   ],
-  //   raw: true,
-  // });
 
+    console.log("current month", currentMonthPayrolls.length);
 
-  return res.status(200).json({
-    success:true,
-    data:payrolls
-  })
-}
-else{
-  const payrolls = await Payroll.findAll({
-    where:{
-      status: {
-        [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
-      },
-    },
-    include: [
-      {
-        model: EmployeePayrollApprovement,
-         where: {
-          status: 'approved',
-          level:approvalLevel-1
+    if (currentMonthPayrolls.length === 0) {
+      return res.status(204).json({
+        message: "No payrolls defined for this month",
+      });
+    }
+    // return res.json({data:currentMonthPayrolls?.[0].id})
+    if (approver?.ApprovalMethod?.approvalMethod === "horizontal") {
+      const minimumApprovers = Number(approver.ApprovalMethod.minimumApprover);
+      if (approver.isMaster) {
+        const payrolls = await Payroll.findAll({
+          where: {
+            status: {
+              [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+            },
+            PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+          },
+          include: [
+            { model: Employee, attributes: ["id", "fullname"] },
+
+            {
+              model: EmployeePayrollApprovement,
+              attributes: [
+                [
+                  Sequelize.fn("COUNT", Sequelize.literal("*")),
+                  "approvalCount",
+                ],
+              ],
+              where: {
+                status: "approved",
+              },
+              required: false, // Keep this line
+              duplicating: false,
+            },
+          ],
+          group: ["Payroll.id"], // Add this line
+          having: Sequelize.literal(
+            `COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`
+          ),
+          raw: true,
+        });
+
+        return res.status(200).json({
+          success: true,
+          data: payrolls,
+        });
+      }
+
+      const payrolls = await Payroll.findAll({
+        where: {
+          status: {
+            [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+          },
+          PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
         },
-        required: true, // Keep this line
-        duplicating: false,
-      },
-    ],
-    raw: true,
-  });
+        include: [
+          { model: Employee, attributes: ["id", "fullname"] },
+          {
+            model: EmployeePayrollApprovement,
+            attributes: [
+              [Sequelize.fn("COUNT", Sequelize.literal("*")), "approvalCount"],
+            ],
+            where: {
+              status: "approved",
+            },
+            required: false, // Keep this line
+            duplicating: false,
+          },
+        ],
+        group: ["Payroll.id"], // Add this line
+        having: Sequelize.literal(
+          `COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < ${minimumApprovers}`
+        ),
+        raw: true,
+      });
 
-  return res.status(200).json({
-    success:true,
-    data:payrolls
-  })
+      return res.status(200).json({
+        success: true,
+        data: payrolls,
+      });
 
-}
- 
+      return res.status(200).json({
+        success: true,
+        data: payrolls,
+      });
+    }
+    if (approver?.ApprovalMethod?.approvalMethod === "hierarchy") {
+      const approvalLevel = Number(approver?.level);
 
-  
-}
+      const companyApprovalLevel = approver?.ApprovalMethod?.approvalLevel;
+      if (approver.isMaster) {
+        const payrolls = await Payroll.findAll({
+          where: {
+            status: {
+              [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+            },
+            PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+          },
+          include: [
+            { model: Employee, attributes: ["id", "fullname"] },
 
+            {
+              model: EmployeePayrollApprovement,
+              where: {
+                status: "approved",
+                level: companyApprovalLevel,
+              },
+              required: true, // Keep this line
+              duplicating: false,
+            },
+          ],
+          raw: true,
+        });
+
+        return res.status(200).json({
+          success: true,
+          data: payrolls,
+        });
+      }
+      if (approvalLevel === 1) {
+        const payrolls = await Payroll.findAll({
+          where: {
+            status: {
+              [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+            },
+            PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+            id: {
+              [Sequelize.Op.notIn]: Sequelize.literal(
+                '(SELECT "PayrollId" FROM "EmployeePayrollApprovements")'
+              ),
+            },
+          },
+          include: [
+            {
+              model: Employee,
+              attributes: ["id", "fullname"],
+            },
+          ],
+        });
+        // const payrolls = await Payroll.findAll({
+        //   where:{
+        //     status: {
+        //       [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+        //     },
+        //   },
+        //   include: [
+        //     {
+        //       model: EmployeePayrollApprovement,
+        //        where: {
+        //         status: 'approved',
+        //         level:1
+        //       },
+        //       required: true, // Keep this line
+        //       duplicating: false,
+        //     },
+        //   ],
+        //   raw: true,
+        // });
+
+        return res.status(200).json({
+          success: true,
+          data: payrolls,
+        });
+      } else {
+        const payrolls = await Payroll.findAll({
+          where: {
+            status: {
+              [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+            },
+          },
+          include: [
+            {
+              model: EmployeePayrollApprovement,
+              where: {
+                status: "approved",
+                level: approvalLevel - 1,
+              },
+              required: true, // Keep this line
+              duplicating: false,
+            },
+          ],
+          raw: true,
+        });
+
+        return res.status(200).json({
+          success: true,
+          data: payrolls,
+        });
+      }
+    }
   } catch (error) {
     console.log("error", error);
-    return next(createError.createError(500,"Internal server error"))
-    
+    return next(createError.createError(500, "Internal server error"));
   }
-}
+};
 
-exports.projectBasedPayroll= async(req,res,next)=>{
-
+exports.projectBasedPayroll = async (req, res, next) => {
   // const transaction = await sequelize.transaction();
   try {
-  const CompanyId= req.user.role ==="companyAdmin"? req.user.id:req.user.CompanyId;
-    const {payrollDefinitionId,employeeIds}= req.body;
- const payrollDefinition = await PayrollDefinition.findByPk(payrollDefinitionId);
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const { payrollDefinitionId, employeeIds } = req.body;
+    const payrollDefinition = await PayrollDefinition.findByPk(
+      payrollDefinitionId
+    );
 
- if(!payrollDefinition){
-  return next(createError.createError(404,"PayrollDefinition Not found"))
- }
+    if (!payrollDefinition) {
+      return next(createError.createError(404, "PayrollDefinition Not found"));
+    }
     const employees = await Employee.findAll({
       where: {
         id: Number(employeeIds),
-        CompanyId:CompanyId
-      },include: [
-        
+        CompanyId: CompanyId,
+      },
+      include: [
         {
           model: Company,
           required: false,
-          attributes:['id','companyCode','organizationName','numberOfEmployees','role','status']
+          attributes: [
+            "id",
+            "companyCode",
+            "organizationName",
+            "numberOfEmployees",
+            "role",
+            "status",
+          ],
         },
 
         {
           model: EmployeeInfo,
           required: false,
-          where:{  isActive: true,}
+          where: { isActive: true },
         },
         {
           model: Position,
@@ -904,17 +925,17 @@ exports.projectBasedPayroll= async(req,res,next)=>{
           required: false,
           through: {
             model: ProjectEmployee,
-            // where:{isActive:true}     
+            // where:{isActive:true}
           },
-          include:[Sponsor]
+          include: [Sponsor],
         },
-       
+
         // {
         //   model: AccountInfo,
         //   required: false,
         //   where:{isActive:true}
         // },
-      
+
         {
           model: Loan,
           required: false,
@@ -959,129 +980,132 @@ exports.projectBasedPayroll= async(req,res,next)=>{
         },
       ],
     });
-   // Check if all requested employees were found
-   if (employees.length < employeeIds.length) {
-    // Determine which employee(s) are missing
-    const foundEmployeeIds = employees.map(employee => employee.id);
-    const missingEmployeeIds = employeeIds.filter(id => !foundEmployeeIds.includes(id));
+    // Check if all requested employees were found
+    if (employees.length < employeeIds.length) {
+      // Determine which employee(s) are missing
+      const foundEmployeeIds = employees.map((employee) => employee.id);
+      const missingEmployeeIds = employeeIds.filter(
+        (id) => !foundEmployeeIds.includes(id)
+      );
 
-    console.error('One or more employees not found:', missingEmployeeIds);
-    return next(createError.createError(404,"One or more employees not found"))
-  }
-
-
-  const pension =await Pension.findOne({
-    where:{
-      CompanyId:CompanyId,
-      isActive:true
+      console.error("One or more employees not found:", missingEmployeeIds);
+      return next(
+        createError.createError(404, "One or more employees not found")
+      );
     }
-  })
-  const taxslabs = await Taxslab.findAll({
-    where: {
-      CompanyId: CompanyId,
-      isActive: true
-    }
-  });
- 
-// let selectedSlab=null
-// let income_tax_payable=0;
-//   for (const slab of taxslabs) {
-//     if (50000 >= slab.from_Salary && 50000 <= slab.to_Salary) {
-//       selectedSlab=slab
-//       income_tax_payable = slab.income_tax_payable;
-//       deductible_Fee = slab.deductible_Fee;
-//       break;
-//     }
-//   }
-//   return res.json(selectedSlab);
-  const employee_pension = pension?.employeeContribution ?? 0;
-  const employer_pension = pension?.employerContribution ?? 0;
-  
 
-  const payrollRecords = employees.map(employee => {
-    let totalDeduction = 0;
-    let totalAllowance = 0;
-    let totalTaxable = 0;
-    let income_tax_payable = 0;
-    let deductible_Fee = 0;
-    let totalExempted = 0;
-    let totalTaxableIncome = 0;
-    let overallTotalDeduction = 0;
-    let totalLoan = 0;
-    let totalAdditionalPay=0;
-    let additionalAllowance=0
-    let taxableIncome=0;
-    let grossEarning= 0;
-    let selectedSlab=null
-    let tax=0;
-    taxableIncome=employee?.EmployeeInfos[0]?.basicSalary; 
-    for (const slab of taxslabs) {
-      if (taxableIncome >= slab.from_Salary && taxableIncome <= slab.to_Salary) {
-        selectedSlab = slab;
-        income_tax_payable = slab.income_tax_payable;
-        deductible_Fee = slab.deductible_Fee;
-        break;
+    const pension = await Pension.findOne({
+      where: {
+        CompanyId: CompanyId,
+        isActive: true,
+      },
+    });
+    const taxslabs = await Taxslab.findAll({
+      where: {
+        CompanyId: CompanyId,
+        isActive: true,
+      },
+    });
+
+    // let selectedSlab=null
+    // let income_tax_payable=0;
+    //   for (const slab of taxslabs) {
+    //     if (50000 >= slab.from_Salary && 50000 <= slab.to_Salary) {
+    //       selectedSlab=slab
+    //       income_tax_payable = slab.income_tax_payable;
+    //       deductible_Fee = slab.deductible_Fee;
+    //       break;
+    //     }
+    //   }
+    //   return res.json(selectedSlab);
+    const employee_pension = pension?.employeeContribution ?? 0;
+    const employer_pension = pension?.employerContribution ?? 0;
+
+    const payrollRecords = employees.map((employee) => {
+      let totalDeduction = 0;
+      let totalAllowance = 0;
+      let totalTaxable = 0;
+      let income_tax_payable = 0;
+      let deductible_Fee = 0;
+      let totalExempted = 0;
+      let totalTaxableIncome = 0;
+      let overallTotalDeduction = 0;
+      let totalLoan = 0;
+      let totalAdditionalPay = 0;
+      let additionalAllowance = 0;
+      let taxableIncome = 0;
+      let grossEarning = 0;
+      let selectedSlab = null;
+      let tax = 0;
+      taxableIncome = employee?.EmployeeInfos[0]?.basicSalary;
+      for (const slab of taxslabs) {
+        if (
+          taxableIncome >= slab.from_Salary &&
+          taxableIncome <= slab.to_Salary
+        ) {
+          selectedSlab = slab;
+          income_tax_payable = slab.income_tax_payable;
+          deductible_Fee = slab.deductible_Fee;
+          break;
+        }
       }
-    }
 
-// tax= 
+      // tax=
 
-    // Calculate payroll directly here
-    const payrollAmount = employee?.EmployeeInfos[0]?.grossEarning;
-// Example calculation
-    // const totalA= employee?.Grades
-    if (employee.Grades.length > 0) {
-      employee.Grades[0].Allowances.forEach(allowance => {
+      // Calculate payroll directly here
+      const payrollAmount = employee?.EmployeeInfos[0]?.grossEarning;
+      // Example calculation
+      // const totalA= employee?.Grades
+      if (employee.Grades.length > 0) {
+        employee.Grades[0].Allowances.forEach((allowance) => {
           totalAllowance += parseFloat(allowance.amount);
         });
-      employee.Grades[0].Deductions.forEach(deduction => {
-        totalDeduction += parseFloat(deduction.amount);
-      });
-    }
-    if(employee.AdditionalAllowances.length>0){
+        employee.Grades[0].Deductions.forEach((deduction) => {
+          totalDeduction += parseFloat(deduction.amount);
+        });
+      }
+      if (employee.AdditionalAllowances.length > 0) {
+        employee.AdditionalAllowances.forEach((allowance) => {
+          additionalAllowance += parseFloat(allowance.amount);
+        });
+      }
+      if (employee.Loan) {
+        employee.Loan.forEach((loan) => {
+          totalLoan += parseFloat(loan.amount);
+        });
+      }
 
-      employee.AdditionalAllowances.forEach(allowance => {
-        additionalAllowance += parseFloat(allowance.amount);
-      });
-    }
-    if(employee.Loan){
-  employee.Loan.forEach(loan => {
-    totalLoan += parseFloat(loan.amount);
-  });
-  
- 
- 
+      return {
+        employeeId: employee.id,
+        payrollDefinitionId: payrollDefinition.id,
+        amount: payrollAmount,
+        totalAllowance: totalAllowance,
+        totalDeduction: totalDeduction,
+        additionalAllowance: additionalAllowance,
+        totalLoan: totalLoan,
+        taxableIncome: taxableIncome,
+        grossEarning:
+          employee?.EmployeeInfos[0]?.basicSalary +
+          totalAllowance +
+          totalAdditionalPay +
+          (employee?.EmployeeInfos[0]?.basicSalary * employer_pension) / 100 +
+          additionalAllowance,
+        employerContribution:
+          employee?.EmployeeInfos[0]?.basicSalary * (employer_pension / 100),
+        additionalAllowance: additionalAllowance,
+        deductible_Fee: deductible_Fee,
+        income_tax_payable: income_tax_payable,
+      };
+    });
 
-    }
-
-    return {
-      employeeId: employee.id,
-      payrollDefinitionId: payrollDefinition.id,
-      amount: payrollAmount,
-      totalAllowance: totalAllowance,
-      totalDeduction:totalDeduction,
-      additionalAllowance:additionalAllowance,
-      totalLoan:totalLoan,
-      taxableIncome: taxableIncome,
-      grossEarning:employee?.EmployeeInfos[0]?.basicSalary+ totalAllowance+totalAdditionalPay + ((employee?.EmployeeInfos[0]?.basicSalary)*employer_pension/100)+additionalAllowance,
-      employerContribution:(employee?.EmployeeInfos[0]?.basicSalary)*(employer_pension/100),
-      additionalAllowance:additionalAllowance,
-      deductible_Fee:deductible_Fee,
-      income_tax_payable:income_tax_payable,
-    };
-  });
-
-
-// const result = await runPayrollForProjectBased(req, res, { employeeIds, CompanyId, payrollDefinitionId });
-return res.status(200).json({ success: true, payrollRecords  });
-
+    // const result = await runPayrollForProjectBased(req, res, { employeeIds, CompanyId, payrollDefinitionId });
+    return res.status(200).json({ success: true, payrollRecords });
   } catch (error) {
     // await transaction.rollback();
-    console.log(error)
-     return next(createError.createError(500,"Internal server error"))    
+    console.log(error);
+    return next(createError.createError(500, "Internal server error"));
   }
-}
-
+};
 
 // async function runPayrollForProjectBased(
 //   req,
@@ -1090,14 +1114,13 @@ return res.status(200).json({ success: true, payrollRecords  });
 // ) {
 //   console.log("company", company);
 // try {
-  
+
 // } catch (error) {
 //   console.log(error)
 //   return next(createError.createError(500,"Internal server error"))
-  
-// }
-// }
 
+// }
+// }
 
 async function runPayrollForProjectBased(
   req,
@@ -1106,7 +1129,7 @@ async function runPayrollForProjectBased(
 ) {
   console.log("company", company);
   const transaction = await sequelize.transaction();
-  
+
   console.log("company", company);
   try {
     const employeeGrade = await EmployeeGrade.findOne({
@@ -1162,7 +1185,6 @@ async function runPayrollForProjectBased(
       }),
       AdditionalPay.findAll({
         where: { CompanyId: company, EmployeeId: employeeId },
-        
       }),
     ]);
     const employee_pension = pension?.employeeContribution ?? 0;
@@ -1171,7 +1193,7 @@ async function runPayrollForProjectBased(
     const taxslabs = await Taxslab.findAll({
       where: { CompanyId: company, isActive: true },
     });
-    console.log("taxslabs",taxslabs);
+    console.log("taxslabs", taxslabs);
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -1181,11 +1203,12 @@ async function runPayrollForProjectBased(
     let totalTaxableIncome = 0;
     let overallTotalDeduction = 0;
     let totalLoan = 0;
-    let totalAdditionalPay=0;
+    let totalAdditionalPay = 0;
     // Calculate total allowances
     allowances?.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
-      console.log( "exemted amount: ",
+      console.log(
+        "exemted amount: ",
         allowance?.AllowanceDefinition.isExempted
       );
       if (allowance?.AllowanceDefinition?.isExempted) {
@@ -1204,8 +1227,8 @@ async function runPayrollForProjectBased(
         totalTaxable += Number(allowance?.amount);
       }
     });
-    additionalPay.forEach((additionalPay)=>{
-    totalAdditionalPay+= Number(additionalPay?.amount)
+    additionalPay.forEach((additionalPay) => {
+      totalAdditionalPay += Number(additionalPay?.amount);
     });
     // Calculate total additional allowances
     additionalAllowances.forEach((allowance) => {
@@ -1236,7 +1259,7 @@ async function runPayrollForProjectBased(
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
-    console.log("addional pay",additionalPay)
+    console.log("addional pay", additionalPay);
     if (taxslab) {
       deductible_Fee = taxslab?.deductible_Fee;
       income_tax_payable = taxslab?.income_tax_payable;
@@ -1247,7 +1270,7 @@ async function runPayrollForProjectBased(
     } else {
       totalTaxableIncome = 0;
     }
-  
+
     loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
@@ -1301,9 +1324,6 @@ async function runPayrollForProjectBased(
   }
 }
 
-
-
-
 async function runForProjectBasedPayroll(
   req,
   res,
@@ -1335,11 +1355,13 @@ async function runForProjectBasedPayroll(
           isActive: true,
         },
       }),
-      
-      ProvidentFund.findOne({where: {
-        CompanyId: company,
-        isActive: true,
-      },}),
+
+      ProvidentFund.findOne({
+        where: {
+          CompanyId: company,
+          isActive: true,
+        },
+      }),
       PayrollDefinition.findByPk(Number(payrollDefinitionId)),
       Payroll.findOne({
         where: {
@@ -1370,18 +1392,17 @@ async function runForProjectBasedPayroll(
       }),
       AdditionalPay.findAll({
         where: { CompanyId: company, EmployeeId: employeeId },
-        
       }),
     ]);
     const employee_pension = pension?.employeeContribution ?? 0;
     const employer_pension = pension?.employerContribution ?? 0;
-    const employee_providentFund= providentFund?.employeeContribution??0;
-    const employer_providentFund= providentFund?.employerContribution??0;
+    const employee_providentFund = providentFund?.employeeContribution ?? 0;
+    const employer_providentFund = providentFund?.employerContribution ?? 0;
 
     const taxslabs = await Taxslab.findAll({
       where: { CompanyId: company, isActive: true },
     });
-    console.log("taxslabs",taxslabs);
+    console.log("taxslabs", taxslabs);
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -1391,37 +1412,36 @@ async function runForProjectBasedPayroll(
     let totalTaxableIncome = 0;
     let overallTotalDeduction = 0;
     let totalLoan = 0;
-    let totalAdditionalPay=0;
-    let taxableIncome=0;
-    let grossSalary=0;
+    let totalAdditionalPay = 0;
+    let taxableIncome = 0;
+    let grossSalary = 0;
 
-   taxableIncome= employee.EmployeeInfos[0]?.basicSalary,
-
-    // Calculate total allowances
-    allowances?.forEach((allowance) => {
-      totalAllowance += Number(allowance.amount);
-      console.log(
-        "exemted amount: ",
-        allowance?.AllowanceDefinition.isExempted
-      );
-      if (allowance?.AllowanceDefinition?.isExempted) {
-        totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
-        if (
-          Number(allowance?.amount) >
-          Number(allowance?.AllowanceDefinition?.startingAmount)
-        ) {
-          totalTaxable +=
-            Number(allowance?.amount) -
-            Number(allowance?.AllowanceDefinition?.exemptedAmount);
+    (taxableIncome = employee.EmployeeInfos[0]?.basicSalary),
+      // Calculate total allowances
+      allowances?.forEach((allowance) => {
+        totalAllowance += Number(allowance.amount);
+        console.log(
+          "exemted amount: ",
+          allowance?.AllowanceDefinition.isExempted
+        );
+        if (allowance?.AllowanceDefinition?.isExempted) {
+          totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
+          if (
+            Number(allowance?.amount) >
+            Number(allowance?.AllowanceDefinition?.startingAmount)
+          ) {
+            totalTaxable +=
+              Number(allowance?.amount) -
+              Number(allowance?.AllowanceDefinition?.exemptedAmount);
+          } else {
+            totalTaxable += Number(allowance.amount);
+          }
         } else {
-          totalTaxable += Number(allowance.amount);
+          totalTaxable += Number(allowance?.amount);
         }
-      } else {
-        totalTaxable += Number(allowance?.amount);
-      }
-    });
-    additionalPay.forEach((additionalPay)=>{
-    totalAdditionalPay+= Number(additionalPay?.amount)
+      });
+    additionalPay.forEach((additionalPay) => {
+      totalAdditionalPay += Number(additionalPay?.amount);
     });
     // Calculate total additional allowances
     additionalAllowances.forEach((allowance) => {
@@ -1443,7 +1463,9 @@ async function runForProjectBasedPayroll(
       }
     });
 
-    totalAllowance+=employee?.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100).toFixed(2)
+    totalAllowance +=
+      employee?.EmployeeInfos[0]?.basicSalary *
+      ((employer_pension * 1) / 100).toFixed(2);
     deductions?.forEach((deduction) => {
       totalDeduction += Number(deduction?.amount);
     });
@@ -1454,32 +1476,32 @@ async function runForProjectBasedPayroll(
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
-    console.log("addional pay",additionalPay)
+    console.log("addional pay", additionalPay);
     if (taxslab) {
       deductible_Fee = taxslab?.deductible_Fee;
       income_tax_payable = taxslab?.income_tax_payable;
       totalTaxableIncome =
-      taxableIncome *
+        taxableIncome *
           (income_tax_payable === 0 ? 1 : income_tax_payable / 100) -
         deductible_Fee;
     } else {
       totalTaxableIncome = 0;
     }
-  grossSalary= totalAllowance +
-  employee.EmployeeInfos[0]?.basicSalary ;
+    grossSalary = totalAllowance + employee.EmployeeInfos[0]?.basicSalary;
     loans.forEach((loan) => (totalLoan += loan?.amount));
     overallTotalDeduction =
       totalLoan +
       totalTaxableIncome +
       totalDeduction +
-      employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100)+
-      employee.EmployeeInfos[0]?.basicSalary * ((employee_providentFund * 1) / 100);
+      employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100) +
+      employee.EmployeeInfos[0]?.basicSalary *
+        ((employee_providentFund * 1) / 100);
     const payrollData = {
-      grossSalary:grossSalary.toFixed(2),
+      grossSalary: grossSalary.toFixed(2),
 
       basicSalary: employee.EmployeeInfos[0]?.basicSalary,
       taxableIncome: taxableIncome,
-      incomeTax:       totalTaxableIncome.toFixed(2),
+      incomeTax: totalTaxableIncome.toFixed(2),
       totalDeduction: overallTotalDeduction.toFixed(2),
       totalAllowance,
       employee_pension_amount: Number(
@@ -1489,12 +1511,10 @@ async function runForProjectBasedPayroll(
         employee.EmployeeInfos[0]?.basicSalary *
         ((employer_pension * 1) / 100)
       ).toFixed(2),
-      NetSalary: (
-        grossSalary -
-        overallTotalDeduction 
-        // totalExempted 
+      NetSalary: (grossSalary - overallTotalDeduction)
+        // totalExempted
 
-      ).toFixed(2),
+        .toFixed(2),
 
       status: "processed",
     };
@@ -1504,293 +1524,278 @@ async function runForProjectBasedPayroll(
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
     });
-    await data.setCompany(Number(req.user.id))
+    await data.setCompany(Number(req.user.id));
     console.log("payroll data", payrollData);
 
     return 1;
   } catch (error) {
     console.log("from runpayroll ", error);
 
-    return next(createError.createError(500,`error occur on empliyee with ID= ${employeeId}`))
+    return next(
+      createError.createError(
+        500,
+        `error occur on empliyee with ID= ${employeeId}`
+      )
+    );
     // return res.status(404).json({
     //   message: `error occur on empliyee with ID= ${employeeId}`,
     // });
   }
 }
 
-
-exports.approvePayrolls = async (req,res,next)=>{
+exports.approvePayrolls = async (req, res, next) => {
   try {
-    
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
-    
+    console.log(error);
+    return next(createError.createError(500, "Internal server error"));
   }
-}
-
-
-
+};
 
 //PROCESSED PAYROLL
-exports.getProcessedPayroll= async (req,res,next)=>{
+exports.getProcessedPayroll = async (req, res, next) => {
   try {
- 
-const currentDate = new Date();
-const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const currentDate = new Date();
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
 
-const currentMonthPayrolls = await PayrollDefinition.findAll({
-  where: {
-    CompanyId: req.user.id,
-    [Op.or]: [
-      {
-        startDate: {
-          [Op.between]: [startOfMonth, endOfMonth],
-        },
-        endDate: {
-          [Op.between]: [startOfMonth, endOfMonth],
-        },
+    const currentMonthPayrolls = await PayrollDefinition.findAll({
+      where: {
+        CompanyId: req.user.id,
+        [Op.or]: [
+          {
+            startDate: {
+              [Op.between]: [startOfMonth, endOfMonth],
+            },
+            endDate: {
+              [Op.between]: [startOfMonth, endOfMonth],
+            },
+          },
+          {
+            startDate: {
+              [Op.lt]: startOfMonth,
+            },
+            endDate: {
+              [Op.gte]: startOfMonth,
+            },
+          },
+        ],
       },
-      {
-        startDate: {
-          [Op.lt]: startOfMonth,
-        },
-        endDate: {
-          [Op.gte]: startOfMonth,
-        },
-      },
-    ],
-  },
-});
+    });
 
-console.log("current month", currentMonthPayrolls.length);
-// return res.json(currentMonthPayrolls?.[0]?.id);
+    console.log("current month", currentMonthPayrolls.length);
+    // return res.json(currentMonthPayrolls?.[0]?.id);
 
-if (currentMonthPayrolls.length === 0) {
-  return res.status(204).json({
-    message: "No payrolls defined for this month",
-  });
-} 
+    if (currentMonthPayrolls.length === 0) {
+      return res.status(204).json({
+        message: "No payrolls defined for this month",
+      });
+    }
 
- 
-const employees = await Employee.findAll({
-  include: [
-
-    {model:Position},
-      {
+    const employees = await Employee.findAll({
+      include: [
+        { model: Position },
+        {
           model: Payroll,
           // required: true,
           where: {
-              PayrollDefinitionId: currentMonthPayrolls?.[0]?.id, // Filter for payroll records of the specific month
-              // required:true
-            },
-      },
+            PayrollDefinitionId: currentMonthPayrolls?.[0]?.id, // Filter for payroll records of the specific month
+            // required:true
+          },
+        },
+      ],
+    });
 
-      
-  ],
-});
+    const transformedEmployees = employees.map((employee) => {
+      const {
+        id,
+        fullname,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+      } = employee;
 
+      const positions = employee.Positions
+        ? {
+            positionName: employee?.Positions[0].positionName,
+          }
+        : {};
 
-const transformedEmployees = employees.map(employee => {
-  const {
-      id,
-      fullname,
-      image,
-      sex,
-      date_of_birth,
-      role,
-      nationality,
-      marriageStatus,
-      employee_id_number,
-      email,
-      phoneNumber,
-      optionalNumber,
-      id_image,
-      id_type,
-  } = employee;
+      // Extract necessary fields from the Payroll object
+      const payrollInfo = employee.Payroll
+        ? {
+            grossSalary: employee.Payroll.grossSalary,
+            basicSalary: employee.Payroll.basicSalary,
+            taxableIncome: employee.Payroll.taxableIncome,
+            incomeTax: employee.Payroll.incomeTax,
+            totalDeduction: employee.Payroll.totalDeduction,
+            totalAllowance: employee.Payroll.totalAllowance,
+            NetSalary: employee.Payroll.NetSalary,
+            employee_pension_amount: employee.Payroll.employee_pension_amount,
+            employer_pension_amount: employee.Payroll.employer_pension_amount,
+            status: employee.Payroll.status,
+            isPaid: employee.Payroll.isPaid,
+          }
+        : {};
 
-  const positions= employee.Positions ?{
-    positionName: employee?.Positions[0].positionName,
-  
-  }:{}
+      return {
+        id,
+        fullname,
+        ...positions,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+        ...payrollInfo,
+      };
+    });
 
+    return res.status(200).json({
+      status: "true",
 
-  // Extract necessary fields from the Payroll object
-  const payrollInfo = employee.Payroll ? {
-      grossSalary: employee.Payroll.grossSalary,
-      basicSalary: employee.Payroll.basicSalary,
-      taxableIncome: employee.Payroll.taxableIncome,
-      incomeTax: employee.Payroll.incomeTax,
-      totalDeduction: employee.Payroll.totalDeduction,
-      totalAllowance: employee.Payroll.totalAllowance,
-      NetSalary: employee.Payroll.NetSalary,
-      employee_pension_amount: employee.Payroll.employee_pension_amount,
-      employer_pension_amount: employee.Payroll.employer_pension_amount,
-      status: employee.Payroll.status,
-      isPaid: employee.Payroll.isPaid,
-  } : {};
-
-  return {
-      id,
-      fullname,
-      ...positions,
-      image,
-      sex,
-      date_of_birth,
-      role,
-      nationality,
-      marriageStatus,
-      employee_id_number,
-      email,
-      phoneNumber,
-      optionalNumber,
-      id_image,
-      id_type,
-      ...payrollInfo,
-    
-  };
-});
-
-return res.status(200).json({
-  status:"true",
-
-data:transformedEmployees})
-
-
+      data: transformedEmployees,
+    });
   } catch (error) {
     console.log("error", error);
-    return next(createError.createError(500,"Internal server error"))
-    
+    return next(createError.createError(500, "Internal server error"));
   }
-}
+};
 
 //UNPROCESSED PAYROLL
-exports.getUnprocessedPayroll= async (req,res,next)=>{
-  try { 
-const currentDate = new Date();
-const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+exports.getUnprocessedPayroll = async (req, res, next) => {
+  try {
+    const payrollDefinitionId = req.params.id;
+    if (!payrollDefinitionId) {
+      return next(createError.createError(404, "Please specify the month"));
+    }
 
-const currentMonthPayrolls = await PayrollDefinition.findAll({
-  where: {
-    CompanyId: req.user.id,
-    [Op.or]: [
-      {
-        startDate: {
-          [Op.between]: [startOfMonth, endOfMonth],
+    const payrollDefinition = await PayrollDefinition.findOne({
+      where: { id: payrollDefinitionId },
+    });
+
+    if (!payrollDefinition) {
+      return next(createError.createError(404, "Month not found"));
+    }
+
+    // Step 1: Get all EmployeeIds with payroll for the specified PayrollDefinitionId
+    const processedPayrolls = await Payroll.findAll({
+      where: { PayrollDefinitionId: payrollDefinitionId },
+      attributes: ["EmployeeId"], // Only select the EmployeeId
+    });
+
+    // Extract EmployeeIds from the processedPayrolls
+    const processedEmployeeIds = processedPayrolls.map(
+      (payroll) => payroll.EmployeeId
+    );
+
+    // Step 2: Fetch unprocessed employees
+    const employees = await Employee.findAll({
+      where: {
+        hireDate: {
+          [Sequelize.Op.lte]: payrollDefinition.endDate, // hireDate must be less than or equal to payrollEndDate
         },
-        endDate: {
-          [Op.between]: [startOfMonth, endOfMonth],
+        CompanyId: req.user.id, // Filter by company
+        id: {
+          [Sequelize.Op.notIn]: processedEmployeeIds, // Exclude processed EmployeeIds
         },
       },
-      {
-        startDate: {
-          [Op.lt]: startOfMonth,
+      include: [
+        {
+          model: Position,
         },
-        endDate: {
-          [Op.gte]: startOfMonth,
-        },
-      },
-    ],
-  },
-});
+      ],
+    });
 
-console.log("current month", currentMonthPayrolls.length);
-// return res.json(currentMonthPayrolls?.[0]?.id);
+    const transformedEmployees = employees.map((employee) => {
+      const {
+        id,
+        fullname,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+      } = employee;
 
-if (currentMonthPayrolls.length === 0) {
-  return res.status(204).json({
-    message: "No payrolls defined for this month",
-  });
-} 
+      const positions = employee.Positions
+        ? {
+            positionName: employee?.Positions[0].positionName,
+          }
+        : {};
 
- 
-const employees = await Employee.findAll({
-  include: [
+      // Extract necessary fields from the Payroll object
+      const payrollInfo = employee.Payroll
+        ? {
+            grossSalary: employee.Payroll.grossSalary,
+            basicSalary: employee.Payroll.basicSalary,
+            taxableIncome: employee.Payroll.taxableIncome,
+            incomeTax: employee.Payroll.incomeTax,
+            totalDeduction: employee.Payroll.totalDeduction,
+            totalAllowance: employee.Payroll.totalAllowance,
+            NetSalary: employee.Payroll.NetSalary,
+            employee_pension_amount: employee.Payroll.employee_pension_amount,
+            employer_pension_amount: employee.Payroll.employer_pension_amount,
+            status: employee.Payroll.status,
+            isPaid: employee.Payroll.isPaid,
+          }
+        : {};
 
-    {model:Position},
-      {
-          model: Payroll,
-          // required: true,
-          where: {
-              PayrollDefinitionId: currentMonthPayrolls?.[0]?.id, 
-            },
-      },
-
-      
-  ],
-});
-
-
-const transformedEmployees = employees.map(employee => {
-  const {
-      id,
-      fullname,
-      image,
-      sex,
-      date_of_birth,
-      role,
-      nationality,
-      marriageStatus,
-      employee_id_number,
-      email,
-      phoneNumber,
-      optionalNumber,
-      id_image,
-      id_type,
-  } = employee;
-
-  const positions= employee.Positions ?{
-    positionName: employee?.Positions[0].positionName,
-  
-  }:{}
-
-
-  const payrollInfo = employee.Payroll ? {
-      grossSalary: employee.Payroll.grossSalary,
-      basicSalary: employee.Payroll.basicSalary,
-      taxableIncome: employee.Payroll.taxableIncome,
-      incomeTax: employee.Payroll.incomeTax,
-      totalDeduction: employee.Payroll.totalDeduction,
-      totalAllowance: employee.Payroll.totalAllowance,
-      NetSalary: employee.Payroll.NetSalary,
-      employee_pension_amount: employee.Payroll.employee_pension_amount,
-      employer_pension_amount: employee.Payroll.employer_pension_amount,
-      status: employee.Payroll.status,
-      isPaid: employee.Payroll.isPaid,
-  } : {};
-
-  return {
-      id,
-      fullname,
-      ...positions,
-      image,
-      sex,
-      date_of_birth,
-      role,
-      nationality,
-      marriageStatus,
-      employee_id_number,
-      email,
-      phoneNumber,
-      optionalNumber,
-      id_image,
-      id_type,
-      ...payrollInfo,
-    
-  };
-});
-
-return res.status(200).json({
-  status:"true",
-
-data:transformedEmployees})
-
-
+      return {
+        id,
+        fullname,
+        ...positions,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+        ...payrollInfo,
+      };
+    });
+    return res.status(200).json({
+      status: "success",
+      data: transformedEmployees,
+    });
   } catch (error) {
     console.log("error", error);
-    return next(createError.createError(500,"Internal server error"))
-    
+    return next(createError.createError(500, "Internal server error"));
   }
-}
+};

@@ -1,7 +1,8 @@
 const AllowanceDefinition = require("../models/allowanceDefinition");
 const Company = require("../models/company");
 const createError = require('../utils/error')
-// Define controller methods for handling User requests
+
+// GET ALL 
 exports.getAllAllowanceDefinition = async (req, res,next) => {
   const Company = req.user.id;
 
@@ -9,7 +10,8 @@ exports.getAllAllowanceDefinition = async (req, res,next) => {
     const criteria = {
       CompanyId: req.user.id,
     };
-    const allowanceDefinitions = await AllowanceDefinition.findAll(criteria);
+    const allowanceDefinitions = await AllowanceDefinition.findAll(
+      {where:criteria});
     res.status(200).json({
       count: allowanceDefinitions.length,
       allowanceDefinitions,
@@ -19,16 +21,16 @@ exports.getAllAllowanceDefinition = async (req, res,next) => {
     return next(createError.createError(500, 'Internal Server Error'))
   }
 };
-
+//GET BY ID
 exports.getAllowanceDefinitionById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const allowanceDefinition = await AllowanceDefinition.findByPk(id);
 
     if (!allowanceDefinition) {
-      return res
-        .status(404)
-        .json({ message: "There is non allowance Definition with this id" });
+
+      return next(createError.createError(404,"There is non allowance Definition with this id"))
+    
     } else {
       res.json(allowanceDefinition);
     }
@@ -37,10 +39,9 @@ exports.getAllowanceDefinitionById = async (req, res,next) => {
     return next(createError.createError(500, 'Internal Server Error'))
   }
 };
-
+//CREATE ALLOWANCE DEFINITION
 exports.createAllowanceDefinition = async (req, res, next) => {
   try {
-    //insert required field
     const Company = req.user.id;
     console.log(Company);
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
@@ -54,7 +55,8 @@ exports.createAllowanceDefinition = async (req, res, next) => {
     });
 
     if (checkAllowance) {
-      res.status(409).json("Allowance Definition is already defined");
+
+      return next(createError.createError(409,"Allowance Definition is already defined"))
     } else {
       const allowanceDefinition = await AllowanceDefinition.create({
         name,
@@ -74,9 +76,10 @@ exports.createAllowanceDefinition = async (req, res, next) => {
     return next(createError.createError(500, 'Internal Server Error'))
   }
 };
+
+//UPDATE ALLOWANCE DEFINITION
 exports.updateAllowanceDefinition = async (req, res, next) => {
   try {
-    //insert required field
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
     const updates = {};
@@ -98,7 +101,19 @@ exports.updateAllowanceDefinition = async (req, res, next) => {
       updates.startingAmount = startingAmount;
     }
 
-    const result = await AllowanceDefinition.update(updates, {
+  const allowanceDefinition= await AllowanceDefinition.findOne({
+    where:{
+      id,
+      CompanyId: req.user.id
+    }
+  })
+
+
+  if(!allowanceDefinition){
+    return next(createError.createError(404, "Allowance definition not found"))
+  }
+
+    const result = await allowanceDefinition.update(updates, {
       where: { id: id },
     });
 
@@ -110,22 +125,23 @@ exports.updateAllowanceDefinition = async (req, res, next) => {
     return next(createError.createError(500, 'Internal Server Error'))
   }
 };
-
+//DELETE ALLOWANCE
 exports.deleteAllowanceDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const allowanceDefinition = await AllowanceDefinition.findOne({
-      where: { id: id },
+      where: { id: id ,
+        CompanyId: req.user.id
+      },
     });
-    if (allowanceDefinition) {
+if(!allowanceDefinition){
+  return next(createError.createError(404," Allowance definition not found"))
+}
+  
       await allowanceDefinition.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
-    } else {
-      res
-        .status(409)
-        .json({ message: "There is no AllowanceDefinition with this ID" });
-    }
+  
   } catch (error) {
     console.log(error)
     return next(createError.createError(500, 'Internal Server Error'))

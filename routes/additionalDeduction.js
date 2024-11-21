@@ -9,6 +9,8 @@ router.get(
   middleware.restrictTo("companyAdmin"),
   additionalDeductionControllers.getAllAdditionalDeduction
 );
+
+// 
 // // router.get("/:id", allowance.getAllowanceById);
 router.post(
   "/",

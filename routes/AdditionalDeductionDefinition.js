@@ -10,6 +10,15 @@ router.get(
   AdditionalDeductionDefinition.getAllAdditionalDeductionDefinition
 );
 
+
+router.get(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+  AdditionalDeductionDefinition.getAdditionalDeductionDefinitionById
+);
+
+
 // //get allowance by its id
 // router.get("/:id", allowanceDefinition.getAllowanceDefinitionById);
 

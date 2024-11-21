@@ -11,6 +11,14 @@ router.get(
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.getAllPayroll
 );
+
+
+router.get(
+  "/current-year",
+  middleware.protectAll,
+  // middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
+  payroll.getAllPayrollForCurrentYear
+);
 router.get(
   "/latest",
   middleware.protectAll,

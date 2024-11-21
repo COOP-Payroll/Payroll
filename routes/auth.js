@@ -1,7 +1,7 @@
 const express = require("express");
 const authcontroller = require("../controllers/authController");
 const middleware = require("../middleware/auth");
-
+const rateLimit = require('express-rate-limit');
 function isLoggedIn(req, res, next) {
   if (req.isAuthenticated()) {
     // Adjust this condition based on your authentication mechanism
@@ -11,10 +11,20 @@ function isLoggedIn(req, res, next) {
   }
 }
 
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 login requests per `windowMs`
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+
 const router = express.Router();
 
-router.post("/login/companyLogin", authcontroller.login);
-router.post("/login/superAdmin", authcontroller.superAdminLogin);
+router.post("/login/companyLogin",loginLimiter, authcontroller.login);
+router.post("/login/superAdmin", loginLimiter,authcontroller.superAdminLogin);
 router.post("/employee/login", authcontroller.login)
 router.post("/auth/refreshToken", authcontroller.refreshToken);
 router.get("/logout", authcontroller.logout)

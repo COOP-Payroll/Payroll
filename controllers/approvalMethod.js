@@ -6,7 +6,8 @@ const { Op } = require("sequelize");
 const sequelize = require('../database/db')
 const { Sequelize } = require('sequelize');
 const Employee = require("../models/employee.js");
-// Define controller methods for handling User requests for deduction definition
+
+//GET ALL APPROVAL METHOD
 exports.getAllApprovalMethod = async (req, res,next) => {
   console.log("all approval")
   const CompanyId = req.user.id;
@@ -25,6 +26,8 @@ exports.getAllApprovalMethod = async (req, res,next) => {
     return next(createError.createError(500,"Internal server error"))
   }
 };
+
+// GET ALL ACTIVE APPROVAL METHOD
 exports.getAllActiveApprovalMethod = async (req, res,next) => {
   
   const CompanyId = req.user.id;

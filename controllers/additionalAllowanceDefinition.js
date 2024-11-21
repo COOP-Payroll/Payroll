@@ -2,7 +2,7 @@ const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefi
 const Company = require("../models/company");
 const createError = require('../utils/error')
 
-// Define controller methods for handling User requests
+// GET ALL ADDITIONAL ALLOWANCE DEFINITION
 exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
   const Company = req.user.id;
 
@@ -22,20 +22,24 @@ exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
   }
 };
 
+
+// GET BY ID
 exports.getAdditionalAllowanceDefinitionById = async (req, res,next) => {
   try {
     const { id } = req.params;
     const AdditionalAllowanceDefinition =
       await AdditionalAllowanceDefinition.findByPk(id);
-    res.json(AdditionalAllowanceDefinition);
+    res.status(200).json(AdditionalAllowanceDefinition);
   } catch (error) {
     console.log(error)
     return next(createError.createError(500, 'Internal Server Error'))}
 };
 
+
+//CREATE ADDITIONAL ALLOWANCE DEFINITION
 exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
   try {
-    //insert required field
+ 
     const Company = req.user.id;
     console.log(Company);
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
@@ -49,7 +53,9 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
     });
 
     if (checkAllowance) {
-      res.status(409).json("Allowance Definition is already defined");
+
+      return next(createError.createError(409,"Allowance definition is already defined"))
+      // res.status(409).json("Allowance Definition is already defined");
     } else {
       const AdditionalAllowanceDefinitions =
         await AdditionalAllowanceDefinition.create({
@@ -70,9 +76,10 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
     return next(createError.createError(500, 'Internal Server Error'))
   }
 };
+
+//UPDATE ADDITIONAL ALLOWANCE DEFINITION
 exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
   try {
-    //insert required field
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
     const updates = {};
@@ -83,7 +90,8 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
     });
     console.log("allowanceDefinition", !allowanceDefinition);
     if (!allowanceDefinition) {
-      return res.status(404).json({ error: "Allowance definition not exist" });
+
+      return next(createError.createError(404, "Allowance definition not exist"))
     } else {
       const updatedInfo = await allowanceDefinition.update(req.body, {
         returning: true,
@@ -100,6 +108,7 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
   }
 };
 
+//DELETE 
 exports.deleteAdditionalAllowanceDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -112,9 +121,9 @@ exports.deleteAdditionalAllowanceDefinition = async (req, res, next) => {
       await AdditionalAllowanceDefinition.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res.status(409).json({
-        message: "There is no AdditionalAllowanceDefinition with this ID",
-      });
+
+      return next(createError.createError(404,"There is no AdditionalAllowanceDefinition with this ID"))
+    
     }
   } catch (error) {
     console.log(error)

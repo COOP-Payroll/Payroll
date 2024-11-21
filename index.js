@@ -2,13 +2,11 @@ const express = require("express");
 const { Worker } = require("worker_threads");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
-
-
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./swagger'); // Path to your Swagger configuration file
-
-
-
+const app = express();
+const helmet = require("helmet");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger"); // Path to your Swagger configuration file
+const csrf = require("csrf");
 require("dotenv").config();
 const sequelize = require("./database/db");
 const cron = require("node-cron");
@@ -50,19 +48,18 @@ const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
 const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
 const ebirrPayment = require("./routes/eBirrPayment.js");
-const position=require("./routes/postionRoutes.js");
-const Sponsors=require("./routes/sponsors.js");
-const Projects=require("./routes/projectRoutes.js");
-const packageRoutes=require("./routes/packageRoutes.js");
-const ReportRoutes= require("./routes/reportingRoutes.js");
+const position = require("./routes/postionRoutes.js");
+const Sponsors = require("./routes/sponsors.js");
+const Projects = require("./routes/projectRoutes.js");
+const packageRoutes = require("./routes/packageRoutes.js");
+const ReportRoutes = require("./routes/reportingRoutes.js");
 // const stripePayment = require("./routes/stripePayment.js");
 
 const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
 const additionalPay = require("./routes/AdditionalPay");
-const checkAccountNumber=require("./routes/accountChecker.js");
-const serviceRoutes=require("./routes/serviceRoutes.js")
-const per= require("./models/companyPermission.js")
-const app = express();
+const checkAccountNumber = require("./routes/accountChecker.js");
+const serviceRoutes = require("./routes/serviceRoutes.js");
+const per = require("./models/companyPermission.js");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -74,30 +71,30 @@ app.use(
   cors({
     origin: [
       "*",
-      "http://10.101.200.91",
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "http://localhost:5172",
-      "http://localhost:5171",
-      "http://localhost:5170",
-      "http://localhost:****",
-      "http://localhost:3001",
-      "http://localhost:3002",
-      "http://localhost:****",
-      "http://10.2.125.124:4000",
-      "http://10.2.125.127:80",
-      "http://10.2.125.127",
-      "http://10.2.125.127:*",
-      "http://10.2.125.124:80",
-      "http://10.2.125.124",
-      "https://payroll-ms.onrender.com",
-      
-      "https://payroll-ms.onrender.com:6000",
+      // "http://10.101.200.91",
+      // "http://localhost:3000",
+      // "http://localhost:5173",
+      // "http://localhost:5172",
+      // "http://localhost:5171",
+      // "http://localhost:5170",
+      // "http://localhost:****",
+      // "http://localhost:3001",
+      // "http://localhost:3002",
+      // "http://localhost:****",
+      // "http://10.2.125.124:4000",
+      // "http://10.2.125.127:80",
+      // "http://10.2.125.127",
+      // "http://10.2.125.127:*",
+      // "http://10.2.125.124:80",
+      // "http://10.2.125.124",
+      // "https://payroll-ms.onrender.com",
+
+      // "https://payroll-ms.onrender.com:6000",
     ],
     credentials: true,
   })
 );
-
+// app.use(csrf({ cookie: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -106,7 +103,7 @@ app.use("/api/user", userRouter);
 app.use("/api/company", companyRouter);
 app.use("/api/reports", ReportRoutes);
 app.use("/api/package", packageRouter);
-app.use("/api/packages",packageRoutes)
+app.use("/api/packages", packageRoutes);
 app.use("/api/taxslab", taxslabRouter);
 app.use("/api/pension", pensionRouter);
 app.use("/api/department", deptRouter);
@@ -138,7 +135,7 @@ app.use("/api/providentFund", providentFund);
 app.use("/api/newPayroll", newPayroll);
 app.use("/api/module", moduleRoute);
 app.use("/api/address", addressRoute);
-app.use("/api/sponsors",Sponsors)
+app.use("/api/sponsors", Sponsors);
 app.use("/api/projects", Projects);
 app.use("/api/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/api/payment", ebirrPayment);
@@ -146,17 +143,20 @@ app.use("/api/employeePayrollApprovement", employeePayrollApprovement);
 app.use("/api/additionalPay", additionalPayDefinition);
 app.use("/api/additionalpayment", additionalPay);
 app.use("/api/payment", ebirrPayment);
-app.use("/api/accountNumber/verify",checkAccountNumber)
-app.use("/api/services",serviceRoutes)
+app.use("/api/accountNumber/verify", checkAccountNumber);
+app.use("/api/services", serviceRoutes);
 
 const swaggerOptions = {
   swaggerOptions: {
-    url: 'http://localhost:6000/api-docs/swagger.json', // Update the URL to match your setup
+    url: "http://localhost:6000/api-docs/swagger.json", // Update the URL to match your setup
   },
 };
 
-app.use('/api/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec,swaggerOptions));
-
+app.use(
+  "/api/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, swaggerOptions)
+);
 
 app.use((req, res, next) => {
   const error = new Error("There is no such URL");
@@ -164,11 +164,19 @@ app.use((req, res, next) => {
   next(error);
 });
 
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+    },
+  })
+);
 app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;
   const errorMessage = err.message || "Something went Wrong";
-// console.log()
+  // console.log()
   return res.status(errorStatus).json({
     success: false,
     status: errorStatus,
@@ -179,7 +187,7 @@ app.use((err, req, res, next) => {
 });
 // sequelize.sync({ logging: console.log });
 // sequelize.sync({ alter: false }).then(() => console.log("db is ready"));
-  
+
 // const runWorker = (employeeId, payrollDefinitionId, user) => {
 //   const worker = new Worker("./controllers/newWorker.js", {
 //     workerData: { employeeId, user, payrollDefinitionId },
@@ -190,13 +198,13 @@ app.use((err, req, res, next) => {
 //   payrolls.forEach((payroll) => {
 //     const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
 //     runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.CompanyId);
-  
+
 //   });
 // };
 
 let isRunning = false;
-console.log(process.env.PORT)
-app.listen(process.env.PORT ||4400, () => {
+console.log(process.env.PORT);
+app.listen(process.env.PORT || 4400, () => {
   // cron.schedule("*/5 * * * * * * * *", async () => {
   //   if (!isRunning) {
   //     isRunning = true;

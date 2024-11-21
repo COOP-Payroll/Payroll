@@ -7,6 +7,7 @@ const createError=require("../utils/error.js")
 // Define controller methods for handling User requests for deduction definition
 exports.getAllPayroll = async (req, res, next) => {
   try {
+  
     const CompanyId = req.user.id;
     //console.log(CompanyId)
     const criteria = {
@@ -23,11 +24,50 @@ exports.getAllPayroll = async (req, res, next) => {
     return next(createError.createError(500, 'Internal Server Error'));
   }
 };
+
+
+//GET ALL PAYROLL DEFINITION FOR THIS YEAR
+exports.getAllPayrollForCurrentYear = async (req, res, next) => {
+  try {
+    const CompanyId = req.user.id;
+    
+    // Get the current year
+    const currentYear = new Date().getFullYear();
+    
+    // Define criteria to get payroll definitions for the current year
+    const criteria = {
+      where: {
+        CompanyId: CompanyId,
+        // Filtering by startDate to only include records from the current year
+        startDate: {
+          [Sequelize.Op.gte]: new Date(`${currentYear}-01-01T00:00:00.000Z`), // January 1st of the current year
+        },
+        endDate: {
+          [Sequelize.Op.lte]: new Date(`${currentYear}-12-31T23:59:59.999Z`), // December 31st of the current year
+        }
+      }
+    };
+
+    const payrollDefinition = await PayrollDefinition.findAll(criteria);
+
+    return res.status(200).json({
+      count: payrollDefinition.length,
+      payrollDefinition,
+    });
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500, 'Internal Server Error'));
+  }
+};
+
+
 //get by id
 exports.getPayrollDefinitionById = async (req, res,next) => {
   const { id } = req.params;
 
   try {
+
+    return res.json("data")
     const payroll = await Payroll.findByPk(Number(id));
     if (!payroll) {
       return res.status(404).json({ error: "payroll does not exist" });

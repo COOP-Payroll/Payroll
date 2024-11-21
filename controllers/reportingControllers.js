@@ -272,7 +272,7 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
   try {
     // Fetch data from the database
     const payrollPublishedReport = await PayrollDefinition.findAll({
-      where: { status: "created" },
+      where: { status: "created",CompanyId:req.user.id },
       include: [
         {
           model: Payroll,

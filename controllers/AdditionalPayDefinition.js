@@ -1,10 +1,10 @@
 const AdditionalPayDefinition = require("../models/additionalPayDefinition");
 const Company = require("../models/company");
 const createError = require('../utils/error')
-// Define controller methods for handling User requests
+
+//GET ALL ADDITIONAL PAY DEFINITION
 exports.getAllAdditionalPayDefinition = async (req, res,next) => {
   const Company = req.user.id;
-
   try {
     const criteria = {
       CompanyId: req.user.id,
@@ -22,17 +22,23 @@ exports.getAllAdditionalPayDefinition = async (req, res,next) => {
   }
 };
 
+//GET BY ID
 exports.getAdditionalPayDefinitionById = async (req, res,next) => {
   try {
+    const CompanyId = req.user.id;
     const { id } = req.params;
-    const AdditionalPayDefinitions = await AdditionalPayDefinition.findByPk(id);
-    res.json(AdditionalPayDefinitions);
+    const additionalPayDefinitions = await AdditionalPayDefinition.findOne({where:{id,CompanyId}});
+
+    if( !additionalPayDefinitions){
+      return next(createError.createError(404,"Additional pay definition is not defined"))
+    }
+    res.status(200).json(additionalPayDefinitions);
   } catch (error) {
     console.log(error)
     return next(createError.createError(500, 'Internal Server Error'))
   }
 };
-
+//CREATE
 exports.createAdditionalPayDefinition = async (req, res, next) => {
   try {
     const Company = req.user.id;
@@ -45,7 +51,8 @@ exports.createAdditionalPayDefinition = async (req, res, next) => {
     });
 
     if (checkAdditionalPay) {
-      res.status(409).json("this Additional pay Definition is already exists");
+
+      return next(createError.createError(409,"Additional pay Definition is already exists"))
     } else {
       const AdditionalPayDefinitions = await AdditionalPayDefinition.create({
         name,
@@ -63,21 +70,23 @@ exports.createAdditionalPayDefinition = async (req, res, next) => {
   }
 };
 
+//UPDATE ADDITIONAL PAY DEFINITION 
 exports.updateAdditionalPayDefinition = async (req, res, next) => {
   try {
-    //insert required field
     const { name, type } = req.body;
     const updates = {};
     const { id } = req.params;
+
+
 
     const additionalPayDefinition = await AdditionalPayDefinition.findOne({
       where: { id },
     });
 
     if (!additionalPayDefinition) {
-      return res.status(404).json({
-        error: " this additional Pay Definition definition not exist",
-      });
+
+      return next(createError.createError(404,"additional Pay Definition definition not exist"))
+   
     } else {
       const criteria = {
         name: name,
@@ -87,9 +96,9 @@ exports.updateAdditionalPayDefinition = async (req, res, next) => {
       });
 
       if (checkAdditionalPay) {
-        return res
-          .status(409)
-          .json({ error: "The name already exists in the database" });
+
+        return next(createError.createError(404,"The name already exists in the database"))
+ 
       } else {
         const updatedInfo = await additionalPayDefinition.update(req.body, {
           returning: true,
@@ -106,6 +115,7 @@ exports.updateAdditionalPayDefinition = async (req, res, next) => {
   }
 };
 
+//DELETE ADDITIONAL PAY DEFINITION
 exports.deleteAdditionalPayDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -116,9 +126,9 @@ exports.deleteAdditionalPayDefinition = async (req, res, next) => {
       await AdditionalPayDefinition.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res.status(409).json({
-        message: "There is no additional pay definitiokna with this ID",
-      });
+
+      return next(createError.createError(404,"There is no additional pay definition with this ID"))
+      
     }
   } catch (error) {
     console.log(error)

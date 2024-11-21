@@ -1,32 +1,42 @@
 const express = require("express");
 const payroll = require("../controllers/newPayrollController");
-const payroll1=require("../controllers/payrollController.js")
+const payroll1 = require("../controllers/payrollController.js");
 const middleware = require("../middleware/auth");
 const router = express.Router();
-const z=require("../controllers/zcontrollers.js")
+const z = require("../controllers/zcontrollers.js");
 router.get(
-  '/available-payrolls',
+  "/available-payrolls",
   middleware.protectAll,
-  middleware.restrictToAll('approver'),
+  middleware.restrictToAll("approver"),
   payroll.getNotApprovedPayroll
-)
+);
 
 router.get(
-  '/get-processed-payrolls',
+  "/get-processed-payrolls",
   middleware.protectAll,
-  middleware.restrictToAll('companyAdmin'),
+  middleware.restrictToAll("companyAdmin"),
   payroll.getProcessedPayroll
-)
-router.get("/payroll-draft",
- middleware.protectAll, 
- middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-payroll1.payrollDraft1)
-router.get("/payrolldraft",
- middleware.protectAll, 
- middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-payroll1.payrollDraft
- 
- )
+);
+
+router.get(
+  "/get-unprocessed-payrolls/:id",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  payroll.getUnprocessedPayroll
+);
+
+router.get(
+  "/payroll-draft",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+  payroll1.payrollDraft1
+);
+router.get(
+  "/payrolldraft",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+  payroll1.payrollDraft
+);
 router.get(
   "/:id",
   middleware.protectAll,
@@ -37,7 +47,6 @@ router.get(
   payroll.getPayrollByPayrollDefId
 );
 
-
 router.post(
   "/",
   middleware.protectAll,
@@ -45,12 +54,12 @@ router.post(
   payroll.createPayroll1
 );
 
-
-router.post("/project-based",
-middleware.protectAll,
-middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-payroll.projectBasedPayroll
-)
+router.post(
+  "/project-based",
+  middleware.protectAll,
+  middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
+  payroll.projectBasedPayroll
+);
 router.post(
   "/deselect",
   middleware.protectAll,
