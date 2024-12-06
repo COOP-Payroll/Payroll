@@ -100,7 +100,7 @@ exports.createPayroll1 = async (req, res, next) => {
     if (errors.length > 0) {
       console.log("error", errors);
       return res
-        .status(500)
+        .status(503)
         .json({ msg: "There is a problem creating payroll", errors });
     }
     ///
@@ -113,7 +113,7 @@ exports.createPayroll1 = async (req, res, next) => {
   } catch (error) {
     console.log("err", error);
     return res
-      .status(500)
+      .status(503)
       .json({ msg: "Error occurred while creating payroll:", error });
   }
 };

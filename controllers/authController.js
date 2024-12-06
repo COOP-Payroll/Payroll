@@ -5,69 +5,170 @@ const User = require("../models/user");
 const Employee = require("../models/employee");
 const CustomRole = require("../models/customRole");
 const Permission = require("../models/permission");
-const  createError  = require("../utils/error");
-
-
+const createError = require("../utils/error");
+const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 // SIGNTOKEN
-const signToken = (id, role,fullName,phoneNumber) => {
+const signToken = (
+  id,
+  role,
+  fullName,
+  phoneNumber,
+  permissions,
+  organizationName,
+  isSetted,
+  isProjectBased,
+  company
+) => {
   try {
+    const token = jwt.sign(
+      {
+        id,
+        role,
+        fullName,
+        phoneNumber,
+        permissions,
+        organizationName,
+        isSetted,
+        isProjectBased,
+        company,
+      },
+      accessTokenSecret,
+      {
+        expiresIn: "7d",
+      }
+    );
 
-    const token = jwt.sign({ id, role ,fullName,phoneNumber}, 'secret', {
-      expiresIn: '7d'
-    })
-
-    const refreshToken = jwt.sign({ id, role }, 'refreshSecret', {
-      expiresIn: '90d' 
-    })
-    return  { token, refreshToken }
+    const refreshToken = jwt.sign({ id, role }, refreshTokenSecret, {
+      expiresIn: "90d",
+    });
+    return { token, refreshToken };
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
-
-//SIGNTOKEN FOR COMPANY
-const signTokenCompany = (company) => {
+const signTokenSuperAdmin = (id, role, fullName, phoneNumber, email) => {
   try {
-  
+    const token = jwt.sign(
+      { id, role, fullName, phoneNumber, email },
+      accessTokenSecret,
+      {
+        expiresIn: "7d",
+      }
+    );
+    const refreshToken = jwt.sign(
+      { id, role, fullName, phoneNumber, email },
+      refreshTokenSecret,
+      {
+        expiresIn: "90d", // Set your desired expiration time for refresh tokens
+      }
+    );
 
-    console.log("data1")
-
-
-
-    const { id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
-      primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
-      Permissions ,isProjectBased,isSetted} = company;
-
-
-    const token = jwt.sign({  id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
-      primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
-      Permissions,isProjectBased,isSetted},'secret', {
-      expiresIn: '7d'
-    })
-    const refreshToken = jwt.sign({  id, name, numberOfEmployees, status, organizationName, email, role, jobTitle, companyCode, country,
-      primary_Color, primary_Font_Color, primary_Gradient_Color, secondary_Color, secondary_Font_Color, secondary_Gradient_Color,
-      Permissions,isProjectBased,isSetted},'refreshSecret', {
-      expiresIn: '90d' // Set your desired expiration time for refresh tokens
-    })
-   
     return { token, refreshToken };
     // jwt.sign({ id, isProjectBased,isSetted, role }, "secret", {
     //   expiresIn: "90d",
     // });
   } catch (err) {
-    // res.json(err);
-    return err;
+    return res.status(503).json("An error occurred, please try again later");
+  }
+};
+
+//SIGNTOKEN FOR COMPANY
+const signTokenCompany = (company, res) => {
+  try {
+    const {
+      id,
+      name,
+      numberOfEmployees,
+      status,
+      organizationName,
+      email,
+      role,
+      jobTitle,
+      companyCode,
+      country,
+      primary_Color,
+      primary_Font_Color,
+      primary_Gradient_Color,
+      secondary_Color,
+      secondary_Font_Color,
+      secondary_Gradient_Color,
+      Permissions,
+      isProjectBased,
+      isSetted,
+    } = company;
+
+    const token = jwt.sign(
+      {
+        id,
+        name,
+        numberOfEmployees,
+        status,
+        organizationName,
+        email,
+        role,
+        jobTitle,
+        companyCode,
+        country,
+        primary_Color,
+        primary_Font_Color,
+        primary_Gradient_Color,
+        secondary_Color,
+        secondary_Font_Color,
+        secondary_Gradient_Color,
+        Permissions,
+        isProjectBased,
+        isSetted,
+      },
+      accessTokenSecret,
+      {
+        expiresIn: "7d",
+      }
+    );
+    const refreshToken = jwt.sign(
+      {
+        id,
+        name,
+        numberOfEmployees,
+        status,
+        organizationName,
+        email,
+        role,
+        jobTitle,
+        companyCode,
+        country,
+        primary_Color,
+        primary_Font_Color,
+        primary_Gradient_Color,
+        secondary_Color,
+        secondary_Font_Color,
+        secondary_Gradient_Color,
+        // Permissions,
+        isProjectBased,
+        isSetted,
+      },
+      refreshTokenSecret,
+      {
+        expiresIn: "90d", // Set your desired expiration time for refresh tokens
+      }
+    );
+
+    return { token, refreshToken };
+    // jwt.sign({ id, isProjectBased,isSetted, role }, "secret", {
+    //   expiresIn: "90d",
+    // });
+  } catch (err) {
+    // throw new Error("Internal server error");
+    console.error("Error in signTokenCompany:", err); //
   }
 };
 
 //CREATESENDTOKEN FOR COMPANY
 const createSendTokenCompany = async (company, statusCode, res) => {
   try {
-  
-
-     const {token,refreshToken} = signTokenCompany(company);
-     console.log("refreshToken")
+    const { token, refreshToken } = signTokenCompany(company, res);
 
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
@@ -76,50 +177,98 @@ const createSendTokenCompany = async (company, statusCode, res) => {
       httpOnly: true,
     };
     company.password = undefined;
-    res.cookie("jwt", token, cookieOptions);
-    res.status(statusCode).json({
-
-      data: {
-        company,
-      },
+    // res.cookie("jwt", token, cookieOptions);
+    res.status(200).json({
+      // data: {
+      //   company,
+      // },
       token,
-      refreshToken
+      refreshToken,
     });
   } catch (error) {
+    console.log(error);
+    console.log(error.message);
 
-    console.log(error)
-    return res.status(500).json({ message: error.name });
+    return res
+      .status(503)
+      .json({ message: "An error occurred, please try again late" });
+    // return next(
+    //   createError.createError(503, "An error occurred, please try again later")
+    // );
   }
 };
 
+const createSendTokenSuperAdmin = async (company, statusCode, res) => {
+  try {
+    // const company = await User.findOne({ where: { id: 1 } });
+    // return res.json(company.role);
+
+    const { token, refreshToken } = signTokenSuperAdmin(
+      company.id,
+      company.role,
+      company.fullName,
+      company.phoneNumber,
+      company.email
+    );
+
+    company.password = undefined;
+    // res.cookie("jwt", token, cookieOptions);
+    res.status(statusCode).json({
+      token,
+      refreshToken,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(503).json({ message: "Internal server error" });
+    // return next(createError.createError(503, error.message));
+  }
+};
 // CREATESEND TOKEN
 const createSendToken = async (company, statusCode, res) => {
   try {
+    const permissionsList =
+      company.CustomRole && Array.isArray(company.CustomRole.Permissions)
+        ? company.CustomRole.Permissions.map((perm) => ({
+            id: perm.id,
+            module: perm.module,
+            isAccessible: perm.isAccessible,
+          }))
+        : [];
+    const company1 = await Company.findOne({ where: { id: 1 } });
+    // return res.json(company1);
 
-    
-    const {token,refreshToken} = signToken(company.id, company.role,company.fullName,company.phoneNumber);
+    const { token, refreshToken } = signToken(
+      company.id,
+      company.role,
+      company.fullName,
+      company.phoneNumber,
+      permissionsList,
+      company1.organizationName,
+      company1.isSetted,
+      company1.isProjectBased,
+      company
+    );
     const cookieOptions = {
       expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
       secure: "production" ? true : false,
       httpOnly: true,
     };
-    company.password = undefined
-    res.cookie('jwt', token, cookieOptions)
+    company.password = undefined;
+    // res.cookie("jwt", token, cookieOptions);
     res.status(statusCode).json({
-  
       token,
-      refreshToken  
-    })
+      refreshToken,
+    });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,error.message))
+    console.log(error);
+    return res.status(503).json({ message: "Internal server error" });
+    // return next(createError.createError(503, error.message));
   }
 };
 
 exports.login = async (req, res, next) => {
   try {
-  
     let company;
     const { email, password, companyCode } = req.body;
 
@@ -129,20 +278,20 @@ exports.login = async (req, res, next) => {
         .json({ message: "please provide email, password or company code" });
     }
 
-    company = await Company.findOne({ where: { email } ,
-      include:[
-    
-      {model: Permission,
-        attributes:['id', 'module','isAccessible'],
-        through: {
-          attributes: [] 
-        }
-      }
-      ]
+    company = await Company.findOne({
+      where: { email },
+      include: [
+        {
+          model: Permission,
+          attributes: ["id", "module", "isAccessible"],
+          through: {
+            attributes: [],
+          },
+        },
+      ],
     });
 
     if (company === null) {
-     
       company = await Employee.findOne({
         where: { email },
         include: [
@@ -154,23 +303,28 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    if(company?.status === 'pending'){
-      return next(createError.createError(401,"your request is being processed please stay tune"))
+    if (company?.status === "pending") {
+      return next(
+        createError.createError(
+          401,
+          "your request is being processed please stay tune"
+        )
+      );
+    }
+    if (company.role === "companyAdmin") {
+      if (
+        !company ||
+        company.companyCode != companyCode ||
+        !(await bcrypt.compare(password, company.password))
+      ) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
     }
 
-
-   
-    if (!company ||   company.companyCode != companyCode|| !(await bcrypt.compare(password, company.password))) {
-      return res.status(401).json({
-        message:
-          "Unauthorized access - Invalid email, password or company code",
-      });
-    }
     if (company.role === "employee" || company.role === "approver") {
       createSendToken(company, 200, res);
     } else {
       if (company.status === "active") {
-
         createSendTokenCompany(company, 200, res);
       } else {
         switch (company.status) {
@@ -194,10 +348,9 @@ exports.login = async (req, res, next) => {
       }
     }
   } catch (err) {
-   
-
-    return next(createError.createError(500, err.message));
- 
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -206,28 +359,24 @@ exports.superAdminLogin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-       if (!email || !password) {
-
-        return next(createError.createError(400,"Please provide email or password"))
-      return res.status(404).json({ error: "please provide email, password" });
+    if (!email || !password) {
+      return next(
+        createError.createError(400, "Please provide email or password")
+      );
     }
     const user = await User.findOne({ where: { email } });
-    if (
-      !user ||
-     
-      !(await bcrypt.compare(password, user.password))
-    ) {
-      return res.status(401).json({ message: "Incorrect email, password" });
-    } else {
-      return createSendToken(user, 200, res);
-    }
 
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    } else {
+      return createSendTokenSuperAdmin(user, 200, res);
+    }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
-
 
 //LOGOUT
 exports.logout = async (req, res, next) => {
@@ -242,48 +391,48 @@ exports.logout = async (req, res, next) => {
       res.status(401).json({ message: "User is not logged in" });
     }
   } catch (error) {
-   console.log(error)
-   return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 //VERIFYREFRESH TOKEN
-const verifyRefreshToken = refreshToken => {
+const verifyRefreshToken = (refreshToken) => {
   try {
-    const decoded = jwt.verify(refreshToken, 'refreshSecret')
-    return decoded
+    const decoded = jwt.verify(refreshToken, refreshTokenSecret);
+    return decoded;
   } catch (err) {
-    // return next(createError.createError(500,"Invalid refresh token"));
-    throw new Error('Invalid refresh token')
+    return next(createError.createError(503, "Invalid refresh token"));
+    // throw new Error("Invalid refresh token");
   }
-}
+};
 
 // REFRESHTOKEN
 exports.refreshToken = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body
+    const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return next(createError.createError(400, 'Refresh token is missing'))
+      return next(createError.createError(400, "Refresh token is missing"));
     }
 
-    const decoded = verifyRefreshToken(refreshToken)
+    const decoded = verifyRefreshToken(refreshToken);
 
     const newAccessToken = jwt.sign(
       { id: decoded.id, role: decoded.role },
-      'secret',
+      accessTokenSecret,
       {
-        expiresIn: '90d'
+        expiresIn: "90d",
       }
-    )
+    );
 
     res.status(200).json({
-      token: newAccessToken
-    })
+      token: newAccessToken,
+    });
   } catch (error) {
-   return  next(createError.createError(500, error.message))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
-
-
-
+};

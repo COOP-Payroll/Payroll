@@ -59,7 +59,7 @@
 //       return res.status(400).json(validationErrors);
 //     }
 
-//     return res.status(500).json({ message: "Internal server error" });
+//     return res.status(503).json({ message: "Internal server error" });
 //   }
 // };
 // exports.pay = async (req, res, next) => {
@@ -72,7 +72,7 @@
 //     });
 //     res.json({ clientSecret: paymentIntent });
 //   } catch (error) {
-//     res.status(500).json({ error: error.message });
+//     res.status(503).json({ error: error.message });
 //   }
 // };
 
@@ -139,6 +139,6 @@
 //     res.status(200).json({ message: "Payment successful" });
 //   } catch (error) {
 //     console.error("Error processing payment:", error);
-//     res.status(500).json({ error: "Payment failed" });
+//     res.status(503).json({ error: "Payment failed" });
 //   }
 // };

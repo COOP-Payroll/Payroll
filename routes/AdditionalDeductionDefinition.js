@@ -6,18 +6,18 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   AdditionalDeductionDefinition.getAllAdditionalDeductionDefinition
 );
 
-
 router.get(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   AdditionalDeductionDefinition.getAdditionalDeductionDefinitionById
 );
-
 
 // //get allowance by its id
 // router.get("/:id", allowanceDefinition.getAllowanceDefinitionById);
@@ -26,6 +26,7 @@ router.get(
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   AdditionalDeductionDefinition.createAdditionalDeductionDefinition
 );
@@ -34,6 +35,7 @@ router.post(
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   AdditionalDeductionDefinition.updateAdditionalDeductionDefinition
 );
@@ -42,6 +44,7 @@ router.put(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   AdditionalDeductionDefinition.deleteAdditionalDeductionDefinition
 );

@@ -1,23 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const middleware = require('../middleware/auth')
+const middleware = require("../middleware/auth");
 const employeePayrollApprovementController = require("../controllers/employeePayrollApprovement");
 
 // GET /employee-payroll-approvements
-router.get("/",middleware.restrictTo('approver'), employeePayrollApprovementController.getAllApprovements);
+router.get(
+  "/",
+  middleware.restrictTo("approver"),
+  employeePayrollApprovementController.getAllApprovements
+);
 
 // GET /employee-payroll-approvements/:id by definition id
 router.get("/:id", employeePayrollApprovementController.getApprovementById);
 
 // GET /employee-payroll-approvements/:id by payroll id
-router.get("/employeeApprovement/:id", 
+router.get(
+  "/employeeApprovement/:id",
 
-
-employeePayrollApprovementController.getApprovementByPayrollId);
+  middleware.validateUserAgent,
+  employeePayrollApprovementController.getApprovementByPayrollId
+);
 // POST /employee-payroll-approvements
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("approver", "companyAdmin"),
   middleware.restrictALL({
     moduleName: "payrollpublishedreport",
@@ -29,6 +36,7 @@ router.post(
 router.post(
   "/approve",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("approver"),
   // middleware.restrictALL({
   //   moduleName: "PayrollPublishedReport",
@@ -38,19 +46,25 @@ router.post(
   // employeePayrollApprovementController.arrayApprove2Approvement
 );
 
-  
-
 // PUT /employee-payroll-approvements/:id
-router.put("/:id", employeePayrollApprovementController.updateApprovement);
+router.put(
+  "/:id",
+  middleware.validateUserAgent,
+  employeePayrollApprovementController.updateApprovement
+);
 
 // DELETE /employee-payroll-approvements/:id
-router.delete("/:id", employeePayrollApprovementController.deleteApprovement);
+router.delete(
+  "/:id",
+  middleware.validateUserAgent,
+  employeePayrollApprovementController.deleteApprovement
+);
 
-
-//reject 
+//reject
 router.post(
   "/reject",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin", "approver"),
   middleware.restrictALL({
     moduleName: "payrollpublishedreport",
@@ -58,6 +72,5 @@ router.post(
   }),
   employeePayrollApprovementController.rejectPayroll
 );
-
 
 module.exports = router;

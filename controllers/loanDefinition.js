@@ -1,61 +1,65 @@
 const AllowanceDefinition = require("../models/allowanceDefinition");
-const LoanDefinition=require('../models/loanDefinition.js')
+const LoanDefinition = require("../models/loanDefinition.js");
 const Company = require("../models/company");
-const createError= require("../utils/error.js")
-// Define controller methods for handling User requests
-exports.getAllLoanDefinition = async (req, res,next) => {
-  const Company = req.user.id;
-
+const createError = require("../utils/error.js");
+//GET ALL
+exports.getAllLoanDefinition = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const criteria = {
-      CompanyId: req.user.id,
+      CompanyId,
     };
-    const loanDefinitions = await LoanDefinition.findAll(criteria);
+
+    // return res.json(CompanyId);
+    const loanDefinitions = await LoanDefinition.findAll({ where: criteria });
     res.status(200).json({
       count: loanDefinitions.length,
       loanDefinitions,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-exports.getLoanDefinitionById = async (req, res,next) => {
+//GET ONE
+exports.getLoanDefinitionById = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const loanDefinition = await LoanDefinition.findByPk(id);
-       res.status(200).json({         
-         loanDefinition,
-       });
+    res.status(200).json({
+      loanDefinition,
+    });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 exports.createLoanDefinition = async (req, res, next) => {
   try {
-    //insert required field
-    const Company = req.user.id;
-    console.log(Company);
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
 
     const criteria = {
       name: name,
-      CompanyId:req.user.id
+      CompanyId,
     };
     const checkLoan = await LoanDefinition.findOne({
       where: criteria,
     });
 
     if (checkLoan) {
-      res.status(409).json("Loan Definition is already defined");
+      return next(
+        createError.createError(400, "Loan Definition is already defined")
+      );
     } else {
       const loanDefinition = await LoanDefinition.create({
         name,
-    
       });
       await loanDefinition.setCompany(req.user.id);
       res.status(200).json({
@@ -64,57 +68,68 @@ exports.createLoanDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
+//UPDATE
 
 exports.updateLoanDefinition = async (req, res, next) => {
   try {
-    //insert required field
-    console.log("first")
-    const { name,  } =
-      req.body;
-    const updates = {};
+    const { name } = req.body;
     const { id } = req.params;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
+    // Check if the loan definition exists
+    const existingLoanDefinition = await LoanDefinition.findOne({
+      where: { id, CompanyId },
+    });
+
+    if (!existingLoanDefinition) {
+      return next(createError.createError(404, "Loan definition not found."));
+    }
+
+    const updates = {};
     if (name) {
       updates.name = name;
     }
-   console.log("name",req.body.name)
-      const result = await LoanDefinition.update({name:req.body.name}, {
-      where: { id: id },
+
+    await LoanDefinition.update(updates, {
+      where: { id, CompanyId },
     });
 
     res.status(200).json({
-      message: "updated successfully",
-      result
+      message: "Loan definition updated successfully.",
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
+//DELETE
 exports.deleteLoanDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
+    // Check if the loan definition exists
     const loanDefinition = await LoanDefinition.findOne({
-      where: { id: id },
+      where: { id, CompanyId },
     });
+
+    // If the loan definition is found, proceed with deletion
     if (loanDefinition) {
-      await loanDefinition.destroy({ where: { id } });
-      res.status(200).json({ message: "Deleted successfully" });
-    } else {
+      await loanDefinition.destroy();
       res
-        .status(409)
-        .json({ message: "There is no Loan Definition with this ID" });
+        .status(200)
+        .json({ message: "Loan definition deleted successfully." });
+    } else {
+      // Return 404 if not found
+      return next(createError.createError(404, "Loan definition not found."));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-

@@ -18,11 +18,12 @@ router.get(
 
 router.post(
   "/",
-  
+
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   additionalPay.createAdditionalPay
-  );
+);
 
 // router.put(
 //   "/:id",

@@ -1,85 +1,111 @@
 const AllowanceDefinition = require("../models/allowanceDefinition");
 const Company = require("../models/company");
-const createError = require('../utils/error')
+const createError = require("../utils/error");
 
-// GET ALL 
-exports.getAllAllowanceDefinition = async (req, res,next) => {
-  const Company = req.user.id;
-
+// GET ALL
+exports.getAllAllowanceDefinition = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const criteria = {
-      CompanyId: req.user.id,
+      CompanyId: CompanyId,
     };
-    const allowanceDefinitions = await AllowanceDefinition.findAll(
-      {where:criteria});
+    const allowanceDefinitions = await AllowanceDefinition.findAll({
+      where: criteria,
+    });
     res.status(200).json({
       count: allowanceDefinitions.length,
       allowanceDefinitions,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 //GET BY ID
-exports.getAllowanceDefinitionById = async (req, res,next) => {
+exports.getAllowanceDefinitionById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const allowanceDefinition = await AllowanceDefinition.findByPk(id);
 
     if (!allowanceDefinition) {
-
-      return next(createError.createError(404,"There is non allowance Definition with this id"))
-    
+      return next(
+        createError.createError(
+          404,
+          "There is non allowance Definition with this id"
+        )
+      );
     } else {
       res.json(allowanceDefinition);
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-//CREATE ALLOWANCE DEFINITION
+// CREATE ALLOWANCE DEFINITION
 exports.createAllowanceDefinition = async (req, res, next) => {
   try {
-    const Company = req.user.id;
-    console.log(Company);
+    // Determine the company ID based on the user's role
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    // Destructure and validate input
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
 
+    // Ensure numeric values or default to zero if undefined or empty
+    const sanitizedExemptedAmount = exemptedAmount
+      ? parseFloat(exemptedAmount)
+      : 0;
+    const sanitizedStartingAmount = startingAmount
+      ? parseFloat(startingAmount)
+      : 0;
+
+    // Criteria to check if the allowance already exists
     const criteria = {
-      name: name,
+      name,
+      CompanyId,
     };
+
+    // Check if the allowance definition already exists
     const checkAllowance = await AllowanceDefinition.findOne({
       where: criteria,
     });
 
     if (checkAllowance) {
-
-      return next(createError.createError(409,"Allowance Definition is already defined"))
-    } else {
-      const allowanceDefinition = await AllowanceDefinition.create({
-        name,
-        isTaxable,
-        isExempted,
-        exemptedAmount,
-        startingAmount,
-      });
-      await allowanceDefinition.setCompany(Company);
-      res.status(200).json({
-        message: "Successfully Registered",
-        allowanceDefinition,
-      });
+      // Return 400 Conflict if allowance is already defined
+      return next(
+        createError.createError(400, "Allowance Definition is already defined")
+      );
     }
+
+    // Create a new allowance definition
+    const allowanceDefinition = await AllowanceDefinition.create({
+      name,
+      isTaxable,
+      isExempted,
+      exemptedAmount: sanitizedExemptedAmount,
+      startingAmount: sanitizedStartingAmount,
+    });
+
+    // Associate the allowance definition with the company
+    await allowanceDefinition.setCompany(CompanyId);
+
+    // Respond with success message
+    res.status(200).json({
+      message: "Successfully Registered",
+      allowanceDefinition,
+    });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    // Return 503 Internal Server Error if any error occurs
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 //UPDATE ALLOWANCE DEFINITION
 exports.updateAllowanceDefinition = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
     const updates = {};
@@ -101,17 +127,18 @@ exports.updateAllowanceDefinition = async (req, res, next) => {
       updates.startingAmount = startingAmount;
     }
 
-  const allowanceDefinition= await AllowanceDefinition.findOne({
-    where:{
-      id,
-      CompanyId: req.user.id
+    const allowanceDefinition = await AllowanceDefinition.findOne({
+      where: {
+        id,
+        CompanyId,
+      },
+    });
+
+    if (!allowanceDefinition) {
+      return next(
+        createError.createError(404, "Allowance definition not found")
+      );
     }
-  })
-
-
-  if(!allowanceDefinition){
-    return next(createError.createError(404, "Allowance definition not found"))
-  }
 
     const result = await allowanceDefinition.update(updates, {
       where: { id: id },
@@ -121,32 +148,27 @@ exports.updateAllowanceDefinition = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 //DELETE ALLOWANCE
 exports.deleteAllowanceDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
-
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const allowanceDefinition = await AllowanceDefinition.findOne({
-      where: { id: id ,
-        CompanyId: req.user.id
-      },
+      where: { id: id, CompanyId },
     });
-if(!allowanceDefinition){
-  return next(createError.createError(404," Allowance definition not found"))
-}
-  
-      await allowanceDefinition.destroy({ where: { id } });
-      res.status(200).json({ message: "Deleted successfully" });
-  
+    if (!allowanceDefinition) {
+      return next(
+        createError.createError(404, " Allowance definition not found")
+      );
+    }
+
+    await allowanceDefinition.destroy({ where: { id } });
+    res.status(200).json({ message: "Deleted successfully" });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-
-
-

@@ -8,12 +8,14 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   companyAccountController.getAllCompanyAccountInfo
 );
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   upload.single("image"),
   companyAccountController.createCompanyAccountInfo
@@ -21,16 +23,22 @@ router.post(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   companyAccountController.deleteCompanyAccountInfo
 );
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   companyAccountController.updateCompanyAccountInfo
 );
 
-router.get("/verify/account", companyAccountController.verifyAccountNumber);
+router.get(
+  "/verify/account",
+  middleware.validateUserAgent,
+  companyAccountController.verifyAccountNumber
+);
 
 module.exports = router;

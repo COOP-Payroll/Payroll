@@ -1,6 +1,6 @@
 const ProvidentFund = require("../models/providentFund.js");
 const createError = require("../utils/error.js");
-const { Op, where } = require('sequelize');
+const { Op, where } = require("sequelize");
 // Define controller methods for handling User requests
 exports.getAllProvidentFund = async (req, res, next) => {
   try {
@@ -22,8 +22,8 @@ exports.getAllProvidentFund = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -33,8 +33,8 @@ exports.getProvidentFundById = async (req, res, next) => {
     const providentFunds = await ProvidentFund.findByPk(id);
     res.json(providentFunds);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+   
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -58,7 +58,7 @@ exports.createProvidentFund = async (req, res, next) => {
           ProvidentFunds,
         });
       } else {
-        res.status(409).json("ProvidentFund is already defined update it ");
+        res.status(400).json("ProvidentFund is already defined update it ");
       }
     } else if (req.user.role === "companyAdmin") {
       const getAllProvidentFund = await ProvidentFund.findAll({
@@ -77,13 +77,12 @@ exports.createProvidentFund = async (req, res, next) => {
         });
       } else {
         return res
-          .status(409)
+          .status(400)
           .json("ProvidentFund is already defined update it ");
       }
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -139,14 +138,12 @@ exports.updateProvidentFund = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 exports.deleteProvidentFund = async (req, res, next) => {
   try {
-
     const { id } = req.params;
     if (req.user.role === "superAdmin") {
       const providentFund = await ProvidentFund.findOne({
@@ -157,18 +154,20 @@ exports.deleteProvidentFund = async (req, res, next) => {
         return res.status(200).json({ message: "Deleted successfully" });
       } else {
         return res
-          .status(409)
+          .status(400)
           .json({ message: "There is no ProvidentFund with this ID" });
       }
     } else if (req.user.role === "companyAdmin") {
-
       const providentFund = await ProvidentFund.findOne({
         where: { id: id, CompanyId: req.user.id },
       });
-      console.log("provident fund", providentFund === null)
-      if (!providentFund || providentFund.length === 0 || providentFund === null) {
+      if (
+        !providentFund ||
+        providentFund.length === 0 ||
+        providentFund === null
+      ) {
         return res
-          .status(409)
+          .status(400)
           .json({ message: "There is no ProvidentFund with this ID" });
       } else {
         await ProvidentFund.destroy({ where: { id } });
@@ -176,17 +175,12 @@ exports.deleteProvidentFund = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-
-
-
 exports.restoreToDefault = async (req, res, next) => {
   try {
-
     const deletedData = await ProvidentFund.update(
       {
         isActive: false,
@@ -199,8 +193,6 @@ exports.restoreToDefault = async (req, res, next) => {
       }
     );
 
-
-
     const PF = await ProvidentFund.create({
       employeeContribution: 0,
       employerContribution: 0,
@@ -209,14 +201,13 @@ exports.restoreToDefault = async (req, res, next) => {
       UserId: null,
     });
 
-
     res.status(200).json({
       success: true,
       message: "Restored to default",
       data: PF,
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"))
+
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

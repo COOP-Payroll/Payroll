@@ -7,6 +7,7 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   //   middleware.restrictALL({ moduleName: "module", isAccessible: true }),
   // middleware.checkPermissions({ name: 'payroll', value:'approve' }),
   moduleController.getAllModules
@@ -16,18 +17,19 @@ router.get(
 router.get(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin"),
-moduleController.getAllowanceById
+  moduleController.getAllowanceById
 );
 
 // //add module of company
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin"),
- moduleController.createModules
+  moduleController.createModules
 );
-
 
 // //update module of company
 // router.put(

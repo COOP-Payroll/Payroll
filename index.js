@@ -3,10 +3,11 @@ const { Worker } = require("worker_threads");
 const cors = require("cors");
 const run = require("./utils/checkSubscriptionPlan");
 const app = express();
+const middleware = require("./middleware/auth.js");
 const helmet = require("helmet");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger"); // Path to your Swagger configuration file
-const csrf = require("csrf");
+// const csrf = require("csrf");
 require("dotenv").config();
 const sequelize = require("./database/db");
 const cron = require("node-cron");
@@ -71,8 +72,9 @@ app.use(
   cors({
     origin: [
       "*",
-      // "http://10.101.200.91",
-      // "http://localhost:3000",
+      "http://10.101.200.91",
+      "http://localhost:3000",
+      "http://10.12.51.85",
       // "http://localhost:5173",
       // "http://localhost:5172",
       // "http://localhost:5171",
@@ -94,6 +96,46 @@ app.use(
     credentials: true,
   })
 );
+
+app.use((req, res, next) => {
+  if (["POST", "PUT", "PATCH"].includes(req.method)) {
+    return middleware.sanitizeInput(req, res, next);
+  }
+  next();
+});
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://trusted-cdn.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "https://trusted-images.com"],
+      // Add other directives as needed
+    },
+  })
+);
+
+app.use(helmet.frameguard({ action: "deny" }));
+app.use(helmet.noSniff());
+app.use(helmet.xssFilter());
+app.use(
+  helmet.hsts({
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  })
+);
+app.use(helmet.referrerPolicy({ policy: "strict-origin" }));
+
+app.use((req, res, next) => {
+  const allowedMethods = ["GET", "POST", "PUT", "DELETE"];
+  if (!allowedMethods.includes(req.method)) {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+  next();
+});
+
 // app.use(csrf({ cookie: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -164,14 +206,14 @@ app.use((req, res, next) => {
   next(error);
 });
 
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-    },
-  })
-);
+// app.use(
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'"],
+//     },
+//   })
+// );
 app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;

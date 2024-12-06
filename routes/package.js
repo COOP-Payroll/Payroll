@@ -7,44 +7,52 @@ const middleware = require("../middleware/auth.js");
 // Define routes for handling User requests
 router.get(
   "/",
-//   middleware.protectAll,
-//   middleware.restrictToAdmin("superAdmin"),
+  middleware.validateUserAgent,
+  //   middleware.protectAll,
+  //   middleware.restrictToAdmin("superAdmin"),
   packageController.getAllPackages
 );
 
-router.get("/trial",
-packageController.getTrial)
+router.get("/trial", middleware.validateUserAgent, packageController.getTrial);
 
-router.get("/monthlyPackages",
-packageController.getMonthlyPackages
+router.get(
+  "/monthlyPackages",
+  middleware.validateUserAgent,
+  packageController.getMonthlyPackages
 );
 
-router.get("/yearlyPackages",
-packageController.getYearlyPackages
+router.get(
+  "/yearlyPackages",
+  middleware.validateUserAgent,
+  packageController.getYearlyPackages
 );
 
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAdmin("superAdmin"),
   packageController.createPackage
 );
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAdmin("superAdmin"),
   packageController.deletePackage
 );
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAdmin("superAdmin"),
   packageController.updatePackage
 );
 router.get(
   "/:id",
-//   middleware.protectAll,
-//   middleware.restrictToAdmin("superAdmin"),
+  middleware.validateUserAgent,
+  //   middleware.protectAll,
+  //   middleware.restrictToAdmin("superAdmin"),
   packageController.getpackageById
 );
 

@@ -1,27 +1,37 @@
 const express = require("express");
 const allowanceDefinition = require("../controllers/allowanceDefinition");
-const middleware=require('../middleware/auth')
+const middleware = require("../middleware/auth");
 const router = express.Router();
 //get allowance defined by this company
-router.get("/", 
-middleware.protectAll,
-middleware.restrictToAll('companyAdmin'),
-allowanceDefinition.getAllAllowanceDefinition);
+router.get(
+  "/",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictToAll("companyAdmin"),
+  allowanceDefinition.getAllAllowanceDefinition
+);
 
-//get allowance by its id 
-router.get("/:id", 
-allowanceDefinition.getAllowanceDefinitionById);
+//get allowance by its id
+router.get(
+  "/:id",
+  middleware.validateUserAgent,
+  allowanceDefinition.getAllowanceDefinitionById
+);
 
-//allowance definition for this company 
-router.post("/", 
-middleware.protectAll,
-middleware.restrictToAll('companyAdmin'),
-allowanceDefinition.createAllowanceDefinition);
+//allowance definition for this company
+router.post(
+  "/",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictToAll("companyAdmin"),
+  allowanceDefinition.createAllowanceDefinition
+);
 
 //update allowance definition
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin"),
   allowanceDefinition.updateAllowanceDefinition
 );
@@ -30,6 +40,7 @@ router.put(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin"),
   allowanceDefinition.deleteAllowanceDefinition
 );

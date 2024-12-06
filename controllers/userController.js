@@ -1,53 +1,58 @@
 const User = require("../models/user.js");
 const Company = require("../models/company.js");
-const createError = require('../utils/error.js');
+const createError = require("../utils/error.js");
 const AccountInfo = require("../models/accountInfo.js");
-const sequelize = require('../database/db')
+const sequelize = require("../database/db");
 const sendEmail = require("../utils/sendEmail.js");
-const axios = require('axios');
-const crypto = require('crypto');
+const axios = require("axios");
+const crypto = require("crypto");
+const { where } = require("sequelize");
+const { stat } = require("fs");
 
 // CREATE USER
-exports.createUser = async (req, res,next) => {
+exports.createUser = async (req, res, next) => {
   // const body = req.body;
 
   try {
-
-    const {fullName, email,password,AccountNumber,phoneNumber,role}= req.body;
+    const { fullName, email, password, AccountNumber, phoneNumber, role } =
+      req.body;
 
     const existingUser = await User.findOne({ where: { email: email } });
     if (existingUser) {
-      return next(createError.createError(409, "User with this email is already registered."));
-
+      return next(
+        createError.createError(
+          400,
+          "User with this email is already registered."
+        )
+      );
     } else {
-      const user = await User.create({ 
-       fullName,
-       email,
-       phoneNumber:phoneNumber,
-       AccountNumber:AccountNumber,
-       password:'pass',
-       role: role?? 'superAdmin'
-
-       });
+      const user = await User.create({
+        fullName,
+        email,
+        phoneNumber: phoneNumber,
+        AccountNumber: AccountNumber,
+        password: "pass",
+        role: role ?? "superAdmin",
+      });
       return res.status(200).json({
-        status: 'true',
+        status: "true",
         message: "User successfully registered.",
-        data:{user:{
-          id: user.id,
-          fullName: user.fullName,
-          email: user.email,
-        }}, 
+        data: {
+          user: {
+            id: user.id,
+            fullName: user.fullName,
+            email: user.email,
+          },
+        },
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 // GET ALL USER
-exports.getAllUser = async (req, res,next) => {
-
+exports.getAllUser = async (req, res, next) => {
   try {
     const users = await User.findAll({
       attributes: { exclude: ["password"] },
@@ -56,14 +61,12 @@ exports.getAllUser = async (req, res,next) => {
     delete users.updatedAt;
     return res.status(200).json(users);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
-
 };
 
 //GET ONE
-exports.getUserById = async (req, res,next) => {
+exports.getUserById = async (req, res, next) => {
   const { id } = req.params;
 
   try {
@@ -71,18 +74,18 @@ exports.getUserById = async (req, res,next) => {
       attributes: { exclude: ["password"] },
     });
     if (!user) return next(createError.createError(404, "User does not exist"));
-   
+
     return res.json(user);
-  }
-  catch (error) {
-    return next(createError.createError(500, "Internal server error"));
+  } catch (error) {
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 // UPDATE USER
-exports.updateUser = async (req, res,next) => {
+exports.updateUser = async (req, res, next) => {
   const { id } = req.params;
-  const {fullName, email,password,AccountNumber,phoneNumber,role}= req.body;
+  const { fullName, email, password, AccountNumber, phoneNumber, role } =
+    req.body;
 
   try {
     const user = await User.findByPk(Number(id));
@@ -104,7 +107,6 @@ exports.updateUser = async (req, res,next) => {
     if (role) {
       updates.role = role;
     }
-   
 
     const result = await user.update(updates);
 
@@ -112,13 +114,12 @@ exports.updateUser = async (req, res,next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 // delete User
-exports.deleteUser = async (req, res,next) => {
+exports.deleteUser = async (req, res, next) => {
   const { id } = req.params;
   try {
     const user = await User.findByPk(Number(id));
@@ -126,29 +127,25 @@ exports.deleteUser = async (req, res,next) => {
     await user.destroy();
     return res.json("user deleted successfully");
   } catch (error) {
-    return next(createError.createError(500, "Internal server error"));
-   
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-
 exports.updateCompanyStatus1 = async (req, res, next) => {
-  const transaction = await sequelize.transaction();
-  const { id, status } = req.body;
+  // const transaction = await sequelize.transaction();
 
   try {
+    const { id, status } = req.body;
     const expirationHours = 24;
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
     });
-
-    const token = crypto.randomBytes(32).toString('hex');
-    console.log("createCompany's token:", token);
+    const token = crypto.randomBytes(32).toString("hex");
 
     const passwordCreationLink = `http://10.101.200.91/#/setpassword?${token}`;
 
     if (!company) {
-      return next(createError(404, "Company does not exist"));
+      return next(createError.createError(404, "Company does not exist"));
     }
 
     const text = `
@@ -173,31 +170,35 @@ exports.updateCompanyStatus1 = async (req, res, next) => {
     `;
 
     if (company.status === status) {
-      // return next(createError(409, Company is already ${status}));
+      return next(createError.createError(400, `Company is already ${status}`));
     }
 
-    await company.update(
+    const updatedCompany = await company.update(
       {
-        status,
+        status: status,
         resetPasswordTokenCreatedAt: new Date(),
         resetPasswordToken: token,
-      },
-      { transaction }
+      }
+      // { transaction }
     );
 
-    await sendEmail({
-      email: company.email,
-      subject: "Create Your Account Password.",
-      html: text,
-    });
+    // await sendEmail(
+    //   {
+    //     email: company.email,
+    //     subject: "Create Your Account Password.",
+    //     html: text,
+    //   },
+    //   { transaction }
+    // );
 
-    await transaction.commit();
-
-    return res.status(200).json({ message: "Company status Activated successfully" });
+    // await transaction.commit();
+    return res
+      .status(200)
+      .json({ message: `Company status updated successfully` });
   } catch (error) {
-    console.log(error);
-    await transaction.rollback();
-    return next(createError(500, "Internal server error"));
+   
+    // await transaction.rollback();
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 // exports.updateCompanyStatus1 = async (req, res, next) => {
@@ -241,7 +242,7 @@ exports.updateCompanyStatus1 = async (req, res, next) => {
 //     `;
 
 //     if (company.status === status) {
-//       // return next(createError(409, Company is already ${status}));
+//       // return next(createError(400, Company is already ${status}));
 //     }
 
 //     await company.update(
@@ -265,16 +266,15 @@ exports.updateCompanyStatus1 = async (req, res, next) => {
 //   } catch (error) {
 //     console.log(error);
 //     await transaction.rollback();
-//     return next(createError(500, "Internal server error"));
+//     return next(createError(503, "Internal server error"));
 //   }
 // };
 
 exports.updateCompanyStatus = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   const { id, status } = req.body;
-  
+
   try {
-    
     const expirationHours = 24;
     const company = await Company.findByPk(Number(id), {
       attributes: { exclude: ["password"] },
@@ -284,7 +284,7 @@ exports.updateCompanyStatus = async (req, res, next) => {
       return next(createError(404, "Company does not exist"));
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString("hex");
 
     const passwordCreationLink = `http://10.101.200.91:4400/api/company/setpassword`;
     // axios.post(apiUrl, requestData, {
@@ -300,7 +300,6 @@ exports.updateCompanyStatus = async (req, res, next) => {
     //   // Handle error
     //   console.error(error);
     // });
-
 
     var text = `
       <!DOCTYPE html>
@@ -324,71 +323,79 @@ exports.updateCompanyStatus = async (req, res, next) => {
     `;
 
     // if (company.status === status) {
-    //   return next(createError.createError(409, `Company is already ${status}`));
+    //   return next(createError.createError(400, `Company is already ${status}`));
     // }
 
-    await company.update({ 
-      status,
-      resetPasswordTokenCreatedAt: new Date(), 
-      resetPasswordToken: token 
-    }, { transaction });
+    await company.update(
+      {
+        status,
+        resetPasswordTokenCreatedAt: new Date(),
+        resetPasswordToken: token,
+      },
+      { transaction }
+    );
 
-    await sendEmail({
-      email: company.email,
-      subject: "Create Your Account Password.",
-      html: text
-    }, { transaction });
+    await sendEmail(
+      {
+        email: company.email,
+        subject: "Create Your Account Password.",
+        html: text,
+      },
+      { transaction }
+    );
 
     await transaction.commit();
 
-    return res.status(200).json({ message: "Company status activated successfully" });
+    return res
+      .status(200)
+      .json({ message: "Company status activated successfully" });
   } catch (error) {
-    console.error(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 exports.verifyCompanyAccount = async (req, res, next) => {
-  const transaction = await sequelize.transaction()
+  const transaction = await sequelize.transaction();
   try {
-    const id = req.params.id
-    const accountId = req.body.accountId
+    const id = req.params.id;
+    const accountId = req.body.accountId;
     const company = await Company.findOne(
       { where: { id: id } },
       {
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ["password"] },
       }
-    )
+    );
 
-    // console.log("id",company);
     if (!company)
-      return next(createError.createError(404, 'company does not exist'))
+      return next(createError.createError(404, "company does not exist"));
     // await company.update({ status });
 
     const foundAccount = await AccountInfo.findOne({
-      where: { id: accountId, isActive: true, isVerified: false, CompanyId: id }
-    })
+      where: {
+        id: accountId,
+        isActive: true,
+        isVerified: false,
+        CompanyId: id,
+      },
+    });
     if (!foundAccount) {
       return next(
-        createError.createError(404, 'Account does not exist or verified')
-      )
+        createError.createError(404, "Account does not exist or verified")
+      );
     }
     const data = await foundAccount.update(
       { isVerified: true },
       { transaction }
-    )
-    await transaction.commit()
-    return res.status(200).json({ message: 'Account verified successfully' })
+    );
+    await transaction.commit();
+    return res.status(200).json({ message: "Account verified successfully" });
   } catch (error) {
-    console.log(error)
-    await transaction.rollback()
-    return next(createError.createError(500, 'Internal server error'))
+    await transaction.rollback();
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
-}
-
+};
 
 //Activate and deactivate user
-
 
 //ACTIVATE || DEACTIVATE USER
 exports.activateUser = async (req, res, next) => {
@@ -427,13 +434,9 @@ exports.activateUser = async (req, res, next) => {
         });
       }
     } else if (action === "deactivate") {
-    
       if (!user.isActive) {
         return next(
-          createError.createError(
-            400,
-            "The user  is already deactiveted"
-          )
+          createError.createError(400, "The user  is already deactiveted")
         );
       } else {
         const result = await user.update({ isActive: false });
@@ -443,7 +446,6 @@ exports.activateUser = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server Error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

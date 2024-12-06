@@ -1,13 +1,12 @@
 const express = require("express");
-const accountChecker=require("../controllers/account.js")
-
+const accountChecker = require("../controllers/account.js");
+const middleware = require("../middleware/auth.js");
 const router = express.Router();
-
-
-
 
 router.post(
   "/",
-  accountChecker.checkAccountNumber);
+  middleware.validateUserAgent,
+  accountChecker.checkAccountNumber
+);
 
-  module.exports = router;
+module.exports = router;

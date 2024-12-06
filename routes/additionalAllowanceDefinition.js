@@ -6,6 +6,7 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   allowanceDefinition.getAllAdditionalAllowanceDefinition
 );
@@ -17,6 +18,7 @@ router.get(
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   allowanceDefinition.createAdditionalAllowanceDefinition
 );
@@ -25,6 +27,7 @@ router.post(
 router.put(
   "/update/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   allowanceDefinition.updateAdditionalAllowanceDefinition
 );
@@ -33,6 +36,7 @@ router.put(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   allowanceDefinition.deleteAdditionalAllowanceDefinition
 );

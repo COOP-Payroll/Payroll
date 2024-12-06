@@ -1,9 +1,9 @@
 const AdditionalPayDefinition = require("../models/additionalPayDefinition");
 const Company = require("../models/company");
-const createError = require('../utils/error')
+const createError = require("../utils/error");
 
 //GET ALL ADDITIONAL PAY DEFINITION
-exports.getAllAdditionalPayDefinition = async (req, res,next) => {
+exports.getAllAdditionalPayDefinition = async (req, res, next) => {
   const Company = req.user.id;
   try {
     const criteria = {
@@ -17,25 +17,31 @@ exports.getAllAdditionalPayDefinition = async (req, res,next) => {
       AdditionalPayDefinitions,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 //GET BY ID
-exports.getAdditionalPayDefinitionById = async (req, res,next) => {
+exports.getAdditionalPayDefinitionById = async (req, res, next) => {
   try {
     const CompanyId = req.user.id;
     const { id } = req.params;
-    const additionalPayDefinitions = await AdditionalPayDefinition.findOne({where:{id,CompanyId}});
+    const additionalPayDefinitions = await AdditionalPayDefinition.findOne({
+      where: { id, CompanyId },
+    });
 
-    if( !additionalPayDefinitions){
-      return next(createError.createError(404,"Additional pay definition is not defined"))
+    if (!additionalPayDefinitions) {
+      return next(
+        createError.createError(404, "Additional pay definition is not defined")
+      );
     }
     res.status(200).json(additionalPayDefinitions);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 //CREATE
@@ -51,8 +57,12 @@ exports.createAdditionalPayDefinition = async (req, res, next) => {
     });
 
     if (checkAdditionalPay) {
-
-      return next(createError.createError(409,"Additional pay Definition is already exists"))
+      return next(
+        createError.createError(
+          400,
+          "Additional pay Definition is already exists"
+        )
+      );
     } else {
       const AdditionalPayDefinitions = await AdditionalPayDefinition.create({
         name,
@@ -65,28 +75,25 @@ exports.createAdditionalPayDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-//UPDATE ADDITIONAL PAY DEFINITION 
+//UPDATE ADDITIONAL PAY DEFINITION
 exports.updateAdditionalPayDefinition = async (req, res, next) => {
   try {
     const { name, type } = req.body;
     const updates = {};
     const { id } = req.params;
 
-
-
     const additionalPayDefinition = await AdditionalPayDefinition.findOne({
       where: { id },
     });
 
     if (!additionalPayDefinition) {
-
-      return next(createError.createError(404,"additional Pay Definition definition not exist"))
-   
+      return next(createError.createError(404, "Resource not found"));
     } else {
       const criteria = {
         name: name,
@@ -96,22 +103,21 @@ exports.updateAdditionalPayDefinition = async (req, res, next) => {
       });
 
       if (checkAdditionalPay) {
-
-        return next(createError.createError(404,"The name already exists in the database"))
- 
+        return next(createError.createError(400, "Duplicate resource"));
       } else {
         const updatedInfo = await additionalPayDefinition.update(req.body, {
           returning: true,
         });
-        res.status(201).json({
+        res.status(200).json({
           msg: "updated successfully",
           updatedInfo,
         });
       }
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -126,12 +132,11 @@ exports.deleteAdditionalPayDefinition = async (req, res, next) => {
       await AdditionalPayDefinition.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-
-      return next(createError.createError(404,"There is no additional pay definition with this ID"))
-      
+      return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

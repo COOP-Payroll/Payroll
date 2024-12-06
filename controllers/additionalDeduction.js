@@ -1,7 +1,7 @@
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition.js");
 const AdditionalDeduction = require("../models/additionalDeduction.js");
 const Employee = require("../models/employee.js");
-const createError = require('../utils/error');
+const createError = require("../utils/error");
 const { all } = require("axios");
 //GET ALL
 exports.getAllAdditionalDeduction = async (req, res, next) => {
@@ -18,29 +18,23 @@ exports.getAllAdditionalDeduction = async (req, res, next) => {
       AdditionalDeductions,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-
-
 // GET BY ID
-exports.getAdditionalDeductionById = async (req, res,next) => {
+exports.getAdditionalDeductionById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-
-
     const allowance = await Allowance.findByPk(id);
 
-    if(!allowance){
-      return next(createError.createError(404," Allowance not found"))
+    if (!allowance) {
+      return next(createError.createError(404, " Allowance not found"));
     }
     res.status(200).json(allowance);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -51,7 +45,6 @@ exports.createAdditionalDeduction = async (req, res, next) => {
     const employeeId = req.body.employeeId;
     const AdditionalDeductionDefinitionId =
       req.body.AdditionalDeductionDefinitionId;
-    console.log(amount, AdditionalDeductionDefinitionId, employeeId);
 
     const employee = await Employee.findByPk(employeeId);
     const AdditionalDeductionDefinitions =
@@ -63,16 +56,12 @@ exports.createAdditionalDeduction = async (req, res, next) => {
     //           AdditionalDeduction:AdditionalDeductionDefinitionId}}
     // );
 
-    // console.log("first", checkAdditionalDeductionForEmployee.length);
     if (!employee) {
-      res.status(404).json("No Employee with this id");
-      //   console.log("no Employee with this id");
+      return next(createError.createError(404, "No Employee with this id"));
     } else if (!AdditionalDeductionDefinitions) {
-      res.status(404).json("No AdditionalDeduction Definition with this id");
+      return next(createError.createError(404, "Resource not found"));
     }
-    // else if(checkAdditionalDeductionForEmployee.length !=0){
-    //      res.status(404).json("AdditionalDeduction added for this employee update it ");
-    // }
+  
     else {
       const AdditionalDeductions = await AdditionalDeduction.create({ amount });
       await AdditionalDeductions.setEmployee(employee);
@@ -88,8 +77,7 @@ exports.createAdditionalDeduction = async (req, res, next) => {
       // Handle the case where the company with the given ID is not found
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 exports.updateAdditionalDeduction = async (req, res, next) => {
@@ -101,14 +89,10 @@ exports.updateAdditionalDeduction = async (req, res, next) => {
     if (amount) {
       updates.amount = amount;
     }
-    // const criteria = {
-    //   CompanyId: req.user.id,
-    // };
 
     const checkAdditionalDeduction = await AdditionalDeduction.findOne({
       where: { id: id, CompanyId: req.user.id },
     });
-    console.log("first", checkAdditionalDeduction);
     if (checkAdditionalDeduction) {
       const result = await AdditionalDeduction.update(
         { amount: amount },
@@ -120,11 +104,10 @@ exports.updateAdditionalDeduction = async (req, res, next) => {
         result,
       });
     } else {
-      res.status(404).json("No such Id");
+      return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -138,12 +121,9 @@ exports.deleteAdditionalDeduction = async (req, res, next) => {
       await AdditionalDeduction.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res.status(409).json({
-        message: "There is no AdditionalDeduction Definition with this ID",
-      });
+      return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

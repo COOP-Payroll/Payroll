@@ -38,8 +38,6 @@ const Permission = sequelize.define("Permission", {
 
 
 
-
-
 module.exports = Permission;
 CustomRole.hasMany(Permission);
 Permission.belongsTo(CustomRole);

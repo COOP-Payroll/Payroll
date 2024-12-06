@@ -1,12 +1,13 @@
 const express = require("express");
 
-const loanDefinition=require('../controllers/loanDefinition.js')
+const loanDefinition = require("../controllers/loanDefinition.js");
 const middleware = require("../middleware/auth");
 const router = express.Router();
 //get allowance defined by this company
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   loanDefinition.getAllLoanDefinition
 );
@@ -18,24 +19,27 @@ router.get(
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
- loanDefinition.createLoanDefinition
+  loanDefinition.createLoanDefinition
 );
 
 //update allowance definition
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
-loanDefinition.updateLoanDefinition
+  loanDefinition.updateLoanDefinition
 );
 
 //delete allowance definition
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
-loanDefinition.deleteLoanDefinition
+  loanDefinition.deleteLoanDefinition
 );
 
 module.exports = router;

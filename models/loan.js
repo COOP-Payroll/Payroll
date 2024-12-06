@@ -9,6 +9,11 @@ const Loan = sequelize.define("Loan", {
     type: DataTypes.DOUBLE,
     allowNull: false,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+
   //employee id
   //allowance id
 });

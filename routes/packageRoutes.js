@@ -36,8 +36,9 @@ const middleware = require("../middleware/auth.js");
  */
 router.get(
   "/",
-//   middleware.protectAll,
-//   middleware.restrictToAdmin("superAdmin"),
+  middleware.validateUserAgent,
+  //   middleware.protectAll,
+  //   middleware.restrictToAdmin("superAdmin"),
   packageController.getAllPackages
 );
 
@@ -59,9 +60,10 @@ router.get(
  *         description: Internal Server Error - Failed to retrieve yearly packages.
  */
 
-
-router.get("/monthlyPackages",
-packageController.getMonthlyPackages
+router.get(
+  "/monthlyPackages",
+  middleware.validateUserAgent,
+  packageController.getMonthlyPackages
 );
 
 /**
@@ -82,10 +84,11 @@ packageController.getMonthlyPackages
  *         description: Internal Server Error - Failed to retrieve yearly packages.
  */
 
-router.get("/yearlyPackages",
-packageController.getYearlyPackages
+router.get(
+  "/yearlyPackages",
+  middleware.validateUserAgent,
+  packageController.getYearlyPackages
 );
-
 
 /**
  * @swagger
@@ -127,7 +130,7 @@ packageController.getYearlyPackages
  *               service:
  *                 type: array
  *                 items:
- *                   type: object 
+ *                   type: object
  *                   description: Service details
  *                   properties:
  *                     serviceName:
@@ -159,27 +162,34 @@ router.post(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAdmin("superAdmin"),
   packageController.deletePackage
 );
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAdmin("superAdmin"),
   packageController.updatePackage
 );
-router.put("/:packageId/:serviceId",
-middleware.restrictToAdmin("superAdmin"),
-packageController.updateService
+router.put(
+  "/:packageId/:serviceId",
+  middleware.validateUserAgent,
+  middleware.restrictToAdmin("superAdmin"),
+  packageController.updateService
 );
-router.delete("/:packageId/:serviceId",
-middleware.restrictToAdmin("superAdmin"),
-packageController.deleteService
+router.delete(
+  "/:packageId/:serviceId",
+  middleware.validateUserAgent,
+  middleware.restrictToAdmin("superAdmin"),
+  packageController.deleteService
 );
 router.get(
   "/:id",
-//   middleware.protectAll,
-//   middleware.restrictToAdmin("superAdmin"),
+  middleware.validateUserAgent,
+  //   middleware.protectAll,
+  //   middleware.restrictToAdmin("superAdmin"),
   packageController.getpackageById
 );
 

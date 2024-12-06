@@ -1,11 +1,14 @@
+const { where } = require("sequelize");
 const Department = require("../models/department.js");
-const createError= require("../utils/error.js")
+const createError = require("../utils/error.js");
 
-// Define controller methods for handling User requests
+//GET ALL DEPARTMENT
 exports.getAllDepartment = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const departments = await Department.findAll({
-      where: { CompanyId: req.user.id },
+      where: { CompanyId },
     });
     if (!departments) {
       res.status(200).json("There is no department");
@@ -16,25 +19,33 @@ exports.getAllDepartment = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-exports.getDepartmentById = async (req, res) => {
+//GET DEPARTMENT BY ID
+exports.getDepartmentById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const department = await Department.findByPk(id);
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const department = await Department.findOne({
+      where: { id, CompanyId },
+    });
     if (!department) {
-      return res.status(404).json({
-        message: "There is no Department with this ID",
-      });
+      return next(createError.createError(404, "Department not found"));
+      // return res.status(404).json({
+      //   message: "There is no Department with this ID",
+      // });
     } else {
-      return res.json({ department });
+      return res.status(200).json({ department });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -42,8 +53,10 @@ exports.createDepartment = async (req, res, next) => {
   try {
     const { deptName, location, shorthandRepresentation } = req.body;
 
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const criteria = {
-      CompanyId: req.user.id,
+      CompanyId,
       deptName: deptName,
     };
 
@@ -64,8 +77,9 @@ exports.createDepartment = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -75,6 +89,8 @@ exports.updateDepartment = async (req, res, next) => {
     const updates = {};
     const { id } = req.params;
     const updatedEmployeeData = req.body;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
     if (deptName) {
       updates.deptName = deptName;
@@ -85,9 +101,9 @@ exports.updateDepartment = async (req, res, next) => {
     if (shorthandRepresentation) {
       updates.shorthandRepresentation = shorthandRepresentation;
     }
-    const department = await Department.findByPk(id);
+    const department = await Department.findOne({ where: { id, CompanyId } });
     if (!department) {
-      return res.status(404).json({ message: "department not found" });
+      return next(createError.createError(404, "Department not found"));
     } else {
       const result = await Department.update(updates, { where: { id: id } });
 
@@ -96,28 +112,31 @@ exports.updateDepartment = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 exports.deleteDepartment = async (req, res, next) => {
   try {
     const { id } = req.params;
-
-    const department = await Department.findOne({ where: { id: id } });
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const department = await Department.findOne({
+      where: { id: id, CompanyId },
+    });
     if (department) {
       await Department.destroy({ where: { id } });
       return res
         .status(200)
         .json({ message: "Department deleted successfully" });
     } else {
-      return res
-        .status(409)
-        .json({ message: "There is no Department with this ID" });
+      return next(createError.createError(404, "Department not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

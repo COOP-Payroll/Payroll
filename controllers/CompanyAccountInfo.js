@@ -2,12 +2,10 @@
 // const CompanyAccountInfo = require("../models/companyAccountInfo");
 
 const CompanyAccountInfo = require("../models/companyAccountInfo");
-const createError= require("../utils/error")
-
-
+const createError = require("../utils/error");
 
 // CREATE COMPANY ACCOUNT INFO
-exports.createCompanyAccountInfo = async (req, res,next) => {
+exports.createCompanyAccountInfo = async (req, res, next) => {
   try {
     const CompanyId = Number(req.user.id);
 
@@ -26,7 +24,7 @@ exports.createCompanyAccountInfo = async (req, res,next) => {
     });
 
     if (existingAccount) {
-      return res.status(409).json({ message: "Account Info already exists" });
+      return next(createError.createError(400, "Duplicate resource"));
     }
 
     const activeAccount = await CompanyAccountInfo.findOne({
@@ -54,12 +52,13 @@ exports.createCompanyAccountInfo = async (req, res,next) => {
       accountInfo: newAccountInfo,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-exports.getAllCompanyAccountInfo = async (req, res,next) => {
+exports.getAllCompanyAccountInfo = async (req, res, next) => {
   try {
     const CompanyId = Number(req.user.id);
     const companyAccountInfo = await CompanyAccountInfo.findOne({
@@ -78,12 +77,13 @@ exports.getAllCompanyAccountInfo = async (req, res,next) => {
 
     return res.status(200).json(companyAccountInfo);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-exports.deleteCompanyAccountInfo = async (req, res,next) => {
+exports.deleteCompanyAccountInfo = async (req, res, next) => {
   try {
     const CompanyId = Number(req.user.id);
     const { id } = req.params;
@@ -91,18 +91,19 @@ exports.deleteCompanyAccountInfo = async (req, res,next) => {
       where: { CompanyId: CompanyId, id },
     });
     if (!companyAccountInfos) {
-      res.status(404).json({ error: "company Account Info does not exist" });
+      return next(createError.createError(404, "Resource not found"));
     } else {
       await companyAccountInfos.destroy();
       return res.json("company Account Info deleted successfully");
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-exports.updateCompanyAccountInfo = async (req, res,next) => {
+exports.updateCompanyAccountInfo = async (req, res, next) => {
   try {
     const CompanyId = Number(req.user.id);
     const { isVerified, accountNumber } = req.body;
@@ -113,9 +114,7 @@ exports.updateCompanyAccountInfo = async (req, res,next) => {
     });
 
     if (!accountInfo) {
-      return res
-        .status(404)
-        .json({ error: "company Account Info does not exist" });
+      return next(createError.createError(404, "Resource not found"));
     } else {
       const updatedAccountInfo = await accountInfo.update({
         isVerified,
@@ -127,17 +126,19 @@ exports.updateCompanyAccountInfo = async (req, res,next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-exports.verifyAccountNumber = (req, res,next) => {
+exports.verifyAccountNumber = (req, res, next) => {
   try {
     const { accountNumber } = req.body;
     res.status(200).json({ fullName: "boo faz baz", accountType: "Saving" });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

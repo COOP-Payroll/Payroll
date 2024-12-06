@@ -1,8 +1,9 @@
+const { getNameOfDeclaration } = require("typescript");
 const Package = require("../models/package.js");
-const  createError  = require("../utils/error.js");
+const createError = require("../utils/error.js");
 
 // Define controller methods for handling User requests
-exports.getAllPackages = async (req, res,next) => {
+exports.getAllPackages = async (req, res, next) => {
   try {
     const packages = await Package.findAll();
 
@@ -10,51 +11,40 @@ exports.getAllPackages = async (req, res,next) => {
       count: packages.length,
       packages,
     });
-  } 
-  catch (error) {
-    console.log(error)
-   next(error);
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-
-exports.getMonthlyPackages = async (req, res,next) => {
-try {
-   const monthlyPackages=await Package.findAll({where:{packageType  :"Monthly"}});
-
-   res.status(200).json({count: monthlyPackages.length
-  ,monthlyPackages
-  }
-    
-    );
-
-  
-} catch (error) {
-  console.log(error);
-  next(error);
-}
-
-}
-
-
-
-exports.getYearlyPackages = async (req, res,next) => {
+exports.getMonthlyPackages = async (req, res, next) => {
   try {
-     const yearlyPackages=await Package.findAll({where:{packageType:"Yearly"}});
-  
-     res.status(200).json({count: yearlyPackages.length
-    ,yearlyPackages
-    }
-      
-      );
-  
-    
+    const monthlyPackages = await Package.findAll({
+      where: { packageType: "Monthly" },
+    });
+
+    res.status(200).json({ count: monthlyPackages.length, monthlyPackages });
   } catch (error) {
-    console.log(error);
-    next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-  
+};
+
+exports.getYearlyPackages = async (req, res, next) => {
+  try {
+    const yearlyPackages = await Package.findAll({
+      where: { packageType: "Yearly" },
+    });
+
+    res.status(200).json({ count: yearlyPackages.length, yearlyPackages });
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
+};
 
 exports.getpackageById = async (req, res) => {
   try {
@@ -62,13 +52,15 @@ exports.getpackageById = async (req, res) => {
     const package = await Package.findByPk(id);
     return res.json(package);
   } catch (error) {
-    next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 exports.createPackage = async (req, res, next) => {
   try {
-        const {
+    const {
       packageType,
       packageName,
       min_employee,
@@ -76,11 +68,22 @@ exports.createPackage = async (req, res, next) => {
       price,
       service,
       discount,
-      isTrial,
     } = req.body;
+
+    console.log({
+      packageType,
+      packageName,
+      min_employee,
+      max_employee,
+      price,
+      service,
+    });
+
+    var isTrial = packageName === "Trial" ? true : false;
+
     const existingPackage = await Package.findOne({
       where: {
-        packageType:packageType,
+        packageType: packageType,
         packageName: packageName,
         max_employee: max_employee,
         min_employee: min_employee,
@@ -89,9 +92,7 @@ exports.createPackage = async (req, res, next) => {
     });
 
     if (existingPackage) {
-      return res.status(409).json({
-        message: "Package already created ",
-      });
+      return next(createError.createError(400, "Package already created "));
     } else {
       const packages = await Package.create({
         packageType,
@@ -104,15 +105,15 @@ exports.createPackage = async (req, res, next) => {
         isTrial,
       });
 
-  
       return res.status(200).json({
         message: "Successfully Registered",
         packages,
       });
     }
   } catch (error) {
-    console.log(error);
-    next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -159,8 +160,9 @@ exports.updatePackage = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -174,30 +176,24 @@ exports.deletePackage = async (req, res, next) => {
       return res.status(200).json({ message: "package deleted successfully" });
     } else {
       return res
-        .status(409)
+        .status(400)
         .json({ message: "There is no package with this ID" });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-
-exports.getTrial = async (req, res,next) => {
+exports.getTrial = async (req, res, next) => {
   try {
-     const trial=await Package.findAll({where:{packageType:"Trial"}});
-  
-     res.status(200).json({success:true,
-      data:trial
-    }
-      
-      );
-  
-    
+    const trial = await Package.findAll({ where: { packageType: "Trial" } });
+
+    res.status(200).json({ success: true, data: trial });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-  
-  }
+};

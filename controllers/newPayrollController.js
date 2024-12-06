@@ -96,7 +96,7 @@ exports.createPayroll1 = async (req, res, next) => {
         // return res.json("data")
         return next(
           createError.createError(
-            409,
+            400,
             "Payroll has already been run for one or more employees1."
           )
         );
@@ -129,7 +129,7 @@ exports.createPayroll1 = async (req, res, next) => {
             // return res.json("data")
             return next(
               createError.createError(
-                409,
+                400,
                 "Payroll has already been run for one or more employees."
               )
             );
@@ -146,8 +146,7 @@ exports.createPayroll1 = async (req, res, next) => {
       }
 
       if (errors.length > 0) {
-        console.log("error", errors);
-        return next(createError(500, "There is a problem creating payroll "));
+        return next(createError(503, "There is a problem creating payroll "));
       }
       ///
       // // Update total payroll count in the database
@@ -158,9 +157,8 @@ exports.createPayroll1 = async (req, res, next) => {
 
     return res.status(201).json({ msg: "Payroll created successfully!  " });
   } catch (error) {
-    console.log("err", error);
     return res
-      .status(500)
+      .status(503)
       .json({ msg: "Error occurred while creating payroll:", error });
   }
 };
@@ -178,7 +176,10 @@ exports.getPayrollByPayrollDefId = async (req, res, next) => {
 
     return res.json({ count: payrolls.length, payrolls });
   } catch (error) {
-    next(error);
+    // next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -220,7 +221,10 @@ exports.getNonPayrollEmployee = async (req, res, next) => {
       employees,
     });
   } catch (error) {
-    next(error);
+    // next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 //update payroll data
@@ -242,23 +246,21 @@ exports.updatePayrollData = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log("first", error);
-    next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 exports.getAll = async (req, res) => {
   try {
-  } catch (error) {
-    console.log("error", error);
-  }
+  } catch (error) {}
 };
 async function runPayroll(
   req,
   res,
   { employeeId, company, payrollDefinitionId }
 ) {
-  console.log("company", company);
   try {
     const employeeGrade = await EmployeeGrade.findOne({
       where: { EmployeeId: employeeId, active: true },
@@ -321,7 +323,6 @@ async function runPayroll(
     const taxslabs = await Taxslab.findAll({
       where: { CompanyId: company, isActive: true },
     });
-    console.log("taxslabs", taxslabs);
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -335,10 +336,7 @@ async function runPayroll(
     // Calculate total allowances
     allowances?.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
-      console.log(
-        "exemted amount: ",
-        allowance?.AllowanceDefinition.isExempted
-      );
+
       if (allowance?.AllowanceDefinition?.isExempted) {
         totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
         if (
@@ -387,7 +385,6 @@ async function runPayroll(
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
-    console.log("addional pay", additionalPay);
     if (taxslab) {
       deductible_Fee = taxslab?.deductible_Fee;
       income_tax_payable = taxslab?.income_tax_payable;
@@ -433,14 +430,12 @@ async function runPayroll(
 
       status: "processed",
     };
-    // console.log("payroll Data", payrollData);
     const data = await Payroll.create({
       ...payrollData,
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
     });
     await data.setCompany(Number(req.user.id));
-    console.log("payroll data", payrollData);
     // const payroll = await oldPayroll.update(payrollData);
     // await payrollDefinition.increment("totalNoOfprocessedEmployee");
     // if (payrollDefinition.totalNoOfEmployee !== 0) {
@@ -452,20 +447,20 @@ async function runPayroll(
     // }
     return 1;
   } catch (error) {
-    console.log("from runpayroll ", error);
     return res.status(404).json({
-      message: `error occur on empliyee with ID= ${employeeId}`,
+      message: `Error occur on Some employee please check `,
     });
   }
 }
-//EMPLOYEE WITH NO PAYROLL ON CURRENT MONTH
+// EMPLOYEE WITH NO PAYROLL ON CURRENT MONTH
 exports.getNonPayrollEmployee1 = async (req, res) => {
   try {
     const { id } = req.params;
     const payrollDef = await PayrollDefinition.findByPk(id);
-    if (!payrollDef)
-      return res.status(404).json({ error: "payroll not found" });
-    console.log("0i mhere from");
+    if (!payrollDef) {
+      return res.status(404).json({ error: "Payroll definition not found" });
+    }
+
     const employees = await Employee.findAll({
       attributes: [
         "id",
@@ -495,26 +490,24 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
           model: Payroll,
           required: false,
           where: {
-            PayrollDefinitionId: id, // Filter for payroll records of the specific month
+            PayrollDefinitionId: id,
           },
         },
         {
           model: EmployeeInfo,
-          // attributes:['id',"basicSalary","grossEarning"],
           where: { isActive: true },
           required: false,
         },
-
         {
           model: Grade,
           through: { model: EmployeeGrade },
           include: [
             {
-              model: Allowance, // Use the correct alias defined in the association
+              model: Allowance,
               include: [AllowanceDefinition],
             },
             {
-              model: Deduction, // Use the correct alias defined in the association
+              model: Deduction,
               include: [DeductionDefinition],
             },
           ],
@@ -523,13 +516,11 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
           model: AccountInfo,
           where: { isActive: true },
           required: false,
-          // attributes:['accountNumber','id']
         },
         {
           model: Loan,
           required: false,
         },
-
         {
           model: AdditionalAllowances,
           include: [AdditionalAllowanceDefinition],
@@ -540,15 +531,279 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
         },
       ],
       where: {
-        "$Payroll.id$": null, // Filter for records where the payroll ID is null
+        "$Payroll.id$": null,
         CompanyId: req.user.id,
       },
     });
-    return res.status(200).json({ count: employees.length, employees });
+
+    const pension = await Pension.findOne({
+      where: { CompanyId: req.user.id, isActive: true },
+    });
+    const taxslabs = await Taxslab.findAll({
+      where: { CompanyId: req.user.id, isActive: true },
+    });
+
+    const employee_pension = pension?.employeeContribution ?? 0;
+    const employer_pension = pension?.employerContribution ?? 0;
+
+    const enrichedEmployees = employees.map((employee) => {
+      let totalDeduction = 0;
+      let totalAllowance = 0;
+      let additionalAllowance = 0;
+      let additionalDeduction = 0;
+      let totalLoan = 0;
+      let taxableIncome = employee?.EmployeeInfos[0]?.basicSalary || 0;
+      let grossEarning = 0;
+
+      // Calculate allowances and deductions
+      employee.Grades?.[0]?.Allowances.forEach((allowance) => {
+        totalAllowance += parseFloat(allowance.amount || 0);
+      });
+      employee.Grades?.[0]?.Deductions.forEach((deduction) => {
+        totalDeduction += parseFloat(deduction.amount || 0);
+      });
+      employee.AdditionalAllowances?.forEach((allowance) => {
+        additionalAllowance += parseFloat(allowance.amount || 0);
+      });
+      employee.AdditionalDeductions?.forEach((deduction) => {
+        additionalDeduction += parseFloat(deduction.amount || 0);
+      });
+      employee.Loan?.forEach((loan) => {
+        totalLoan += parseFloat(loan.amount || 0);
+      });
+
+      // Summing allowances and deductions
+      const totalAllowancesCombined = totalAllowance + additionalAllowance;
+      const totalDeductionsCombined = totalDeduction + additionalDeduction;
+
+      // Calculate gross earnings
+      grossEarning =
+        taxableIncome +
+        totalAllowancesCombined +
+        (taxableIncome * employer_pension) / 100 -
+        totalDeductionsCombined;
+
+      // Add calculated fields to the employee object
+      return {
+        ...employee.toJSON(),
+        totalAllowances: totalAllowancesCombined,
+        totalDeductions: totalDeductionsCombined,
+        // additionalAllowance,
+        // additionalDeduction,
+        totalLoan,
+        taxableIncome,
+        grossEarning,
+        employerContribution: (taxableIncome * employer_pension) / 100,
+      };
+    });
+
+    return res
+      .status(200)
+      .json({ count: enrichedEmployees.length, employees: enrichedEmployees });
   } catch (error) {
-    res.status(500).json(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
+
+// //EMPLOYEE WITH NO PAYROLL ON CURRENT MONTH
+// exports.getNonPayrollEmployee1 = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const payrollDef = await PayrollDefinition.findByPk(id);
+//     if (!payrollDef) {
+//       return next(createError.createError(404, "payroll definition not found"));
+//     }
+//     // return res.status(404).json({ error: "payroll not found" });
+
+//     const employees = await Employee.findAll({
+//       attributes: [
+//         "id",
+//         "fullname",
+//         "image",
+//         "sex",
+//         "date_of_birth",
+//         "role",
+//         "nationality",
+//         "marriageStatus",
+//         "employee_id_number",
+//         "email",
+//         "phoneNumber",
+//         "optionalNumber",
+//         "id_image",
+//         "id_type",
+//         "id_Number",
+//         "isDeactivated",
+//         "hireDate",
+//         "joiningDate",
+//         "isActive",
+//         "CompanyId",
+//       ],
+//       where: { CompanyId: req.user.id },
+//       include: [
+//         {
+//           model: Payroll,
+//           required: false,
+//           where: {
+//             PayrollDefinitionId: id, // Filter for payroll records of the specific month
+//           },
+//         },
+//         {
+//           model: EmployeeInfo,
+//           // attributes:['id',"basicSalary","grossEarning"],
+//           where: { isActive: true },
+//           required: false,
+//         },
+
+//         {
+//           model: Grade,
+//           through: { model: EmployeeGrade },
+//           include: [
+//             {
+//               model: Allowance, // Use the correct alias defined in the association
+//               include: [AllowanceDefinition],
+//             },
+//             {
+//               model: Deduction, // Use the correct alias defined in the association
+//               include: [DeductionDefinition],
+//             },
+//           ],
+//         },
+//         {
+//           model: AccountInfo,
+//           where: { isActive: true },
+//           required: false,
+//           // attributes:['accountNumber','id']
+//         },
+//         {
+//           model: Loan,
+//           required: false,
+//         },
+
+//         {
+//           model: AdditionalAllowances,
+//           include: [AdditionalAllowanceDefinition],
+//         },
+//         {
+//           model: AdditionalDeduction,
+//           include: [AdditionalDeductionDefinition],
+//         },
+//       ],
+//       where: {
+//         "$Payroll.id$": null, // Filter for records where the payroll ID is null
+//         CompanyId: req.user.id,
+//       },
+//     });
+
+//     const pension = await Pension.findOne({
+//       where: {
+//         CompanyId: req.user.id,
+//         isActive: true,
+//       },
+//     });
+//     const taxslabs = await Taxslab.findAll({
+//       where: {
+//         CompanyId: req.user.id,
+//         isActive: true,
+//       },
+//     });
+
+//     // let selectedSlab=null
+//     // let income_tax_payable=0;
+//     //   for (const slab of taxslabs) {
+//     //     if (50300 >= slab.from_Salary && 50300 <= slab.to_Salary) {
+//     //       selectedSlab=slab
+//     //       income_tax_payable = slab.income_tax_payable;
+//     //       deductible_Fee = slab.deductible_Fee;
+//     //       break;
+//     //     }
+//     //   }
+//     //   return res.json(selectedSlab);
+//     const employee_pension = pension?.employeeContribution ?? 0;
+//     const employer_pension = pension?.employerContribution ?? 0;
+
+//     const payrollRecords = employees.map((employee) => {
+//       let totalDeduction = 0;
+//       let totalAllowance = 0;
+//       let totalTaxable = 0;
+//       let income_tax_payable = 0;
+//       let deductible_Fee = 0;
+//       let totalExempted = 0;
+//       let totalTaxableIncome = 0;
+//       let overallTotalDeduction = 0;
+//       let totalLoan = 0;
+//       let totalAdditionalPay = 0;
+//       let additionalAllowance = 0;
+//       let taxableIncome = 0;
+//       let grossEarning = 0;
+//       let selectedSlab = null;
+//       let tax = 0;
+//       taxableIncome = employee?.EmployeeInfos[0]?.basicSalary;
+//       for (const slab of taxslabs) {
+//         if (
+//           taxableIncome >= slab.from_Salary &&
+//           taxableIncome <= slab.to_Salary
+//         ) {
+//           selectedSlab = slab;
+//           income_tax_payable = slab.income_tax_payable;
+//           deductible_Fee = slab.deductible_Fee;
+//           break;
+//         }
+//       }
+
+//       // tax=
+
+//       // Calculate payroll directly here
+//       const payrollAmount = employee?.EmployeeInfos[0]?.grossEarning;
+//       // Example calculation
+//       // const totalA= employee?.Grades
+//       if (employee.Grades.length > 0) {
+//         employee.Grades[0].Allowances.forEach((allowance) => {
+//           totalAllowance += parseFloat(allowance.amount);
+//         });
+//         employee.Grades[0].Deductions.forEach((deduction) => {
+//           totalDeduction += parseFloat(deduction.amount);
+//         });
+//       }
+//       if (employee.AdditionalAllowances.length > 0) {
+//         employee.AdditionalAllowances.forEach((allowance) => {
+//           additionalAllowance += parseFloat(allowance.amount);
+//         });
+//       }
+//       if (employee.Loan) {
+//         employee.Loan.forEach((loan) => {
+//           totalLoan += parseFloat(loan.amount);
+//         });
+//       }
+//     });
+//     return {
+//       employeeId: employee.id,
+//       payrollDefinitionId: payrollDefinition.id,
+//       amount: payrollAmount,
+//       totalAllowance: totalAllowance,
+//       totalDeduction: totalDeduction,
+//       additionalAllowance: additionalAllowance,
+//       totalLoan: totalLoan,
+//       taxableIncome: taxableIncome,
+//       grossEarning:
+//         employee?.EmployeeInfos[0]?.basicSalary +
+//         totalAllowance +
+//         totalAdditionalPay +
+//         (employee?.EmployeeInfos[0]?.basicSalary * employer_pension) / 100 +
+//         additionalAllowance,
+//       employerContribution:
+//         employee?.EmployeeInfos[0]?.basicSalary * (employer_pension / 100),
+//       additionalAllowance: additionalAllowance,
+//       deductible_Fee: deductible_Fee,
+//       income_tax_payable: income_tax_payable,
+//     };
+
+//     // return res.status(200).json({ count: employees.length, employees });
+//   } catch (error) {
+//     res.status(503).json(error);
+//   }
+// };
 
 exports.deselectRunnedPayroll = async (req, res, next) => {
   try {
@@ -566,7 +821,6 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
       },
     });
     const existingEmployeeIds = employees.map((employee) => employee.id);
-    console.log("existiongEmployeeIds: " + existingEmployeeIds);
     const nonExistingEmployeeIds = employeeIds.filter(
       (id) => !existingEmployeeIds.includes(id)
     );
@@ -593,8 +847,13 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
             payrollDestroyed = true;
           }
         } catch (error) {
-          console.log("Error in employee payroll deselection:", error);
-          next(error);
+          // next(error);
+          return next(
+            createError.createError(
+              503,
+              "An error occurred, please try again later"
+            )
+          );
         }
       })
     );
@@ -607,8 +866,9 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
       res.status(404).json({ message: "Their is no such employee" });
     }
   } catch (error) {
-    console.log("error", error);
-    next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -665,8 +925,6 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
         ],
       },
     });
-
-    console.log("current month", currentMonthPayrolls.length);
 
     if (currentMonthPayrolls.length === 0) {
       return res.status(204).json({
@@ -858,8 +1116,9 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log("error", error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -980,6 +1239,7 @@ exports.projectBasedPayroll = async (req, res, next) => {
         },
       ],
     });
+
     // Check if all requested employees were found
     if (employees.length < employeeIds.length) {
       // Determine which employee(s) are missing
@@ -988,7 +1248,6 @@ exports.projectBasedPayroll = async (req, res, next) => {
         (id) => !foundEmployeeIds.includes(id)
       );
 
-      console.error("One or more employees not found:", missingEmployeeIds);
       return next(
         createError.createError(404, "One or more employees not found")
       );
@@ -1010,7 +1269,7 @@ exports.projectBasedPayroll = async (req, res, next) => {
     // let selectedSlab=null
     // let income_tax_payable=0;
     //   for (const slab of taxslabs) {
-    //     if (50000 >= slab.from_Salary && 50000 <= slab.to_Salary) {
+    //     if (50300 >= slab.from_Salary && 50300 <= slab.to_Salary) {
     //       selectedSlab=slab
     //       income_tax_payable = slab.income_tax_payable;
     //       deductible_Fee = slab.deductible_Fee;
@@ -1102,8 +1361,9 @@ exports.projectBasedPayroll = async (req, res, next) => {
     return res.status(200).json({ success: true, payrollRecords });
   } catch (error) {
     // await transaction.rollback();
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -1112,12 +1372,10 @@ exports.projectBasedPayroll = async (req, res, next) => {
 //   res,
 //   { employeeId, company, payrollDefinitionId }
 // ) {
-//   console.log("company", company);
 // try {
 
 // } catch (error) {
-//   console.log(error)
-//   return next(createError.createError(500,"Internal server error"))
+//   return next(createError.createError(503,"Internal server error"))
 
 // }
 // }
@@ -1127,10 +1385,8 @@ async function runPayrollForProjectBased(
   res,
   { employeeId, company, payrollDefinitionId }
 ) {
-  console.log("company", company);
   const transaction = await sequelize.transaction();
 
-  console.log("company", company);
   try {
     const employeeGrade = await EmployeeGrade.findOne({
       where: { EmployeeId: employeeId, active: true },
@@ -1193,7 +1449,6 @@ async function runPayrollForProjectBased(
     const taxslabs = await Taxslab.findAll({
       where: { CompanyId: company, isActive: true },
     });
-    console.log("taxslabs", taxslabs);
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -1207,10 +1462,7 @@ async function runPayrollForProjectBased(
     // Calculate total allowances
     allowances?.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
-      console.log(
-        "exemted amount: ",
-        allowance?.AllowanceDefinition.isExempted
-      );
+
       if (allowance?.AllowanceDefinition?.isExempted) {
         totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
         if (
@@ -1259,7 +1511,7 @@ async function runPayrollForProjectBased(
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
-    console.log("addional pay", additionalPay);
+
     if (taxslab) {
       deductible_Fee = taxslab?.deductible_Fee;
       income_tax_payable = taxslab?.income_tax_payable;
@@ -1310,14 +1562,12 @@ async function runPayrollForProjectBased(
     // Commit the transaction
     await transaction.commit();
 
-    console.log("Payroll processed successfully");
     return 1;
   } catch (error) {
     // Rollback the transaction if an error occurs
     await transaction.rollback();
 
-    console.error("Error processing payroll:", error);
-    return res.status(500).json({
+    return res.status(503).json({
       success: false,
       error: "Error occurred while processing payroll",
     });
@@ -1329,7 +1579,6 @@ async function runForProjectBasedPayroll(
   res,
   { employeeId, company, payrollDefinitionId }
 ) {
-  console.log("company", company);
   try {
     const employeeGrade = await EmployeeGrade.findOne({
       where: { EmployeeId: employeeId, active: true },
@@ -1402,7 +1651,6 @@ async function runForProjectBasedPayroll(
     const taxslabs = await Taxslab.findAll({
       where: { CompanyId: company, isActive: true },
     });
-    console.log("taxslabs", taxslabs);
     let totalDeduction = 0;
     let totalAllowance = 0;
     let totalTaxable = 0;
@@ -1420,10 +1668,7 @@ async function runForProjectBasedPayroll(
       // Calculate total allowances
       allowances?.forEach((allowance) => {
         totalAllowance += Number(allowance.amount);
-        console.log(
-          "exemted amount: ",
-          allowance?.AllowanceDefinition.isExempted
-        );
+
         if (allowance?.AllowanceDefinition?.isExempted) {
           totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
           if (
@@ -1476,7 +1721,6 @@ async function runForProjectBasedPayroll(
     const taxslab = taxslabs.find(
       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
     );
-    console.log("addional pay", additionalPay);
     if (taxslab) {
       deductible_Fee = taxslab?.deductible_Fee;
       income_tax_payable = taxslab?.income_tax_payable;
@@ -1518,25 +1762,16 @@ async function runForProjectBasedPayroll(
 
       status: "processed",
     };
-    // console.log("payroll Data", payrollData);
     const data = await Payroll.create({
       ...payrollData,
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
     });
     await data.setCompany(Number(req.user.id));
-    console.log("payroll data", payrollData);
 
     return 1;
   } catch (error) {
-    console.log("from runpayroll ", error);
-
-    return next(
-      createError.createError(
-        500,
-        `error occur on empliyee with ID= ${employeeId}`
-      )
-    );
+    return next(createError.createError(503, `error occur on some Employee `));
     // return res.status(404).json({
     //   message: `error occur on empliyee with ID= ${employeeId}`,
     // });
@@ -1546,14 +1781,192 @@ async function runForProjectBasedPayroll(
 exports.approvePayrolls = async (req, res, next) => {
   try {
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+
+//PROCESSED PAYROLL
+exports.getUnprocessedPayrollForSpecificMonthProcessedPayroll = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    // const currentDate = new Date();
+    // const startOfMonth = new Date(
+    //   currentDate.getFullYear(),
+    //   currentDate.getMonth(),
+    //   1
+    // );
+    // const endOfMonth = new Date(
+    //   currentDate.getFullYear(),
+    //   currentDate.getMonth() + 1,
+    //   0
+    // );
+
+    // const currentMonthPayrolls = await PayrollDefinition.findAll({
+    //   where: {
+    //     CompanyId: req.user.id,
+    //     [Op.or]: [
+    //       {
+    //         startDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //         endDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //       },
+    //       {
+    //         startDate: {
+    //           [Op.lt]: startOfMonth,
+    //         },
+    //         endDate: {
+    //           [Op.gte]: startOfMonth,
+    //         },
+    //       },
+    //     ],
+    //   },
+    // });
+
+    const { id } = req.params;
+    const currentMonthPayrolls = await PayrollDefinition.findOne({
+      where: {
+        CompanyId: req.user.id,
+        id: id,
+      },
+    });
+
+    if (!currentMonthPayrolls) {
+      return next(createError.createError(404, "Payrolldefinition not found"));
+    }
+    const employees = await Employee.findAll({
+      include: [
+        { model: Position },
+        {
+          model: Payroll,
+          // required: true,
+          where: {
+            PayrollDefinitionId: id, // Filter for payroll records of the specific month
+            // required:true
+          },
+        },
+      ],
+    });
+
+    const transformedEmployees = employees.map((employee) => {
+      const {
+        id,
+        fullname,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+      } = employee;
+
+      const positions = employee.Positions
+        ? {
+            positionName: employee?.Positions[0].positionName,
+          }
+        : {};
+
+      // Extract necessary fields from the Payroll object
+      const payrollInfo = employee.Payroll
+        ? {
+            grossSalary: employee.Payroll.grossSalary,
+            basicSalary: employee.Payroll.basicSalary,
+            taxableIncome: employee.Payroll.taxableIncome,
+            incomeTax: employee.Payroll.incomeTax,
+            totalDeduction: employee.Payroll.totalDeduction,
+            totalAllowance: employee.Payroll.totalAllowance,
+            NetSalary: employee.Payroll.NetSalary,
+            employee_pension_amount: employee.Payroll.employee_pension_amount,
+            employer_pension_amount: employee.Payroll.employer_pension_amount,
+            status: employee.Payroll.status,
+            isPaid: employee.Payroll.isPaid,
+          }
+        : {};
+
+      return {
+        id,
+        fullname,
+        ...positions,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+        ...payrollInfo,
+      };
+    });
+
+    return res.status(200).json({
+      status: "true",
+
+      data: transformedEmployees,
+    });
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 //PROCESSED PAYROLL
 exports.getProcessedPayroll = async (req, res, next) => {
   try {
+    // const currentDate = new Date();
+    // const startOfMonth = new Date(
+    //   currentDate.getFullYear(),
+    //   currentDate.getMonth(),
+    //   1
+    // );
+    // const endOfMonth = new Date(
+    //   currentDate.getFullYear(),
+    //   currentDate.getMonth() + 1,
+    //   0
+    // );
+
+    // const currentMonthPayrolls = await PayrollDefinition.findAll({
+    //   where: {
+    //     CompanyId: req.user.id,
+    //     [Op.or]: [
+    //       {
+    //         startDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //         endDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //       },
+    //       {
+    //         startDate: {
+    //           [Op.lt]: startOfMonth,
+    //         },
+    //         endDate: {
+    //           [Op.gte]: startOfMonth,
+    //         },
+    //       },
+    //     ],
+    //   },
+    // });
+
     const currentDate = new Date();
     const startOfMonth = new Date(
       currentDate.getFullYear(),
@@ -1569,28 +1982,13 @@ exports.getProcessedPayroll = async (req, res, next) => {
     const currentMonthPayrolls = await PayrollDefinition.findAll({
       where: {
         CompanyId: req.user.id,
-        [Op.or]: [
-          {
-            startDate: {
-              [Op.between]: [startOfMonth, endOfMonth],
-            },
-            endDate: {
-              [Op.between]: [startOfMonth, endOfMonth],
-            },
-          },
-          {
-            startDate: {
-              [Op.lt]: startOfMonth,
-            },
-            endDate: {
-              [Op.gte]: startOfMonth,
-            },
-          },
-        ],
+        startDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
       },
     });
 
-    console.log("current month", currentMonthPayrolls.length);
+    // return res.json(currentMonthPayrolls);
     // return res.json(currentMonthPayrolls?.[0]?.id);
 
     if (currentMonthPayrolls.length === 0) {
@@ -1680,8 +2078,9 @@ exports.getProcessedPayroll = async (req, res, next) => {
       data: transformedEmployees,
     });
   } catch (error) {
-    console.log("error", error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -1795,7 +2194,8 @@ exports.getUnprocessedPayroll = async (req, res, next) => {
       data: transformedEmployees,
     });
   } catch (error) {
-    console.log("error", error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

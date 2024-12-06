@@ -7,21 +7,22 @@ const middleware = require("../middleware/auth.js");
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   pensionController.getAllPension
 );
 
-
-
 router.get(
   "/all",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   pensionController.getAllPensionIncludingInActive
 );
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   pensionController.createPension
 );
@@ -30,6 +31,7 @@ router.post(
 router.put(
   "/:restore-to-default",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
 
   pensionController.restoreToDefault
@@ -37,6 +39,7 @@ router.put(
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
 
   pensionController.updatePension
@@ -45,11 +48,16 @@ router.put(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
 
   pensionController.deletePension
 );
 
-router.get("/:id", pensionController.getpensionById);
+router.get(
+  "/:id",
+  middleware.validateUserAgent,
+  pensionController.getpensionById
+);
 
 module.exports = router;

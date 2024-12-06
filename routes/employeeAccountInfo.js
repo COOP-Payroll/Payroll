@@ -7,12 +7,14 @@ const router = express.Router();
 
 router.get(
   "/",
+  middleware.validateUserAgent,
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
   employeeAccountController.getAllEmployeeAccountInfo
 );
 router.post(
   "/",
+  middleware.validateUserAgent,
   upload.fields([{ name: "image", maxCount: 1 }]),
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
@@ -20,12 +22,14 @@ router.post(
 );
 router.delete(
   "/:id",
+  middleware.validateUserAgent,
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),
   employeeAccountController.deleteEmployeeAccountInfo
 );
 router.put(
   "/:id",
+  middleware.validateUserAgent,
   upload.fields([{ name: "image", maxCount: 1 }]),
   middleware.protectAll,
   middleware.restrictTo("companyAdmin"),

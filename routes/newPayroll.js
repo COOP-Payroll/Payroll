@@ -22,7 +22,7 @@ router.get(
   "/get-unprocessed-payrolls/:id",
   middleware.protectAll,
   middleware.restrictToAll("companyAdmin"),
-  payroll.getUnprocessedPayroll
+  payroll.getUnprocessedPayrollForSpecificMonthProcessedPayroll
 );
 
 router.get(
@@ -63,6 +63,7 @@ router.post(
 router.post(
   "/deselect",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
   payroll.deselectRunnedPayroll
 );
@@ -70,12 +71,14 @@ router.post(
 router.get(
   "/getAllEmployee/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
   payroll1.getAllEmployeePayroll
 );
 router.get(
   "/nonPayrollEmployee/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin", "approver"),
   payroll.getNonPayrollEmployee1
 );
@@ -90,6 +93,7 @@ router.get(
 router.put(
   "/update/:payrollId",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
   payroll.updatePayrollData
 );

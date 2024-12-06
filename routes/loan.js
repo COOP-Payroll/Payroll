@@ -6,14 +6,16 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
 
   loanControllers.getAllLoan
-);  
+);
 
 router.get(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
 
   loanControllers.getAllowanceById
@@ -22,18 +24,30 @@ router.get(
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   loanControllers.createLoan
 );
 router.put(
+  "/unassign/employee",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+  loanControllers.unassignLoan
+);
+
+router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   loanControllers.updateLoan
 );
+
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   loanControllers.deleteLoan
 );

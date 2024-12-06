@@ -28,7 +28,7 @@ exports.updateAddress = async (req, res,next) => {
       return res.status(200).json({ data: newAddress });
     } 
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

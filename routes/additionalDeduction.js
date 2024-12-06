@@ -6,15 +6,17 @@ const router = express.Router();
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   additionalDeductionControllers.getAllAdditionalDeduction
 );
 
-// 
+//
 // // router.get("/:id", allowance.getAllowanceById);
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   additionalDeductionControllers.createAdditionalDeduction
 );

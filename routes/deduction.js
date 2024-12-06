@@ -2,10 +2,11 @@ const express = require("express");
 const deduction = require("../controllers/deduction");
 
 const router = express.Router();
-const middleware=require('../middleware/auth.js')
+const middleware = require("../middleware/auth.js");
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
 
   deduction.getAllDeduction
@@ -13,6 +14,7 @@ router.get(
 router.get(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   deduction.getDeductionById
 );
@@ -20,19 +22,23 @@ router.post(
   "/",
 
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   deduction.createDeduction
 );
-router.put("/:id",
+router.put(
+  "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
-deduction.updateDeduction);
+  deduction.updateDeduction
+);
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   deduction.deleteDeduction
 );
-
 
 module.exports = router;

@@ -61,8 +61,7 @@ exports.generateProjectSalaryReport = async (req, res, next) => {
 
     return res.status(200).json({ data: formattedData });
   } catch (error) {
-    console.error("Error fetching data:", error);
-    return next(createError.createError(500, "Internal server Error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -170,8 +169,7 @@ exports.getPayrollPublishedReport2 = async (req, res, next) => {
 
     return res.status(200).json(formattedData);
   } catch (error) {
-    console.error("Error fetching payroll published report:", error);
-    return next(createError.createError(500, "Internal server Error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 exports.getPayrollPublishedReport1 = async (req, res, next) => {
@@ -263,8 +261,7 @@ exports.getPayrollPublishedReport1 = async (req, res, next) => {
     // Return the formatted data as JSON response
     return res.status(200).json(formattedData);
   } catch (error) {
-    console.error(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -272,7 +269,7 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
   try {
     // Fetch data from the database
     const payrollPublishedReport = await PayrollDefinition.findAll({
-      where: { status: "created",CompanyId:req.user.id },
+      where: { status: "created", CompanyId: req.user.id },
       include: [
         {
           model: Payroll,
@@ -367,8 +364,7 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
     // Return the sorted array as JSON response
     return res.status(200).json(result);
   } catch (error) {
-    console.error(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -416,7 +412,8 @@ exports.getPayrollPublishedReportBasedOnSiteLocation = async (
       ],
     });
     const formattedResult = fetchEmployee.map((employeeInfo) => ({
-      PayrollMonth: employeeInfo?.Employee?.Payroll?.PayrollDefinition?.payrollName,
+      PayrollMonth:
+        employeeInfo?.Employee?.Payroll?.PayrollDefinition?.payrollName,
       fullname: employeeInfo.Employee ? employeeInfo.Employee.fullname : null,
       Position: employeeInfo?.Employee?.Positions?.[0]?.positionName,
       siteLocation: employeeInfo?.siteLocation,
@@ -427,8 +424,10 @@ exports.getPayrollPublishedReportBasedOnSiteLocation = async (
       totalDeduction: employeeInfo?.Employee?.Payroll?.totalDeduction,
       totalAllowance: employeeInfo?.Employee?.Payroll?.totalAllowance,
       NetSalary: employeeInfo?.Employee?.Payroll?.NetSalary,
-      employee_pension_amount:employeeInfo?.Employee?.Payroll?.employee_pension_amount,
-      employer_pension_amount: employeeInfo?.Employee?.Payroll?.employer_pension_amount,
+      employee_pension_amount:
+        employeeInfo?.Employee?.Payroll?.employee_pension_amount,
+      employer_pension_amount:
+        employeeInfo?.Employee?.Payroll?.employer_pension_amount,
     }));
 
     return res.json({
@@ -436,8 +435,7 @@ exports.getPayrollPublishedReportBasedOnSiteLocation = async (
       data: formattedResult,
     });
   } catch (error) {
-    console.error(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -528,8 +526,7 @@ exports.downloadPayrollPublishedReport = async (req, res, next) => {
       pdfFilename,
     });
   } catch (error) {
-    console.error("Error fetching payroll published report:", error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -669,8 +666,7 @@ function generatePDF(data) {
 //     // Send the Excel file as a response
 //     res.send(excelBuffer);
 //   } catch (error) {
-//     console.error(error);
-//     return next(createError.createError(500, 'Internal server error'));
+//     return next(createError.createError(503, 'Internal server error'));
 //   }
 // };
 
@@ -802,8 +798,7 @@ function generatePDF(data) {
 //     // Send Excel buffer as response
 //     res.send(excelBuffer);
 //   } catch (error) {
-//     console.error(error);
-//     return next(createError.createError(500, 'Internal server error'));
+//     return next(createError.createError(503, 'Internal server error'));
 //   }
 // };
 
@@ -854,7 +849,7 @@ function generatePDF(data) {
 
 //   } catch (error) {
 //     console.log(error);
-//     return next(createError.createError(500, 'Internal server error'));
+//     return next(createError.createError(503, 'Internal server error'));
 //   }
 // };
 
@@ -883,7 +878,7 @@ exports.downloadExcelReport = async (req, res, next) => {
 
     // Ensure payrollPublishedReport is not undefined
     if (!payrollPublishedReport) {
-      return res.status(404).json({ error: "Payroll report not found" });
+      return res.status(404).json({ message: "Payroll report not found" });
     }
 
     // Create a new workbook
@@ -993,11 +988,9 @@ exports.downloadExcelReport = async (req, res, next) => {
     // Send Excel buffer as response
     res.send(excelBuffer);
   } catch (error) {
-    console.error(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-
 
 exports.getPayrollPublishedReportPerMonth = async (req, res, next) => {
   try {
@@ -1051,37 +1044,6 @@ exports.getPayrollPublishedReportPerMonth = async (req, res, next) => {
     });
     return res.status(200).json(data);
   } catch (error) {
-    console.log(error);
-
-    return next(createError.createError(500, "Internal Server Error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

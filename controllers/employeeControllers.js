@@ -10,8 +10,8 @@ const IdFormat = require("../models/companyIdFormat.js");
 const Allowance = require("../models/allowance.js");
 const AllowanceDefinition = require("../models/allowanceDefinition.js");
 const DeductionDefinition = require("../models/deductionDefinition.js");
-const AdditionalPayDefinition=require("../models/additionalPayDefinition.js");
-const AdditionalPay=require("../models/additionalPay.js")
+const AdditionalPayDefinition = require("../models/additionalPayDefinition.js");
+const AdditionalPay = require("../models/additionalPay.js");
 const Deduction = require("../models/deduction.js");
 const Projects = require("../models/projects.js");
 const ProjectEmployee = require("../models/project-employee.js");
@@ -20,15 +20,15 @@ const Permission = require("../models/permission.js");
 const Loan = require("../models/loan.js");
 const nodemailer = require("nodemailer");
 
-const sequelize = require('../database/db')
+const sequelize = require("../database/db");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail.js");
 const { Op, json } = require("sequelize");
-const createError= require('../utils/error.js')
+const createError = require("../utils/error.js");
 // Define controller methods for handling User requests
-const Position=require("../models/position.js")
+const Position = require("../models/position.js");
 
 const xlsx = require("xlsx");
 const AdditionalAllowance = require("../models/additionalAllowance.js");
@@ -48,28 +48,35 @@ const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
 const upload4 = multer({ storage: storage4 }).single("file");
 
-
-
-exports.getAllEmployee = async (req, res,next) => {
+exports.getAllEmployee = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const Employees = await Employee.findAll({
-      where: { CompanyId: req.user.id},
+      where: { CompanyId },
       include: [
         {
           model: Address,
           required: false,
-          where:{isActive:true}
+          where: { isActive: true },
         },
         {
           model: Company,
           required: false,
-          attributes:['id','companyCode','organizationName','numberOfEmployees','role','status']
+          attributes: [
+            "id",
+            "companyCode",
+            "organizationName",
+            "numberOfEmployees",
+            "role",
+            "status",
+          ],
         },
 
         {
           model: EmployeeInfo,
           required: false,
-          where:{  isActive: true,}
+          where: { isActive: true },
         },
         {
           model: Position,
@@ -96,15 +103,15 @@ exports.getAllEmployee = async (req, res,next) => {
           required: false,
           through: {
             model: ProjectEmployee,
-            // where:{isActive:true}     
+            // where:{isActive:true}
           },
-          include:[Sponsor]
+          include: [Sponsor],
         },
-       
+
         {
           model: AccountInfo,
           required: false,
-          where:{isActive:true}
+          where: { isActive: true },
         },
         {
           model: CustomRole,
@@ -172,61 +179,77 @@ exports.getAllEmployee = async (req, res,next) => {
       ],
     });
 
-    const sanitizedEmployees = Employees.map(employee => {
+    const sanitizedEmployees = Employees.map((employee) => {
       // Destructure the employee object excluding the password field
       const { password, ...sanitizedEmployee } = employee.dataValues;
-    
+
       // If there are nested associations, remove passwords from them as well
       if (sanitizedEmployee.Companys) {
-        sanitizedEmployee.Companys = sanitizedEmployee.Companys.map(info => {
+        sanitizedEmployee.Companys = sanitizedEmployee.Companys.map((info) => {
           const { password, ...sanitizedInfo } = info.dataValues;
           return sanitizedInfo;
         });
       }
-    
+
       // Similarly, sanitize other nested associations if needed
-    
+
       return sanitizedEmployee;
     });
-    
 
     res.status(200).json({
       count: Employees.length,
-      Employees: sanitizedEmployees 
+      Employees: sanitizedEmployees,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
-exports.getEmployeeWithCustomRole= async(req,res,next)=>{
+exports.getEmployeeWithCustomRole = async (req, res, next) => {
   try {
-
-    const getEmployeeWithCustomRole= await Employee.findAll({
-    
-      where:{
-        CompanyId:req.user.id,
-        // CustomRoleId: {
+    const getEmployeeWithCustomRole = await Employee.findAll({
+      where: {
+        CompanyId: req.user.id,
+        // CustomRole: {
         //   [Op.not]: null,  // Exclude payrolls with status 'approved'
         // },
-        
+      },
+      attributes: {
+        exclude: [
+          "password",
+          "acceptanceCode",
+          "isActive",
+          "isDeactivated",
+          "joiningDate",
+          "createdAt",
+          "updatedAt",
+          "CompanyId",
+        ], // Exclude the password field
       },
       include: [
         {
           model: Address,
           required: false,
-          where:{isActive:true}
+          where: { isActive: true },
         },
         {
           model: Company,
           required: false,
-          attributes:['id','companyCode','organizationName','numberOfEmployees','role','status']
+          attributes: [
+            "id",
+            "companyCode",
+            "organizationName",
+            "numberOfEmployees",
+            "role",
+            "status",
+          ],
         },
 
         {
           model: EmployeeInfo,
           required: false,
-          where:{  isActive: true,}
+          where: { isActive: true },
         },
         {
           model: Position,
@@ -253,21 +276,21 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
           required: false,
           through: {
             model: ProjectEmployee,
-            // where:{isActive:true}     
+            // where:{isActive:true}
           },
-          include:[Sponsor]
+          include: [Sponsor],
         },
-       
+
         {
           model: AccountInfo,
           required: false,
-          where:{isActive:true}
+          where: { isActive: true },
         },
         // {
         //   model: CustomRole,
         //   through:{
         //   model: EmployeeCustomRole,
-       
+
         //   },
         //   include: [Permission],
         //   required: false,
@@ -298,7 +321,7 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
             // { model: EmployeeGrade, where: { active: true } },
           ],
         },
-    
+
         {
           model: EmergencyContact,
           required: false,
@@ -319,6 +342,15 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
           model: AdditionalPay,
           include: [AdditionalPayDefinition],
         },
+        {
+          model: CustomRole,
+          required: true, // Ensure the employee has a CustomRole
+          where: {
+            name: {
+              [Op.not]: null, // Exclude CustomRoles with a null name
+            },
+          },
+        },
         //Address,
         // EmployeeInfo,
         // EmergencyContact,
@@ -327,40 +359,66 @@ exports.getEmployeeWithCustomRole= async(req,res,next)=>{
         // Grade,
 
         // // Company,
-        // CustomRole,
+        CustomRole,
       ],
-    })
-   return res.status(200).json({
-    success:true,
-    data:getEmployeeWithCustomRole
-   })
+    });
+    return res.status(200).json({
+      success: true,
+      data: getEmployeeWithCustomRole,
+    });
   } catch (error) {
-    
-    console.log(error)
-    return next(createError.createError(500,"Internal server Error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
-exports.getEmployeeById = async (req, res,next) => {
+exports.getEmployeeById = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     const employees = await Employee.findOne({
       where: { id: id },
+      attributes: {
+        exclude: [
+          "password",
+          "acceptanceCode",
+          "isActive",
+          "isDeactivated",
+          "joiningDate",
+          "createdAt",
+          "updatedAt",
+          "CompanyId",
+        ], // Exclude the password field
+      },
       include: [
         {
           model: Address,
           required: false,
-          where:{  isActive: true,}
+          where: { isActive: true },
         },
         {
           model: Company,
           required: false,
+
+          attributes: {
+            exclude: [
+              "password",
+              "acceptanceCode",
+              "isActive",
+              "isDeactivated",
+              "joiningDate",
+              "createdAt",
+              "updatedAt",
+              "CompanyId",
+              "resetPasswordToken",
+              "resetPasswordTokenCreatedAt",
+            ], // Exclude the password field
+          },
         },
         {
           model: EmployeeInfo,
           required: false,
-          where:{  isActive: true,}
+          where: { isActive: true },
         },
         {
           model: Department,
@@ -443,14 +501,13 @@ exports.getEmployeeById = async (req, res,next) => {
 
       return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(503).json({ message: "Internal server error" });
     }
   }
 };
 
 exports.createEmployee = async (req, res, next) => {
   try {
-    console.log("first", req.body.employeeinfo);
     const {
       address,
       employeeInfo,
@@ -458,7 +515,6 @@ exports.createEmployee = async (req, res, next) => {
       basicInfo,
       accountInformation,
     } = req.body;
-    console.log("basic INfo", basicInfo);
     const { file } = req;
 
     let password = req.user.companyCode.substring(0, 4) + "0000";
@@ -468,17 +524,15 @@ exports.createEmployee = async (req, res, next) => {
     const existingEmail = await Employee.findOne({
       where: {
         email: basicInfo.email,
+        CompanyId: req.user.id,
       },
     });
 
     const accountData = [];
-    
 
     for (const ai of accountInformation) {
       accountData.push(ai);
     }
-  
-
 
     for (const account of accountData) {
       const existingAccount = await AccountInfo.findOne({
@@ -486,8 +540,9 @@ exports.createEmployee = async (req, res, next) => {
       });
       if (!existingAccount) {
       } else {
-
-        return next(createError.createError(409,"Account number already axists"))
+        return next(
+          createError.createError(400, "Account number already axists")
+        );
         // return res.status(400).json({
         //   error: `Account number already exists: ${account.accountNumber}`,
         // });
@@ -495,15 +550,15 @@ exports.createEmployee = async (req, res, next) => {
     }
 
     // if (existingAccount) {
-    //   return res.status(409).json({ error: "Account Info already exists" });
+    //   return res.status(400).json({ error: "Account Info already exists" });
     // }
 
     if (existingEmail) {
-      return res.status(409).json({ error: "Email already exists" });
+      return res.status(400).json({ error: "Email already exists" });
     }
 
     //  if (existingAccount) {
-    //    return res.status(409).json({ error: "Account Number already exists" });
+    //    return res.status(400).json({ error: "Account Number already exists" });
     //  }
 
     if (!basicInfo?.DepartmentId) {
@@ -581,9 +636,7 @@ exports.createEmployee = async (req, res, next) => {
         employeeId += idFormat.separator;
       }
     }
-    console.log("basic info");
 
-    console.log("basic info", basicInfo);
     employeeId += idFormat.separator + paddedEmployeeCode;
     let basicInfo1;
     if (file) {
@@ -624,7 +677,6 @@ exports.createEmployee = async (req, res, next) => {
   <p>Please click the following link to confirm your registration:</p>
   <p><a href="${URL}/confirm/{token}">${URL}/confirm/{token}</a></p>`,
     };
-    console.log("email", message1);
     await sendEmail({ message1 });
 
     //
@@ -662,7 +714,7 @@ exports.createEmployee = async (req, res, next) => {
     let statusCode = 200;
 
     if (conflicts.length > 0) {
-      statusCode = 409;
+      statusCode = 400;
       message = "Accounts conflict. Further operations prevented.";
     } else {
       message = "Accounts created successfully.";
@@ -674,8 +726,9 @@ exports.createEmployee = async (req, res, next) => {
       conflicts,
     });
   } catch (error) {
-    console.log("first", error);
-    return next(createError.createError(500,"Internal server Error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -689,8 +742,6 @@ exports.updateEmployee = async (req, res, next) => {
       where: { id: id },
       returning: true,
     });
-
-
 
     res.status(200).json({
       message: "updated successfully",
@@ -711,7 +762,7 @@ exports.updateEmployee = async (req, res, next) => {
 
       return res.status(404).json({ message: errors });
     } else {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(503).json({ message: "Internal server error" });
     }
   }
 };
@@ -722,33 +773,14 @@ exports.deleteEmployee = async (req, res, next) => {
 
     const Employe = await Employee.findByPk(Number(id));
     if (Employe) {
-
-
-      await AccountInfo.destroy({where: {EmployeeId:id}})
+      await AccountInfo.destroy({ where: { EmployeeId: id } });
       await Employe.destroy({ where: { id } });
       res.status(200).json({ message: "Employee deleted successfully" });
     } else {
-      res.status(409).json({ message: "There is no Employee with this ID" });
+      res.status(400).json({ message: "There is no Employee with this ID" });
     }
   } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      // console.log("er", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
+    return res.status(503).json({ message: "Internal server error" });
   }
 };
 
@@ -814,7 +846,6 @@ exports.findByDepartment = async (req, res, next) => {
         ],
       });
 
-   
       res.status(200).json({
         count: dept.length,
         dept,
@@ -880,8 +911,9 @@ exports.findByDepartment = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log("first", error);
-  return next(createError.createError(500,"Internal server Error"))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -900,7 +932,6 @@ exports.createEmployeeFile = async (req, res, next) => {
         const numRecords = data.length;
         const emails = [];
         let password = req.user.companyCode.substring(0, 4) + "0000";
-        console.log("numRecords", numRecords);
         const employeeRecords = data.map((row) => {
           const address = {
             country: row["country"],
@@ -955,7 +986,6 @@ exports.createEmployeeFile = async (req, res, next) => {
             accountInformation,
           };
         });
-        console.log("address", employeeRecords[0].address);
         for (const record of employeeRecords) {
           const {
             address,
@@ -964,12 +994,10 @@ exports.createEmployeeFile = async (req, res, next) => {
             employeeInfo,
             accountInformation,
           } = record;
-          console.log("address", employeeInfo);
           let password = req.user.companyCode.substring(0, 4) + "0000";
           const conflicts = [];
           const createdAccountInfos = [];
 
-          console.log("first", basicInfo.GradeId);
           // if (!basicInfo?.DepartmentId) {
           //   return res.status(404).json("There is no department");
           // } else
@@ -1095,7 +1123,7 @@ exports.createEmployeeFile = async (req, res, next) => {
           let statusCode = 200;
 
           if (conflicts.length > 0) {
-            statusCode = 409;
+            statusCode = 400;
             message = "Accounts conflict. Further operations prevented.";
           } else {
             message = "Accounts created successfully.";
@@ -1106,28 +1134,9 @@ exports.createEmployeeFile = async (req, res, next) => {
             message,
             conflicts,
           });
-
-          console.log("Employee created:", createdEmployee);
         }
       } catch (error) {
-        console.log("first", error);
-        if (error.name === "SequelizeValidationError") {
-          const errors = {};
-          error.errors.forEach((err) => {
-            errors[err.path] = [`${err.path} is required`];
-          });
-
-          return res.status(404).json({ message: errors });
-        } else if (error.name === "SequelizeUniqueConstraintError") {
-          const errors = {};
-          error.errors.forEach((err) => {
-            errors[err.path] = [`${err.path} must be unique`];
-          });
-
-          return res.status(404).json({ message: errors });
-        } else {
-          return res.status(500).json({ message: "Internal server error" });
-        }
+        return res.status(503).json({ message: "Internal server error" });
       }
     }
   });
@@ -1168,70 +1177,70 @@ const createSendToken = async (user, statusCode, res) => {
   }
 };
 ///super admin login
-exports.login = async (req, res, next) => {
-  try {
-    let company;
-    const { email, password, companyCode } = req.body;
+// exports.login = async (req, res, next) => {
+//   try {
+//     let company;
 
-    //check if email and password exist company code
-    if (!email || !password || !companyCode) {
-      return res
-        .status(404)
-        .json({ message: "please provide email, password or company code" });
-    }
+//     const { email, password, companyCode } = req.body;
 
-    //check if user exists and password is correct
-    company = await Employee.findOne({ where: { email } });
-    // console.log("company", company);
-    // console.log("company", company)
-    //console.log("company", company === null);
-    // if (company === null) {
+//     //check if email and password exist company code
+//     if (!email || !password || !companyCode) {
+//       return res
+//         .status(404)
+//         .json({ message: "please provide email, password or company code" });
+//     }
 
-    //   company = await Employee.findOne({
-    //     where: { email },
-    //     include: [
-    //       {
-    //         model: CustomRole,
-    //         include: [Permission],
-    //       },
-    //     ],
-    //   });
-    // }
+//     //check if user exists and password is correct
+//     company = await Employee.findOne({ where: { email } });
+//     // console.log("company", company);
+//     // console.log("company", company)
+//     //console.log("company", company === null);
+//     // if (company === null) {
 
-    console.log("company.passord", company.password);
-    console.log("company", !company),
-      //const c="$2b$10$.mOen.LsSbhGgG/FTI4iG.9CZkfTLMFhHCSH8x6wttZuMLfn3wEGC";
-      console.log("first", await bcrypt.compare(password, company.password));
+//     //   company = await Employee.findOne({
+//     //     where: { email },
+//     //     include: [
+//     //       {
+//     //         model: CustomRole,
+//     //         include: [Permission],
+//     //       },
+//     //     ],
+//     //   });
+//     // }
 
-    // if (!company || !(await bcrypt.compare(password, company.password))) {
-    //   return res.status(401).json({
-    //     message:
-    //       "Unauthorized access - Invalid email, password or company code",
-    //   });
-    // }
+//     console.log("company.passord", company.password);
+//     console.log("company", !company),
+//       //const c="$2b$10$.mOen.LsSbhGgG/FTI4iG.9CZkfTLMFhHCSH8x6wttZuMLfn3wEGC";
+//       console.log("first", await bcrypt.compare(password, company.password));
 
-    const passwordMatch = await bcrypt.compare(password, company.password);
+//     // if (!company || !(await bcrypt.compare(password, company.password))) {
+//     //   return res.status(401).json({
+//     //     message:
+//     //       "Unauthorized access - Invalid email, password or company code",
+//     //   });
+//     // }
 
-    if (passwordMatch) {
-      res.status(200).json({ message: "Authentication successful" });
-    } else {
-      res.status(401).json({ error: "Authentication failed" });
-    }
-  } catch (error) {
-    console.log("Error", error);
-   return next(createError.createError(500,"Internal server error"))}
-};
+//     const passwordMatch = await bcrypt.compare(password, company.password);
+
+//     if (passwordMatch) {
+//       res.status(200).json({ message: "Authentication successful" });
+//     } else {
+//       res.status(401).json({ error: "Authentication failed" });
+//     }
+//   } catch (error) {
+//     console.log("Error", error);
+//    return next(createError.createError(503, "An error occurred, please try again later"));
+//   }
+// };
 exports.addAddionalPay = async (req, res, next) => {
   try {
     const updates = req.body;
     const { id } = req.params.id;
-    console.log("first", updates);
 
     const employee = await Employee.findAll({
       where: { id: req.params.id, CompanyId: req.user.id },
     });
 
-    //  console.log("first", employee);
     if (employee) {
       const result = await employee.update({ acting: 100 });
 
@@ -1249,9 +1258,6 @@ exports.addAddionalPay = async (req, res, next) => {
 
 // Send confirmation email function
 const sendConfirmationEmail = async (employee) => {
-  console.log(employee);
-  console.log(employee);
-
   // return new Promise(async (resolve, reject) => {
   //   try {
   //     // Create a nodemailer transporter
@@ -1264,18 +1270,14 @@ const sendConfirmationEmail = async (employee) => {
   //         pass: 'your-password',
   //       },
   //     });
-
   //     // Calculate the expiration date (e.g., 7 days from the current date)
   //     const expirationDate = new Date();
   //     expirationDate.setDate(expirationDate.getDate() + 7);
-
   //     // Format the expiration date as a string
   //     const formattedExpirationDate = expirationDate.toDateString();
-
   //     // Generate unique acceptance and rejection codes
   //     const acceptanceCode = generateUniqueCode();
   //     const rejectionCode = generateUniqueCode();
-
   //     // Compose the email message
   //     const message = {
   //       from: 'your-email@gmail.com',
@@ -1290,13 +1292,10 @@ const sendConfirmationEmail = async (employee) => {
   //         <li><a href="${process.env.BASE_URL}/reject/${rejectionCode}">Reject</a></li>
   //       </ul>`,
   //     };
-
   //     // Save the acceptance and rejection codes to the Employee record
   //     await employee.update({ acceptanceCode, rejectionCode });
-
   //     // Send the email
   //     await transporter.sendMail(message);
-
   //     resolve(); // Resolve the promise when the email is sent successfully
   //   } catch (error) {
   //     reject(error); // Reject the promise if there's an error sending the email
@@ -1311,8 +1310,7 @@ function generateUniqueCode() {
   return uuidv4();
 }
 
-
-exports.createEmployee_new = async (req, res,next) => {
+exports.createEmployee_new = async (req, res, next) => {
   const {
     address,
     employeeInfo,
@@ -1326,8 +1324,6 @@ exports.createEmployee_new = async (req, res,next) => {
   }
 
   const accountNumbers = accountInformation?.map((acct) => acct.accountNumber);
-
-  console.log("employee", req.files);
 
   try {
     const [grade, department, employee, accountInfos, idformat] =
@@ -1493,10 +1489,8 @@ exports.createEmployee_new = async (req, res,next) => {
       // Generate unique acceptance and rejection codes
       const acceptanceCode = token;
       const rejectionCode = expirationDate;
-      console.log("generateUniqueCode", acceptanceCode);
-      console.log("rejection code", rejectionCode);
 
-      const URL = "https://payroll-ms.onrender.com";
+      const URL = "/";
       createEmployee.acceptanceCode = acceptanceCode;
       createEmployee.rejectionCode = rejectionCode;
       // createEmployee.save();
@@ -1531,234 +1525,237 @@ exports.createEmployee_new = async (req, res,next) => {
       });
     });
   } catch (error) {
-    console.error("Error creating records:", error);
     return res
-      .status(500)
+      .status(503)
       .json({ error: "An error occurred while creating the records." });
   }
 };
 
-
 exports.getAllProjectEmployeeInvolded = async (req, res, next) => {
   try {
-    const { employeeId } = req.params
+    const { employeeId } = req.params;
 
     const Employees = await Employee.findOne({
       where: { id: employeeId, CompanyId: req.user.id },
-      attributes: ['fullname'],
+      attributes: ["fullname"],
       include: [
         {
           model: Projects,
           required: false,
           through: {
             model: ProjectEmployee,
-            attributes: ['percent', 'gross']
+            attributes: ["percent", "gross"],
           },
 
           include: [
             {
-             model: Sponsor,
-              attributes: ['name']
-            }
-          ]
+              model: Sponsor,
+              attributes: ["name"],
+            },
+          ],
           // attributes:['name'],
-        }
-      ]
-    })
+        },
+      ],
+    });
     res.status(200).json({
       count: Employees.length,
-      Employees
-    })
+      Employees,
+    });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
-exports.updateContactInfo= async( req,res,next)=>{
+exports.updateContactInfo = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
+    const employeeId = req.params.employeeId;
+    const {
+      email,
+      phoneNumber,
+      country,
+      state,
+      region,
+      zone_or_city,
+      woreda,
+      kebele,
+      houseNumber,
+    } = req.body;
 
-    console.log("here")
-    const employeeId= req.params.employeeId;
-    const { email,phoneNumber,country,state,region,zone_or_city,woreda,kebele,houseNumber} = req.body;
-   
-  
-const employee = await Employee.findOne({
-  where: { id: employeeId, CompanyId: req.user.id }
-})
+    const employee = await Employee.findOne({
+      where: { id: employeeId, CompanyId: req.user.id },
+    });
 
-
-if(email|| phoneNumber){
-   await employee.update({ email: email?email:employee.email, phoneNumber:phoneNumber?phoneNumber:employee.phoneNumber},{transaction: transaction});     
-}
-
-if(country||state||region||zone_or_city||woreda||kebele||houseNumber){
-const checkAddress= await Address.findOne({
-  where:{EmployeeId:employeeId,
-  isActive:true}
-})
-
-  if (checkAddress) {
-    const updatedData = await checkAddress.update(
-      { isActive: false },
-      { transaction }
-    )
-
-    const newEmployeeInfo = await Address.create(
-      {
-        isActive: true,
-        EmployeeId: Number(employeeId),
-        kebele:kebele?kebele: checkAddress?.kebele,
-        woreda:woreda?woreda: checkAddress?.woreda,
-        zone_or_city:zone_or_city?zone_or_city:checkAddress.zone_or_city,
-        state: state?state:checkAddress.state,
-        country: country?country:checkAddress.country,
-        houseNumber:houseNumber?houseNumber:checkAddress.houseNumber
-              },
-      { transaction }
-    )
-  
-            }
-  }
-  await transaction.commit()
-  return res.status(200).json({
-    success:true,
-    message: "Contact info updated successfully"
-  })
-
-
-  } catch (error) {
-    console.log(error);
-    await transaction.rollback();
-    return next(createError.createError(500, 'Internal Server error'))
-  }
-}
-
-
-exports.UnAssignApprovers=async(req,res,next)=>{
-  const transaction = await sequelize.transaction();
-  try {
-    const EmployeeId=req.params.id
-    const employee= await Employee.findOne({
-      where:{
-        id:EmployeeId
-      }
-    })
-
-    if(!employee){
-      return next(createError.createError(404,"Employee not found"))
+    if (email || phoneNumber) {
+      await employee.update(
+        {
+          email: email ? email : employee.email,
+          phoneNumber: phoneNumber ? phoneNumber : employee.phoneNumber,
+        },
+        { transaction: transaction }
+      );
     }
-if(employee?.role != 'approver'){
-  return next(createError.createError(400,"Employee is not Approver"))
-}
-const approvalMethods= await ApprovalMethod.findOne({
-  where:{
-    CompanyId:req.user.id,
-    isActive:true
-  }
-})
-const approvers= await Approver.findOne({
-  where:{
-    EmployeeId:EmployeeId
-  }
-})
-const isMaster=approvers?.isMaster
-const ApprovalMethodId=approvers?.ApprovalMethodId
-const approvalMethodType= approvalMethods?.approvalMethod
-const isCompleted=approvalMethods.isCompleted;
-if(approvalMethodType){
-if(isCompleted){
 
-}
-}
+    if (
+      country ||
+      state ||
+      region ||
+      zone_or_city ||
+      woreda ||
+      kebele ||
+      houseNumber
+    ) {
+      const checkAddress = await Address.findOne({
+        where: { EmployeeId: employeeId, isActive: true },
+      });
 
-// return res.status(200).json(approvalMethodType)
+      if (checkAddress) {
+        const updatedData = await checkAddress.update(
+          { isActive: false },
+          { transaction }
+        );
 
-// await employee.update({role:"employee"},{transaction});
-return res.status(200).json({
-  status:true,
-  message:"unassigned successfully "
-})
-
-return res.status(200).json({
-  sta
-})
-await transaction.commit();
+        const newEmployeeInfo = await Address.create(
+          {
+            isActive: true,
+            EmployeeId: Number(employeeId),
+            kebele: kebele ? kebele : checkAddress?.kebele,
+            woreda: woreda ? woreda : checkAddress?.woreda,
+            zone_or_city: zone_or_city
+              ? zone_or_city
+              : checkAddress.zone_or_city,
+            state: state ? state : checkAddress.state,
+            country: country ? country : checkAddress.country,
+            houseNumber: houseNumber ? houseNumber : checkAddress.houseNumber,
+          },
+          { transaction }
+        );
+      }
+    }
+    await transaction.commit();
+    return res.status(200).json({
+      success: true,
+      message: "Contact info updated successfully",
+    });
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, 'Internal Server error'));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
-
-
-exports.employeesCurrentProject= async (req,res,next)=>{
+exports.UnAssignApprovers = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
+    const EmployeeId = req.params.id;
+    const employee = await Employee.findOne({
+      where: {
+        id: EmployeeId,
+      },
+    });
 
-    const employeeId= req.params?.employeeId;
-    const employee= await Projects.findAll({
-      include:[{
-        model: ProjectEmployee,
-        where:{
-          EmployeeId: employeeId,
-          isActive:true
-        },
-        attributes:[ 'gross','percent']
-      
+    if (!employee) {
+      return next(createError.createError(404, "Employee not found"));
+    }
+    if (employee?.role != "approver") {
+      return next(createError.createError(400, "Employee is not Approver"));
+    }
+    const approvalMethods = await ApprovalMethod.findOne({
+      where: {
+        CompanyId: req.user.id,
+        isActive: true,
+      },
+    });
+    const approvers = await Approver.findOne({
+      where: {
+        EmployeeId: EmployeeId,
+      },
+    });
+    const isMaster = approvers?.isMaster;
+    const ApprovalMethodId = approvers?.ApprovalMethodId;
+    const approvalMethodType = approvalMethods?.approvalMethod;
+    const isCompleted = approvalMethods.isCompleted;
+    if (approvalMethodType) {
+      if (isCompleted) {
       }
-      ]
-       
-    })
+    }
+
+    // return res.status(200).json(approvalMethodType)
+
+    // await employee.update({role:"employee"},{transaction});
+    return res.status(200).json({
+      status: true,
+      message: "unassigned successfully ",
+    });
+
+    return res.status(200).json({
+      sta,
+    });
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+
+exports.employeesCurrentProject = async (req, res, next) => {
+  try {
+    const employeeId = req.params?.employeeId;
+    const employee = await Projects.findAll({
+      include: [
+        {
+          model: ProjectEmployee,
+          where: {
+            EmployeeId: employeeId,
+            isActive: true,
+          },
+          attributes: ["gross", "percent"],
+        },
+      ],
+    });
 
     // if(employee === null){
     //   return next(createError.createError(404,"Employee not assigned to project"))
     // }
 
-
-
-    return res.json({data: employee})
-    
+    return res.json({ data: employee });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server Error"))    
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-} 
+};
 
-
-
-exports.employeesPreviousProject= async (req,res,next)=>{
+exports.employeesPreviousProject = async (req, res, next) => {
   try {
+    const employeeId = req.params?.employeeId;
 
-    const employeeId= req.params?.employeeId;
-
-    const employee= await Projects.findAll({
-      include:[{
-        model: ProjectEmployee,
-        where:{
-          EmployeeId: employeeId,
-          isActive:false
+    const employee = await Projects.findAll({
+      include: [
+        {
+          model: ProjectEmployee,
+          where: {
+            EmployeeId: employeeId,
+            isActive: false,
+          },
+          attributes: ["gross", "percent"],
         },
-        attributes:[ 'gross','percent']
-      
-      }
-      ]
-       
-    })
+      ],
+    });
 
     // if(employee === null){
     //   return next(createError.createError(404,"Employee not assigned to project"))
     // }
 
-
-
-    return res.json({data: employee})
-    
+    return res.json({ data: employee });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server Error"))    
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-} 
-
-
+};

@@ -1,35 +1,37 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const middleware = require('../middleware/auth')
-const payroll=require('../controllers/payrollDefinition');
-const PayrollDefinition = require('../models/payrollDefinition');
+const middleware = require("../middleware/auth");
+const payroll = require("../controllers/payrollDefinition");
+const PayrollDefinition = require("../models/payrollDefinition");
 
 // Define routes for handling User requests
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.getAllPayroll
 );
 
-
 router.get(
   "/current-year",
   middleware.protectAll,
+  middleware.validateUserAgent,
   // middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.getAllPayrollForCurrentYear
 );
 router.get(
   "/latest",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.getLatestPayroll
 );
 
-
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.createPayroll
 );
@@ -37,6 +39,7 @@ router.post(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.deletePayrollDefinition
 );
@@ -44,6 +47,7 @@ router.delete(
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.updatePayrollDefinition
 );
@@ -51,9 +55,9 @@ router.put(
 router.get(
   "/currentMonth",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.getCurrentMonth
 );
-
 
 module.exports = router;

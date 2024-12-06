@@ -6,31 +6,41 @@ const upload = require("../middleware/multer");
 // const { accountInfoMulter, upload } = require("../middleware/multer.js");
 const newEmployeeController = require("../controllers/newEmployeeControllers.js");
 
-router.put('/unassign-approver/:id',
-middleware.protectAll,
-middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
-employeeController.UnAssignApprovers
-)
+router.put(
+  "/unassign-approver/:id",
+  middleware.validateUserAgent,
+  middleware.protectAll,
+
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  employeeController.UnAssignApprovers
+);
 router.put(
   "/update-contact-info/:employeeId",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.updateContactInfo
 );
 router.get(
   "/",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getAllEmployee
 );
-router.get("/employees-with-custom-role", middleware.protectAll,   middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
-employeeController.getEmployeeWithCustomRole
-)
+router.get(
+  "/employees-with-custom-role",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  employeeController.getEmployeeWithCustomRole
+);
 router.get(
   "/get-all-projects/:employeeId",
 
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getAllProjectEmployeeInvolded
 );
 
@@ -45,13 +55,11 @@ router.get(
   newEmployeeController.downloadEmployeeTemplate
 );
 
-
-
-
 router.get(
   "/:id",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getEmployeeById
 );
 router.post(
@@ -65,53 +73,53 @@ router.post(
   ]),
   middleware.protectAll,
   middleware.restrictALL({
-    moduleName: "employeeinfo",
+    moduleName: "EmployeeList",
     isAccessible: true,
   }),
   // employeeController.createEmployee
   newEmployeeController.createEmployee
 );
 
-
 router.get(
   "/company/employees",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   newEmployeeController.getAllEmployee
 );
 
-
-
-
- router.get(
-    "/current-project/:employeeId",
-    middleware.protectAll,
-    employeeController.employeesCurrentProject
-  );
-  router.get(
-    "/previous-project/:employeeId",
-    middleware.protectAll,
-    employeeController.employeesPreviousProject
-    
-  );
+router.get(
+  "/current-project/:employeeId",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  employeeController.employeesCurrentProject
+);
+router.get(
+  "/previous-project/:employeeId",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  employeeController.employeesPreviousProject
+);
 
 router.get(
   "/employee-history/:id",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   newEmployeeController.getEmployeeHistory
-  
 );
 router.get(
   "/department/:departmentId",
   middleware.protectAll,
-  middleware.restrictALL({ moduleName: "employlist", isAccessible: true }),
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.findByDepartment
 );
 
 router.put(
   "/additionalPay/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "employeeinfo",
     isAccessible: true,
@@ -134,7 +142,6 @@ router.put(
 //   newEmployeeController.updatedBasicInfo
 // );
 
-
 router.put(
   "/update-basic-info/:id",
   upload.fields([
@@ -143,6 +150,7 @@ router.put(
   ]),
 
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "employeeinfo",
     isAccessible: true,
@@ -158,13 +166,13 @@ router.put(
   ]),
 
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "employeeinfo",
     isAccessible: true,
   }),
   newEmployeeController.updateTermination
 );
-
 
 router.put(
   "/update-emergency-info/:employeeId",
@@ -174,6 +182,7 @@ router.put(
   ]),
 
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "employeeinfo",
     isAccessible: true,
@@ -182,12 +191,14 @@ router.put(
 );
 router.put(
   "/update-account-info/:employeeId",
+  middleware.validateUserAgent,
   upload.fields([
     // { name: "image", maxCount: 1 },
     { name: "accountImage", maxCount: 1 },
   ]),
 
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "employeeinfo",
     isAccessible: true,
@@ -195,9 +206,9 @@ router.put(
   newEmployeeController.updateAccountInfo
 );
 
-
 router.put(
   "/update-employee-info/:id",
+  middleware.validateUserAgent,
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "id_image", maxCount: 1 },
@@ -210,7 +221,6 @@ router.put(
   }),
   newEmployeeController.updateEmployee
 );
-
 
 router.put(
   "/update-employement-info/:id",
@@ -227,26 +237,23 @@ router.put(
   newEmployeeController.updateEmployementInfo
 );
 
-
-
 router.put(
   "/promotion/:id",
 
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "employeeinfo",
     isAccessible: true,
   }),
-  upload.fields([
-    { name: "letter", maxCount: 1 },
-  
-  ]),
+  upload.fields([{ name: "letter", maxCount: 1 }]),
   newEmployeeController.promotion
 );
 
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "employeeinfo",
     isAccessible: true,
@@ -260,12 +267,30 @@ router.delete(
 router.post(
   "/excel",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin"),
   employeeController.createEmployeeFile
 );
 
-// router.post("/login", employeeController.login);
+router.post(
+  "/login",
+  middleware.validateUserAgent,
+  newEmployeeController.employeeLogin
+);
 
-router.get("/confirm/:id", newEmployeeController.confirmaRegistration);
+router.post(
+  "/register/bulk",
+  middleware.validateUserAgent,
+
+  middleware.protectAll,
+  upload.fields([{ name: "file", maxCount: 1 }]),
+  newEmployeeController.bulkRegister
+);
+
+router.get(
+  "/confirm/:id",
+  middleware.validateUserAgent,
+  newEmployeeController.confirmaRegistration
+);
 
 module.exports = router;

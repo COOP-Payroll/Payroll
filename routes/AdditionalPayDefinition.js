@@ -11,17 +11,17 @@ router.get(
 );
 
 router.get(
-    "/",
-    middleware.protectAll,
-    middleware.restrictTo("companyAdmin"),
-    additionPayDefinition.getAllAdditionalPayDefinition
-  );
-
+  "/",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  additionPayDefinition.getAllAdditionalPayDefinition
+);
 
 //allowance definition for this company
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   additionPayDefinition.createAdditionalPayDefinition
 );
@@ -30,6 +30,7 @@ router.post(
 router.put(
   "/update/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   additionPayDefinition.updateAdditionalPayDefinition
 );
@@ -38,6 +39,7 @@ router.put(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictTo("companyAdmin"),
   additionPayDefinition.deleteAdditionalPayDefinition
 );

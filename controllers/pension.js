@@ -1,12 +1,11 @@
 const Pension = require("../models/pension.js");
 const User = require("../models/user.js");
-const createError= require("../utils/error.js")
-const { Op, where } = require('sequelize');
+const createError = require("../utils/error.js");
+const { Op, where } = require("sequelize");
 
-exports.getAllPension = async (req, res,next) => {
+exports.getAllPension = async (req, res, next) => {
   try {
     if (req.user.role === "superAdmin") {
-
       const pensions = await Pension.findAll({
         where: { UserId: req.user.id, isActive: true },
       });
@@ -16,7 +15,7 @@ exports.getAllPension = async (req, res,next) => {
       });
     } else if (req.user.role === "companyAdmin") {
       const pensions = await Pension.findAll({
-        where: { CompanyId: req.user.id ,isActive: true},
+        where: { CompanyId: req.user.id, isActive: true },
       });
       res.status(200).json({
         count: pensions.length,
@@ -24,19 +23,17 @@ exports.getAllPension = async (req, res,next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-exports.getpensionById = async (req, res,next) => {
+exports.getpensionById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const pension = await Pension.findByPk(id);
     res.json(pension);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -44,7 +41,6 @@ exports.createPension = async (req, res, next) => {
   try {
     const { employerContribution, employeeContribution } = req.body;
 
-    console.log("user ID", req.user.id);
 
     if (req.user.role === "superAdmin") {
       const getAllPension = await Pension.findAll({
@@ -52,7 +48,7 @@ exports.createPension = async (req, res, next) => {
       });
 
       if (getAllPension.length != 0) {
-        res.status(409).json("Pension is already defined update it ");
+        res.status(400).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({
           employerContribution,
@@ -69,7 +65,7 @@ exports.createPension = async (req, res, next) => {
         where: { CompanyId: req.user.id },
       });
       if (getAllPension.length != 0) {
-        res.status(409).json("Pension is already defined update it ");
+        res.status(400).json("Pension is already defined update it ");
       } else {
         const pensions = await Pension.create({
           employerContribution,
@@ -83,8 +79,7 @@ exports.createPension = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -155,8 +150,7 @@ exports.updatePension = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -170,17 +164,15 @@ exports.deletePension = async (req, res, next) => {
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
       return res
-        .status(409)
-        .json({ message: "There is no pension with this ID" });
+        .status(400)
+        .json({ message: "Pension not Found" });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-
-exports.getAllPensionIncludingInActive = async (req, res,next) => {
+exports.getAllPensionIncludingInActive = async (req, res, next) => {
   try {
     if (req.user.role === "superAdmin") {
       const pensions = await Pension.findAll({
@@ -200,15 +192,12 @@ exports.getAllPensionIncludingInActive = async (req, res,next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-
 exports.restoreToDefault = async (req, res, next) => {
   try {
-  
     const deletedData = await Pension.update(
       {
         isActive: false,
@@ -221,24 +210,20 @@ exports.restoreToDefault = async (req, res, next) => {
       }
     );
 
-  const  pension=await  Pension.create({         
-            employeeContribution: 0,
-            employerContribution: 0,
-            CompanyId: Number(req.user.id),
-            isActive:true,
-            UserId: null,
-          });
-      
-  
-   
-    
+    const pension = await Pension.create({
+      employeeContribution: 0,
+      employerContribution: 0,
+      CompanyId: Number(req.user.id),
+      isActive: true,
+      UserId: null,
+    });
+
     res.status(200).json({
-      success:true,
+      success: true,
       message: "Restored to default",
-      data:pension,
+      data: pension,
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

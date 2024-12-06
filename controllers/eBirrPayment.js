@@ -16,12 +16,11 @@ exports.EbirrPayment = async (req, res, next) => {
       apiKey,
     } = req.body;
     const orderID = utils.generateOrderId();
-    console.log(orderID);
     const ebirr_Payment = await EbirrPayment.findOne({
       where: { referenceId: referenceId },
     });
     if (ebirr_Payment) {
-      return res.status(409).json({
+      return res.status(400).json({
         message: "Ebirr Payment Already Exists",
       });
     }
@@ -62,10 +61,10 @@ exports.EbirrPayment = async (req, res, next) => {
             status: "success",
             data: response.data,
           });
-        } else if (response.status == 409) {
+        } else if (response.status == 400) {
           ebirrPayment.paymentStatus = "Failed";
           ebirrPayment.save();
-          return res.status(409).json({
+          return res.status(400).json({
             status: "failure",
             message: "Ebirr Payment Already Exists",
           });
@@ -82,7 +81,7 @@ exports.EbirrPayment = async (req, res, next) => {
         console.error(error);
         ebirrPayment.paymentStatus = "Failed";
         ebirrPayment.save();
-        return res.status(500).json(error.message);
+        return res.status(503).json(error.message);
       });
   } catch (error) {
     console.error(error);
@@ -101,7 +100,7 @@ exports.EbirrPayment = async (req, res, next) => {
 
       return res.status(404).json({message:errors});
     } else {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(503).json({ message: "Internal server error" });
     }
   }
 };
@@ -142,7 +141,7 @@ exports.ChapaPayment=async (req,res,next)=>{
       },
     });
     if (chapa) {
-      res.status(409).json({ message: "Transaction Already Exists" });
+      res.status(400).json({ message: "Transaction Already Exists" });
     } else {
       const chapaPay = await ChapaPayment.create({
         email: email,
@@ -176,22 +175,21 @@ exports.ChapaPayment=async (req,res,next)=>{
         )
         .then((response) => {
           if (response.status === 200) {
-            console.log("response Data", response.data.data.checkout_url);
             chapaPay.cheackoutUrl = response.data.data.checkout_url;
             chapaPay.paymentStatus = "PENDING";
             chapaPay.save();
             return res.status(200).json(response.data);
           }
-          return res.status(500).json({ message: "Error" });
+          return res.status(503).json({ message: "Error" });
         })
         .catch((error) => {
           console.error(error.message);
-          return res.status(500).json(error.message);
+          return res.status(503).json(error.message);
         });
     }
   } catch (error) {
      console.error("Error: " + error);
-     return res.status(500).send({
+     return res.status(503).send({
        message: error,
      });
   }

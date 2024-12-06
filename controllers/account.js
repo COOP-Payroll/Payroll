@@ -25,7 +25,7 @@ exports.checkAccountNumber = async (req, res, next) => {
         ]
     }
     })
-    console.log(response) 
+    
 
     if (response?.data?.AccountDetailsResponse?.ESBStatus?.Status === 'Failure') {
       return next(createError.createError(404, 'Account number not found'))
@@ -36,7 +36,7 @@ exports.checkAccountNumber = async (req, res, next) => {
       data:response?.data?.AccountDetailsResponse?.CustomerInfo
     })
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    // console.log(error)
+    return next(createError.createError(503, 'Internal Server Error'))
   }
 }

@@ -15,12 +15,11 @@ exports.EbirrPayment = async (req, res, next) => {
       apiKey,
     } = req.body;
     const orderID = utils.generateOrderId();
-    console.log(orderID);
     const eirrPaym = await EbirrPayment.findOne({
       where: { referenceId: referenceId },
     });
     if (eirrPaym) {
-      return res.status(409).json({
+      return res.status(400).json({
         message: "Ebirr Payment Already Exists",
       });
     }
@@ -60,10 +59,10 @@ exports.EbirrPayment = async (req, res, next) => {
             status: "success",
             data: response.data,
           });
-        } else if (response.status == 409) {
+        } else if (response.status == 400) {
           ebirrPayment.paymentStatus = "Failed";
           ebirrPayment.save();
-          return res.status(409).json({
+          return res.status(400).json({
             status: "failure",
             message: "Ebirr Payment Already Exists",
           });
@@ -81,10 +80,10 @@ exports.EbirrPayment = async (req, res, next) => {
         console.error(error);
         ebirrPayment.paymentStatus = "Failed";
         ebirrPayment.save();
-        return res.status(500).json(error.message);
+        return res.status(503).json(error.message);
       });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(503).json({ message: "Internal Server Error" });
   }
 };

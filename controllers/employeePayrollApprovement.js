@@ -15,10 +15,8 @@ const getAllApprovements = async (req, res,next) => {
   try {
     const approvements = await EmployeePayrollApprovement.findAll()
     res.json(approvements)
-    console.log('approvements')
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+  return next(createError.createError(503, "An error occurred, please try again later"));
   }
 }
 
@@ -35,8 +33,7 @@ const getApprovementById = async (req, res,next) => {
     }
     res.json(approvement)
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+  return next(createError.createError(503, "An error occurred, please try again later"));
   }
 }
 
@@ -279,8 +276,7 @@ const createApprovement = async (req, res, next) => {
       return res.json('your approval method is not active')
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+  return next(createError.createError(503, "An error occurred, please try again later"));
   }
 }
 const getApprovementByPayrollId = async (req, res,next) => {
@@ -311,7 +307,7 @@ const getApprovementByPayrollId = async (req, res,next) => {
     res.json(payrolls)
   } catch (error) {
     console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+  return next(createError.createError(503, "An error occurred, please try again later"));
   }
 }
 
@@ -324,7 +320,7 @@ const updateApprovement = async (req, res,next) => {
     res.json('update approve')
   } catch (error) {
     console.error(error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(503).json({ message: 'Internal server error' })
   }
 }
 
@@ -338,7 +334,7 @@ const deleteApprovement = async (req, res) => {
     res.status(204).json('deleted successfully')
   } catch (error) {
     console.error(error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(503).json({ message: 'Internal server error' })
   }
 }
 
@@ -358,11 +354,9 @@ const arrayApproveApprovement = async (req, res, next) => {
     // Iterate over the array of payroll IDs
     for (const payrollId of payrollIds) {
       if (isNaN(payrollId) || payrollId === NaN) {
-        console.log(`Invalid payroll ID: ${payrollId}`)
-        console.log(`Invalid payroll ID: ${payrollId}`)
+       
         continue // Skip to the next iteration
       }
-      console.log('payrollids', payrollIds)
       try {
         // Check if payroll exists and is processed
         const payroll = await Payroll.findOne({
@@ -651,8 +645,7 @@ const arrayApproveApprovement = async (req, res, next) => {
 
     return res.status(200).json(results)
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+  return next(createError.createError(503, "An error occurred, please try again later"));
   }
 }
 
@@ -1124,7 +1117,7 @@ const rejectPayroll = async (req, res, next) => {
     return res.json(results)
   } catch (error) {
     return res
-      .status(500)
+      .status(503)
       .json({ error: 'An error occurred while updating payrolls.' })
   }
 }
@@ -1374,7 +1367,6 @@ async function handlePayrollA (
   employeeId,
   companyId
 ) {
-  console.log('Payroll')
 
   const payroll = await Payroll.findOne({ where: { id: payrollId } })
   const payrollDefinition = await PayrollDefinition.findOne({
@@ -1413,11 +1405,9 @@ const arrayApprove2Approvement = async (req, res) => {
     // Iterate over the array of payroll IDs
     for (const payrollId of payrollIds) {
       if (isNaN(payrollId) || payrollId === NaN) {
-        console.log(`Invalid payroll ID: ${payrollId}`)
-        console.log(`Invalid payroll ID: ${payrollId}`)
+       
         continue // Skip to the next iteration
       }
-      console.log('payrollids', payrollIds)
       try {
         // Check if payroll exists and is processed
         const payroll = await Payroll.findOne({
@@ -1427,7 +1417,6 @@ const arrayApprove2Approvement = async (req, res) => {
         })
 
         // return res.json(payroll)
-        console.log(`Payroll ${payroll}`)
 
         if (!payroll) {
           results.push(`No such payroll created: ${payrollId}`)
@@ -1678,11 +1667,10 @@ const arrayApprove2Approvement = async (req, res) => {
       }
     }
 
-    console.log('For loop finished')
     return res.json(results)
   } catch (error) {
     console.error(error)
-    // return res.status(500).json({ message: 'Internal server error' });
+    // return res.status(503).json({ message: 'Internal server error' });
   }
 }
 
@@ -1741,7 +1729,6 @@ const approveStatusOfPayroll = async (req, res, next) => {
     }
 
     if (!approvalMethods.isCompleted) {
-      console.log(approvalMethods.isCompleted)
       return next(createError.createError(404, 'Assign all approver first'))
     }
     const isMasterApproverAvailable = approvalMethods.isThereMasterApprover
@@ -1801,8 +1788,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
         })
 
         formattedResponse.forEach(item => {
-          console.log(item.PayrollId)
-          console.log(item.maxLevel)
+       
           //
           if (item.maxLevel < companyApprovalLevel) {
             checkMaximumReached = true
@@ -1861,7 +1847,6 @@ const approveStatusOfPayroll = async (req, res, next) => {
       })
 
       if (checkApproved.length != 0 && !isMasterApprover) {
-        console.log('2')
         return next(
           createError.createError(
             400,
@@ -2016,7 +2001,6 @@ const approveStatusOfPayroll = async (req, res, next) => {
               }
             }
 
-            console.log('Bulk create successful:', newApprovements)
             return res.status(200).json({
               message: 'Payroll approved successfully.',
               data: validApprovementsData
@@ -2025,7 +2009,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
             await transaction.rollback()
             console.error('Error creating bulk records:', error)
             return next(
-              createError.createError(500, 'Error creating bulk records')
+              createError.createError(503, 'Error creating bulk records')
             )
           }
         }
@@ -2161,7 +2145,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
             'Error creating bulk records   vertical is master approvers:',
             error
           )
-          return next(createError.createError(500, 'Internal server error'))
+          return next(createError.createError(503, "An error occurred, please try again later"));
         }
       }
     }
@@ -2219,7 +2203,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
               error
             )
             return next(
-              createError.createError(500, 'Error retrieving payrolls')
+              createError.createError(503, 'Error retrieving payrolls')
             )
           }
         })
@@ -2253,7 +2237,6 @@ const approveStatusOfPayroll = async (req, res, next) => {
             }
           }
 
-          console.log('Bulk create successful:', newApprovements)
           return res.status(200).json({
             message: 'Payroll approved successfully.',
             data: validApprovementsData
@@ -2262,7 +2245,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
           await transaction.rollback()
           console.error('Error creating bulk records:', error)
 
-          return createError.createError(500, 'Internal server error')
+          return createError.createError(503, 'Internal server error')
         }
       }
       if (approvalType === 'hierarchy') {
@@ -2308,7 +2291,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
               error
             )
             return createError.createError(
-              500,
+              503,
               'Error retrieving Payroll for PayrollId:'
             )
           }
@@ -2343,7 +2326,6 @@ const approveStatusOfPayroll = async (req, res, next) => {
             }
           }
 
-          console.log('Bulk create successful:', newApprovements)
           return res.status(200).json({
             message: 'Payroll approved successfully.',
             data: validApprovementsData
@@ -2351,13 +2333,12 @@ const approveStatusOfPayroll = async (req, res, next) => {
         } catch (error) {
           // await transaction.rollback();
           console.error('Error creating bulk records:', error)
-          return next(createError.createError(500, 'Internal server Error'))
+          return next(createError.createError(503, "An error occurred, please try again later"));
         }
       }
     }
   } catch (error) {
-    console.log('  await transaction.rollback();', error)
-    return next(createError.createError(500, 'Internal server error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 }
 

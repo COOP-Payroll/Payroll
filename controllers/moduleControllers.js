@@ -14,8 +14,7 @@ exports.getAllModules = async (req, res, next) => {
       Moduless,
     });
   } catch (error) {
-    console.log("first", error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503,"Internal server error"))
   }
 };
 
@@ -26,7 +25,7 @@ exports.getAllowanceById = async (req, res,next) => {
     const module = await Modules.findByPk(id);
     res.json(module);
   } catch (error) {
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503,"Internal server error"))
   }
 };
 
@@ -35,7 +34,6 @@ exports.createModules = async (req, res, next) => {
     //insert required field
     const name = req.body.name;
 const getAllModules = await Modules.findAll({where:{name:name}});
-console.log(!getAllModules)
 
 
 if(getAllModules.length != 0 ){
@@ -54,8 +52,7 @@ if(getAllModules.length != 0 ){
 
 }
    catch (error) {
-    console.log(error);
-    return next(createError.createError(500,"Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 exports.updateModules = async (req, res, next) => {
@@ -72,7 +69,6 @@ exports.updateModules = async (req, res, next) => {
     const checkModules = await Modules.findOne({
       where: { id: id, CompanyId: req.user.id },
     });
-    console.log("first", checkModules);
     if (checkModules) {
       const result = await Modules.update(
         { amount: amount },
@@ -87,8 +83,7 @@ exports.updateModules = async (req, res, next) => {
       res.status(404).json("No such Id");
     }
   } catch (error) {
-     console.log(error);
-     return next(createError.createError(500,"Internal server error"));
+     return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -102,14 +97,11 @@ exports.deleteModules = async (req, res, next) => {
       await Modules.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res.status(409).json({
-        message: "There is no Modules  with this ID",
-      });
+      return next(createError.createError(404, "Module not found"));
     }
   } catch (error) {
 
-    console.log(error);
-    return next(createError.createError(500,"Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 }
 
@@ -117,6 +109,6 @@ exports.updateModule=async(req,res,next)=>{
   try{
 
   }catch(err){
-    console.log("error",error)
+
   }
 }

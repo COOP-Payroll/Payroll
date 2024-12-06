@@ -3,12 +3,12 @@ const AllowanceDefinition = require("../models/additionalAllowanceDefinition.js"
 const Grade = require("../models/grade");
 const Company = require("../models/company.js");
 const Employee = require("../models/employee.js");
-const createError = require('../utils/error');
+const createError = require("../utils/error");
 const { where } = require("sequelize");
 const AdditionalAllowance = require("../models/additionalAllowance.js");
 
 // GET ALL ALLOWANCE
-exports.getAllAllowance = async (req, res,next) => {
+exports.getAllAllowance = async (req, res, next) => {
   try {
     const CompanyId = req.user.id;
     const allowances = await Allowance.findAll({ where: { CompanyId } });
@@ -17,31 +17,29 @@ exports.getAllAllowance = async (req, res,next) => {
       allowances,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
-
 //GET BY ID
-exports.getAllowanceById = async (req, res,next) => {
+exports.getAllowanceById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const allowance = await Allowance.findByPk(id);
     if (!allowance) {
-
-      return next(createError.createError(404,"There is no allowance with this ID"))
+      return next(createError.createError(404, "Resource not found"));
     } else {
-     return  res.status(200).json(allowance);
+      return res.status(200).json(allowance);
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
-
-
 
 // CREATE
 exports.createAllowance = async (req, res, next) => {
@@ -51,51 +49,37 @@ exports.createAllowance = async (req, res, next) => {
     const allowanceDefinitionId = req.body.allowanceDefinitionId;
 
     const allowanceDefinition = await AllowanceDefinition.findOne({
-      where:{ id: allowanceDefinitionId,
-        CompanyId: req.user.id
-      }
-    }        );
+      where: { id: allowanceDefinitionId, CompanyId: req.user.id },
+    });
 
-
-    if(!allowanceDefinition){
-      return next(createError.createError(404,"Allowance definition not found"))
+    if (!allowanceDefinition) {
+      return next(createError.createError(404, "Resource not found"));
     }
     const employee = await Employee.findOne({
-      where: { id: employeeId,
-        CompanyId: req.user.id
-       },
+      where: { id: employeeId, CompanyId: req.user.id },
       include: {
         model: Allowance,
-       
       },
     });
 
-  
-    const additionalAllowanceDefinition1 = await AdditionalAllowance.findOne(
-     {where: {id: allowanceDefinitionId,
-      CompanyId:req.user.id,
-      EmployeeId: employeeId
-     }}
-     
-    );
-  
+    const additionalAllowanceDefinition1 = await AdditionalAllowance.findOne({
+      where: {
+        id: allowanceDefinitionId,
+        CompanyId: req.user.id,
+        EmployeeId: employeeId,
+      },
+    });
 
-   
     if (!employee) {
-
-      return next(createError.createError(400,"There is no employee with this ID"))
-    } 
-    else if (additionalAllowanceDefinition1) {
-
-      return next(createError.createError(400, "Allowance definition is already added"))
-  
-    }
-    
-    else {
-
+      return next(createError.createError(404, "Resource not found"));
+    } else if (additionalAllowanceDefinition1) {
+      return next(createError.createError(400, "Duplicate resource"));
+    } else {
       const allowance = await Allowance.create({ amount });
       await allowance.setCompany(Number(req.user.id));
-      await allowance.setAdditionalAllowanceDefinition(Number(allowanceDefinitionId));
+      await allowance.setAdditionalAllowanceDefinition(
+        Number(allowanceDefinitionId)
+      );
       await allowance.setEmployee(employee);
       res.status(200).json({
         message: "Successfully Registered",
@@ -103,8 +87,9 @@ exports.createAllowance = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -119,12 +104,9 @@ exports.updateAllowance = async (req, res, next) => {
       updates.amount = amount;
     }
 
-
-    
-
     const checkAllowance = await Allowance.findOne({
-      where: {id: id}
-    })
+      where: { id: id },
+    });
 
     // return res.json(checkAllowance)
     const result = await Allowance.update({ amount }, { where: { id: id } });
@@ -133,8 +115,11 @@ exports.updateAllowance = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+
+    
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 //DE
@@ -146,12 +131,11 @@ exports.deleteAllowance = async (req, res, next) => {
       await Allowance.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res
-        .status(409)
-        .json({ message: "There is no Deduction Definition with this ID" });
+      return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

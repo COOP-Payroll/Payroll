@@ -8,6 +8,7 @@ const router = express.Router();
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
   address.updateAddress
 );

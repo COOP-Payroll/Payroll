@@ -1,13 +1,13 @@
 const Company = require("../models/company.js");
 const Taxslab = require("../models/taxslab.js");
 const User = require("../models/user.js");
-const createError  = require("../utils/error.js");
+const createError = require("../utils/error.js");
 
 function parseInfinityBack(value) {
   return value === 1000000000 ? "Infinity" : value;
 }
 
-exports.getAllTaxslabs = async (req, res,next) => {
+exports.getAllTaxslabs = async (req, res, next) => {
   try {
     if (req.user.role === "superAdmin") {
       const taxslabs = await Taxslab.findAll({
@@ -17,7 +17,6 @@ exports.getAllTaxslabs = async (req, res,next) => {
             model: Company,
             attributes: { exclude: ["password"] },
           },
-        
         ],
       });
       const taxslab = taxslabs.map((taxslab) => {
@@ -30,12 +29,9 @@ exports.getAllTaxslabs = async (req, res,next) => {
         count: taxslab.length,
         taxslab,
       });
-
-  
     } else {
       const taxslabs = await Taxslab.findAll({
         where: { CompanyId: req.user.id, isActive: true },
-       
       });
 
       const taxslab = taxslabs.map((taxslab) => {
@@ -50,19 +46,16 @@ exports.getAllTaxslabs = async (req, res,next) => {
         count: taxslab.length,
         taxslab,
       });
-     
     }
   } catch (error) {
-    console.log("error", error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-exports.getTaxslabById = async (req, res,next) => {
+exports.getTaxslabById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const taxslab = await Taxslab.findOne({ where: { id: id } });
-
 
     if (!taxslab) {
       return res.status(404).json({ message: "TaxSlab not found" });
@@ -73,14 +66,12 @@ exports.getTaxslabById = async (req, res,next) => {
       return res.json(taxslab);
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 exports.createTaxslab = async (req, res, next) => {
   try {
-
     //CHECK SUPER ADMIN
     if (req.user.role === "superAdmin") {
       const {
@@ -100,7 +91,7 @@ exports.createTaxslab = async (req, res, next) => {
       });
 
       if (checkTax.length != 0) {
-        res.status(409).json("Taxslab is already defined");
+        res.status(400).json("Taxslab is already defined");
       } else {
         const data = to_Salary == "Infinity" ? 1000000000 : to_Salary;
         // to_Salary === "Infinity" ? Infinity :to_Salary;
@@ -134,11 +125,9 @@ exports.createTaxslab = async (req, res, next) => {
           to_Salary: data,
         },
       });
-      console.log(to_Salary == "Infinity" ? 1000000000 : to_Salary);
 
       if (checkTax === "undefined" || checkTax.length === 0) {
-        console.log("to_Salary: ", data);
-        console.log("to salary", to_Salary);
+       
         const taxslab = await Taxslab.create({
           from_Salary,
           to_Salary: data,
@@ -155,12 +144,11 @@ exports.createTaxslab = async (req, res, next) => {
           taxslab,
         });
       } else {
-        res.status(409).json("Taxslab is already defined");
+        res.status(400).json("Taxslab is already defined");
       }
     }
   } catch (error) {
-    console.log(error);   
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -178,7 +166,6 @@ exports.updateTaxslab = async (req, res, next) => {
           { isActive: false, remark: remark },
           { where: { id: id } }
         );
-        // console.log(data);
 
         const taxslab = await Taxslab.create(otherData);
         await taxslab.setUser(req.user.id);
@@ -188,7 +175,7 @@ exports.updateTaxslab = async (req, res, next) => {
           .json({ message: " Tax Rule is updated successfully", taxslab });
       } else {
         return res
-          .status(409)
+          .status(400)
           .json({ message: "There is no tax rule with this ID" });
       }
     } else if (req.user.role === "companyAdmin") {
@@ -206,14 +193,13 @@ exports.updateTaxslab = async (req, res, next) => {
           .json({ message: " Tax Rule is updated successfully", taxslab });
       } else {
         return res
-          .status(409)
+          .status(400)
           .json({ message: "There is no tax rule with this ID" });
       }
     }
   } catch (error) {
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
- 
 };
 
 exports.deleteTaxslab = async (req, res, next) => {
@@ -229,12 +215,11 @@ exports.deleteTaxslab = async (req, res, next) => {
         .json({ message: " Tax Rule is Deleted successfully" });
     } else {
       return res
-        .status(409)
+        .status(400)
         .json({ message: "There is no tax rule with this ID" });
     }
   } catch (error) {
-    console.log("first", error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -273,8 +258,7 @@ exports.assignTaxruleToCompany = async (req, res, next) => {
 
     return res.json(taxRule);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -287,22 +271,18 @@ exports.getCompanyWITHtAXSLAB = async (req, res, next) => {
     const taxRule = await Taxslab.findByPk(taxRuleId);
 
     if (!taxRule) {
-      console.log("Tax rule not found");
       return;
     }
 
     const associatedCompanies = await Taxslab.getCompany();
 
-    console.log("Companies assigned to the tax rule:", associatedCompanies);
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 //RESTORE
 
 //MULTIPLE UPDATE
-
 
 exports.updateMany = async (req, res, next) => {
   try {
@@ -329,7 +309,6 @@ exports.updateMany = async (req, res, next) => {
         (acc, count) => acc + count,
         0
       );
-      console.log("first", totalUpdatedCount);
       res
         .status(201)
         .json({ message: `Updated ${totalUpdatedCount} tax slabs` });
@@ -354,17 +333,14 @@ exports.updateMany = async (req, res, next) => {
         (acc, count) => acc + count,
         0
       );
-      console.log("first", totalUpdatedCount);
       res
         .status(201)
         .json({ message: `Updated ${totalUpdatedCount} tax slabs` });
     }
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-
 
 exports.restoreToDefault = async (req, res, next) => {
   try {
@@ -379,7 +355,6 @@ exports.restoreToDefault = async (req, res, next) => {
         isActive: true,
       },
     });
-
 
     const tax = await Promise.all(
       taxslabs.map((taxslab) => {
@@ -399,24 +374,19 @@ exports.restoreToDefault = async (req, res, next) => {
       tax,
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-exports.createNewTaxslab= async(req,res,next)=>{
+exports.createNewTaxslab = async (req, res, next) => {
   try {
-    const {first_Name,last_Name,email,}=req.body;
-    if(!first_Name){
+    const { first_Name, last_Name, email } = req.body;
+    if (!first_Name) {
       return res.status(404).json({
-        message:"please enter firstname"
-      })
+        message: "please enter firstname",
+      });
     }
-
-
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'));
-    
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
-}
+};

@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const Company = sequelize.define("Company", {
   name: {
     type: DataTypes.STRING,
-    allowNull: false,
+    // allowNull: false,
   },
   numberOfEmployees: {
     type: DataTypes.INTEGER,
@@ -21,7 +21,7 @@ const Company = sequelize.define("Company", {
     allowNull: false,
     validate: {
       notNull: {
-        msg: 'Organization name cannot be null.',
+        msg: "Organization name cannot be null.",
       },
     },
   },
@@ -52,7 +52,7 @@ const Company = sequelize.define("Company", {
   },
   jobTitle: {
     type: DataTypes.STRING,
-    allowNull: false,
+    // allowNull: false,
   },
   companyCode: {
     type: DataTypes.STRING,
@@ -74,27 +74,27 @@ const Company = sequelize.define("Company", {
   },
   primary_Color: {
     type: DataTypes.STRING,
-    defaultValue:'#1234'
+    defaultValue: "#00adef",
   },
   primary_Font_Color: {
     type: DataTypes.STRING,
-    defaultValue:'123456'
+    defaultValue: "#000000",
   },
   primary_Gradient_Color: {
     type: DataTypes.STRING,
-    defaultValue:'#fff'
+    defaultValue: "",
   },
   secondary_Color: {
     type: DataTypes.STRING,
-    defaultValue:'#fff'
+    defaultValue: "#008000",
   },
   secondary_Font_Color: {
     type: DataTypes.STRING,
-    defaultValue:'#fff'
+    defaultValue: "#ffffff",
   },
   secondary_Gradient_Color: {
     type: DataTypes.STRING,
-    defaultValue:'#fff'
+    defaultValue: "",
   },
   social_Media_Images: {
     type: DataTypes.BOOLEAN,
@@ -114,39 +114,37 @@ const Company = sequelize.define("Company", {
     type: DataTypes.STRING,
   },
 
-  accountNumber:{
-    type:DataTypes.STRING,
-  
+  accountNumber: {
+    type: DataTypes.STRING,
   },
   isProjectBased: {
-
-    type:DataTypes.BOOLEAN,
-    defaultValue:false,
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
   isSetted: {
-    type:DataTypes.BOOLEAN,
-    defaultValue:false,
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
-  resetPasswordToken:{
-    type:DataTypes.STRING,
+  resetPasswordToken: {
+    type: DataTypes.STRING,
   },
-  resetPasswordTokenCreatedAt:{
-    type:DataTypes.DATE,
-  }
-  
+  resetPasswordTokenCreatedAt: {
+    type: DataTypes.DATE,
+  },
 });
 
 Company.beforeCreate((company, options) => {
   const saltRounds = 10;
-  if(company.password!=null && company.password === ''){
-  return bcrypt
-    .hash(company.password, saltRounds)
-    .then((hash) => {
-      company.password = hash;
-    })
-    .catch((err) => {
-      throw new Error(err);
-    });}
+  if (company.password != null && company.password === "") {
+    return bcrypt
+      .hash(company.password, saltRounds)
+      .then((hash) => {
+        company.password = hash;
+      })
+      .catch((err) => {
+        throw new Error(err);
+      });
+  }
 });
 
 Company.beforeUpdate((company, options) => {
@@ -162,7 +160,6 @@ Company.beforeUpdate((company, options) => {
       });
   }
 });
-
 
 // Company.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Company;

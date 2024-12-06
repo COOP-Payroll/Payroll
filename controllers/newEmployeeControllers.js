@@ -24,6 +24,13 @@ const xlsx = require("xlsx");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
 const path = require("path");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const CustomRole = require("../models/customRole.js");
+const Permission = require("../models/permission.js");
+const Company = require("../models/company.js");
+const { clearScreenDown } = require("readline");
+
 exports.createEmployee = async (req, res, next) => {
   const {
     address,
@@ -34,11 +41,8 @@ exports.createEmployee = async (req, res, next) => {
   } = req.body;
 
   try {
-    // return res.json(req.basicInfo)
-
-    console.log("department", !basicInfo?.DepartmentId);
-    console.log("department", !basicInfo?.GradeId);
-    console.log("department", !basicInfo?.emergencyInfo);
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
     if (!basicInfo?.DepartmentId || !basicInfo?.GradeId) {
       return next(
@@ -56,18 +60,23 @@ exports.createEmployee = async (req, res, next) => {
     const accountNumbers = accountInformation?.map(
       (acct) => acct.accountNumber
     );
-    // console.log('employeIfo', employeeInfo.position)
     const [position, grade, department, employee, accountInfos, idformat] =
       await Promise.all([
         Position.findOne({
-          where: { id: Number(employeeInfo.position), CompanyId: req.user.id },
+          where: { id: Number(employeeInfo.position), CompanyId: CompanyId },
         }),
-        Grade.findByPk(Number(basicInfo?.GradeId)),
-        Department.findByPk(Number(basicInfo?.DepartmentId)),
-        Employee.findOne({ where: { email: basicInfo?.email } }),
-        AccountInfo.findAll({ where: { accountNumber: accountNumbers } }),
+        Grade.findOne({ where: { id: Number(basicInfo?.GradeId), CompanyId } }),
+        Department.findOne({
+          where: { id: Number(basicInfo?.DepartmentId), CompanyId },
+        }),
+        Employee.findOne({
+          where: { email: basicInfo?.email, CompanyId },
+        }),
+        AccountInfo.findAll({
+          where: { accountNumber: accountNumbers, CompanyId },
+        }),
         IdFormat.findOne({
-          where: { CompanyId: Number(req.user.id), isActive: true },
+          where: { CompanyId, isActive: true },
         }),
       ]);
 
@@ -126,6 +135,7 @@ exports.createEmployee = async (req, res, next) => {
     // }
 
     let password = req?.user?.companyCode?.substring(0, 4) + "0000";
+
     await sequelize.transaction(async (t) => {
       const imagePath = req?.files?.["basicInfo[image]"]?.[0]?.path || null;
       const idImagePath =
@@ -181,7 +191,6 @@ exports.createEmployee = async (req, res, next) => {
         },
         { transaction: t }
       );
-      // console.log("data")
       const junctionCreate = await EmployeeDepartment.create(
         {
           EmployeeId: Number(createEmployee.id),
@@ -248,14 +257,10 @@ exports.createEmployee = async (req, res, next) => {
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 7);
 
-      // Format the expiration date as a string
       const formattedExpirationDate = expirationDate.toDateString();
 
-      // Generate unique acceptance and rejection codes
       const acceptanceCode = token;
       const rejectionCode = expirationDate;
-      // console.log('generateUniqueCode', acceptanceCode)
-      // console.log('rejection code', rejectionCode)
 
       const URL = "https://payroll-production.up.railway.app";
       createEmployee.acceptanceCode = acceptanceCode;
@@ -292,17 +297,14 @@ exports.createEmployee = async (req, res, next) => {
       });
     });
   } catch (error) {
-    console.log("eror");
-    console.error("Error creating records:", error);
-
     return next(
       createError.createError(
-        500,
+        503,
         "An error occurred while creating the records."
       )
     );
     // return res
-    //   .status(500)
+    //   .status(503)
     //   .json({ error: 'An error occurred while creating the records.' })
   }
 };
@@ -320,7 +322,6 @@ exports.updateEmployee = async (req, res, next) => {
       employement_Type,
     } = req.body;
     const status = false;
-    console.log("GradeID ", grossEarning);
 
     const employee = await Employee.findByPk(
       Number(req.params.id),
@@ -362,8 +363,7 @@ exports.updateEmployee = async (req, res, next) => {
         transaction,
       }
     );
-    // return res.json(employee)
-    // console.log('employee',employee)
+
     if (!employee) {
       await transaction.rollback();
       return res.status(404).json({ error: "Employee not found" });
@@ -383,7 +383,7 @@ exports.updateEmployee = async (req, res, next) => {
     //     if (basicSalary < grade?.minSalary || basicSalary > grade?.maxSalary) {
     //       return next(
     //         createError.createError(
-    //           409,
+    //           400,
     //           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
     //         )
     //       )
@@ -391,7 +391,7 @@ exports.updateEmployee = async (req, res, next) => {
     //   } else {if(employee.basicSalary < grade?.minSalary || employee.basicSalary > grade?.maxSalary) {
     //       return next(
     //         createError.createError(
-    //           409,
+    //           400,
     //           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
     //         )
     //       )
@@ -492,7 +492,6 @@ exports.updateEmployee = async (req, res, next) => {
       const jointData = await EmployeeDepartment.findOne({
         where: { EmployeeId: employee.id, active: true },
       });
-      console.log("joint data", jointData);
 
       if (jointData) {
         await jointData.update({ active: false }, { transaction });
@@ -541,26 +540,12 @@ exports.updateEmployee = async (req, res, next) => {
       // oldEmployee: updateEmployee,
     });
   } catch (error) {
-    await transaction.rollback();
-    console.error(error);
-    if (
-      error.name === "SequelizeValidationError" ||
-      error.name === "SequelizeUniqueConstraintError"
-    ) {
-      const errors = error.errors.reduce((acc, err) => {
-        acc[err.path] = [`${err.path} is required`];
-        return acc;
-      }, {});
-      return res.status(404).json({ message: errors });
-    }
-    console.log(error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(503).json({ message: "Internal server error" });
   }
 };
 
 exports.getAllEmployee = async (req, res, next) => {
   try {
-    console.log("hete");
     const employees = await Employee.findAll({
       where: { CompanyId: Number(req.user.id) },
       exclude: ["password"],
@@ -673,7 +658,7 @@ exports.getAllEmployee = async (req, res, next) => {
   } catch (error) {
     // con=
     return res
-      .status(500)
+      .status(503)
       .json({ error: "there is a problem fetching employees" });
   }
 };
@@ -710,9 +695,7 @@ exports.confirmaRegistration = async (req, res, next) => {
     //    res.status(400).send("Invalid or expired confirmation link");
     //  }
     res.status(200).json("employee", employee);
-  } catch (error) {
-    console.log("error", error);
-  }
+  } catch (error) {}
 };
 
 //   <p>Dear ${createEmployee.fullname},</p>
@@ -768,7 +751,9 @@ exports.promotion = async (req, res, next) => {
 
     if (!employee) {
       await transaction.rollback();
-      return res.status(404).json({ error: "Employee not found" });
+
+      return next(createError.createError(404, "Employee not found"));
+      // return res.status(404).json({ error: "Employee not found" });
     }
 
     //   if(position){
@@ -836,8 +821,8 @@ exports.promotion = async (req, res, next) => {
           employeeBasicsalary < grade.minSalary ||
           employeeBasicsalary > grade.maxSalary
         ) {
-          return res.status(409).json({
-            error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`,
+          return res.status(400).json({
+            message: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`,
           });
         }
 
@@ -931,7 +916,6 @@ exports.promotion = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error(error);
     next(error);
   }
 };
@@ -993,9 +977,10 @@ exports.updatedBasicInfo = async (req, res, next) => {
     // ? req.files?.['image']?.[0]?.path
     // : employee.image
 
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -1009,7 +994,7 @@ exports.updateTermination = async (req, res, next) => {
     if (!terminantionDate || !terminationReason) {
       return next(
         createError.createError(
-          500,
+          503,
           "Please enter a valid termination date and  termination reason"
         )
       );
@@ -1029,7 +1014,7 @@ exports.updateTermination = async (req, res, next) => {
         { transaction }
       );
     }
-    console.log("department", employeeInfo);
+
     const newEmployeeInfo = await EmployeeInfo.create(
       {
         isActive: true,
@@ -1060,9 +1045,10 @@ exports.updateTermination = async (req, res, next) => {
       message: "Employee basic information updated successfully",
     });
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal Server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -1087,12 +1073,8 @@ exports.updateEmergencyContact = async (req, res, next) => {
         await existingRecord.update(updatedData, { transaction });
         updatedRecords.push(existingRecord);
       } else {
-        // If the record doesn't exist, throw an error or handle it accordingly
-        // throw new Error(`Record with ID ${id} does not exist.`);
         await transaction.rollback();
-        return next(
-          createError.createError(404, `Record with ID ${id} does not exist`)
-        );
+        return next(createError.createError(404, `Employee record not found`));
       }
     }
     await transaction.commit();
@@ -1104,9 +1086,10 @@ exports.updateEmergencyContact = async (req, res, next) => {
     // The updatedRecords array now contains the updated records
     // console.log(updatedRecords);
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal Server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -1158,9 +1141,10 @@ exports.updateAccountInfo = async (req, res, next) => {
       message: "Account information updated successfully",
     });
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal Server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.getEmployeeHistory = async (req, res, next) => {
@@ -1189,13 +1173,145 @@ exports.getEmployeeHistory = async (req, res, next) => {
     });
 
     // Further processing or displaying of filtered positions
-    console.log(filteredPositions);
 
     // Return response with filtered positions
     return res.status(200).json(filteredPositions);
   } catch (error) {
-    console.error(error);
-    return next(createError.createError(500, "Internal Server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+
+// LOGIN HANDLER
+exports.employeeLogin = async (req, res, next) => {
+  try {
+    const { email, password, companyCode } = req.body;
+
+    // const CompanyId =
+    //   req.user.role == "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    // Validate input
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Please provide both email and password." });
+    }
+
+    // Fetch employee
+    const employee = await Employee.findOne({
+      where: { email },
+      include: [
+        {
+          model: CustomRole,
+          include: [
+            {
+              model: Permission,
+              attributes: ["id", "module", "isAccessible"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!employee) {
+      return next(
+        createError.createError(
+          401,
+          "Invalid credentials. Employee does not exist."
+        )
+      );
+    }
+
+    const employeeCompanyCode = await Company.findOne({
+      where: { id: employee.CompanyId },
+    });
+
+    // Check if password matches
+    const isPasswordCorrect = await bcrypt.compare(password, employee.password);
+    if (!isPasswordCorrect || employeeCompanyCode.companyCode != companyCode) {
+      return res.status(401).json({
+        message: "Unauthorized access - Invalid email or password.",
+      });
+    }
+
+    if (!employee.isActive) {
+      return res.status(401).json({
+        message: "Your account is deactivated. Please contact admin.",
+      });
+    }
+
+    createSendToken(employee, 200, res);
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+
+// SIGN TOKEN FUNCTION
+const signToken = (id, role, fullName, phoneNumber, permissions) => {
+  try {
+    const token = jwt.sign(
+      { id, role, fullName, phoneNumber, permissions },
+      "secret",
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    const refreshToken = jwt.sign(
+      { id, role, fullName, phoneNumber, permissions },
+      "refreshSecret",
+      {
+        expiresIn: "90d",
+      }
+    );
+
+    return { token, refreshToken };
+  } catch (error) {
+    throw new Error("Failed to sign token");
+  }
+};
+
+// CREATE SEND TOKEN FUNCTION
+const createSendToken = (employee, statusCode, res) => {
+  try {
+    const permissionsList =
+      employee.CustomRole && Array.isArray(employee.CustomRole.Permissions)
+        ? employee.CustomRole.Permissions.map((perm) => ({
+            id: perm.id,
+            module: perm.module,
+            isAccessible: perm.isAccessible,
+          }))
+        : [];
+
+    const { token, refreshToken } = signToken(
+      employee.id,
+      employee.role,
+      employee.fullname,
+      employee.phoneNumber,
+      permissionsList
+    );
+
+    // Set cookie options
+    const cookieOptions = {
+      expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000), // 1 day
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+    };
+
+    // Remove password from response
+    employee.password = undefined;
+
+    // Send response
+    res.cookie("jwt", token, cookieOptions);
+    res.status(statusCode).json({
+      token,
+      refreshToken,
+    });
+  } catch (error) {
+    throw new Error("Failed to create and send token");
   }
 };
 
@@ -1248,7 +1364,7 @@ exports.getEmployeeHistory = async (req, res, next) => {
 //     return res.status(200).json(employeeHistory);
 //   } catch (error) {
 //     console.error(error);
-//     return next(createError.createError(500, 'Internal Server Error'));
+//     return next(createError.createError(503, 'Internal Server Error'));
 //   }
 // }
 
@@ -1326,7 +1442,7 @@ exports.getEmployeeHistory = async (req, res, next) => {
 //     )
 //   } catch (error) {
 //     console.log(error)
-//     return next(createError.createError(500, 'Internal Server Error'))
+//     return next(createError.createError(503, 'Internal Server Error'))
 //   }
 // }
 
@@ -1367,9 +1483,8 @@ exports.updateEmployementInfo = async (req, res, next) => {
       message: "Employee information updated successfully",
     });
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    next(createError.createError(500, "Internal server error"));
+    next(createError.createError(503, "Internal server error"));
   }
 };
 
@@ -1378,10 +1493,152 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
   try {
     return res.status(200).json(req.body);
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
+
+// exports.downloadEmployeeTemplate = async (req, res, next) => {
+//   try {
+//     const departments = await Department.findAll();
+//     const positions = await Position.findAll();
+//     const grades = await Grade.findAll();
+//     const workbook = new ExcelJS.Workbook();
+
+//     // Define your dropdown options
+//     const idTypeOptions = {
+//       "Driving License": "Driving License",
+//       Passport: "Passport",
+//       // Add more options as needed
+//     };
+
+//     // Employee data sheet
+//     const employeeSheet = workbook.addWorksheet("Employees");
+//     employeeSheet.columns = [
+//       { header: "fullname", key: "fullname", width: 30 },
+//       { header: "sex", key: "sex", width: 10 },
+//       { header: "date_of_birth", key: "date_of_birth", width: 15 },
+//       { header: "DepartmentId", key: "DepartmentId", width: 15 },
+//       { header: "GradeId", key: "GradeId", width: 15 },
+//       { header: "marriageStatus", key: "marriageStatus", width: 15 },
+//       { header: "isActive", key: "isActive", width: 10 },
+//       { header: "nationality", key: "nationality", width: 15 },
+//       { header: "email", key: "email", width: 30 },
+//       { header: "phoneNumber", key: "phoneNumber", width: 20 },
+//       { header: "optionalPhoneNumber", key: "optionalPhoneNumber", width: 20 },
+//       { header: "id_type", key: "id_type", width: 15 },
+//       { header: "id_Number", key: "id_Number", width: 20 },
+//       { header: "country", key: "country", width: 15 },
+//       { header: "state", key: "state", width: 15 },
+//       { header: "zone_or_city", key: "zone_or_city", width: 15 },
+//       { header: "woreda", key: "woreda", width: 15 },
+//       { header: "kebele", key: "kebele", width: 15 },
+//       { header: "houseNumber", key: "houseNumber", width: 15 },
+//       { header: "employeeTIN", key: "employeeTIN", width: 20 },
+//       { header: "hireDate", key: "hireDate", width: 20 },
+//       { header: "employee_Code", key: "employee_Code", width: 20 },
+//       { header: "basicSalary", key: "basicSalary", width: 20 },
+//       { header: "position", key: "position", width: 15 },
+//       { header: "siteLocation", key: "siteLocation", width: 15 },
+//       { header: "emergency_relation", key: "emergency_relation", width: 20 },
+//       {
+//         header: "emergency_phoneNumber",
+//         key: "emergency_phoneNumber",
+//         width: 20,
+//       },
+//       { header: "emergency_fullname", key: "emergency_fullname", width: 30 },
+//       { header: "accountNumber", key: "accountNumber", width: 30 },
+//     ];
+
+//     // Apply data validation for the id_type column using dropdown with mapped options
+//     employeeSheet
+//       .getColumn("id_type")
+//       .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//         if (rowNumber === 1) return; // Skip header row
+//         cell.dataValidation = {
+//           type: "list",
+//           allowBlank: true,
+//           formula1: Object.values(idTypeOptions), // Using Object.values to get the values array
+//           showErrorMessage: true,
+//           errorTitle: "Invalid Option",
+//           error: "Please select a valid option",
+//         };
+//       });
+
+//     // Apply date format for the date_of_birth column
+//     employeeSheet
+//       .getColumn("date_of_birth")
+//       .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//         if (rowNumber === 1) return; // Skip header row
+//         cell.numFmt = "mm/dd/yyyy"; // Apply date format
+//         cell.dataValidation = {
+//           type: "date",
+//           operator: "greaterThan",
+//           formula1: "1900-01-01", // Date must be after this date
+//           showErrorMessage: true,
+//           errorTitle: "Invalid Date",
+//           error: "Please enter a valid date",
+//         };
+//       });
+
+//     // Department data sheet
+//     const departmentSheet = workbook.addWorksheet("Departments");
+//     departmentSheet.columns = [
+//       { header: "Department ID", key: "id", width: 15 },
+//       { header: "Department Name", key: "deptName", width: 30 },
+//     ];
+//     departments.forEach((department) => {
+//       departmentSheet.addRow({
+//         id: department.id,
+//         deptName: department.deptName,
+//       });
+//     });
+
+//     // Position data sheet
+//     const positionSheet = workbook.addWorksheet("Positions");
+//     positionSheet.columns = [
+//       { header: "Position ID", key: "id", width: 15 },
+//       { header: "Position Name", key: "name", width: 30 },
+//     ];
+//     positions.forEach((position) => {
+//       positionSheet.addRow({ id: position.id, name: position.positionName });
+//     });
+
+//     // Grade data sheet
+//     const gradeSheet = workbook.addWorksheet("Grades");
+//     gradeSheet.columns = [
+//       { header: "Grade ID", key: "id", width: 15 },
+//       { header: "Grade Name", key: "name", width: 20 },
+//       { header: "minSalary", key: "minSalary", width: 20 },
+//       { header: "maxSalary", key: "maxSalary", width: 20 },
+//     ];
+//     grades.forEach((grade) => {
+//       gradeSheet.addRow({
+//         id: grade.id,
+//         name: grade.name,
+//         minSalary: grade.minSalary,
+//         maxSalary: grade.maxSalary,
+//       });
+//     });
+
+//     // Set the response content type
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+//     res.setHeader(
+//       "Content-Disposition",
+//       "attachment; filename=employee_template.xlsx"
+//     );
+
+//     await workbook.xlsx.write(res);
+//     res.end();
+//   } catch (error) {
+//     console.error("Error generating template:", error);
+//     next(createError.createError(503, "Internal Server Error"));
+//   }
+// };
 
 exports.downloadEmployeeTemplate = async (req, res, next) => {
   try {
@@ -1390,88 +1647,58 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
     const grades = await Grade.findAll();
     const workbook = new ExcelJS.Workbook();
 
-    // Define your dropdown options
-    const idTypeOptions = {
-      "Driving License": "Driving License",
-      "Passport": "Passport",
-      // Add more options as needed
-    };
-
-    // Employee data sheet
-    const employeeSheet = workbook.addWorksheet("Employees");
-    employeeSheet.columns = [
-      { header: "fullname", key: "fullname", width: 30 },
-      { header: "sex", key: "sex", width: 10 },
-      { header: "date_of_birth", key: "date_of_birth", width: 15 },
-      { header: "DepartmentId", key: "DepartmentId", width: 15 },
-      { header: "GradeId", key: "GradeId", width: 15 },
-      { header: "marriageStatus", key: "marriageStatus", width: 15 },
-      { header: "isActive", key: "isActive", width: 10 },
-      { header: "nationality", key: "nationality", width: 15 },
-      { header: "email", key: "email", width: 30 },
-      { header: "phoneNumber", key: "phoneNumber", width: 20 },
-      { header: "optionalPhoneNumber", key: "optionalPhoneNumber", width: 20 },
-      { header: "id_type", key: "id_type", width: 15 },
-      { header: "id_Number", key: "id_Number", width: 20 },
-      { header: "country", key: "country", width: 15 },
-      { header: "state", key: "state", width: 15 },
-      { header: "zone_or_city", key: "zone_or_city", width: 15 },
-      { header: "woreda", key: "woreda", width: 15 },
-      { header: "kebele", key: "kebele", width: 15 },
-      { header: "houseNumber", key: "houseNumber", width: 15 },
-      { header: "employeeTIN", key: "employeeTIN", width: 20 },
-      { header: "hireDate", key: "hireDate", width: 20 },
-      { header: "employee_Code", key: "employee_Code", width: 20 },
-      { header: "basicSalary", key: "basicSalary", width: 20 },
-      { header: "position", key: "position", width: 15 },
-      { header: "siteLocation", key: "siteLocation", width: 15 },
-      { header: "emergency_relation", key: "emergency_relation", width: 20 },
-      { header: "emergency_phoneNumber", key: "emergency_phoneNumber", width: 20 },
-      { header: "emergency_fullname", key: "emergency_fullname", width: 30 },
-      { header: "accountNumber", key: "accountNumber", width: 30 },
+    // Add an instructions sheet
+    const instructionsSheet = workbook.addWorksheet("Instructions");
+    instructionsSheet.columns = [
+      { header: "Instructions", key: "instructions", width: 150 },
     ];
 
-    // Apply data validation for the id_type column using dropdown with mapped options
-    employeeSheet.getColumn('id_type').eachCell({ includeEmpty: true }, (cell, rowNumber) => {
-      if (rowNumber === 1) return; // Skip header row
-      cell.dataValidation = {
-        type: 'list',
-        allowBlank: true,
-        formula1: Object.values(idTypeOptions), // Using Object.values to get the values array
-        showErrorMessage: true,
-        errorTitle: 'Invalid Option',
-        error: 'Please select a valid option',
-      };
+    // Apply bold and font size to the header
+    instructionsSheet.getRow(1).font = {
+      bold: true,
+      size: 20,
+      color: { argb: "FFFFFF" },
+    }; // Bold and font size for the header
+    instructionsSheet.getRow(1).alignment = { horizontal: "center" }; // Center-align the header
+    instructionsSheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0070C0" },
+    };
+    const instructionsRows = [
+      "1. Please refer to the 'Grades' sheet to view the available grade names and their corresponding salary ranges (Min Salary and Max Salary).",
+      "2. When entering a salary in the 'Employees' sheet, ensure the salary falls within the Min and Max Salary range specified for the corresponding grade.",
+      "3. For fields such as 'Sex' and 'Marital Status', please select from the provided dropdown options. The 'Sex' field allows the selection of either 'MALE' or 'FEMALE', and the 'Marital Status' field provides options like 'Single', 'Married', etc.",
+      "4. For the 'Date of Birth' field, please ensure the date is entered in the format 'mm/dd/yyyy'. Use the calendar picker to select a date or enter the value manually in the correct format.",
+      "5. The 'Email', 'Account Number', and 'Phone Number' fields must be unique. Please ensure that no duplicate values are entered in these fields. The 'Email' must follow the correct format (e.g., example@domain.com), the 'Account Number' must be unique for each employee, and the 'Phone Number' must also be unique.",
+    ];
+
+    // Add and style instruction rows
+    instructionsRows.forEach((text, index) => {
+      const row = instructionsSheet.addRow({ instructions: text });
+      row.font = { bold: true, size: 12 }; // Make the text bold and set font size
+      row.alignment = { wrapText: true }; // Wrap the text for better readability
     });
 
-    // Apply date format for the date_of_birth column
-    employeeSheet.getColumn('date_of_birth').eachCell({ includeEmpty: true }, (cell, rowNumber) => {
-      if (rowNumber === 1) return; // Skip header row
-      cell.numFmt = 'mm/dd/yyyy'; // Apply date format
-      cell.dataValidation = {
-        type: 'date',
-        operator: 'greaterThan',
-        formula1: '1900-01-01', // Date must be after this date
-        showErrorMessage: true,
-        errorTitle: 'Invalid Date',
-        error: 'Please enter a valid date',
-      };
-    });
-
-    // Department data sheet
     const departmentSheet = workbook.addWorksheet("Departments");
     departmentSheet.columns = [
       { header: "Department ID", key: "id", width: 15 },
       { header: "Department Name", key: "deptName", width: 30 },
     ];
-    departments.forEach((department) => {
+    // departments.forEach((department) => {
+    //   departmentSheet.addRow({
+    //     id: department.id,
+    //     deptName: department.deptName,
+    //   });
+    // });
+    // Populate the Departments sheet
+    departments.forEach((department, index) => {
       departmentSheet.addRow({
         id: department.id,
         deptName: department.deptName,
       });
     });
 
-    // Position data sheet
     const positionSheet = workbook.addWorksheet("Positions");
     positionSheet.columns = [
       { header: "Position ID", key: "id", width: 15 },
@@ -1481,24 +1708,252 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
       positionSheet.addRow({ id: position.id, name: position.positionName });
     });
 
-    // Grade data sheet
+    // positions.forEach((position, index) => {
+    //   positionSheet.addRow({
+    //     id: position.id,
+    //     positionName: position.positionName,
+    //   });
+    // });
+    const employeeSheet = workbook.addWorksheet("Employees");
     const gradeSheet = workbook.addWorksheet("Grades");
     gradeSheet.columns = [
-      { header: "Grade ID", key: "id", width: 15 },
+      // { header: "Grade ID", key: "id", width: 15 },
       { header: "Grade Name", key: "name", width: 20 },
       { header: "minSalary", key: "minSalary", width: 20 },
       { header: "maxSalary", key: "maxSalary", width: 20 },
     ];
+    const headerRow = gradeSheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 13 };
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF0070C0" }, // Blue background
+      };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+
     grades.forEach((grade) => {
-      gradeSheet.addRow({
-        id: grade.id,
+      const row = gradeSheet.addRow({
         name: grade.name,
         minSalary: grade.minSalary,
         maxSalary: grade.maxSalary,
       });
+
+      // Align the body content to the left
+      row.eachCell((cell) => {
+        cell.font = { bold: true, size: 12 };
+        cell.alignment = { vertical: "middle", horizontal: "left" }; // Align content to left
+      });
+    });
+    // grades.forEach((grade, index) => {
+    //   gradeSheet.addRow({
+    //     id: grade.id,
+    //     name: grade.name,
+    //     minSalary: grade.minSalary,
+    //     maxSalary: grade.maxSalary,
+    //   });
+    // });
+
+    employeeSheet.columns = [
+      { header: "FULL NAME", key: "fullname", width: 30 },
+      { header: "SEX", key: "sex", width: 25 },
+      {
+        header: "DATE OF BIRTH",
+        key: "date_of_birth",
+        style: { numFmt: "mm/dd/yyyy" },
+        width: 20,
+      },
+      { header: "DEPARTMENT ", key: "DepartmentId", width: 30 },
+      { header: "GRADE ", key: "GradeId", width: 30 },
+      { header: "MARRIAGE STATUS", key: "marriageStatus", width: 30 },
+      { header: "NATIONALITY", key: "nationality", width: 25 },
+      { header: "EMAIL", key: "email", width: 30 },
+      { header: "ID-TYPE", key: "id_type", width: 30 },
+      // { header: "ID TYPE", key: "id_type", width: 20 },
+      { header: "ID NUMBER", key: "id_Number", width: 30 },
+      { header: "PHONE NUMBER", key: "phoneNumber", width: 30 },
+      {
+        header: "OPTIONAL PHONE NUMBER",
+        key: "optionalPhoneNumber",
+        width: 30,
+      },
+      { header: "COUNTRY", key: "country", width: 30 },
+      { header: "STATE", key: "state", width: 30 },
+      { header: "ZONE OR CITY", key: "zone_or_city", width: 30 },
+      { header: "WOREDA", key: "woreda", width: 30 },
+      { header: "KEBELE", key: "kebele", width: 30 },
+      { header: "HOUSE NUMBER", key: "houseNumber", width: 25 },
+      { header: "EMPLOYEE TIN", key: "employeeTIN", width: 30 },
+      { header: "HIRE DATE", key: "hireDate", width: 30 },
+      { header: "EMPLOYEE CODE", key: "employee_Code", width: 30 },
+      { header: "BASIC SALARY", key: "basicSalary", width: 30 },
+      { header: "POSITION", key: "positionId", width: 30 },
+      // { header: "SITE LOCATION", key: "siteLocation", width: 15 },
+      { header: "EMERGENCY RELATION", key: "emergency_relation", width: 45 },
+      {
+        header: "EMERGENCY PHONE NUMBER",
+        key: "emergency_phoneNumber",
+        width: 45,
+      },
+      { header: "EMERGENCY FULL NAME", key: "emergency_fullname", width: 45 },
+      { header: "ACCOUNT NUMBER", key: "accountNumber", width: 45 },
+    ];
+
+    // Define your options
+    const SEX_LIST = ["Male", "Female"];
+    const MARITALSTATUS = ["Single", "Married", "Divorced"];
+    const IDTYPE = ["kebele", "passport", "driving License"];
+    const departmentNames = departments.map((dept) => dept.deptName);
+    const positionNames = positions.map((dept) => dept.positionName);
+    const gradeNames = grades.map((dept) => dept.name);
+    // Create hidden sheets for options
+    const secondSheet = workbook.addWorksheet("SexOptions", { visible: false });
+    const maritalStatusSheet = workbook.addWorksheet("maritalstatusOptions", {
+      visible: false,
+    });
+    const idTypeSheet = workbook.addWorksheet("idTypeOptions", {
+      visible: false,
     });
 
-    // Set the response content type
+    // Populate hidden sheets with options
+    SEX_LIST.forEach(
+      (value, index) => (secondSheet.getCell(`A${index + 1}`).value = value)
+    );
+    MARITALSTATUS.forEach(
+      (value, index) =>
+        (maritalStatusSheet.getCell(`A${index + 1}`).value = value)
+    );
+    IDTYPE.forEach(
+      (value, index) => (idTypeSheet.getCell(`A${index + 1}`).value = value)
+    );
+
+    // Apply drop-down validation for columns
+    const header = employeeSheet.getRow(1);
+
+    const stateSize = secondSheet.getColumn(1).values.length;
+    const maritalStatusSize = maritalStatusSheet.getColumn(1).values.length;
+    const idTypeSize = idTypeSheet.getColumn(1).values.length;
+
+    header.eachCell((cell, colNumber) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF0070C0" },
+      };
+      cell.font = { color: { argb: "ffffff" }, bold: true, size: 13 };
+
+      if (cell.value === "SEX") {
+        for (let i = 2; i <= 100; i++) {
+          const sexCell = employeeSheet.getCell(`B${i}`);
+          sexCell.dataValidation = {
+            type: "list",
+            allowBlank: true,
+            formulae: [`SexOptions!$A$1:$A$${stateSize}`],
+          };
+        }
+      }
+
+      for (let row = 2; row <= 100; row++) {
+        const departmentCell = employeeSheet.getCell(`D${row}`); // Department column (D)
+
+        departmentCell.dataValidation = {
+          type: "list",
+          allowBlank: true,
+          showDropDown: true,
+          formulae: [`"${departmentNames.join(",")}"`],
+        };
+      }
+
+      ///POSITION
+
+      for (let row = 2; row <= 100; row++) {
+        const departmentCell = employeeSheet.getCell(`W${row}`); // Department column (D)
+
+        departmentCell.dataValidation = {
+          type: "list",
+          allowBlank: true,
+          showDropDown: true,
+          formulae: [`"${positionNames.join(",")}"`],
+        };
+      }
+
+      //GRADE
+      for (let row = 2; row <= 100; row++) {
+        const departmentCell = employeeSheet.getCell(`E${row}`); // Department column (D)
+
+        departmentCell.dataValidation = {
+          type: "list",
+          allowBlank: true,
+          showDropDown: true,
+          formulae: [`"${gradeNames.join(",")}"`],
+        };
+      }
+      if (cell.value === "MARRIAGE STATUS") {
+        for (let i = 2; i <= 100; i++) {
+          const maritalStatusCell = employeeSheet.getCell(`F${i}`);
+          maritalStatusCell.dataValidation = {
+            type: "list",
+            allowBlank: true,
+            showDropDown: true,
+
+            formulae: [`maritalstatusOptions!$A$1:$A$${maritalStatusSize}`],
+          };
+        }
+      }
+
+      if (cell.value === "ID-TYPE") {
+        for (let i = 2; i <= 100; i++) {
+          const idTypeCell = employeeSheet.getCell(`I${i}`);
+          idTypeCell.dataValidation = {
+            type: "list",
+            allowBlank: true,
+            formulae: [`idTypeOptions!$A$1:$A$${idTypeSize}`],
+          };
+        }
+      }
+    });
+
+    const dobColumn = employeeSheet.getColumn("C"); // 'C' is for DATE OF BIRTH column
+
+    secondSheet.state = "hidden";
+    maritalStatusSheet.state = "hidden";
+    idTypeSheet.state = "hidden";
+    departmentSheet.state = "hidden";
+    positionSheet.state = "hidden";
+
+    header.commit();
+
+    employeeSheet
+      .getColumn("date_of_birth")
+      .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+        if (rowNumber === 1) return;
+        cell.numFmt = "mm/dd/yyyy";
+        cell.dataValidation = {
+          type: "date",
+          operator: "greaterThan",
+          formula1: "1900-01-01",
+          showErrorMessage: true,
+          errorTitle: "Invalid Date",
+          error: "Please enter a valid date.",
+        };
+      });
+
+    employeeSheet
+      .getColumn("hireDate")
+      .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+        if (rowNumber === 1) return;
+        cell.numFmt = "mm/dd/yyyy";
+        cell.dataValidation = {
+          type: "date",
+          operator: "greaterThan",
+          formula1: "1900-01-01",
+          showErrorMessage: true,
+          errorTitle: "Invalid Date",
+          error: "Please enter a valid date.",
+        };
+      });
+
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1511,10 +1966,811 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    console.error("Error generating template:", error);
-    next(createError.createError(500, "Internal Server Error"));
+    console.log(error);
+    next(createError.createError(503, "Internal Server Error"));
   }
 };
+
+exports.genrea = async (req, res, next) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet1");
+    const secondSheet = workbook.addWorksheet("Sheet2");
+
+    const STATE_LIST = [
+      "Andhra Pradesh",
+      "Arunachal Pradesh",
+      "Assam",
+      "Bihar",
+      "Chhattisgarh",
+      "Goa",
+      "Gujarat",
+      "Haryana",
+      "Himachal Pradesh",
+      "Jharkhand",
+      "Karnataka",
+      "Kerala",
+      "Madhya Pradesh",
+      "Maharashtra",
+      "Manipur",
+      "Meghalaya",
+      "Mizoram",
+      "Nagaland",
+      "Odisha",
+      "Punjab",
+      "Rajasthan",
+      "Sikkim",
+      "Tamil Nadu",
+      "Telangana",
+      "Tripura",
+      "Uttar Pradesh",
+      "Uttarakhand",
+      "West Bengal",
+      "Andaman and Nicobar Islands",
+      "Chandigarh",
+      "Dadra and Nagar Haveli and Daman and Diu",
+      "Lakshadweep",
+      "Delhi (National Capital Territory of Delhi)",
+      "Puducherry",
+    ];
+
+    // Add states to second sheet
+    STATE_LIST.forEach((value, index) => {
+      const rowNumber = index + 1;
+      secondSheet.getCell(`A${rowNumber}`).value = value;
+    });
+
+    const headerRow = [
+      "CUSTOMER NAME",
+      "CUSTOMER EMAIL",
+      "CUSTOMER ADDRESS",
+      "MOBILE NUMBER",
+      "PRODUCT NAME",
+      "TOTAL AMOUNT",
+      "DISCOUNT",
+      "STATE",
+      "CITY",
+      "PIN CODE",
+    ];
+
+    worksheet.addRow(headerRow);
+    const header = worksheet.getRow(1);
+
+    const stateSize = secondSheet.getColumn(1).values;
+
+    header.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "090f63" }, // Set the header color (light gray in this example)
+      };
+      cell.font = {
+        color: { argb: "ffffff" },
+        bold: true,
+      };
+
+      if (cell.value == "STATE") {
+        let i = 2;
+        while (i < 100) {
+          const customerTypeCell = worksheet.getCell(
+            `${cell.address.charAt(0)}${i}`
+          );
+          customerTypeCell.dataValidation = {
+            type: "list",
+            allowBlank: true,
+            formulae: [`Sheet2!$A$1:$A$${stateSize.length}`],
+          };
+          i++;
+        }
+      }
+    });
+
+    const createSheet1 = workbook.getWorksheet("Sheet1");
+    const createSheet2 = workbook.getWorksheet("Sheet2");
+
+    if (worksheet) {
+      createSheet1.columns.forEach((column, index) => {
+        column.width = 25;
+
+        createSheet1.eachRow((row) => {
+          row.height = 25;
+        });
+
+        // Center align cells in the worksheet
+        for (let rowNumber = 1; rowNumber <= worksheet.rowCount; rowNumber++) {
+          const cell = worksheet.getCell(rowNumber, index + 1);
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        }
+      });
+    }
+
+    // Hide the second sheet containing the states
+    createSheet2.state = "hidden";
+
+    // Set the response headers to allow file download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Customer-file.xlsx"
+    );
+
+    // Stream the workbook as a response
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+exports.bulkRegister = async (req, res, next) => {
+  try {
+    // Prepare password and CompanyId
+    let password = req?.user?.companyCode?.substring(0, 4) + "0000";
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    const excelFile = req?.files?.["file"]?.[0]?.path;
+
+    if (!excelFile) {
+      return next(createError.createError(404, "Please upload the file"));
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(excelFile);
+    const worksheet = workbook.getWorksheet("Employees"); // Ensure this matches your template sheet name
+
+    const rows = [];
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber !== 1) rows.push(row); // Skip header row
+    });
+
+    // Fetch departments, grades, and positions once to avoid repeated database queries
+    const [departments, grades, positions] = await Promise.all([
+      Department.findAll({ where: { CompanyId } }),
+      Grade.findAll({ where: { CompanyId } }),
+      Position.findAll({ where: { CompanyId } }),
+    ]);
+
+    const departmentNames = new Map(departments.map((d) => [d.deptName, d.id]));
+    const gradeNames = new Map(grades.map((g) => [g.name, g.id]));
+    const positionNames = new Map(positions.map((p) => [p.positionName, p.id]));
+
+    const employees = [];
+    const employeeRecords = [];
+    const employeeDepartmentRecords = [];
+    const employeeGradeRecords = [];
+    const employeePositionRecords = [];
+    const emergencyContactRecords = [];
+    const accountInfoRecords = [];
+
+    for (const row of rows) {
+      const fullName = row.getCell(1).text.trim();
+      const email = row.getCell(8).text.trim();
+      const accountNumber = row.getCell(27).text.trim();
+      const basicSalary = parseFloat(row.getCell(22).text.trim());
+
+      // Perform validations
+      const departmentName = row.getCell(4).text.trim();
+      const positionName = row.getCell(23).text.trim();
+      const gradeName = row.getCell(5).text.trim();
+
+      // Fetch DepartmentId, PositionId, GradeId from preloaded maps
+      const departmentId = departmentNames.get(departmentName);
+      const positionId = positionNames.get(positionName);
+      const gradeId = gradeNames.get(gradeName);
+
+      // Check if the necessary data exists
+      if (!departmentId || !positionId || !gradeId) {
+        return next(
+          createError.createError(
+            400,
+            "Invalid department, position, or grade."
+          )
+        );
+      }
+
+      if (!fullName || !email || !accountNumber) {
+        return next(
+          createError.createError(
+            400,
+            "Full name, email, and account number are required fields and cannot be empty."
+          )
+        );
+      }
+
+      // Check if email is unique
+      const existingEmail = await Employee.findOne({ where: { email } });
+      if (existingEmail) {
+        return next(
+          createError.createError(400, `Email '${email}' is already taken.`)
+        );
+      }
+
+      // Check if basic salary is within the valid range for the grade
+      const grade = grades.find((g) => g.id === gradeId);
+      if (basicSalary < grade.minSalary || basicSalary > grade.maxSalary) {
+        return next(
+          createError.createError(
+            400,
+            `Basic salary '${basicSalary}' is outside the valid range for grade '${gradeName}'.`
+          )
+        );
+      }
+
+      // Prepare employee data
+      const hireDateRaw = row.getCell(20).text.trim();
+      const hireDate = hireDateRaw
+        ? new Date(hireDateRaw).toISOString().slice(0, 10)
+        : null;
+      const dateOfBirthRaw = row.getCell(3).text.trim();
+      const dateOfBirth = dateOfBirthRaw
+        ? new Date(dateOfBirthRaw).toISOString().slice(0, 10)
+        : null;
+
+      const employeeData = {
+        fullname: fullName,
+        sex: row.getCell(2).text.trim(),
+        date_of_birth: dateOfBirth,
+        email,
+        accountNumber,
+        basicSalary,
+        DepartmentId: departmentId,
+        PositionId: positionId,
+        GradeId: gradeId,
+        password, // Assuming password is predefined
+        hireDate,
+        phoneNumber: "987654",
+        isActive: true,
+        CompanyId,
+      };
+
+      employees.push(employeeData);
+
+      if (!employeeData.phoneNumber) {
+        // Handle the case where phoneNumber is missing
+        console.error("Phone number is required");
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+      // return res.json(employees)
+      employeeDepartmentRecords.push({
+        EmployeeId: 1,
+        DepartmentId: departmentId,
+        active: true,
+      });
+      employeeGradeRecords.push({
+        EmployeeId: 1,
+        GradeId: gradeId,
+        active: true,
+      });
+      employeePositionRecords.push({ EmployeeId: 1, PositionId: positionId });
+      emergencyContactRecords.push({
+        EmployeeId: 1,
+        emergency_fullname: row.getCell(26).text.trim(),
+        emergency_phoneNumber: row.getCell(25).text.trim(),
+      });
+      accountInfoRecords.push({
+        EmployeeId: 1,
+        account_number: accountNumber,
+      });
+    }
+
+    await sequelize.transaction(async (t) => {
+      await Employee.bulkCreate(employees, { transaction: t });
+      await EmployeeDepartment.bulkCreate(employeeDepartmentRecords, {
+        transaction: t,
+      });
+      await EmployeeGrade.bulkCreate(employeeGradeRecords, { transaction: t });
+      await EmployeePosition.bulkCreate(employeePositionRecords, {
+        transaction: t,
+      });
+      await EmergencyContact.bulkCreate(emergencyContactRecords, {
+        transaction: t,
+      });
+      await AccountInfo.bulkCreate(accountInfoRecords, { transaction: t });
+
+      return res.status(201).json({
+        message: "Bulk employee registration completed successfully.",
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(500, "Internal server error", error));
+  }
+};
+
+// exports.bulkRegister = async (req, res, next) => {
+//   try {
+//     // Proceed with employee registration
+//     let password = req?.user?.companyCode?.substring(0, 4) + "0000";
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+//     const excelFile = req?.files?.["file"]?.[0]?.path;
+
+//     if (excelFile == null) {
+//       return next(createError.createError(404, "Please upload the file"));
+//     }
+
+//     const workbook = new ExcelJS.Workbook();
+//     await workbook.xlsx.readFile(excelFile);
+
+//     const worksheet = workbook.getWorksheet("Employees"); // Ensure this matches your template sheet name
+
+//     const employees = [];
+
+//     const departments = await Department.findAll({ where: { CompanyId } });
+//     const grades = await Grade.findAll({ where: { CompanyId } });
+//     const positions = await Position.findAll({ where: { CompanyId } });
+
+//     // Convert the departments, grades, and positions to arrays of their names for easy checking
+//     const departmentNames = departments.map((dept) => dept.name);
+//     const gradeNames = grades.map((grade) => grade.name);
+//     const positionNames = positions.map((position) => position.name);
+//     const rows = [];
+//     worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+//       if (rowNumber !== 1) rows.push(row); // Skip header row
+//     });
+
+//     // Process rows asynchronously
+//     await Promise.all(
+//       rows.map(async (row) => {
+//         const departmentName = row.getCell(4).text.trim();
+//         const positionName = row.getCell(23).text.trim();
+//         const gradeName = row.getCell(5).text.trim();
+//         // Fetch DepartmentId
+//         const department = await Department.findOne({
+//           where: { deptName: departmentName, CompanyId },
+//         });
+
+//         // Fetch PositionId
+//         const position = await Position.findOne({
+//           where: { positionName: positionName, CompanyId },
+//         });
+
+//         const grade = await Grade.findOne({
+//           where: { name: gradeName, CompanyId }, // Adjust `name` to your database schema
+//         });
+
+//         // Check if any of the required fields are not found
+//         if (!department) {
+//           return next(
+//             createError.createError(
+//               400,
+//               `Department '${departmentName}' not found.`
+//             )
+//           );
+//         }
+
+//         if (!position) {
+//           return next(
+//             createError.createError(
+//               400,
+//               `Position '${positionName}' not found.`
+//             )
+//           );
+//         }
+
+//         if (!grade) {
+//           return next(
+//             createError.createError(400, `Grade '${gradeName}' not found.`)
+//           );
+//         }
+
+//         const fullName = row.getCell(1).text.trim(); // Make sure fullName is assigned here
+//         const email = row.getCell(8).text.trim();
+//         const accountNumber = row.getCell(27).text.trim();
+//         const basicSalary = parseFloat(row.getCell(22).text.trim());
+
+//         // Check if the basic salary is within the grade's salary range
+//         if (basicSalary < grade.minSalary || basicSalary > grade.maxSalary) {
+//           //   return res.status(400).json({
+//           //     message: `Basic salary '${basicSalary}' is outside the valid range for grade '${gradeName}'. The salary should be between ${grade.minSalary} and ${grade.maxSalary}.`,
+//           //   });
+
+//           return next(
+//             createError.createError(
+//               400,
+//               `Basic salary '${basicSalary}' is outside the valid range for grade '${gradeName}'. The salary should be between ${grade.minSalary} and ${grade.maxSalary}.`
+//             )
+//           );
+//         }
+
+//         // Check if fullName, email, or accountNumber are empty
+//         if (!fullName || !email || !accountNumber) {
+//           // return res.status(400).json({
+//           //   error:
+//           //     "Full name, email, and account number are required fields and cannot be empty.",
+//           // });
+
+//           return next(
+//             createError.createError(
+//               400,
+//               "Full name, email, and account number are required fields and cannot be empty."
+//             )
+//           );
+//         }
+
+//         // Check if email is unique
+//         const existingEmail = await Employee.findOne({ where: { email } });
+//         if (existingEmail) {
+//           // return res
+//           //   .status(400)
+//           //   .json({ error: `Email '${email}' is already taken.` });
+
+//           return next(
+//             createError.createError(400, "Email '${email}' is already taken.")
+//           );
+//         }
+//         const hireDateRaw = row.getCell(20).text.trim();
+//         const hireDate = hireDateRaw
+//           ? new Date(hireDateRaw).toISOString().slice(0, 10) // Format as "YYYY-MM-DD"
+//           : null;
+//         const dateOfBirthRaw = row.getCell(3).text.trim();
+//         const dateOfBirth = dateOfBirthRaw
+//           ? new Date(dateOfBirthRaw).toISOString().slice(0, 10) // Format as "YYYY-MM-DD"
+//           : null;
+//         const employeeData = {
+//           fullname: row.getCell(1).text.trim(),
+//           sex: row.getCell(2).text.trim(),
+//           date_of_birth: dateOfBirth,
+//           marriageStatus: row.getCell(6).text.trim(),
+//           nationality: row.getCell(7).text.trim(),
+//           email: row.getCell(8).text.trim(),
+//           id_type: row.getCell(9).text.trim(),
+//           id_Number: row.getCell(10).text.trim(),
+//           phoneNumber: row.getCell(11).text.trim(),
+//           optionalPhoneNumber: row.getCell(12).text.trim(),
+//           country: row.getCell(13).text.trim(),
+//           state: row.getCell(14).text.trim(),
+//           zone_or_city: row.getCell(15).text.trim(),
+//           woreda: row.getCell(16).text.trim(),
+//           kebele: row.getCell(17).text.trim(),
+//           houseNumber: row.getCell(18).text.trim(),
+//           employeeTIN: row.getCell(19).text.trim(),
+//           hireDate,
+//           employee_Code: row.getCell(21).text.trim(),
+//           basicSalary: row.getCell(22).text.trim(),
+//           emergency_relation: row.getCell(24).text.trim(),
+//           emergency_phoneNumber: row.getCell(25).text.trim(),
+//           emergency_fullname: row.getCell(26).text.trim(),
+//           accountNumber: row.getCell(27).text.trim(),
+//           DepartmentId: department ? department.id : null,
+//           positionId: position ? position.id : null,
+//           GradeId: grade ? grade.id : null,
+//         };
+
+//         employees.push(employeeData);
+//       })
+//     );
+
+//     console.log("Employees array after processing rows:", employees);
+//     await sequelize.transaction(async (t) => {
+//       const imagePath = req?.files?.["basicInfo[image]"]?.[0]?.path || null;
+//       const idImagePath =
+//         req?.files?.["basicInfo[id_image]"]?.[0]?.path || null;
+
+//       const employeeRecords = []; // Array to collect employee records
+//       const employeeDepartmentRecords = []; // Array for EmployeeDepartment records
+//       const employeeGradeRecords = []; // Array for EmployeeGrade records
+//       const employeePositionRecords = []; // Array for EmployeePosition records
+//       const emergencyContactRecords = []; // Array for EmergencyContact records
+//       const accountInfoRecords = []; // Array for AccountInfo records
+
+//       // Loop through each employee row for bulk insertion
+//       for (const row of rows) {
+//         const departmentName = row.getCell(4).text.trim();
+//         const positionName = row.getCell(23).text.trim();
+//         const gradeName = row.getCell(5).text.trim();
+
+//         // Fetch DepartmentId, PositionId, GradeId (same as your current logic)
+//         const department = await Department.findOne({
+//           where: { deptName: departmentName, CompanyId },
+//         });
+
+//         const position = await Position.findOne({
+//           where: { positionName: positionName, CompanyId },
+//         });
+
+//         const grade = await Grade.findOne({
+//           where: { name: gradeName, CompanyId },
+//         });
+
+//         if (!department || !position || !grade) {
+//           return res
+//             .status(400)
+//             .json({ error: "Invalid department, position, or grade." });
+//         }
+
+//         const fullName = row.getCell(1).text.trim();
+//         const email = row.getCell(8).text.trim();
+//         const accountNumber = row.getCell(27).text.trim();
+//         const basicSalary = parseFloat(row.getCell(22).text.trim());
+
+//         if (!fullName || !email || !accountNumber) {
+//           return res.status(400).json({
+//             error:
+//               "Full name, email, and account number are required fields and cannot be empty.",
+//           });
+//         }
+
+//         // Validate uniqueness of email and account number
+//         const existingEmail = await Employee.findOne({ where: { email } });
+//         // const existingAccountNumber = await Employee.findOne({
+//         //   where: { accountNumber },
+//         // });
+
+//         if (existingEmail) {
+//           return res.status(400).json({
+//             error: `Email or account number '${
+//               email || accountNumber
+//             }' is already taken.`,
+//           });
+//         }
+
+//         // Prepare employee data for bulk insert
+//         const employeeData = {
+//           fullname: fullName,
+//           email,
+//           sex: "male",
+//           accountNumber,
+//           basicSalary,
+//           DepartmentId: department.id,
+//           PositionId: position.id,
+//           GradeId: grade.id,
+//           password, // Assuming password is generated in a loop or predefined.
+//           image: imagePath,
+//           id_image: idImagePath,
+//           isActive: true,
+//           CompanyId: Number(req.user.id),
+//         };
+
+//         employeeRecords.push(employeeData);
+//         employeeDepartmentRecords.push({
+//           EmployeeId: 1,
+//           DepartmentId: department.id,
+//           active: true,
+//         });
+//         employeeGradeRecords.push({
+//           EmployeeId: 1,
+//           GradeId: grade.id,
+//           active: true,
+//         });
+//         employeePositionRecords.push({
+//           EmployeeId: 1,
+//           PositionId: position.id,
+//         });
+//         emergencyContactRecords.push({
+//           EmployeeId: 1,
+//           emergency_fullname: row.getCell(26).text.trim(),
+//           emergency_phoneNumber: row.getCell(25).text.trim(),
+//         });
+//         accountInfoRecords.push({
+//           EmployeeId: 1,
+//           account_number: accountNumber,
+//           image: imagePath,
+//         });
+//       }
+
+//       // Bulk insert data using sequelize.bulkCreate
+//       await Employee.bulkCreate(employeeRecords, { transaction: t });
+//       await EmployeeDepartment.bulkCreate(employeeDepartmentRecords, {
+//         transaction: t,
+//       });
+//       await EmployeeGrade.bulkCreate(employeeGradeRecords, { transaction: t });
+//       await EmployeePosition.bulkCreate(employeePositionRecords, {
+//         transaction: t,
+//       });
+//       await EmergencyContact.bulkCreate(emergencyContactRecords, {
+//         transaction: t,
+//       });
+//       await AccountInfo.bulkCreate(accountInfoRecords, { transaction: t });
+
+//       return res.status(201).json({
+//         message: "Bulk employee registration completed successfully.",
+//       });
+//     });
+// return res.json(employees);
+
+//   // Find corresponding department, grade, and position based on the names in the excel sheet
+//   const department = departments.find(
+//     (dept) => dept.name === employeeData.basicInfo.DepartmentName
+//   );
+//   const grade = grades.find(
+//     (grade) => grade.name === employeeData.basicInfo.GradeName
+//   );
+//   const position = positions.find(
+//     (position) => position.name === employeeData.basicInfo.PositionName
+//   );
+
+//   return res.json(employeeData.basicInfo.PositionName)
+
+//   if (!department || !grade || !position) {
+//     return next(
+//       createError.createError(
+//         404,
+//         "Department, Grade, or Position not found"
+//       )
+//     );
+//   }
+
+//   // Error handling for missing required fields
+//   if (
+//     !employeeData.basicInfo?.DepartmentName ||
+//     !employeeData.basicInfo?.GradeName ||
+//     !employeeData.basicInfo?.PositionName
+//   ) {
+//     return next(
+//       createError.createError(
+//         400,
+//         "Please provide all required information"
+//       )
+//     );
+//   }
+
+//   if (
+//     !employeeData.accountInformation ||
+//     employeeData.accountInformation?.[0]?.accountNumber === undefined
+//   ) {
+//     return next(createError.createError(400, "Account number is required"));
+//   }
+
+//   const accountNumbers = employeeData.accountInformation?.map(
+//     (acct) => acct.accountNumber
+//   );
+
+//   try {
+//     // Fetch position, grade, department, employee, account info, and ID format in parallel
+//     const [
+//       existingPosition,
+//       existingGrade,
+//       existingDepartment,
+//       employee,
+//       accountInfos,
+//       idformat,
+//     ] = await Promise.all([
+//       Position.findOne({
+//         where: {
+//           id: Number(position.id),
+//           CompanyId,
+//         },
+//       }),
+//       Grade.findOne({
+//         where: { id: Number(grade.id), CompanyId },
+//       }),
+//       Department.findOne({
+//         where: {
+//           id: Number(department.id),
+//           CompanyId,
+//         },
+//       }),
+//       Employee.findOne({
+//         where: { email: employeeData.basicInfo?.email, CompanyId },
+//       }),
+//       AccountInfo.findAll({
+//         where: { accountNumber: accountNumbers, CompanyId },
+//       }),
+//       IdFormat.findOne({
+//         where: { CompanyId, isActive: true },
+//       }),
+//     ]);
+
+//     const errors = [];
+
+//     return res.json(existingGrade);
+
+//     // Validation checks for position, grade, department, and salary
+//     if (!existingPosition) {
+//       return next(createError.createError(404, "Position not found"));
+//     }
+//     if (!existingGrade) {
+//       return next(createError.createError(404, "Grade not found"));
+//     }
+//     if (!existingDepartment) {
+//       return next(createError.createError(404, "Department not found"));
+//     }
+//     if (
+//       employeeData.employeeInfo.basicSalary < existingGrade?.minSalary ||
+//       employeeData.employeeInfo.basicSalary > existingGrade?.maxSalary
+//     ) {
+//       return next(
+//         createError.createError(
+//           404,
+//           `Basic salary must be between ${existingGrade.minSalary} and ${existingGrade.maxSalary}`
+//         )
+//       );
+//     }
+
+//     if (employee) {
+//       return next(
+//         createError.createError(
+//           404,
+//           "Employee already exists with this email"
+//         )
+//       );
+//     }
+
+//     if (accountInfos.length > 0) {
+//       return next(
+//         createError.createError(404, "Account number already exists")
+//       );
+//     }
+
+//     await sequelize.transaction(async (t) => {
+//       const newEmployee = await Employee.create(
+//         {
+//           ...employeeData.basicInfo,
+//           password: "defaultPassword", // Use a default password or generate one
+//           isActive: true,
+//           CompanyId,
+//           departmentId: existingDepartment.id,
+//           gradeId: existingGrade.id,
+//           positionId: existingPosition.id,
+//         },
+//         { transaction: t }
+//       );
+
+//       await Address.create(
+//         {
+//           ...employeeData.address,
+//           EmployeeId: newEmployee.id,
+//           isActive: true,
+//         },
+//         { transaction: t }
+//       );
+//       await EmployeeInfo.create(
+//         {
+//           ...employeeData.employeeInfo,
+//           EmployeeId: newEmployee.id,
+//           isActive: true,
+//         },
+//         { transaction: t }
+//       );
+//       await EmergencyContact.bulkCreate(
+//         employeeData.emergencyInfo.map((info) => ({
+//           ...info,
+//           EmployeeId: newEmployee.id,
+//           isActive: true,
+//         })),
+//         { transaction: t }
+//       );
+//       await AccountInfo.bulkCreate(
+//         employeeData.accountInformation.map((info) => ({
+//           ...info,
+//           EmployeeId: newEmployee.id,
+//           isActive: true,
+//         })),
+//         { transaction: t }
+//       );
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Employees registered successfully.",
+//     });
+//   } catch (err) {
+//     console.error("Error processing employee:", err);
+//     return next(
+//       createError.createError(
+//         503,
+//         "An error occurred during employee registration."
+//       )
+//     );
+//   }
+// });
+//   } catch (error) {
+//     console.error("Error processing Excel file:", error);
+//     return next(
+//       createError.createError(
+//         503,
+//         "An error occurred during bulk registration."
+//       )
+//     );
+//   }
+// };
 
 // exports.downloadEmployeeTemplate = async (req, res, next) => {
 //   try {
@@ -1650,7 +2906,153 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
 //     res.end();
 //   } catch (error) {
 //     console.error("Error generating template:", error);
-//     next(createError.createError(500, "Internal Server Error"));
+//     next(createError.createError(503, "Internal Server Error"));
 //   }
 // };
 
+// exports.downloadEmployeeTemplate = async (req, res, next) => {
+//   try {
+//     const departments = await Department.findAll();
+//     const positions = await Position.findAll();
+//     const grades = await Grade.findAll();
+//     const workbook = new ExcelJS.Workbook();
+
+//     // Employee data sheet
+//     const employeeSheet = workbook.addWorksheet("Employees");
+
+//     // Add department, grade, and position lists at the top
+//     employeeSheet.mergeCells("A1:B1");
+//     employeeSheet.getCell("A1").value = "Departments:";
+//     let departmentStartRow = 2;
+//     departments.forEach((department, index) => {
+//       employeeSheet.getCell(`A${departmentStartRow + index}`).value =
+//         department.id;
+//       employeeSheet.getCell(`B${departmentStartRow + index}`).value =
+//         department.deptName;
+//     });
+
+//     let gradeStartRow = departmentStartRow + departments.length + 1;
+//     employeeSheet.mergeCells(`A${gradeStartRow}:C${gradeStartRow}`);
+//     employeeSheet.getCell(`A${gradeStartRow}`).value = "Grades:";
+
+//     // Adding titles for GradeId and GradeName under Grades section
+//     employeeSheet.getCell(`A${gradeStartRow + 1}`).value = "GRADEid";
+//     employeeSheet.getCell(`B${gradeStartRow + 1}`).value = "GRADEname";
+//     employeeSheet.getCell(`C${gradeStartRow + 1}`).value = "Salary Range";
+
+//     grades.forEach((grade, index) => {
+//       employeeSheet.getCell(`A${gradeStartRow + 2 + index}`).value = grade.id;
+//       employeeSheet.getCell(`B${gradeStartRow + 2 + index}`).value = grade.name;
+//       employeeSheet.getCell(
+//         `C${gradeStartRow + 2 + index}`
+//       ).value = `${grade.minSalary} - ${grade.maxSalary}`;
+//     });
+
+//     let positionStartRow = gradeStartRow + grades.length + 2;
+//     employeeSheet.mergeCells(`A${positionStartRow}:B${positionStartRow}`);
+//     employeeSheet.getCell(`A${positionStartRow}`).value = "Positions:";
+
+//     positions.forEach((position, index) => {
+//       employeeSheet.getCell(`A${positionStartRow + 1 + index}`).value =
+//         position.id;
+//       employeeSheet.getCell(`B${positionStartRow + 1 + index}`).value =
+//         position.positionName;
+//     });
+
+//     // Leave a blank row between lists and the employee table
+//     let employeeTableStartRow = positionStartRow + positions.length + 2;
+
+//     // Set up employee data table headers
+//     employeeSheet.columns = [
+//       { header: "fullname", key: "fullname", width: 30 },
+//       { header: "sex", key: "sex", width: 10 },
+//       { header: "date_of_birth", key: "date_of_birth", width: 15 },
+//       { header: "DepartmentId", key: "DepartmentId", width: 15 },
+//       { header: "GradeId", key: "GradeId", width: 15 },
+//       { header: "position", key: "position", width: 15 },
+//       // Add more columns as needed
+//     ];
+
+//     // // Adjust the table header row
+//     employeeSheet.spliceRows(
+//       employeeTableStartRow,
+//       0,
+//       employeeSheet.columns.map((col) => col.header)
+//     );
+
+//     // Apply data validation for DepartmentId, GradeId, and Position columns
+//     const dropdownRange = (startRow, endRow, colIndex) =>
+//       `$${String.fromCharCode(64 + colIndex)}${startRow}:$${String.fromCharCode(
+//         64 + colIndex
+//       )}${endRow}`;
+
+//     employeeSheet
+//       .getColumn("DepartmentId")
+//       .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//         if (rowNumber >= employeeTableStartRow) {
+//           cell.dataValidation = {
+//             type: "list",
+//             allowBlank: true,
+//             formula1: dropdownRange(2, 2 + departments.length - 1, 1),
+//             showErrorMessage: true,
+//             errorTitle: "Invalid Option",
+//             error: "Please select a valid Department ID.",
+//           };
+//         }
+//       });
+
+//     employeeSheet
+//       .getColumn("GradeId")
+//       .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//         if (rowNumber >= employeeTableStartRow) {
+//           cell.dataValidation = {
+//             type: "list",
+//             allowBlank: true,
+//             formula1: dropdownRange(
+//               gradeStartRow + 1,
+//               gradeStartRow + grades.length,
+//               1
+//             ),
+//             showErrorMessage: true,
+//             errorTitle: "Invalid Option",
+//             error: "Please select a valid Grade ID.",
+//           };
+//         }
+//       });
+
+//     employeeSheet
+//       .getColumn("position")
+//       .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
+//         if (rowNumber >= employeeTableStartRow) {
+//           cell.dataValidation = {
+//             type: "list",
+//             allowBlank: true,
+//             formula1: dropdownRange(
+//               positionStartRow + 1,
+//               positionStartRow + positions.length,
+//               1
+//             ),
+//             showErrorMessage: true,
+//             errorTitle: "Invalid Option",
+//             error: "Please select a valid Position ID.",
+//           };
+//         }
+//       });
+
+//     // Set the response content type
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+//     res.setHeader(
+//       "Content-Disposition",
+//       "attachment; filename=employee_template.xlsx"
+//     );
+
+//     await workbook.xlsx.write(res);
+//     res.end();
+//   } catch (error) {
+//     console.error("Error generating template:", error);
+//     next(createError.createError(503, "Internal Server Error"));
+//   }
+// };

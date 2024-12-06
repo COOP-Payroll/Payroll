@@ -3,10 +3,10 @@ const router = express.Router();
 const payrollApprovement = require("../controllers/payrollApprovement");
 const middleware = require("../middleware/auth");
 
-
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictALL({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
@@ -17,7 +17,8 @@ router.post(
 
 router.post(
   "/reject",
-  middleware.protectAll, 
+  middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
@@ -28,6 +29,7 @@ router.post(
 router.post(
   "/reApprove",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
@@ -38,6 +40,7 @@ router.post(
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictApprover({
     moduleName: "payrollpublishedreport",
     isAccessible: true,
@@ -48,6 +51,7 @@ router.get(
 router.get(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin", "approver"),
   middleware.restrictALL({
     moduleName: "payrollpublishedreport",
@@ -59,6 +63,7 @@ router.get(
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin", "approver"),
   middleware.restrictALL({
     moduleName: "payrollpublishedreport",
@@ -70,6 +75,7 @@ router.put(
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin", "approver"),
   middleware.restrictALL({
     moduleName: "payrollpublishedreport",

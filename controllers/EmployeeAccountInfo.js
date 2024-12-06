@@ -13,7 +13,7 @@ exports.createEmployeeAccountInfo = async (req, res,next) => {
       return res.status(404).json({ error: "employee not found" });
     }
     if (account) {
-      return res.status(409).json({ error: "account exist" });
+      return res.status(400).json({ error: "account exist" });
     }
 
     const imagePath = req?.files?.image[0].path || null;
@@ -27,9 +27,7 @@ exports.createEmployeeAccountInfo = async (req, res,next) => {
       accountInfo: newAccount,
     });
   } catch (error) {
-    console.error("Error creating company account info:", error);
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -40,7 +38,7 @@ exports.getAllEmployeeAccountInfo = async (req, res,next) => {
       where: { EmployeeId: id, isActive: true },
     });
     let employeeAccountInfo = employeeeAccountInfos[0];
-    const baseUrl = "https://payroll-production.up.railway.app/";
+    const baseUrl = "/";
     const imageUrl = `${baseUrl}${employeeAccountInfo.image.replace(
       /\\/g,
       "/"
@@ -48,8 +46,7 @@ exports.getAllEmployeeAccountInfo = async (req, res,next) => {
     employeeAccountInfo.dataValues.imageUrl = imageUrl;
     return res.status(200).json(employeeAccountInfo);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -66,8 +63,7 @@ exports.deleteEmployeeAccountInfo = async (req, res,next) => {
       return res.json("employee Account Info deleted successfully");
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -89,8 +85,7 @@ exports.updateEmployeeAccountInfo = async (req, res,next) => {
       .status(200)
       .json({ message: "account updated successfully", data: updatedAccount });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -99,7 +94,6 @@ exports.verifyAccountNumber = (req, res,next) => {
     const { accountNumber } = req.body;
     res.status(200).json({ fullName: "boo faz baz", accountType: "Saving" });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

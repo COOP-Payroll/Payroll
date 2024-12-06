@@ -1,11 +1,9 @@
 const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
-const createError = require('../utils/error')
+const createError = require("../utils/error");
 
 const Company = require("../models/company");
 // GET ALL ADDITIONAL DEDUCTION DEFINITION
-exports.getAllAdditionalDeductionDefinition = async (req, res,next) => {
-
- 
+exports.getAllAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     const Company = req.user.id;
     const criteria = {
@@ -18,27 +16,25 @@ exports.getAllAdditionalDeductionDefinition = async (req, res,next) => {
       AdditionalDeductionDefinitions,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
-
 //GET BY ID
-exports.getAdditionalDeductionDefinitionById = async (req, res,next) => {
+exports.getAdditionalDeductionDefinitionById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const additionalDeductionDefinition =   await AdditionalDeductionDefinition.findByPk(id);
+    const additionalDeductionDefinition =
+      await AdditionalDeductionDefinition.findByPk(id);
 
-    if(!additionalDeductionDefinition){
-      return next(createError.createError(404,"There is no additional deduction definition with this Id"))
+    if (!additionalDeductionDefinition) {
+      return next(createError.createError(404, "Resource not found"));
     }
     res.status(200).json({
       additionalDeductionDefinition,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -47,7 +43,7 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     //insert required field
     const Company = req.user.id;
-    console.log(Company);
+
     const { name } = req.body;
 
     const criteria = {
@@ -60,8 +56,7 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
       });
 
     if (checkAdditionalDeductionDefinition) {
-
-      return next(createError.createError(409,"Aready defined"))
+      return next(createError.createError(400, "Duplicate resource"));
     } else {
       const AdditionalDeductionDefinitions =
         await AdditionalDeductionDefinition.create({
@@ -74,11 +69,9 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-
 
 //UPDATE
 exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
@@ -91,11 +84,11 @@ exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
       updates.name = name;
     }
     const additionalDeductionDefinitions =
-    await AdditionalDeductionDefinition.findOne({
-      where: { id: id, CompanyId: req.user.id },
-    });
-    if(!additionalDeductionDefinitions){
-      return next(createError.createError(404,"There is no additional deduction definition with this ID"))
+      await AdditionalDeductionDefinition.findOne({
+        where: { id: id, CompanyId: req.user.id },
+      });
+    if (!additionalDeductionDefinitions) {
+      return next(createError.createError(404, "Resource not found"));
     }
 
     const result = await AdditionalDeductionDefinition.update(
@@ -110,11 +103,9 @@ exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
       //   result,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-
 
 //DELETE
 exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
@@ -131,12 +122,9 @@ exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
       });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-
-      return next(createError.createError(404, "There is no such Id"))
+      return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
-

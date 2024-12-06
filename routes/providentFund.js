@@ -7,18 +7,21 @@ const middleware = require("../middleware/auth.js");
 router.get(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   providentController.getAllProvidentFund
 );
 router.post(
   "/",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   providentController.createProvidentFund
 );
 
 router.put(
   "/:restore-to-default",
+  middleware.validateUserAgent,
   middleware.protectAll,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   providentController.restoreToDefault
@@ -26,16 +29,17 @@ router.put(
 router.put(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   providentController.updateProvidentFund
 );
 router.delete(
   "/:id",
   middleware.protectAll,
+  middleware.validateUserAgent,
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   providentController.deleteProvidentFund
 );
-
 
 // router.get("/:id", providentController.getpensionById);
 

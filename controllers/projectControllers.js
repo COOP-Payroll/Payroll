@@ -90,7 +90,7 @@ exports.getAllProjects = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -135,8 +135,7 @@ exports.getOneProject = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 exports.createProjects = async (req, res, next) => {
@@ -173,7 +172,7 @@ exports.createProjects = async (req, res, next) => {
       where: { CompanyId: req.user.id, projectName: projectName },
     });
     if (checkProjectName) {
-      return next(createError.createError(409, "Project already defined"));
+      return next(createError.createError(400, "Project already defined"));
     }
     sponsor = await Sponsor.findOne({
       where: { id: sponsorId, CompanyId: req.user.id },
@@ -208,7 +207,7 @@ exports.createProjects = async (req, res, next) => {
       ? referenceLetterData
       : null;
     if (!accountInfo) {
-      // console.log("data",data)
+    
 
       // await accountInfo.update({ isActive: false }, { transaction })
       await AccountInfo.create(
@@ -251,9 +250,8 @@ exports.createProjects = async (req, res, next) => {
       data: projects,
     });
   } catch (error) {
-    console.log("first", error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -278,7 +276,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
       Number(getAllEmployeeUnderTheProject) >=
       Number(projects?.numberOfEmployees)
     ) {
-      return next(createError.createError(409, "Maximum allocation reached"));
+      return next(createError.createError(400, "Maximum allocation reached"));
     }
     //  return res.status(200).json(getAllEmployeeUnderTheProject)
 
@@ -412,7 +410,6 @@ exports.assignProjectToEmployee = async (req, res, next) => {
           `Position  is not associated with the project`
         )
       );
-      // console.error(`Position with ID  is not associated with the project`);
     }
     if (
       Number(percent) > positionProjectAssociations?.maximumPercentAllocation
@@ -428,7 +425,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
       await transaction.rollback();
       return next(
         createError.createError(
-          409,
+          400,
           "The maximum number of employees for the project for this position has been reached"
         )
       );
@@ -446,7 +443,6 @@ exports.assignProjectToEmployee = async (req, res, next) => {
           totalAllowance += parseFloat(allowance.amount);
         });
       }
-      console.log(totalAllowance);
       if (employee.AdditionalAllowances.length > 0) {
         employee.AdditionalAllowances.forEach((allowance) => {
           additionalAllowance += parseFloat(allowance.amount);
@@ -480,10 +476,7 @@ exports.assignProjectToEmployee = async (req, res, next) => {
         { transaction }
       );
 
-      console.log(
-        " noOfAssignedEmployees: Number(positionProjectAssociations.noOfAssignedEmployees) +1",
-        Number(positionProjectAssociations.noOfAssignedEmployees) + 1
-      );
+     
       await positionProjectAssociations.update(
         {
           noOfAssignedEmployees:
@@ -493,7 +486,6 @@ exports.assignProjectToEmployee = async (req, res, next) => {
       );
 
       await transaction.commit();
-      console.log("Total percent incremented successfully");
     } else {
       await transaction.rollback();
       return next(
@@ -509,9 +501,8 @@ exports.assignProjectToEmployee = async (req, res, next) => {
       message: "Project successfully assigned to employee",
     });
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -545,7 +536,6 @@ exports.assignPositionToProject = async (req, res, next) => {
         )
       );
     }
-    // console.log(projectId,positionIds,noOfEmployees)
     const projects = await Projects.findOne({
       where: { id: Number(projectId), CompanyId: req.user.id },
     });
@@ -602,7 +592,6 @@ exports.assignPositionToProject = async (req, res, next) => {
     });
 
     if (existingAssociations.length > 0) {
-      console.log(existingAssociations);
       // Throw an error if any positions are already associated
       const existingPositionIds = existingAssociations.map(
         (assoc) => assoc.PositionId
@@ -677,23 +666,19 @@ exports.assignPositionToProject = async (req, res, next) => {
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
-      console.error("Error bulk creating PositionProjectAssociations:", error);
       // Handle the error appropriately, e.g., log it or return an error response
-      return next(createError.createError(500, "Internal server Error"));
+      return next(createError.createError(503, "An error occurred, please try again later"));
     }
-    console.log("Positions added to the project successfully!");
     return res.status(200).json({
       success: true,
       message: "Successfully assigned",
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 exports.updateProjects = async (req, res, next) => {
   try {
-    console.log("da la project");
     //insert required field
     const { projectName, location, description, numberOfEmployees } = req.body;
     const updates = {};
@@ -731,7 +716,6 @@ exports.updateProjects = async (req, res, next) => {
       return next(createError.createError(404, "project not found"));
     }
 
-    console.log(updates);
     const result = await checkProject.update({
       projectName: projectName,
       location: location,
@@ -747,7 +731,7 @@ exports.updateProjects = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -768,8 +752,7 @@ exports.deleteProjects = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -847,7 +830,6 @@ exports.deassignPositionFromProject = async (req, res, next) => {
 
     // Create entries in ProjectPositionHistory
     for (const position of assignedPositions) {
-      console.log(position.PositionProjectAssociation.createdAt);
       await ProjectPositionHistory.create(
         {
           ProjectId: Number(projectId),
@@ -869,24 +851,20 @@ exports.deassignPositionFromProject = async (req, res, next) => {
 
     await transaction.commit();
     //  await ProjectPositionHistory.bul
-    console.log("Positions removed from the project successfully!");
     return res.status(200).json({
       success: true,
       message: "Successfully removed positions from the project",
       data: assignedPositions,
     });
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server Error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 exports.qassignEmployeesToProject = async (req, res, next) => {
   try {
-    console.log("helloo");
     const { projectId, percent, employeeIds } = req.body;
-    // console.log(employeeIds)
     // Retrieve the positions associated with all employees
     const employees = await EmployeePosition.findAll({
       where: {
@@ -909,9 +887,7 @@ exports.qassignEmployeesToProject = async (req, res, next) => {
       const positionId = employee.PositionId ? employee.PositionId : null;
 
       if (!positionId) {
-        console.error(
-          `Employee with ID ${employee.EmployeeId} is missing a position`
-        );
+      
         continue; // Skip to the next iteration
       }
 
@@ -924,9 +900,7 @@ exports.qassignEmployeesToProject = async (req, res, next) => {
         });
 
       if (!positionProjectAssociation) {
-        console.error(
-          `Position with ID ${positionId} is not associated with the project`
-        );
+       
         continue; // Skip to the next iteration
       }
 
@@ -941,9 +915,7 @@ exports.qassignEmployeesToProject = async (req, res, next) => {
         employeeIds.length >= currentNoOfEmployees ||
         remainingEmployees <= 0
       ) {
-        console.error(
-          `Adding employee with ID ${employee.EmployeeId} would exceed the maximum number of employees for the project`
-        );
+      
         continue; // Skip to the next iteration
       }
 
@@ -954,11 +926,10 @@ exports.qassignEmployeesToProject = async (req, res, next) => {
           EmployeeId: employee.EmployeeId,
         },
       });
-      // console.log("currentNoOfEmployees: " + existingAssignment)
       if (existingAssignment) {
         return next(
           createError.createError(
-            409,
+            400,
             `Employee with ID ${employee.EmployeeId} is already assigned to the project`
           )
         );
@@ -983,9 +954,8 @@ exports.qassignEmployeesToProject = async (req, res, next) => {
       });
     }
 
-    // console.log('All employees assigned to the project successfully');
   } catch (error) {
-    console.error(error);
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -1017,8 +987,7 @@ exports.getAllEmployeeUnderTheSameProject = async (req, res, next) => {
       data: allEmployee,
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server Error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -1026,7 +995,6 @@ exports.getAllUnassignedProjectForEmployee = async (req, res, next) => {
   try {
     const { positionId, employeeId } = req.params;
 
-    console.log(positionId);
     if (!positionId || !employeeId) {
       return next(
         createError.createError(400, "position id or employee id not found")
@@ -1189,8 +1157,7 @@ exports.getAllUnassignedProjectForEmployee = async (req, res, next) => {
 
     return res.status(200).json(filteredProjects);
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 exports.deSelectEmployeeFromProject = async (req, res, next) => {
@@ -1245,7 +1212,6 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
       include: [Employee],
     });
 
-    console.log("projectEmployee.percent", req.user.id);
     if (!projectEmployee) {
       // await transaction.rollback();
       return next(
@@ -1272,7 +1238,6 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
       );
     }
     // await employee.decrement('totalPercent', { by: employee.totalPercent }, { transaction });
-    // console.log(employee)
 
     const projectEmployeeHistory = await ProjectEmployeeHistory.create(
       {
@@ -1286,11 +1251,7 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
       },
       { transaction }
     );
-    console.log("projectEmployeeHistory.percent", projectEmployeeHistory);
-    console.log(
-      "employee.totalPercent-projectEmployee.percent",
-      Number(employee.totalPercent) - Number(projectEmployee.percent)
-    );
+  
     const data = await employee.update(
       {
         totalPercent:
@@ -1316,17 +1277,14 @@ exports.deSelectEmployeeFromProject = async (req, res, next) => {
       // data: projectEmployee.gross,
     });
   } catch (error) {
-    console.error(error);
     await transaction.rollback();
-    console.error(error.message);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 exports.updateProjectEmployeeAssocitation = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    console.log("assignProjectToEmmployee");
 
     const { employeeId, projectId, percent } = req.body;
     if (!employeeId || !projectId) {
@@ -1373,7 +1331,6 @@ exports.updateProjectEmployeeAssocitation = async (req, res, next) => {
         createError.createError(404, "Employee is not  associated to project")
       );
     }
-    console.log(employee.totalPercent - chechEmployeAssociation.percent);
     if (
       employee.totalPercent -
         chechEmployeAssociation.percent +
@@ -1433,9 +1390,8 @@ exports.updateProjectEmployeeAssocitation = async (req, res, next) => {
       message: "Updated successfully",
     });
   } catch (error) {
-    console.log(error);
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -1495,14 +1451,12 @@ exports.getUnassignedProjects = async (req, res, next) => {
 
     return res.status(200).json(foundPosition);
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 exports.getAllProjectUnderTheEmployee = async (req, res, next) => {
   try {
-    console.log("data");
     const employeeId = req.params.employeeId;
 
     const employee = await Projects.findAll({
@@ -1518,13 +1472,11 @@ exports.getAllProjectUnderTheEmployee = async (req, res, next) => {
       ],
     });
     if (!employee) {
-      console.log(error);
       return next(createError.createError(404, "Employee not found"));
     }
     return res.status(200).json(employee);
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -1543,15 +1495,13 @@ exports.getTotalAssignedForEmployee = async (req, res, next) => {
 
     return res.status(200).json({ total: foundEmployee?.totalPercent });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
 exports.getPreviousProject = async (req, res, next) => {
   try {
     const { projectId, employeeId } = req.params;
-    console.log("com", req.user.id);
     const foundEmployee = await Employee.findOne({
       where: { id: employeeId, CompanyId: req.user.id },
     });
@@ -1578,7 +1528,6 @@ exports.getPreviousProject = async (req, res, next) => {
 
     // const getHistory= a
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server error"));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

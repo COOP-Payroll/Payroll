@@ -17,8 +17,7 @@ exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
       AdditionalAllowanceDefinitions,
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, 'Internal Server Error'))
   }
 };
 
@@ -31,8 +30,8 @@ exports.getAdditionalAllowanceDefinitionById = async (req, res,next) => {
       await AdditionalAllowanceDefinition.findByPk(id);
     res.status(200).json(AdditionalAllowanceDefinition);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))}
+   
+    return next(createError.createError(503, 'Internal Server Error'))}
 };
 
 
@@ -41,7 +40,6 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
   try {
  
     const Company = req.user.id;
-    console.log(Company);
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
 
@@ -54,8 +52,8 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
 
     if (checkAllowance) {
 
-      return next(createError.createError(409,"Allowance definition is already defined"))
-      // res.status(409).json("Allowance Definition is already defined");
+      return next(createError.createError(400,"Allowance definition is already defined"))
+      // res.status(400).json("Allowance Definition is already defined");
     } else {
       const AdditionalAllowanceDefinitions =
         await AdditionalAllowanceDefinition.create({
@@ -72,8 +70,8 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+ 
+    return next(createError.createError(503, 'Internal Server Error'))
   }
 };
 
@@ -88,7 +86,6 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
     const allowanceDefinition = await AdditionalAllowanceDefinition.findOne({
       where: { id },
     });
-    console.log("allowanceDefinition", !allowanceDefinition);
     if (!allowanceDefinition) {
 
       return next(createError.createError(404, "Allowance definition not exist"))
@@ -103,8 +100,8 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+ 
+    return next(createError.createError(503, 'Internal Server Error'))
   }
 };
 
@@ -126,8 +123,7 @@ exports.deleteAdditionalAllowanceDefinition = async (req, res, next) => {
     
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(createError.createError(503, 'Internal Server Error'))
   }
 };
 

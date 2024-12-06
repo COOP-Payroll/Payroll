@@ -6,7 +6,6 @@ const createError= require("../utils/error")
 //GET ALL DEDUCTION DEFINITION
 exports.getAllDeductionDefinition = async (req, res,next) => {
   const Company = req.user.id;
-  console.log(Company);
   try {
     const criteria = {
       CompanyId: req.user.id,
@@ -19,8 +18,7 @@ exports.getAllDeductionDefinition = async (req, res,next) => {
       deductionDefinitions,
     });
   } catch (error) {
-   console.log(error)
-   return next(createError.createError(500,"Internal server error"))
+  return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 //GET BY ID
@@ -30,8 +28,7 @@ exports.getDeductionDefinitionById = async (req, res,next) => {
     const deductionDefinition = await DeductionDefinition.findByPk(id);
     return res.json(deductionDefinition);
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -71,8 +68,7 @@ exports.createDeductionDefinition = async (req, res, next) => {
     }
 
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -100,8 +96,7 @@ exports.updateDeductionDefinition = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -118,12 +113,9 @@ exports.deleteDeductionDefinition = async (req, res, next) => {
       await DeductionDefinition.destroy({ where: { id } });
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
-      return res
-        .status(404)
-        .json({ message: "There is no Deduction Definition with this ID" });
+      return next(createError.createError(404, "Deduction definition not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500,"Internal server error"))
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

@@ -28,8 +28,9 @@ exports.getAllPackages = async (req, res, next) => {
       data: packages,
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -53,8 +54,9 @@ exports.getMonthlyPackages = async (req, res, next) => {
       monthlyPackages,
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -77,8 +79,9 @@ exports.getYearlyPackages = async (req, res, next) => {
       yearlyPackages,
     });
   } catch (error) {
-    console.log(error);
-    return next(createError.createError(500, "Internal server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -105,7 +108,9 @@ exports.getpackageById = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(500, "Internal server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -123,7 +128,6 @@ exports.createPackage = async (req, res, next) => {
       isTrial,
     } = req.body;
 
-    // console.log("service data:", service.length)
     const existingPackage = await Package.findOne({
       where: {
         packageType: packageType,
@@ -135,7 +139,7 @@ exports.createPackage = async (req, res, next) => {
     });
 
     if (existingPackage) {
-      return next(createError.createError(409, "Package already exists"));
+      return next(createError.createError(400, "Package already exists"));
     } else {
       const packages = await Package.create({
         packageType,
@@ -146,7 +150,6 @@ exports.createPackage = async (req, res, next) => {
         discount,
         isTrial,
       });
-      console.log(packages.length);
       if (packages) {
         const services = Service.bulkCreate(service).then((createdService) => {
           packages.setServices(createdService);
@@ -160,8 +163,9 @@ exports.createPackage = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error);
-    next(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.createPackageWithServie = async (req, res, next) => {
@@ -192,25 +196,27 @@ exports.createPackageWithServie = async (req, res, next) => {
       { transaction }
     );
 
-   
     // Convert service IDs from strings to numbers
-    const serviceIds = services.map(service => Number(service));
+    const serviceIds = services.map((service) => Number(service));
 
     // Validate that all service IDs exist
-    const serviceInstances = await Services.findAll({
-      where: {
-        id: serviceIds,
+    const serviceInstances = await Services.findAll(
+      {
+        where: {
+          id: serviceIds,
+        },
       },
-    }, { transaction });
+      { transaction }
+    );
 
     if (serviceInstances.length !== serviceIds.length) {
-      throw createError(409, "One or more services not found");
+      throw createError(400, "One or more services not found");
     }
 
     // Create entries in the join table
-    const packageServiceEntries = serviceIds.map(serviceId => ({
+    const packageServiceEntries = serviceIds.map((serviceId) => ({
       PackageInfoId: newPackage.id,
-      ServiceId:serviceId,
+      ServiceId: serviceId,
       isActive: true,
     }));
 
@@ -224,10 +230,11 @@ exports.createPackageWithServie = async (req, res, next) => {
       package: newPackage,
     });
   } catch (error) {
-    console.error(error);
     // Rollback the transaction in case of error
     await transaction.rollback();
-    return next(createError.createError(500, "Internal server error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.updatePackage = async (req, res, next) => {
@@ -289,8 +296,9 @@ exports.updatePackage = async (req, res, next) => {
       data: updatedPackage,
     });
   } catch (err) {
-    console.error(err);
-    return next(createError.createError(500, "Internal Server Error"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -318,8 +326,8 @@ exports.updateService = async (req, res, next) => {
     });
   } catch (error) {
     ``;
-    console.log(error);
-    return next(createError.createError(500, "Internal Server Error"));
+    
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -345,8 +353,7 @@ exports.deleteService = async (req, res, next) => {
     });
   } catch (error) {
     ``;
-    console.log(error);
-    return next(createError.createError(500, "Internal Server Error"));
+   return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
 
@@ -406,7 +413,7 @@ exports.deleteService = async (req, res, next) => {
 //       data: { updatedPackage }
 //     });
 //   } catch (err) {
-//     return next(createError.createError(500, "Internal Server Error"));
+//    return next(createError.createError(503, "An error occurred, please try again later"));
 
 //   }
 // };
@@ -418,11 +425,8 @@ exports.deletePackage = async (req, res, next) => {
 
     const packageInstance = await Package.findByPk(id, { include: Service });
     if (!packageInstance) {
-      return res
-        .status(409)
-        .json({ message: "There is no package with this ID" });
+     return next(createError.createError(404,"Package not found"))
     } else {
-      console.log(packageInstance);
       // Delete associated services
       const serviceIds = Array.isArray(packageInstance.services)
         ? packageInstance.services.map((service) => service.id)
@@ -446,7 +450,6 @@ exports.deletePackage = async (req, res, next) => {
     }
   } catch (error) {
     await t.rollback();
-    console.log(error);
-    return next(createError.createError(500, "Internal Server Error "));
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };

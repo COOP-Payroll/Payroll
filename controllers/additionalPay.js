@@ -3,63 +3,59 @@ const AdditionalpayDefinition = require("../models/additionalPayDefinition.js");
 const Grade = require("../models/grade");
 const Company = require("../models/company.js");
 const Employee = require("../models/employee.js");
-const createError = require('../utils/error')
+const createError = require("../utils/error");
 
 //GET ALL ADDITIONAL PAY
-exports.getAllAdditionalPay = async (req, res,next) => {
-    try {
-      const CompanyId = req.user.id;
-      const additionalPay = await AdditionalPay.findAll({ where: { CompanyId } });
-      res.status(200).json({
-        count: additionalPay.length,
-        additionalPay,
-      });
-    } catch (error) {
-      console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
-    }
-  };
+exports.getAllAdditionalPay = async (req, res, next) => {
+  try {
+    const CompanyId = req.user.id;
+    const additionalPay = await AdditionalPay.findAll({ where: { CompanyId } });
+    res.status(200).json({
+      count: additionalPay.length,
+      additionalPay,
+    });
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
 
-  //GET ADDITIONALPAYBYID 
-exports.getAdditionalPayById = async (req, res,next) => {
+//GET ADDITIONALPAYBYID
+exports.getAdditionalPayById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const additionalPay = await AdditionalPay.findByPk(id);
     if (!additionalPay) {
-
-      return next(createError.createError(404,"Allowance not found"))
+      return next(createError.createError(404, "Allowance not found"));
     } else {
-     return  res.json(additionalPay);
+      return res.json(additionalPay);
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 //CREATE ADDITIONAL PAY
 exports.createAdditionalPay = async (req, res, next) => {
   try {
-  
     const amount = req.body.amount;
     const employeeId = req.body.employeeId;
     const additionalPayDefinitionId = req.body.additionalPayDefinitionId;
     const payrollDefinitionId = req.body.payrollDefinitionId;
     const CompanyId = req.user.id;
     const employee = await Employee.findOne({
-      where:{id: employeeId,
-        CompanyId
-      }
+      where: { id: employeeId, CompanyId },
     });
 
- 
-    if(!employee){
-      return next(createError.createError(404,'Employee not found'))
+    if (!employee) {
+      return next(createError.createError(404, "Employee not found"));
     }
-  
 
     const additionalPayDefinition1 = await AdditionalpayDefinition.findByPk(
-        additionalPayDefinitionId,
+      additionalPayDefinitionId,
       {
         include: [
           {
@@ -69,63 +65,57 @@ exports.createAdditionalPay = async (req, res, next) => {
         ],
       }
     );
-    
-    
+
     const allDefinition = await AdditionalpayDefinition.findByPk(
-      additionalPayDefinitionId,
+      additionalPayDefinitionId
     );
     if (!employee) {
-
-      return next(createError.createError(404,"Employee not found"))
+      return next(createError.createError(404, "Employee not found"));
     } else if (!allDefinition) {
-      res.status(404).json({
-        message: "additional payment definition is not defined",
-        additionalPayDefinition1,
-      });
-
-   
-    }
-    else if (additionalPayDefinition1) {
-      res.status(404).json({
-        message: "additional payment definition is already added",
-      });
+      return next(createError.createError(404, "Resource not found"));
+    } else if (additionalPayDefinition1) {
+      return next(createError.createError(400, "Duplicate resource"));
     } else {
       // Handle the case where the company with the given ID is not found
       const additionalPayType = await AdditionalpayDefinition.findByPk(
-        additionalPayDefinitionId,
-        )
+        additionalPayDefinitionId
+      );
       const type2 = additionalPayType.type;
-      if(type2==='deduction'){
-        const amount = -(req.body.amount);
+      if (type2 === "deduction") {
+        const amount = -req.body.amount;
         const additionalPay = await AdditionalPay.create({ amount });
         await additionalPay.setCompany(Number(req.user.id));
-        await additionalPay.setAdditionalPayDefinition(additionalPayDefinitionId);
+        await additionalPay.setAdditionalPayDefinition(
+          additionalPayDefinitionId
+        );
         await additionalPay.setEmployee(employee);
         await additionalPay.setPayrollDefinition(payrollDefinitionId);
 
         res.status(200).json({
-            message: "Successfully Registered",
-            additionalPay,
-            // additionalAllowanceDefinition1,
+          message: "Successfully Registered",
+          additionalPay,
+          // additionalAllowanceDefinition1,
         });
-      }else{
+      } else {
         const additionalPay = await AdditionalPay.create({ amount });
         await additionalPay.setCompany(Number(req.user.id));
-        await additionalPay.setAdditionalPayDefinition(additionalPayDefinitionId);
+        await additionalPay.setAdditionalPayDefinition(
+          additionalPayDefinitionId
+        );
         await additionalPay.setEmployee(employee);
         await additionalPay.setPayrollDefinition(payrollDefinitionId);
-        
+
         res.status(200).json({
-            message: "Successfully Registered",
-            additionalPay,
-            // additionalAllowanceDefinition1,
+          message: "Successfully Registered",
+          additionalPay,
+          // additionalAllowanceDefinition1,
         });
       }
-      
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -139,20 +129,23 @@ exports.updateAdditionalPay = async (req, res, next) => {
     if (amount) {
       updates.amount = amount;
     }
-    const addAddionalPay= await AdditionalPay.findOne({where:{id,CompanyId }})
+    const addAddionalPay = await AdditionalPay.findOne({
+      where: { id, CompanyId },
+    });
 
-    if(!addAddionalPay){
-      return next(createError.createError(404,"Additional pay not found"))
+    if (!addAddionalPay) {
+      return next(createError.createError(404, "Additional pay not found"));
     }
 
-    const result = await addAddionalPay.update({ amount },);
+    const result = await addAddionalPay.update({ amount });
 
     res.status(200).json({
       message: "updated successfully",
     });
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -165,12 +158,11 @@ exports.deleteAdditionalPay = async (req, res, next) => {
       await AdditionalPay.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-      res
-        .status(404)
-        .json({ message: "There is no Deduction Definition with this ID" });
+      return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    console.log(error)
-    return next(createError.createError(500, 'Internal Server Error'))
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
