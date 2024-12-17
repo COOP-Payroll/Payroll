@@ -326,8 +326,10 @@ exports.updateService = async (req, res, next) => {
     });
   } catch (error) {
     ``;
-    
-   return next(createError.createError(503, "An error occurred, please try again later"));
+
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -353,7 +355,9 @@ exports.deleteService = async (req, res, next) => {
     });
   } catch (error) {
     ``;
-   return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -425,7 +429,7 @@ exports.deletePackage = async (req, res, next) => {
 
     const packageInstance = await Package.findByPk(id, { include: Service });
     if (!packageInstance) {
-     return next(createError.createError(404,"Package not found"))
+      return next(createError.createError(404, "Package not found"));
     } else {
       // Delete associated services
       const serviceIds = Array.isArray(packageInstance.services)
@@ -450,6 +454,8 @@ exports.deletePackage = async (req, res, next) => {
     }
   } catch (error) {
     await t.rollback();
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

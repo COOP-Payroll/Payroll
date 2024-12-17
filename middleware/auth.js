@@ -7,8 +7,11 @@ const CustomRole = require("../models/customRole");
 const Permission = require("../models/permission.js");
 const createError = require(".././utils/error.js");
 ///
+const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 const validator = require("validator");
 const { json } = require("body-parser");
+// const rateLimit = require('express-rate-limit');
 // exports.sanitizeInput = (req, res, next) => {
 //   try {
 //     for (const key in req.body) {
@@ -199,14 +202,11 @@ exports.protectAll = async (req, res, next) => {
         )
       );
     }
-    const decoded = await promisify(jwt.verify)(token, "secret");
+    const decoded = await promisify(jwt.verify)(token, accessTokenSecret);
 
     let currentUser;
 
-
-
     if (decoded.role === "superAdmin") {
-
       currentUser = await User.findByPk(Number(decoded.id));
     } else if (decoded.role === "companyAdmin") {
       currentUser = await Company.findByPk(Number(decoded.id));

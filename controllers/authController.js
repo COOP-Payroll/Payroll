@@ -35,12 +35,12 @@ const signToken = (
       },
       accessTokenSecret,
       {
-        expiresIn: "7d",
+        expiresIn: "30m",
       }
     );
 
     const refreshToken = jwt.sign({ id, role }, refreshTokenSecret, {
-      expiresIn: "90d",
+      expiresIn: "30m",
     });
     return { token, refreshToken };
   } catch (error) {
@@ -55,14 +55,14 @@ const signTokenSuperAdmin = (id, role, fullName, phoneNumber, email) => {
       { id, role, fullName, phoneNumber, email },
       accessTokenSecret,
       {
-        expiresIn: "7d",
+        expiresIn: "30m",
       }
     );
     const refreshToken = jwt.sign(
       { id, role, fullName, phoneNumber, email },
       refreshTokenSecret,
       {
-        expiresIn: "90d", // Set your desired expiration time for refresh tokens
+        expiresIn: "30m", // Set your desired expiration time for refresh tokens
       }
     );
 
@@ -124,7 +124,7 @@ const signTokenCompany = (company, res) => {
       },
       accessTokenSecret,
       {
-        expiresIn: "7d",
+        expiresIn: "30m",
       }
     );
     const refreshToken = jwt.sign(
@@ -151,7 +151,7 @@ const signTokenCompany = (company, res) => {
       },
       refreshTokenSecret,
       {
-        expiresIn: "90d", // Set your desired expiration time for refresh tokens
+        expiresIn: "30m", // Set your desired expiration time for refresh tokens
       }
     );
 
@@ -170,14 +170,7 @@ const createSendTokenCompany = async (company, statusCode, res) => {
   try {
     const { token, refreshToken } = signTokenCompany(company, res);
 
-    const cookieOptions = {
-      expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
-
-      secure: "production" ? true : false,
-      httpOnly: true,
-    };
     company.password = undefined;
-    // res.cookie("jwt", token, cookieOptions);
     res.status(200).json({
       // data: {
       //   company,
@@ -212,7 +205,6 @@ const createSendTokenSuperAdmin = async (company, statusCode, res) => {
     );
 
     company.password = undefined;
-    // res.cookie("jwt", token, cookieOptions);
     res.status(statusCode).json({
       token,
       refreshToken,
@@ -248,14 +240,8 @@ const createSendToken = async (company, statusCode, res) => {
       company1.isProjectBased,
       company
     );
-    const cookieOptions = {
-      expires: new Date(Date.now() + 1000 * 24 * 60 * 60 * 1000),
 
-      secure: "production" ? true : false,
-      httpOnly: true,
-    };
     company.password = undefined;
-    // res.cookie("jwt", token, cookieOptions);
     res.status(statusCode).json({
       token,
       refreshToken,
@@ -423,7 +409,7 @@ exports.refreshToken = async (req, res, next) => {
       { id: decoded.id, role: decoded.role },
       accessTokenSecret,
       {
-        expiresIn: "90d",
+        expiresIn: "30m",
       }
     );
 

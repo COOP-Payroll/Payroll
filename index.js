@@ -7,6 +7,7 @@ const middleware = require("./middleware/auth.js");
 const helmet = require("helmet");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger"); // Path to your Swagger configuration file
+const session = require("express-session");
 // const csrf = require("csrf");
 require("dotenv").config();
 const sequelize = require("./database/db");
@@ -206,6 +207,18 @@ app.use((req, res, next) => {
   next(error);
 });
 
+app.use(
+  session({
+    secret: "yourSecretKey",
+    resave: false,
+    saveUninitialized: false, // Don't save the session if it's not initialized
+    cookie: {
+      httpOnly: true, // Make the cookie inaccessible to JavaScript (security measure)
+      secure: false, // Set to true if you're using HTTPS, false for development
+      maxAge: 0, // Expire the cookie immediately, preventing it from being sent
+    },
+  })
+);
 // app.use(
 //   helmet.contentSecurityPolicy({
 //     directives: {

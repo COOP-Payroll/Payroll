@@ -6,7 +6,8 @@ const createError = require("../utils/error.js");
 exports.getAllPackages = async (req, res, next) => {
   try {
     const packages = await Package.findAll();
-
+    // return res.json("dddd");
+    // res.removeHeader("Set-Cookie");
     return res.status(200).json({
       count: packages.length,
       packages,
