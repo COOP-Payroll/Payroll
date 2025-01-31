@@ -43,7 +43,7 @@ exports.getcompanyProfiles = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Data found",
-      data: company,
+      company,
     });
   } catch (error) {
     return next(createError.createError(503, error.message));
@@ -554,8 +554,8 @@ exports.getAllCompany = async (req, res, next) => {
       return company;
     });
     return res.json({
-      count: companies.length,
-
+      // count: companies.length,
+      message: "Fetched successfully",
       companies,
     });
   } catch (error) {
@@ -613,7 +613,7 @@ exports.getCompanyById = async (req, res, next) => {
     if (!company) {
       return next(createError.createError(404, "Company does not exist"));
     } else {
-      return res.json(company);
+      return res.json({ message: "Fetched successfully", company });
     }
   } catch (error) {
     return next(
@@ -671,7 +671,7 @@ exports.updateCompanyDetails = async (req, res, next) => {
     await transaction.commit();
     return res.status(200).json({
       message: "Company details updated successfully",
-      company: updatedCompany,
+      updatedCompany,
     });
   } catch (error) {
     await transaction.rollback();
@@ -709,9 +709,9 @@ exports.updateCompany = async (req, res, next) => {
         header: headerPath,
         footer: footerPath,
       });
-      return res
-        .status(200)
-        .json(successResponse.createSuccess("Updated successfully"));
+      return res.status(200).json({
+        message: "Updated successfully",
+      });
       // return res.json(updatedData)
     }
   } catch (error) {
@@ -735,9 +735,7 @@ exports.deleteCompany = async (req, res, next) => {
 
       await company.destroy({ cascade: true });
 
-      return res
-        .status(200)
-        .json(successResponse.createSuccess("company deleted successfully"));
+      return res.status(200).json({ message: "company deleted successfully" });
     }
   } catch (error) {
     return next(
@@ -762,6 +760,7 @@ exports.getAllActiveCompany = async (req, res, next) => {
     });
     res.status(200).json({
       count: activeCompany.length,
+      message: "Fetched successfully",
       activeCompany,
     });
   } catch (error) {
@@ -789,6 +788,7 @@ exports.getAllPendingCompany = async (req, res, next) => {
 
     res.status(200).json({
       count: pendingCompany.length,
+      message: "Fetched successfully",
       pendingCompany,
     });
   } catch (error) {
@@ -816,6 +816,7 @@ exports.getAllBlockedCompany = async (req, res, next) => {
 
     res.status(200).json({
       count: blockedCompany.length,
+      message: "Fetched successfully",
       blockedCompany,
     });
   } catch (error) {
@@ -845,6 +846,7 @@ exports.getDeactivatedCompany = async (req, res, next) => {
       },
     });
     res.status(200).json({
+      message: "Fetched successfully",
       deactiveCompany,
     });
   } catch (error) {
@@ -872,6 +874,7 @@ exports.getAllDeniedCompany = async (req, res, next) => {
 
     res.status(200).json({
       count: deniedCompany.length,
+      message: "Fetched successfully",
       deniedCompany,
     });
   } catch (error) {
@@ -1024,7 +1027,10 @@ exports.resetPasswordToken = async (req, res, next) => {
 
     res.json({ message: "Password set successfully" });
   } catch (error) {
-    res.status(503).json({ error: "Internal server error" });
+    // res.status(503).json({ error: "Internal server error" });
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -1137,17 +1143,17 @@ exports.resetTodefauldCompanyProfiles = async (req, res, next) => {
       secondary_Gradient_Color: "",
       social_Media_Images: true,
     };
-    return res.json({
-      success: true,
-      message: "Reset to default successfully",
-      data: updatedFields, // This contains only the updated rows
-    });
-
     // return res.json({
     //   success: true,
-    //   message: "Reset do default successfully",
-    //   updatedCompany,
+    //   message: "Reset to default successfully",
+    //   data: updatedFields, // This contains only the updated rows
     // });
+
+    return res.json({
+      success: true,
+      message: "Reset do default successfully",
+      updatedCompany,
+    });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")

@@ -907,7 +907,9 @@ exports.findByDepartment = async (req, res, next) => {
       });
       res.status(200).json({
         count: Employees.length,
-        Employees,
+
+        message: "Fetched successfully",
+        data: Employees,
       });
     }
   } catch (error) {

@@ -25,7 +25,12 @@ exports.getMonthlyPackages = async (req, res, next) => {
       where: { packageType: "Monthly" },
     });
 
-    res.status(200).json({ count: monthlyPackages.length, monthlyPackages });
+    res.status(200).json({
+      // status: 200,
+      message: "Monthly packages fetched successfully.",
+      // count: monthlyPackages.length,
+      monthlyPackages,
+    });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")
@@ -39,7 +44,12 @@ exports.getYearlyPackages = async (req, res, next) => {
       where: { packageType: "Yearly" },
     });
 
-    res.status(200).json({ count: yearlyPackages.length, yearlyPackages });
+    res.status(200).json({
+      // status: 200,
+      message: "Yearly packages fetched successfully.",
+      // count: yearlyPackages.length,
+       yearlyPackages,
+    });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")
