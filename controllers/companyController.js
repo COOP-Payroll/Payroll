@@ -43,7 +43,7 @@ exports.getcompanyProfiles = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Data found",
-      company,
+      data: company,
     });
   } catch (error) {
     return next(createError.createError(503, error.message));
@@ -556,7 +556,7 @@ exports.getAllCompany = async (req, res, next) => {
     return res.json({
       // count: companies.length,
       message: "Fetched successfully",
-      companies,
+      data: companies,
     });
   } catch (error) {
     return next(
@@ -613,7 +613,7 @@ exports.getCompanyById = async (req, res, next) => {
     if (!company) {
       return next(createError.createError(404, "Company does not exist"));
     } else {
-      return res.json({ message: "Fetched successfully", company });
+      return res.json({ message: "Fetched successfully", data: company });
     }
   } catch (error) {
     return next(
@@ -671,7 +671,7 @@ exports.updateCompanyDetails = async (req, res, next) => {
     await transaction.commit();
     return res.status(200).json({
       message: "Company details updated successfully",
-      updatedCompany,
+      data: updatedCompany,
     });
   } catch (error) {
     await transaction.rollback();
@@ -761,7 +761,7 @@ exports.getAllActiveCompany = async (req, res, next) => {
     res.status(200).json({
       count: activeCompany.length,
       message: "Fetched successfully",
-      activeCompany,
+      data: activeCompany,
     });
   } catch (error) {
     return next(
@@ -789,7 +789,7 @@ exports.getAllPendingCompany = async (req, res, next) => {
     res.status(200).json({
       count: pendingCompany.length,
       message: "Fetched successfully",
-      pendingCompany,
+      data: pendingCompany,
     });
   } catch (error) {
     return next(
@@ -817,7 +817,7 @@ exports.getAllBlockedCompany = async (req, res, next) => {
     res.status(200).json({
       count: blockedCompany.length,
       message: "Fetched successfully",
-      blockedCompany,
+      data: blockedCompany,
     });
   } catch (error) {
     return next(
@@ -847,7 +847,7 @@ exports.getDeactivatedCompany = async (req, res, next) => {
     });
     res.status(200).json({
       message: "Fetched successfully",
-      deactiveCompany,
+      data: deactiveCompany,
     });
   } catch (error) {
     return next(
@@ -875,7 +875,7 @@ exports.getAllDeniedCompany = async (req, res, next) => {
     res.status(200).json({
       count: deniedCompany.length,
       message: "Fetched successfully",
-      deniedCompany,
+      data: deniedCompany,
     });
   } catch (error) {
     return next(
@@ -908,9 +908,11 @@ exports.getSubscriptionLeftDate = async (req, res, next) => {
     const startDate = moment(subscriptionLeftDate.createdAt);
     const diff = nextPaymentDate.diff(currentDate, "days");
     return res.status(200).json({
-      Subscription_left_date: diff,
-      packageType: subscriptionLeftDate?.Package?.packageType,
-      packageName: subscriptionLeftDate?.Package?.packageName,
+      data: {
+        Subscription_left_date: diff,
+        packageType: subscriptionLeftDate?.Package?.packageType,
+        packageName: subscriptionLeftDate?.Package?.packageName,
+      },
     });
   } catch (error) {
     return next(
@@ -1152,7 +1154,7 @@ exports.resetTodefauldCompanyProfiles = async (req, res, next) => {
     return res.json({
       success: true,
       message: "Reset do default successfully",
-      updatedCompany,
+      data: updatedCompany,
     });
   } catch (error) {
     return next(
@@ -1171,7 +1173,7 @@ exports.createPassword = async (req, res, next) => {
     //   subject: subject,
     //   text,
     // });
-    return res.json(password);
+    return res.json({ data: password });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")

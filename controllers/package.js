@@ -10,7 +10,7 @@ exports.getAllPackages = async (req, res, next) => {
     // res.removeHeader("Set-Cookie");
     return res.status(200).json({
       count: packages.length,
-      packages,
+      data: packages,
     });
   } catch (error) {
     return next(
@@ -29,7 +29,7 @@ exports.getMonthlyPackages = async (req, res, next) => {
       // status: 200,
       message: "Monthly packages fetched successfully.",
       // count: monthlyPackages.length,
-      monthlyPackages,
+      data: monthlyPackages,
     });
   } catch (error) {
     return next(
@@ -48,7 +48,7 @@ exports.getYearlyPackages = async (req, res, next) => {
       // status: 200,
       message: "Yearly packages fetched successfully.",
       // count: yearlyPackages.length,
-       yearlyPackages,
+      data: yearlyPackages,
     });
   } catch (error) {
     return next(
@@ -61,7 +61,7 @@ exports.getpackageById = async (req, res) => {
   try {
     const { id } = req.params;
     const package = await Package.findByPk(id);
-    return res.json(package);
+    return res.json({ data: package });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")
@@ -118,7 +118,7 @@ exports.createPackage = async (req, res, next) => {
 
       return res.status(200).json({
         message: "Successfully Registered",
-        packages,
+        data: packages,
       });
     }
   } catch (error) {
