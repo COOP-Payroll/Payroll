@@ -57,7 +57,7 @@ exports.getYearlyPackages = async (req, res, next) => {
   }
 };
 
-exports.getpackageById = async (req, res) => {
+exports.getpackageById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const package = await Package.findByPk(id);

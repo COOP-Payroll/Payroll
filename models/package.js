@@ -2,19 +2,18 @@ const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 // const ServiceModel=require("../models/services.js")
 const Package = sequelize.define("Package", {
-  
   packageName: {
-    type: DataTypes.ENUM("Custom", "Gold", "Platinium","Trial"),
+    type: DataTypes.ENUM("Custom", "Gold", "Platinium", "Trial"),
     allowNull: false,
     validate: {
-      isIn: [['Custom', 'Gold','Platinium','Trial']],
+      isIn: [["Custom", "Gold", "Platinium", "Trial"]],
     },
   },
-  packageType:{
-    type: DataTypes.ENUM("Yearly", "Monthly","Trial"),
+  packageType: {
+    type: DataTypes.ENUM("Yearly", "Monthly", "Trial"),
     allowNull: false,
     validate: {
-      isIn: [['Yearly', 'Monthly','Trial']],
+      isIn: [["Yearly", "Monthly", "Trial"]],
     },
   },
   ///
@@ -43,6 +42,5 @@ const Package = sequelize.define("Package", {
 
 // Define a one-to-many association between PackageModel and ServiceModel
 // Package.hasMany(ServiceModel, { as: 'services' });
-
 
 module.exports = Package;

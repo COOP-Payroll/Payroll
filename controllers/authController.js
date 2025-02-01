@@ -255,6 +255,8 @@ const createSendToken = async (company, statusCode, res) => {
 
 exports.login = async (req, res, next) => {
   try {
+
+  // return res.json("dkjhgf");?
     let company;
     const { email, password, companyCode } = req.body;
 

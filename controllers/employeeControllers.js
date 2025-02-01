@@ -179,6 +179,8 @@ exports.getAllEmployee = async (req, res, next) => {
       ],
     });
 
+    // return res.json("fghgfdf")
+
     const sanitizedEmployees = Employees.map((employee) => {
       // Destructure the employee object excluding the password field
       const { password, ...sanitizedEmployee } = employee.dataValues;

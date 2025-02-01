@@ -5,6 +5,7 @@ const createError = require("../utils/error.js");
 //GET ALL DEPARTMENT
 exports.getAllDepartment = async (req, res, next) => {
   try {
+
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const departments = await Department.findAll({
@@ -15,7 +16,8 @@ exports.getAllDepartment = async (req, res, next) => {
     } else {
       return res.status(200).json({
         count: departments.length,
-        departments,
+        message: "Fetched successfully",
+        data: departments,
       });
     }
   } catch (error) {
@@ -40,7 +42,10 @@ exports.getDepartmentById = async (req, res, next) => {
       //   message: "There is no Department with this ID",
       // });
     } else {
-      return res.status(200).json({ department });
+      return res.status(200).json({
+        message: "Fetched successfully",
+        data: department,
+      });
     }
   } catch (error) {
     return next(
@@ -63,7 +68,7 @@ exports.createDepartment = async (req, res, next) => {
     const checkDepartment = await Department.findOne({ where: criteria });
 
     if (checkDepartment) {
-      res.status(404).json("Department is defined already ");
+      res.status(404).json({ message: "Department is defined already " });
     } else {
       const departments = await Department.create({
         deptName,
@@ -73,7 +78,7 @@ exports.createDepartment = async (req, res, next) => {
       await departments.setCompany(req.user.id);
       return res.status(200).json({
         message: "Successfully Registered",
-        departments,
+        data: departments,
       });
     }
   } catch (error) {

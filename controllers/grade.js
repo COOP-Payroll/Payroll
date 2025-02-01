@@ -33,7 +33,8 @@ exports.getAllGrade = async (req, res, next) => {
     } else {
       res.status(200).json({
         count: companyGrade.length,
-        companyGrade,
+        message: "Fetched successfully",
+        data: companyGrade,
       });
     }
   } catch (error) {
@@ -57,7 +58,7 @@ exports.getGradeById = async (req, res, next) => {
         createError.createError(404, "There is no Grade with this ID")
       );
     } else {
-      res.json(grade);
+      res.json({ message: "Fetched successfully", data: grade });
     }
   } catch (error) {
     return next(
@@ -100,7 +101,7 @@ exports.createGrade = async (req, res, next) => {
 
       return res.status(200).json({
         message: "Successfully Registered",
-        grade,
+        data: grade,
       });
     } else {
       return next(
@@ -142,7 +143,7 @@ exports.updateGrade = async (req, res, next) => {
 
     res.status(200).json({
       message: "updated successfully",
-      result,
+      data: result,
     });
   } catch (error) {
     return next(

@@ -27,7 +27,8 @@ exports.getAllTaxslabs = async (req, res, next) => {
       });
       return res.status(200).json({
         count: taxslab.length,
-        taxslab,
+        message: "Fetched successfully",
+        data: taxslab,
       });
     } else {
       const taxslabs = await Taxslab.findAll({
@@ -44,11 +45,14 @@ exports.getAllTaxslabs = async (req, res, next) => {
 
       return res.status(200).json({
         count: taxslab.length,
-        taxslab,
+        message: "Fetched successfully",
+        data: taxslab,
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -66,7 +70,9 @@ exports.getTaxslabById = async (req, res, next) => {
       return res.json(taxslab);
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -127,7 +133,6 @@ exports.createTaxslab = async (req, res, next) => {
       });
 
       if (checkTax === "undefined" || checkTax.length === 0) {
-       
         const taxslab = await Taxslab.create({
           from_Salary,
           to_Salary: data,
@@ -148,7 +153,9 @@ exports.createTaxslab = async (req, res, next) => {
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -198,7 +205,9 @@ exports.updateTaxslab = async (req, res, next) => {
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -219,7 +228,9 @@ exports.deleteTaxslab = async (req, res, next) => {
         .json({ message: "There is no tax rule with this ID" });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -258,7 +269,9 @@ exports.assignTaxruleToCompany = async (req, res, next) => {
 
     return res.json(taxRule);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -275,9 +288,10 @@ exports.getCompanyWITHtAXSLAB = async (req, res, next) => {
     }
 
     const associatedCompanies = await Taxslab.getCompany();
-
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 //RESTORE
@@ -338,7 +352,9 @@ exports.updateMany = async (req, res, next) => {
         .json({ message: `Updated ${totalUpdatedCount} tax slabs` });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -374,7 +390,9 @@ exports.restoreToDefault = async (req, res, next) => {
       tax,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -387,6 +405,8 @@ exports.createNewTaxslab = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
