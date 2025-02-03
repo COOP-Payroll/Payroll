@@ -3,6 +3,11 @@ const sequelize = require("../database/db.js");
 const Company = require("./company.js");
 
 const Department = sequelize.define("Department", {
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true,
+    autoIncrement: true, // Auto-increments the id field
+  },
   deptName: {
     type: DataTypes.STRING,
     allowNull: false,

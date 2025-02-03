@@ -255,11 +255,9 @@ const createSendToken = async (company, statusCode, res) => {
 
 exports.login = async (req, res, next) => {
   try {
-
-  // return res.json("dkjhgf");?
+    // return res.json("dkjhgf");?
     let company;
     const { email, password, companyCode } = req.body;
-
     if (!email || !password || !companyCode) {
       return res
         .status(404)
@@ -278,7 +276,7 @@ exports.login = async (req, res, next) => {
         },
       ],
     });
-
+    // return res.json(company);
     if (company === null) {
       company = await Employee.findOne({
         where: { email },
@@ -299,17 +297,18 @@ exports.login = async (req, res, next) => {
         )
       );
     }
-    if (company.role === "companyAdmin") {
+
+    if (company?.role === "companyAdmin") {
       if (
         !company ||
-        company.companyCode != companyCode ||
-        !(await bcrypt.compare(password, company.password))
+        company?.companyCode != companyCode ||
+        !(await bcrypt.compare(password, company?.password))
       ) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
     }
 
-    if (company.role === "employee" || company.role === "approver") {
+    if (company?.role === "employee" || company?.role === "approver") {
       createSendToken(company, 200, res);
     } else {
       if (company.status === "active") {
@@ -336,6 +335,7 @@ exports.login = async (req, res, next) => {
       }
     }
   } catch (err) {
+    console.log(err);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

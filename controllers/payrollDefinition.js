@@ -18,7 +18,9 @@ exports.getAllPayroll = async (req, res, next) => {
       payroll,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -51,7 +53,9 @@ exports.getAllPayrollForCurrentYear = async (req, res, next) => {
       payrollDefinition,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -68,8 +72,9 @@ exports.getPayrollDefinitionById = async (req, res, next) => {
       return res.json(payroll);
     }
   } catch (error) {
-  
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.getLatestPayroll = async (req, res, next) => {
@@ -78,10 +83,12 @@ exports.getLatestPayroll = async (req, res, next) => {
       order: [["createdAt", "DESC"]],
     });
     const lastEndDate = latestPayroll.endDate.toISOString().substring(0, 10);
- 
+
     res.json(latestPayroll);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.createPayroll = async (req, res, next) => {
@@ -91,7 +98,15 @@ exports.createPayroll = async (req, res, next) => {
     // };
     const CompanyId = req.user.id;
 
-    const payrollData = req.body;
+    // const payrollData = req.body;
+    // Ensure req.body is an array
+    const payrollData = Array.isArray(req.body)
+      ? req.body
+      : Object.values(req.body);
+
+    // return res.json(payrollData);
+
+    // return res.json(payrollData);
 
     // Check if any of the provided payroll names already exist for the given CompanyId
     const existingPayrollNames = await PayrollDefinition.findAll({
@@ -133,7 +148,9 @@ exports.createPayroll = async (req, res, next) => {
       payrollDefinition,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -162,7 +179,9 @@ exports.updatePayrollDefinition = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -179,7 +198,9 @@ exports.deletePayrollDefinition = async (req, res, next) => {
         .json({ message: "There is no  such payroll with this ID" });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.deletePayrolldefinition = async (req, res, next) => {
@@ -196,7 +217,9 @@ exports.deletePayrolldefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -231,6 +254,8 @@ exports.getCurrentMonth = async (req, res, next) => {
       return res.status(200).json(currentMonthPayrolls);
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

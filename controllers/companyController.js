@@ -492,6 +492,7 @@ exports.createCompany = async (req, res, next) => {
 
     // }
   } catch (error) {
+    console.log(error);
     await transaction.rollback();
 
     return next(
@@ -987,6 +988,7 @@ exports.updateAccountInfo = async (req, res, next) => {
       message: "Account info updated successfully",
     });
   } catch (error) {
+    console.log(error);
     await transaction.rollback();
 
     return next(
@@ -1070,6 +1072,8 @@ exports.updateCompanyProfile = async (req, res, next) => {
     const banner = req.files?.logo?.[0]?.path;
 
     const bannerPath = banner ? banner : null;
+
+    // return res.json(req.body);
     const company = await Company.update(
       {
         primary_Color,
@@ -1092,6 +1096,7 @@ exports.updateCompanyProfile = async (req, res, next) => {
       message: "Updated successfully",
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
@@ -1154,9 +1159,10 @@ exports.resetTodefauldCompanyProfiles = async (req, res, next) => {
     return res.json({
       success: true,
       message: "Reset do default successfully",
-      data: updatedCompany,
+      data: updatedFields,
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

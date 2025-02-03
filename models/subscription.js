@@ -4,6 +4,11 @@ const Package = require("../models/package.js");
 const Company = require("../models/company.js");
 
 const Subscription = sequelize.define("Subscription", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true, // ✅ Ensure auto-increment
+  },
   duration: {
     type: DataTypes.INTEGER,
     allowNull: false,

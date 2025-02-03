@@ -3,6 +3,11 @@ const sequelize = require("../database/db.js");
 const bcrypt = require("bcrypt");
 
 const Company = sequelize.define("Company", {
+  // id: {
+  //   type: Sequelize.INTEGER,
+  //   primaryKey: true,
+  //   autoIncrement: true, // Auto-increments the id field
+  // },
   name: {
     type: DataTypes.STRING,
     // allowNull: false,

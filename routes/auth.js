@@ -66,6 +66,85 @@ const loginLimiter = rateLimit({
 });
 
 const router = express.Router();
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ * /api/login/companyLogin:
+ *   post:
+ *     summary: Login for Company User
+ *     description: Logs in a company user using their email, password, and company code, and returns a JWT token upon successful authentication.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address of the company user.
+ *                 example: "test@gmail.com"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: The password of the company user.
+ *                 example: "testC@#1234"
+ *               companyCode:
+ *                 type: string
+ *                 description: The company code for authentication.
+ *                 example: "test"
+ *     responses:
+ *       '200':
+ *         description: Successful login, JWT token returned.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token for authenticating further requests.
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTYiLCJyb2xlIjoibGVnYWwiLCJleHBpcmVkX2Zyb20iOiJ5b3VydGVuIiwiZXhwIjoxNjYyOTQwNzUwfQ.Ovpxk3Y1UP-5Jv9YH8KzZ6WhpaCzYP5MshhOeReKtTI"
+ *       '400':
+ *         description: Bad Request - Missing required fields (email, password, or company code).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Please provide email, password, or company code"
+ *       '401':
+ *         description: Unauthorized - Invalid credentials, or account status is blocked/denied.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid credentials"
+ *       '503':
+ *         description: Service unavailable - Error occurred during login process.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred, please try again later"
+ */
 
 router.post(
   "/login/companyLogin",
@@ -74,6 +153,75 @@ router.post(
   // middleware.sanitizeInput,
   authcontroller.login
 );
+/**
+ * @swagger
+ * /api/login/superAdmin:
+ *   post:
+ *     summary: Login for Super Admin
+ *     description: Logs in a super admin using their email and password, and returns a JWT token upon successful authentication.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address of the super admin.
+ *                 example: "admin@gmail.com"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: The password of the super admin.
+ *                 example: "test"
+ *     responses:
+ *       '200':
+ *         description: Successful login, JWT token returned.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token for authenticating further requests.
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTYiLCJyb2xlIjoic3VwZXIiLCJleHBpcmVkX2Zyb20iOiJzeW1wbGVhZGluIiwiZXhwIjoxNjYyOTQwNzUwfQ.Ovpxk3Y1UP-5Jv9YH8KzZ6WhpaCzYP5MshhOeReKtTI"
+ *       '400':
+ *         description: Bad Request - Missing required fields (email or password).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Please provide email or password"
+ *       '401':
+ *         description: Unauthorized - Invalid credentials.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid credentials"
+ *       '503':
+ *         description: Service unavailable - Error occurred during login process.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred, please try again later"
+ */
+
 router.post(
   "/login/superAdmin",
   loginLimiter,

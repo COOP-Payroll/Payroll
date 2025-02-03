@@ -5,7 +5,6 @@ const departmentController = require("../controllers/department.js");
 
 // Define routes for handling User requests
 
-//GET ALL DEPARTMENT
 /**
  * @swagger
  * components:
@@ -45,16 +44,24 @@ const departmentController = require("../controllers/department.js");
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               deptName:
  *                 type: string
  *                 example: "HR Department"
+ *               location:
+ *                 type: string
+ *                 example: "Headquarters"
+ *               shorthandRepresentation:
+ *                 type: string
+ *                 example: "HR"
  *     responses:
- *       '201':
+ *       '200':
  *         description: Department created successfully.
  *       '400':
- *         description: Bad request.
+ *         description: Bad request - Department already exists.
  *       '401':
- *         description: Unauthorized.
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '503':
+ *         description: Service unavailable - Server error.
  *
  * /api/department/{id}:
  *   get:
@@ -77,7 +84,7 @@ const departmentController = require("../controllers/department.js");
  *       '404':
  *         description: Department not found.
  *       '401':
- *         description: Unauthorized.
+ *         description: Unauthorized - Token is missing or invalid.
  *
  *   put:
  *     summary: Update department by ID
@@ -100,16 +107,22 @@ const departmentController = require("../controllers/department.js");
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               deptName:
  *                 type: string
  *                 example: "Updated Department Name"
+ *               location:
+ *                 type: string
+ *                 example: "Updated Location"
+ *               shorthandRepresentation:
+ *                 type: string
+ *                 example: "HRU"
  *     responses:
  *       '200':
  *         description: Successfully updated department.
  *       '400':
- *         description: Bad request.
+ *         description: Bad request - Invalid department data.
  *       '401':
- *         description: Unauthorized.
+ *         description: Unauthorized - Token is missing or invalid.
  *
  *   delete:
  *     summary: Delete department by ID
@@ -131,9 +144,10 @@ const departmentController = require("../controllers/department.js");
  *       '404':
  *         description: Department not found.
  *       '401':
- *         description: Unauthorized.
+ *         description: Unauthorized - Token is missing or invalid.
  */
 
+//GET ALL DEPARTMENT
 router.get(
   "/",
   middleware.protectAll,

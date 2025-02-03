@@ -200,7 +200,8 @@ exports.getAllEmployee = async (req, res, next) => {
 
     res.status(200).json({
       count: Employees.length,
-      Employees: sanitizedEmployees,
+      message: "Data fetched sucessfully",
+      data: sanitizedEmployees,
     });
   } catch (error) {
     return next(

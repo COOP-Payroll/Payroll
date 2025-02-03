@@ -5,7 +5,6 @@ const createError = require("../utils/error.js");
 //GET ALL DEPARTMENT
 exports.getAllDepartment = async (req, res, next) => {
   try {
-
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const departments = await Department.findAll({
@@ -65,15 +64,23 @@ exports.createDepartment = async (req, res, next) => {
       deptName: deptName,
     };
 
-    const checkDepartment = await Department.findOne({ where: criteria });
+    const checkDepartment = await Department.findOne({
+      where: { CompanyId, deptName },
+    });
+
+    // return res.json({ checkDepartment, CompanyId, deptName });
 
     if (checkDepartment) {
-      res.status(404).json({ message: "Department is defined already " });
+      // res.status(404).json({ message: "Department is defined already " });
+      return next(
+        createError.createError(400, "Department is defined already")
+      );
     } else {
       const departments = await Department.create({
         deptName,
         location,
         shorthandRepresentation,
+        // CompanyId: 1,
       });
       await departments.setCompany(req.user.id);
       return res.status(200).json({
@@ -82,6 +89,7 @@ exports.createDepartment = async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
