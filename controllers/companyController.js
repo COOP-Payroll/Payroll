@@ -35,7 +35,15 @@ exports.getcompanyProfiles = async (req, res, next) => {
     const company = await Company.findByPk(
       req.user.id,
 
-      { attributes: { exclude: ["password"] } }
+      {
+        attributes: {
+          exclude: [
+            "password",
+            "resetPasswordToken",
+            "resetPasswordTokenCreatedAt",
+          ],
+        },
+      }
     );
     if (!company) {
       return next(createError.createError(404, "Company not found"));

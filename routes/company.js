@@ -228,6 +228,26 @@ router.get(
 router.post("/", middleware.validateUserAgent, companyController.createCompany);
 
 router.put("/set");
+/**
+ * @swagger
+ * /api/company/get/companyprofile:
+ *   get:
+ *     summary: Get company profile
+ *     description: Retrieve the profile details of the authenticated user's company.
+ *     tags:
+ *       - Company
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved company profile.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '404':
+ *         description: Company profile not found.
+ *       '500':
+ *         description: Internal Server Error.
+ */
 
 router.get(
   "/get/companyprofile",
