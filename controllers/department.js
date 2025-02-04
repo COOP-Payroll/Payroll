@@ -57,8 +57,8 @@ exports.createDepartment = async (req, res, next) => {
   try {
     const { deptName, location, shorthandRepresentation } = req.body;
 
-    const CompanyId =
-      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+      const CompanyId =
+        req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const criteria = {
       CompanyId,
       deptName: deptName,
