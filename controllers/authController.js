@@ -308,13 +308,16 @@ exports.login = async (req, res, next) => {
       }
     }
 
+    if (company == null) {
+      return next(createError.createError(400, "Invalid credentials"));
+    }
     if (company?.role === "employee" || company?.role === "approver") {
       createSendToken(company, 200, res);
     } else {
-      if (company.status === "active") {
+      if (company?.status === "active") {
         createSendTokenCompany(company, 200, res);
       } else {
-        switch (company.status) {
+        switch (company?.status) {
           case "pending":
             return res.status(401).json({
               message: "your request is being processed please stay tune",

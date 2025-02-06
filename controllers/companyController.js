@@ -1061,10 +1061,73 @@ const sendActivationEmail = async (email, subject, text, next) => {
 };
 
 //UPDATE COMPANY PROFILE
+// exports.updateCompanyProfile = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const {
+//       primary_Color,
+//       primary_Font_Color,
+//       primary_Gradient_Color,
+//       secondary_Color,
+//       secondary_Font_Color,
+//       secondary_Gradient_Color,
+//       social_Media_Images,
+//     } = req.body;
+//     const CompanyId = Number(req.user.id);
+//     const logo = req.files?.logo?.[0]?.path;
+//     const logoPath = logo ? logo : null;
+
+//     const banner = req.files?.logo?.[0]?.path;
+
+//     const bannerPath = banner ? banner : null;
+
+//     // return res.json(req.body);
+//     const company = await Company.update(
+//       {
+//         primary_Color,
+//         primary_Font_Color,
+//         primary_Gradient_Color,
+//         secondary_Color,
+//         secondary_Font_Color,
+//         secondary_Gradient_Color,
+//         social_Media_Images,
+//         companyLogo: logo,
+//         companyBanner: banner,
+//       },
+//       {
+//         where: { id: Number(id) },
+//       }
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Updated successfully",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
+
 exports.updateCompanyProfile = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
     const {
+      name,
+      numberOfEmployees,
+      organizationName,
+      email,
+      phoneNumber,
+      jobTitle,
+      country,
+      region_or_City,
+      fax,
+      address_Street,
+      notes,
       primary_Color,
       primary_Font_Color,
       primary_Gradient_Color,
@@ -1073,17 +1136,24 @@ exports.updateCompanyProfile = async (req, res, next) => {
       secondary_Gradient_Color,
       social_Media_Images,
     } = req.body;
-    const CompanyId = Number(req.user.id);
-    const logo = req.files?.logo?.[0]?.path;
-    const logoPath = logo ? logo : null;
 
-    const banner = req.files?.logo?.[0]?.path;
+    const logo = req.files?.logo?.[0]?.path || null;
+    const banner = req.files?.banner?.[0]?.path || null;
 
-    const bannerPath = banner ? banner : null;
-
-    // return res.json(req.body);
-    const company = await Company.update(
+    // Update company profile
+    const [updated] = await Company.update(
       {
+        name,
+        numberOfEmployees,
+        organizationName,
+        email,
+        phoneNumber,
+        jobTitle,
+        country,
+        region_or_City,
+        fax,
+        address_Street,
+        notes,
         primary_Color,
         primary_Font_Color,
         primary_Gradient_Color,
@@ -1094,17 +1164,21 @@ exports.updateCompanyProfile = async (req, res, next) => {
         companyLogo: logo,
         companyBanner: banner,
       },
-      {
-        where: { id: Number(id) },
-      }
+      { where: { id: CompanyId } }
     );
+
+    if (!updated) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Company not found" });
+    }
 
     return res.status(200).json({
       success: true,
       message: "Updated successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

@@ -255,7 +255,6 @@ router.get(
   middleware.validateUserAgent,
   companyController.getcompanyProfiles
 );
-
 /**
  * @swagger
  * components:
@@ -265,21 +264,14 @@ router.get(
  *       scheme: bearer
  *       bearerFormat: JWT
  *
- * /api/company/update-company-profile/{id}:
+ * /api/company/update-company-profile:
  *   put:
  *     summary: Update company profile
- *     description: Update the profile details of a specific company, including logo, banner, and theme colors.
+ *     description: Update the profile details of the authenticated company, including logo, banner, and company details.
  *     tags:
  *       - Company
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: The company ID.
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -287,6 +279,40 @@ router.get(
  *           schema:
  *             type: object
  *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Tech Innovations Ltd"
+ *               numberOfEmployees:
+ *                 type: integer
+ *                 example: 150
+ *               organizationName:
+ *                 type: string
+ *                 example: "Tech Innovations"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "contact@techinnovations.com"
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "+1234567890"
+ *               jobTitle:
+ *                 type: string
+ *                 example: "Senior Developer"
+ *               country:
+ *                 type: string
+ *                 example: "Ethiopia"
+ *               region_or_City:
+ *                 type: string
+ *                 example: "Addis Ababa"
+ *               fax:
+ *                 type: string
+ *                 example: "+1234567891"
+ *               address_Street:
+ *                 type: string
+ *                 example: "123 Innovation Street"
+ *               notes:
+ *                 type: string
+ *                 example: "Leading company in tech solutions."
  *               primary_Color:
  *                 type: string
  *                 example: "#ff5733"
@@ -326,14 +352,92 @@ router.get(
  *         description: Unauthorized - Token is missing or invalid.
  *       '403':
  *         description: Forbidden - User does not have permission.
+ *       '404':
+ *         description: Not found - Company not found.
  *       '500':
  *         description: Internal Server Error - Failed to update the company profile.
  *       '503':
  *         description: Service unavailable - Server failure.
  */
 
+// /**
+//  * @swagger
+//  * components:
+//  *   securitySchemes:
+//  *     bearerAuth:
+//  *       type: http
+//  *       scheme: bearer
+//  *       bearerFormat: JWT
+//  *
+//  * /api/company/update-company-profile/{id}:
+//  *   put:
+//  *     summary: Update company profile
+//  *     description: Update the profile details of a specific company, including logo, banner, and theme colors.
+//  *     tags:
+//  *       - Company
+//  *     security:
+//  *       - bearerAuth: []
+//  *     parameters:
+//  *       - in: path
+//  *         name: id
+//  *         required: true
+//  *         description: The company ID.
+//  *         schema:
+//  *           type: string
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         multipart/form-data:
+//  *           schema:
+//  *             type: object
+//  *             properties:
+//  *               primary_Color:
+//  *                 type: string
+//  *                 example: "#ff5733"
+//  *               primary_Font_Color:
+//  *                 type: string
+//  *                 example: "#ffffff"
+//  *               primary_Gradient_Color:
+//  *                 type: string
+//  *                 example: "#ff5733, #ffbd33"
+//  *               secondary_Color:
+//  *                 type: string
+//  *                 example: "#33c1ff"
+//  *               secondary_Font_Color:
+//  *                 type: string
+//  *                 example: "#000000"
+//  *               secondary_Gradient_Color:
+//  *                 type: string
+//  *                 example: "#33c1ff, #33ff57"
+//  *               social_Media_Images:
+//  *                 type: boolean
+//  *                 example: false
+//  *                 description: Whether social media images are enabled for the company (true or false).
+//  *               logo:
+//  *                 type: string
+//  *                 format: binary
+//  *                 description: The company logo image file (optional).
+//  *               banner:
+//  *                 type: string
+//  *                 format: binary
+//  *                 description: The company banner image file (optional).
+//  *     responses:
+//  *       '200':
+//  *         description: Successfully updated company profile.
+//  *       '400':
+//  *         description: Bad request - Invalid data.
+//  *       '401':
+//  *         description: Unauthorized - Token is missing or invalid.
+//  *       '403':
+//  *         description: Forbidden - User does not have permission.
+//  *       '500':
+//  *         description: Internal Server Error - Failed to update the company profile.
+//  *       '503':
+//  *         description: Service unavailable - Server failure.
+//  */
+
 router.put(
-  "/update-company-profile/:id",
+  "/update-company-profile/",
   middleware.protectAll,
   middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin"),
