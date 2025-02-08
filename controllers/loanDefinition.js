@@ -15,10 +15,13 @@ exports.getAllLoanDefinition = async (req, res, next) => {
     const loanDefinitions = await LoanDefinition.findAll({ where: criteria });
     res.status(200).json({
       count: loanDefinitions.length,
-      loanDefinitions,
+      message: "Data fetched successfully",
+      data: loanDefinitions,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -31,17 +34,20 @@ exports.getLoanDefinitionById = async (req, res, next) => {
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const loanDefinition = await LoanDefinition.findByPk(id);
     res.status(200).json({
-      loanDefinition,
+      message: "Data fetched successfully",
+      data: loanDefinition,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 exports.createLoanDefinition = async (req, res, next) => {
   try {
     const CompanyId =
-      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+      req?.user?.role === "companyAdmin" ? req?.user?.id : req?.user?.CompanyId;
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
 
@@ -49,6 +55,7 @@ exports.createLoanDefinition = async (req, res, next) => {
       name: name,
       CompanyId,
     };
+
     const checkLoan = await LoanDefinition.findOne({
       where: criteria,
     });
@@ -64,11 +71,13 @@ exports.createLoanDefinition = async (req, res, next) => {
       await loanDefinition.setCompany(req.user.id);
       res.status(200).json({
         message: "Successfully Registered",
-        loanDefinition,
+        data: loanDefinition,
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -103,7 +112,9 @@ exports.updateLoanDefinition = async (req, res, next) => {
       message: "Loan definition updated successfully.",
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -130,6 +141,8 @@ exports.deleteLoanDefinition = async (req, res, next) => {
       return next(createError.createError(404, "Loan definition not found."));
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

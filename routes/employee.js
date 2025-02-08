@@ -245,6 +245,35 @@ router.get(
   middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getAllEmployee
 );
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ * /api/employee/employees-with-custom-role:
+ *   get:
+ *     summary: Get all employees with a custom role
+ *     description: Retrieve a list of all employees with a custom role.
+ *     tags:
+ *       - System User
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved list of employees with a custom role.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - Insufficient permissions to access the employee list.
+ *       '500':
+ *         description: Internal Server Error.
+ */
+
 router.get(
   "/employees-with-custom-role",
   middleware.protectAll,
@@ -252,6 +281,7 @@ router.get(
   middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getEmployeeWithCustomRole
 );
+
 router.get(
   "/get-all-projects/:employeeId",
 

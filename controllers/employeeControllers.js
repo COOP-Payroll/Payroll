@@ -274,21 +274,21 @@ exports.getEmployeeWithCustomRole = async (req, res, next) => {
             },
           },
         },
-        {
-          model: Projects,
-          required: false,
-          through: {
-            model: ProjectEmployee,
-            // where:{isActive:true}
-          },
-          include: [Sponsor],
-        },
+        // {
+        //   model: Projects,
+        //   required: false,
+        //   through: {
+        //     model: ProjectEmployee,
+        //     // where:{isActive:true}
+        //   },
+        //   include: [Sponsor],
+        // },
 
-        {
-          model: AccountInfo,
-          required: false,
-          where: { isActive: true },
-        },
+        // {
+        //   model: AccountInfo,
+        //   required: false,
+        //   where: { isActive: true },
+        // },
         // {
         //   model: CustomRole,
         //   through:{
@@ -298,10 +298,10 @@ exports.getEmployeeWithCustomRole = async (req, res, next) => {
         //   include: [Permission],
         //   required: false,
         // },
-        {
-          model: Loan,
-          required: false,
-        },
+        // {
+        //   model: Loan,
+        //   required: false,
+        // },
         {
           model: Grade,
 
@@ -325,26 +325,26 @@ exports.getEmployeeWithCustomRole = async (req, res, next) => {
           ],
         },
 
-        {
-          model: EmergencyContact,
-          required: false,
-        },
+        // {
+        //   model: EmergencyContact,
+        //   required: false,
+        // },
         {
           model: CustomRole,
           include: [Permission],
         },
-        {
-          model: AdditionalAllowance,
-          include: [AdditionalAllowanceDefinition],
-        },
-        {
-          model: AdditionalDeduction,
-          include: [AdditionalDeductionDefinition],
-        },
-        {
-          model: AdditionalPay,
-          include: [AdditionalPayDefinition],
-        },
+        // {
+        //   model: AdditionalAllowance,
+        //   include: [AdditionalAllowanceDefinition],
+        // },
+        // {
+        //   model: AdditionalDeduction,
+        //   include: [AdditionalDeductionDefinition],
+        // },
+        // {
+        //   model: AdditionalPay,
+        //   include: [AdditionalPayDefinition],
+        // },
         {
           model: CustomRole,
           required: true, // Ensure the employee has a CustomRole

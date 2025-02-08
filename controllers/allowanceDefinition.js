@@ -15,10 +15,13 @@ exports.getAllAllowanceDefinition = async (req, res, next) => {
     });
     res.status(200).json({
       count: allowanceDefinitions.length,
-      allowanceDefinitions,
+      message: "Data fetched successfully",
+      data: allowanceDefinitions,
     });
   } catch (error) {
-   return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 //GET BY ID
@@ -35,10 +38,15 @@ exports.getAllowanceDefinitionById = async (req, res, next) => {
         )
       );
     } else {
-      res.json(allowanceDefinition);
+      res.json({
+        message: "Data fetched successfully",
+        data: allowanceDefinition,
+      });
     }
   } catch (error) {
-   return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 // CREATE ALLOWANCE DEFINITION
@@ -93,11 +101,13 @@ exports.createAllowanceDefinition = async (req, res, next) => {
     // Respond with success message
     res.status(200).json({
       message: "Successfully Registered",
-      allowanceDefinition,
+      data: allowanceDefinition,
     });
   } catch (error) {
     // Return 503 Internal Server Error if any error occurs
-   return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -148,7 +158,9 @@ exports.updateAllowanceDefinition = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-   return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 //DELETE ALLOWANCE
@@ -169,6 +181,8 @@ exports.deleteAllowanceDefinition = async (req, res, next) => {
     await allowanceDefinition.destroy({ where: { id } });
     res.status(200).json({ message: "Deleted successfully" });
   } catch (error) {
-   return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

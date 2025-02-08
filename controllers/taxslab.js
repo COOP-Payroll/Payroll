@@ -146,7 +146,7 @@ exports.createTaxslab = async (req, res, next) => {
 
         return res.status(200).json({
           message: "Successfully Registered",
-          taxslab,
+          data: taxslab,
         });
       } else {
         res.status(400).json("Taxslab is already defined");
@@ -387,7 +387,7 @@ exports.restoreToDefault = async (req, res, next) => {
     res.status(200).json({
       message: "Restored to default",
       deletedData: tax,
-      tax,
+      data: tax,
     });
   } catch (error) {
     return next(

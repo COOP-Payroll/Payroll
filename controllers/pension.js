@@ -19,11 +19,14 @@ exports.getAllPension = async (req, res, next) => {
       });
       res.status(200).json({
         count: pensions.length,
-        pensions,
+        message: "Data fetched successfully",
+        data: pensions,
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -31,16 +34,20 @@ exports.getpensionById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const pension = await Pension.findByPk(id);
-    res.json(pension);
+    res.json({
+      message: "Data fetched successfully",
+      data: pension,
+    });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 exports.createPension = async (req, res, next) => {
   try {
     const { employerContribution, employeeContribution } = req.body;
-
 
     if (req.user.role === "superAdmin") {
       const getAllPension = await Pension.findAll({
@@ -57,7 +64,7 @@ exports.createPension = async (req, res, next) => {
         await pensions.setUser(Number(req.user.id));
         return res.status(200).json({
           message: "Successfully Registered",
-          pensions,
+          data: pensions,
         });
       }
     } else if (req.user.role === "companyAdmin") {
@@ -74,12 +81,14 @@ exports.createPension = async (req, res, next) => {
         await pensions.setCompany(Number(req.user.id));
         return res.status(200).json({
           message: "Successfully Registered",
-          pensions,
+          data: pensions,
         });
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -115,7 +124,7 @@ exports.updatePension = async (req, res, next) => {
 
         return res.status(200).json({
           message: "updated successfully",
-          newPension,
+          data: newPension,
         });
       }
     } else if (req.user.role === "companyAdmin") {
@@ -145,12 +154,14 @@ exports.updatePension = async (req, res, next) => {
 
         return res.status(200).json({
           message: "updated successfully",
-          newPension,
+          data: newPension,
         });
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -163,12 +174,12 @@ exports.deletePension = async (req, res, next) => {
       await Pension.destroy({ where: { id } });
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
-      return res
-        .status(400)
-        .json({ message: "Pension not Found" });
+      return res.status(400).json({ message: "Pension not Found" });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -188,11 +199,14 @@ exports.getAllPensionIncludingInActive = async (req, res, next) => {
       });
       res.status(200).json({
         count: pensions.length,
-        pensions,
+        message: "Data fetched successfully",
+        data: pensions,
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -224,6 +238,8 @@ exports.restoreToDefault = async (req, res, next) => {
       data: pension,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
