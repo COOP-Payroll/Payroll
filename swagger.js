@@ -22,9 +22,9 @@ const options = {
   definition: {
     openapi: "3.0.0", // Specify the correct OpenAPI version
     info: {
-      title: "Payroll SAAS API Documentation",
+      title: "Payroll API Documentation",
       version: "1.0.0",
-      description: "Payroll SAAS API Documentation",
+      description: "Payroll API Documentation",
     },
     // components: {
     //   securitySchemes: {

@@ -35,12 +35,12 @@ const signToken = (
       },
       accessTokenSecret,
       {
-        expiresIn: "30m",
+        expiresIn: "30000m",
       }
     );
 
     const refreshToken = jwt.sign({ id, role }, refreshTokenSecret, {
-      expiresIn: "30m",
+      expiresIn: "30000m",
     });
     return { token, refreshToken };
   } catch (error) {
@@ -55,14 +55,14 @@ const signTokenSuperAdmin = (id, role, fullName, phoneNumber, email) => {
       { id, role, fullName, phoneNumber, email },
       accessTokenSecret,
       {
-        expiresIn: "30m",
+        expiresIn: "30000m",
       }
     );
     const refreshToken = jwt.sign(
       { id, role, fullName, phoneNumber, email },
       refreshTokenSecret,
       {
-        expiresIn: "30m", // Set your desired expiration time for refresh tokens
+        expiresIn: "30000m", // Set your desired expiration time for refresh tokens
       }
     );
 
@@ -124,7 +124,7 @@ const signTokenCompany = (company, res) => {
       },
       accessTokenSecret,
       {
-        expiresIn: "30m",
+        expiresIn: "30000m",
       }
     );
     const refreshToken = jwt.sign(
@@ -151,7 +151,7 @@ const signTokenCompany = (company, res) => {
       },
       refreshTokenSecret,
       {
-        expiresIn: "30m", // Set your desired expiration time for refresh tokens
+        expiresIn: "30000m", // Set your desired expiration time for refresh tokens
       }
     );
 
@@ -414,7 +414,7 @@ exports.refreshToken = async (req, res, next) => {
       { id: decoded.id, role: decoded.role },
       accessTokenSecret,
       {
-        expiresIn: "30m",
+        expiresIn: "30000m",
       }
     );
 

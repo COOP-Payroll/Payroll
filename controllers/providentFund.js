@@ -10,7 +10,8 @@ exports.getAllProvidentFund = async (req, res, next) => {
       });
       res.status(200).json({
         count: ProvidentFunds.length,
-        ProvidentFunds,
+        message: "Data fetched successfully",
+        data: ProvidentFunds,
       });
     } else if (req.user.role === "companyAdmin") {
       const ProvidentFunds = await ProvidentFund.findAll({
@@ -18,12 +19,14 @@ exports.getAllProvidentFund = async (req, res, next) => {
       });
       res.status(200).json({
         count: ProvidentFunds.length,
-        ProvidentFunds,
+        message: "Data fetched successfully",
+        data: ProvidentFunds,
       });
     }
   } catch (error) {
-
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -31,10 +34,14 @@ exports.getProvidentFundById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const providentFunds = await ProvidentFund.findByPk(id);
-    res.json(providentFunds);
+    res.json({
+      message: "Data fetched successfully",
+      data: providentFunds,
+    });
   } catch (error) {
-   
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -55,10 +62,16 @@ exports.createProvidentFund = async (req, res, next) => {
         await ProvidentFunds.setUser(Number(req.user.id));
         return res.status(200).json({
           message: "Successfully Registered",
-          ProvidentFunds,
+          data: ProvidentFunds,
         });
       } else {
-        res.status(400).json("ProvidentFund is already defined update it ");
+        return next(
+          createError.createError(
+            400,
+            "ProvidentFund is already defined update it"
+          )
+        );
+        // res.status(400).json("ProvidentFund is already defined update it ");
       }
     } else if (req.user.role === "companyAdmin") {
       const getAllProvidentFund = await ProvidentFund.findAll({
@@ -73,16 +86,24 @@ exports.createProvidentFund = async (req, res, next) => {
         await ProvidentFunds.setCompany(Number(req.user.id));
         return res.status(200).json({
           message: "Successfully Registered",
-          ProvidentFunds,
+          data: ProvidentFunds,
         });
       } else {
-        return res
-          .status(400)
-          .json("ProvidentFund is already defined update it ");
+        return next(
+          createError.createError(
+            400,
+            "ProvidentFund is already defined update it"
+          )
+        );
+        // return res
+        //   .status(400)
+        //   .json("ProvidentFund is already defined update it ");
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -112,7 +133,7 @@ exports.updateProvidentFund = async (req, res, next) => {
 
       return res.status(200).json({
         message: "updated successfully",
-        newProvidentFund,
+        data: newProvidentFund,
       });
     } else if (req.user.role === "companyAdmin") {
       if (employerContribution) {
@@ -134,11 +155,13 @@ exports.updateProvidentFund = async (req, res, next) => {
 
       return res.status(200).json({
         message: "updated successfully",
-        newProvidentFund,
+        data: newProvidentFund,
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -166,16 +189,21 @@ exports.deleteProvidentFund = async (req, res, next) => {
         providentFund.length === 0 ||
         providentFund === null
       ) {
-        return res
-          .status(400)
-          .json({ message: "There is no ProvidentFund with this ID" });
+        return next(
+          createError.createError(400, "There is no ProvidentFund with this ID")
+        );
+        // return res
+        //   .status(400)
+        //   .json({ message: "There is no ProvidentFund with this ID" });
       } else {
         await ProvidentFund.destroy({ where: { id } });
         return res.status(200).json({ message: "Deleted successfully" });
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -207,7 +235,8 @@ exports.restoreToDefault = async (req, res, next) => {
       data: PF,
     });
   } catch (error) {
-
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

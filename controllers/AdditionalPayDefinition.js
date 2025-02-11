@@ -14,7 +14,8 @@ exports.getAllAdditionalPayDefinition = async (req, res, next) => {
     });
     res.status(200).json({
       count: AdditionalPayDefinitions.length,
-      AdditionalPayDefinitions,
+      message: "Data fetched successfully",
+      data: AdditionalPayDefinitions,
     });
   } catch (error) {
     return next(
@@ -37,7 +38,11 @@ exports.getAdditionalPayDefinitionById = async (req, res, next) => {
         createError.createError(404, "Additional pay definition is not defined")
       );
     }
-    res.status(200).json(additionalPayDefinitions);
+    res.status(200).json({
+      message: "Data fetched successfully",
+
+      data: additionalPayDefinitions,
+    });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")
@@ -71,7 +76,7 @@ exports.createAdditionalPayDefinition = async (req, res, next) => {
       await AdditionalPayDefinitions.setCompany(Company);
       res.status(200).json({
         message: "Successfully Registered",
-        AdditionalPayDefinitions,
+        data: AdditionalPayDefinitions,
       });
     }
   } catch (error) {
@@ -109,8 +114,8 @@ exports.updateAdditionalPayDefinition = async (req, res, next) => {
           returning: true,
         });
         res.status(200).json({
-          msg: "updated successfully",
-          updatedInfo,
+          message: "updated successfully",
+          data: updatedInfo,
         });
       }
     }

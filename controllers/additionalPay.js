@@ -12,7 +12,8 @@ exports.getAllAdditionalPay = async (req, res, next) => {
     const additionalPay = await AdditionalPay.findAll({ where: { CompanyId } });
     res.status(200).json({
       count: additionalPay.length,
-      additionalPay,
+      message: "Data fetched successfully",
+      data: additionalPay,
     });
   } catch (error) {
     return next(
@@ -29,7 +30,10 @@ exports.getAdditionalPayById = async (req, res, next) => {
     if (!additionalPay) {
       return next(createError.createError(404, "Allowance not found"));
     } else {
-      return res.json(additionalPay);
+      return res.json({
+        message: "Data fetched successfully",
+        data: additionalPay,
+      });
     }
   } catch (error) {
     return next(
@@ -93,7 +97,7 @@ exports.createAdditionalPay = async (req, res, next) => {
 
         res.status(200).json({
           message: "Successfully Registered",
-          additionalPay,
+          data: additionalPay,
           // additionalAllowanceDefinition1,
         });
       } else {
@@ -107,7 +111,7 @@ exports.createAdditionalPay = async (req, res, next) => {
 
         res.status(200).json({
           message: "Successfully Registered",
-          additionalPay,
+          data: additionalPay,
           // additionalAllowanceDefinition1,
         });
       }

@@ -15,7 +15,8 @@ exports.getAllPayroll = async (req, res, next) => {
 
     return res.status(200).json({
       count: payroll.length,
-      payroll,
+      message: "Data fetched successfully",
+      data: payroll,
     });
   } catch (error) {
     return next(
@@ -50,7 +51,8 @@ exports.getAllPayrollForCurrentYear = async (req, res, next) => {
 
     return res.status(200).json({
       count: payrollDefinition.length,
-      payrollDefinition,
+      message: "Data fetched successfully",
+      data: payrollDefinition,
     });
   } catch (error) {
     return next(
@@ -64,12 +66,12 @@ exports.getPayrollDefinitionById = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    return res.json("data");
     const payroll = await Payroll.findByPk(Number(id));
     if (!payroll) {
-      return res.status(404).json({ error: "payroll does not exist" });
+      return next(createError.createError(404, "Payroll does not exist"));
+      // return res.status(404).json({ error: "payroll does not exist" });
     } else {
-      return res.json(payroll);
+      return res.json({ message: "Data fetched successfully", data: payroll });
     }
   } catch (error) {
     return next(
@@ -84,7 +86,7 @@ exports.getLatestPayroll = async (req, res, next) => {
     });
     const lastEndDate = latestPayroll.endDate.toISOString().substring(0, 10);
 
-    res.json(latestPayroll);
+    res.json({ message: "Data fetched successfully", data: latestPayroll });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")
@@ -145,7 +147,7 @@ exports.createPayroll = async (req, res, next) => {
 
     return res.status(201).json({
       message: "Successfully defined your payroll.",
-      payrollDefinition,
+      data: payrollDefinition,
     });
   } catch (error) {
     return next(
@@ -193,9 +195,12 @@ exports.deletePayrollDefinition = async (req, res, next) => {
       await Payroll.destroy({ where: { id } });
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
-      return res
-        .status(400)
-        .json({ message: "There is no  such payroll with this ID" });
+      return next(
+        createError.createError(400, "There is no  such payroll with this ID")
+      );
+      // return res
+      //   .status(400)
+      //   .json({ message: "There is no  such payroll with this ID" });
     }
   } catch (error) {
     return next(
@@ -212,9 +217,12 @@ exports.deletePayrolldefinition = async (req, res, next) => {
       await checkpayrollDefinition.destroy();
       return res.status(200).json({ message: "Deleted successfully" });
     } else {
-      return res.status(404).json({
-        message: "There is no such payroll definition ID",
-      });
+      return next(
+        createError.createError(404, "There is no such payroll definition ID")
+      );
+      // return res.status(404).json({
+      //   message: "There is no such payroll definition ID",
+      // });
     }
   } catch (error) {
     return next(
@@ -247,11 +255,17 @@ exports.getCurrentMonth = async (req, res, next) => {
     });
 
     if (currentMonthPayrolls.length == 0) {
-      return res.status(404).json({
-        message: "Payroll not defined for this month ",
-      });
+      return next(
+        createError.createError(404, "Payroll not defined for this month")
+      );
+      // return res.status(404).json({
+      //   message: "Payroll not defined for this month ",
+      // });
     } else {
-      return res.status(200).json(currentMonthPayrolls);
+      return res.status(200).json({
+        message: "Data fetched successfully",
+        data: currentMonthPayrolls,
+      });
     }
   } catch (error) {
     return next(
