@@ -39,6 +39,7 @@ const ProjectEmployee = require("../models/project-employee.js");
 const Sponsor = require("../models/sponsor.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
+const OTPayment = require("../models/otPayModel.js");
 
 exports.createPayroll1 = async (req, res, next) => {
   try {
@@ -48,7 +49,7 @@ exports.createPayroll1 = async (req, res, next) => {
     const employeeID = employeeIds.map((id) => parseInt(id));
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
     const company = req.user.id;
-
+    // return res.json("dddd")
     // return res.json(req.user.isProjectBased)
     if (!payrolldef) {
       return res.status(404).json({ message: "payroll is not defined" });
@@ -166,12 +167,20 @@ exports.createPayroll1 = async (req, res, next) => {
 exports.getPayrollByPayrollDefId = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const payrollDef = await PayrollDefinition.findByPk(id);
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const payrollDef = await PayrollDefinition.findOne({
+      where: {
+        id: id,
+        CompanyId,
+      },
+    });
     if (!payrollDef)
       return res.status(404).json({ message: "Payroll not found" });
     const payrolls = await Payroll.findAll({
-      where: { PayrollDefinitionId: id },
-      include: [Employee, PayrollDefinition],
+      where: { PayrollDefinitionId: id, CompanyId },
+      include: [{ model: Employee }, PayrollDefinition],
     });
 
     return res.json({ count: payrolls.length, payrolls });
@@ -276,8 +285,10 @@ async function runPayroll(
       deductions,
       additionalAllowances,
       additionalDeductions,
+
       // additionalPayDefinition,
       additionalPay,
+      otpayment,
     ] = await Promise.all([
       Pension.findOne({
         where: {
@@ -316,7 +327,11 @@ async function runPayroll(
       AdditionalPay.findAll({
         where: { CompanyId: company, EmployeeId: employeeId },
       }),
+      OTPayment.findAll({
+        where: { CompanyId: company, EmployeeId: employeeId },
+      }),
     ]);
+    // return res.json(otpayment)
     const employee_pension = pension?.employeeContribution ?? 0;
     const employer_pension = pension?.employerContribution ?? 0;
 
@@ -333,6 +348,7 @@ async function runPayroll(
     let overallTotalDeduction = 0;
     let totalLoan = 0;
     let totalAdditionalPay = 0;
+    let totalOTPayment=0;
     // Calculate total allowances
     allowances?.forEach((allowance) => {
       totalAllowance += Number(allowance.amount);
@@ -356,6 +372,9 @@ async function runPayroll(
     additionalPay.forEach((additionalPay) => {
       totalAdditionalPay += Number(additionalPay?.amount);
     });
+    otpayment.forEach((otpay)=>{
+      totalOTPayment+= employee.EmployeeInfos[0]?.basicSalary  /192 *otpay?.hour
+    })
     // Calculate total additional allowances
     additionalAllowances.forEach((allowance) => {
       totalAllowance += Number(allowance?.amount);
@@ -413,7 +432,7 @@ async function runPayroll(
       taxableIncome: totalTaxable.toFixed(2),
       incomeTax: totalTaxableIncome.toFixed(2),
       totalDeduction: overallTotalDeduction.toFixed(2),
-      totalAllowance,
+      totalAllowance :totalAllowance +totalOTPayment,
       employee_pension_amount: Number(
         employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100)
       ).toFixed(2),
@@ -425,17 +444,20 @@ async function runPayroll(
         totalTaxable -
         overallTotalDeduction +
         totalExempted +
-        totalAdditionalPay
+        totalAdditionalPay +totalOTPayment
       ).toFixed(2),
 
       status: "processed",
+      overtime: totalOTPayment
     };
+
+    // return res.json(payrollData)
     const data = await Payroll.create({
       ...payrollData,
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
     });
-    await data.setCompany(Number(req.user.id));
+    // await data.setCompany(Number(req.user.id));
     // const payroll = await oldPayroll.update(payrollData);
     // await payrollDefinition.increment("totalNoOfprocessedEmployee");
     // if (payrollDefinition.totalNoOfEmployee !== 0) {
@@ -573,7 +595,7 @@ exports.getNonPayrollEmployee1 = async (req, res) => {
       });
 
       // Summing allowances and deductions
-      const totalAllowancesCombined = totalAllowance + additionalAllowance;
+      const totalAllowancesCombined = totalAllowance + additionalAllowance + totalOTPayment;
       const totalDeductionsCombined = totalDeduction + additionalDeduction;
 
       // Calculate gross earnings
@@ -874,17 +896,22 @@ exports.deselectRunnedPayroll = async (req, res, next) => {
 
 exports.getNotApprovedPayroll = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    // return res.json("Gemechu")
     const approver = await Approver.findOne({
       where: { EmployeeId: req.user.id, isActive: true },
       include: {
         model: ApprovalMethod,
         as: "ApprovalMethod",
         where: {
-          CompanyId: req.user.CompanyId,
+          CompanyId: CompanyId,
           isActive: true,
         },
       },
     });
+
+    // return res.json(approver)
 
     if (approver?.ApprovalMethod === null) {
       return next(createError.createError(400, "Define approval method first"));
@@ -901,31 +928,39 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
       currentDate.getMonth() + 1,
       0
     );
-
     const currentMonthPayrolls = await PayrollDefinition.findAll({
       where: {
-        CompanyId: req.user.CompanyId,
-        [Op.or]: [
-          {
-            startDate: {
-              [Op.between]: [startOfMonth, endOfMonth],
-            },
-            endDate: {
-              [Op.between]: [startOfMonth, endOfMonth],
-            },
-          },
-          {
-            startDate: {
-              [Op.lt]: startOfMonth,
-            },
-            endDate: {
-              [Op.gte]: startOfMonth,
-            },
-          },
-        ],
+        CompanyId: CompanyId,
+        startDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
       },
     });
+    // const currentMonthPayrolls = await PayrollDefinition.findAll({
+    //   where: {
+    //     CompanyId: req.user.CompanyId,
+    //     [Op.or]: [
+    //       {
+    //         startDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //         endDate: {
+    //           [Op.between]: [startOfMonth, endOfMonth],
+    //         },
+    //       },
+    //       {
+    //         startDate: {
+    //           [Op.lt]: startOfMonth,
+    //         },
+    //         endDate: {
+    //           [Op.gte]: startOfMonth,
+    //         },
+    //       },
+    //     ],
+    //   },
+    // });
 
+    // return res.json(approver);
     if (currentMonthPayrolls.length === 0) {
       return res.status(204).json({
         message: "No payrolls defined for this month",
@@ -972,35 +1007,144 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
           data: payrolls,
         });
       }
-
       const payrolls = await Payroll.findAll({
-        where: {
-          status: {
-            [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
-          },
-          PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
-        },
+        attributes: [
+          "id",
+          "grossSalary",
+          "basicSalary",
+          "taxableIncome",
+          "incomeTax",
+          "totalDeduction",
+          "totalAllowance",
+          "NetSalary",
+          "employee_pension_amount",
+          "employer_pension_amount",
+          "status",
+          "isPaid",
+          "createdAt",
+          "updatedAt",
+          "EmployeeId",
+          "CompanyId",
+          "PayrollDefinitionId",
+        ],
         include: [
-          { model: Employee, attributes: ["id", "fullname"] },
           {
-            model: EmployeePayrollApprovement,
-            attributes: [
-              [Sequelize.fn("COUNT", Sequelize.literal("*")), "approvalCount"],
-            ],
-            where: {
-              status: "approved",
-            },
-            required: false, // Keep this line
-            duplicating: false,
+            model: Employee,
+            attributes: ["id", "fullname", "phoneNumber", "nationality"],
+          },
+          {
+            model: EmployeePayrollApprovement, // Ensure this matches the model name
+            attributes: ["id"],
+            where: { status: "pending", ApproverId: { [Op.ne]: approver.id } },
+            required: false, // Ensure LEFT JOIN
           },
         ],
-        group: ["Payroll.id"], // Add this line
+        where: {
+          status: { [Op.notIn]: ["approved", "rejected"] },
+          PayrollDefinitionId: currentMonthPayrolls?.[0].id,
+          id: {
+            [Op.notIn]: Sequelize.literal(`(
+              SELECT DISTINCT "PayrollId" FROM "EmployeePayrollApprovements"
+              WHERE  "ApproverId" = ${approver.id}
+            )`), // Exclude payrolls already approved by the current approver
+          },
+        },
+        group: [
+          "Payroll.id",
+          "Employee.id",
+          "EmployeePayrollApprovements.id", // Ensure alias matches JOIN
+        ],
         having: Sequelize.literal(
-          `COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < ${minimumApprovers}`
+          'COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < 2'
         ),
-        raw: true,
       });
 
+      return res.status(200).json({
+        success: true,
+        data: payrolls,
+      });
+
+      // const payrolls = await Payroll.findAll({
+      //   attributes: [
+      //     "id",
+      //     "grossSalary",
+      //     "basicSalary",
+      //     "taxableIncome",
+      //     "incomeTax",
+      //     "totalDeduction",
+      //     "totalAllowance",
+      //     "NetSalary",
+      //     "employee_pension_amount",
+      //     "employer_pension_amount",
+      //     "status",
+      //     "isPaid",
+      //     "createdAt",
+      //     "updatedAt",
+      //     "EmployeeId",
+      //     "CompanyId",
+      //     "PayrollDefinitionId",
+      //   ],
+      //   include: [
+      //     {
+      //       model: Employee,
+      //       attributes: ["id", "fullname",'phoneNumber','nationality',],
+      //     },
+      //     {
+      //       model: EmployeePayrollApprovement, // Ensure this matches the model name
+      //       attributes: ["id"],
+      //       where: { ApproverId: { [Op.ne]: approver.id } },
+      //       required: false, // Ensure LEFT JOIN
+      //     },
+      //   ],
+      //   where: {
+      //     status: { [Op.notIn]: ["approved", "rejected"] },
+      //     PayrollDefinitionId: currentMonthPayrolls?.[0].id,
+      //   },
+      //   group: [
+      //     "Payroll.id",
+      //     "Employee.id",
+      //     "EmployeePayrollApprovements.id", // Ensure alias matches JOIN
+      //   ],
+      //   having: Sequelize.literal(
+      //     'COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < 2'
+      //   ),
+      // });
+
+      // return res.status(200).json({
+      //   success: true,
+      //   data: payrolls,
+      // });
+
+      // const payrolls = await Payroll.findAll({
+      //   where: {
+      //     status: {
+      //       [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+      //     },
+      //     PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+      //   },
+      //   include: [
+      //     { model: Employee, attributes: ["id", "fullname"] },
+
+      //     {
+      //       model: EmployeePayrollApprovement,
+      //       attributes: [
+      //         [Sequelize.fn("COUNT", Sequelize.literal("*")), "approvalCount"],
+      //       ],
+      //       where: {
+      //         status: "approved",
+      //       },
+      //       required: false, // Keep this line
+      //       duplicating: false,
+      //     },
+      //   ],
+      //   group: ["Payroll.id"], // Add this line
+      //   having: Sequelize.literal(
+      //     `COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < ${minimumApprovers}`
+      //   ),
+      //   raw: true,
+      // });
+
+      // return res.json("dddk")
       return res.status(200).json({
         success: true,
         data: payrolls,
@@ -1116,6 +1260,7 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
       }
     }
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
@@ -2049,6 +2194,129 @@ exports.getProcessedPayroll = async (req, res, next) => {
             employer_pension_amount: employee.Payroll.employer_pension_amount,
             status: employee.Payroll.status,
             isPaid: employee.Payroll.isPaid,
+          }
+        : {};
+
+      return {
+        id,
+        fullname,
+        ...positions,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+        ...payrollInfo,
+      };
+    });
+
+    return res.status(200).json({
+      status: "true",
+
+      data: transformedEmployees,
+    });
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+
+//PROCESSED PAYROLL
+exports.getApprovedPay = async (req, res, next) => {
+  try {
+    const currentDate = new Date();
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
+
+    const currentMonthPayrolls = await PayrollDefinition.findAll({
+      where: {
+        CompanyId: req.user.id,
+        startDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
+      },
+    });
+
+    // return res.json(currentMonthPayrolls);
+    // return res.json(currentMonthPayrolls?.[0]?.id);
+
+    if (currentMonthPayrolls.length === 0) {
+      return res.status(204).json({
+        message: "No payrolls defined for this month",
+      });
+    }
+
+    const employees = await Employee.findAll({
+      include: [
+        { model: Position },
+        {
+          model: Payroll,
+          // required: true,
+          where: {
+            status: "approved",
+            PayrollDefinitionId: currentMonthPayrolls?.[0]?.id, // Filter for payroll records of the specific month
+            // required:true
+          },
+        },
+      ],
+    });
+
+    const transformedEmployees = employees.map((employee) => {
+      const {
+        id,
+        fullname,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+      } = employee;
+
+      const positions = employee.Positions
+        ? {
+            positionName: employee?.Positions[0].positionName,
+          }
+        : {};
+
+      // Extract necessary fields from the Payroll object
+      const payrollInfo = employee.Payroll
+        ? {
+            grossSalary: employee.Payroll.grossSalary,
+            basicSalary: employee.Payroll.basicSalary,
+            taxableIncome: employee.Payroll.taxableIncome,
+            incomeTax: employee.Payroll.incomeTax,
+            totalDeduction: employee.Payroll.totalDeduction,
+            totalAllowance: employee.Payroll.totalAllowance,
+            NetSalary: employee.Payroll.NetSalary,
+            employee_pension_amount: employee.Payroll.employee_pension_amount,
+            employer_pension_amount: employee.Payroll.employer_pension_amount,
+            status: employee.Payroll.status,
+            isPaid: employee.Payroll.isPaid,
+            isPaid: employee.Payroll.isPaid,
+            processId: employee.Payroll.id,
           }
         : {};
 

@@ -20,7 +20,9 @@ exports.getAllApprovalMethod = async (req, res, next) => {
       approvalMethod,
     });
   } catch (err) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -37,7 +39,9 @@ exports.getAllActiveApprovalMethod = async (req, res, next) => {
       approvalMethod,
     });
   } catch (err) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.getAllInActiveApprovalMethod = async (req, res, next) => {
@@ -53,7 +57,9 @@ exports.getAllInActiveApprovalMethod = async (req, res, next) => {
       approvalMethod,
     });
   } catch (err) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 async function saveApprovalMethod(
@@ -164,7 +170,11 @@ exports.createApprovalMethod = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    console.log(error);
+    console.log("object");
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 async function reSaveApprovalMethod(
@@ -418,7 +428,9 @@ exports.updateApprovalMethod = async (req, res, next) => {
     } else {
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -433,7 +445,9 @@ exports.deleteApprovalMethod = async (req, res, next) => {
       return next(createError.createError(404, "Resource not found"));
     }
   } catch (err) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -512,7 +526,9 @@ exports.reCreateApprovalMethods = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
     // res.status(503).json("Something gonna wrong");
   }
 };
@@ -617,6 +633,8 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
