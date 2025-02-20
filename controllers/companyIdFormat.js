@@ -97,8 +97,12 @@ exports.getActiveCompany = async (req, res, next) => {
     });
     if (!activeCompanyId)
       return next(createError.createError(404, "Resource not found"));
-    res.status(200).json(activeCompanyId);
+    res.status(200).json({
+      message: "Data fetched successfully",
+      data: activeCompanyId,
+    });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

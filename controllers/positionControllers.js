@@ -33,7 +33,9 @@ exports.getAllpositions = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -60,7 +62,9 @@ exports.getOne = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.createPositions = async (req, res, next) => {
@@ -97,7 +101,10 @@ exports.createPositions = async (req, res, next) => {
       data: position,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    console.log(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -133,7 +140,9 @@ exports.updatePosition = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -156,6 +165,8 @@ exports.deletePosition = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

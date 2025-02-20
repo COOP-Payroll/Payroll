@@ -115,6 +115,40 @@ router.delete(
   middleware.restrictToAll("companyAdmin"),
   companyIdRouter.deleteCompanyIdFormat
 );
+
+/**
+ * @swagger
+ * /api/companyIdFormat/activeIdFormat:
+ *   get:
+ *     summary: Get active company ID format
+ *     description: Retrieve the active company ID format for the authenticated user.
+ *     tags:
+ *       - Company ID
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved active company ID format.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message.
+ *                 data:
+ *                   type: object
+ *                   description: The active company ID format object.
+ *       '404':
+ *         description: Not Found - No active company ID format found.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - Insufficient permissions to access this resource.
+ *       '503':
+ *         description: Service Unavailable - Server error occurred.
+ */
 router.get(
   "/activeIdFormat",
   middleware.protectAll,
