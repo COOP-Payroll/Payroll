@@ -68,6 +68,12 @@ router.get(
  *               - order
  *               - separator
  *               - digitLength
+ *           example:
+ *             year: true
+ *             department: false
+ *             separator: "-"
+ *             digitLength: 4
+ *             order: "companyCode,department,year"
  *     responses:
  *       '200':
  *         description: Successfully updated company ID format.
