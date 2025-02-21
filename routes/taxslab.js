@@ -282,7 +282,7 @@ const middleware = require("../middleware/auth.js");
  */
 /**
  * @swagger
- * /api/restoreTodefault/tax:
+ * /api/taxslab/restoreTodefault/tax:
  *   put:
  *     summary: Restore tax slabs to default for the company
  *     description: Restores tax slabs to their default values for a specific company. Accessible by superAdmin and companyAdmin.
