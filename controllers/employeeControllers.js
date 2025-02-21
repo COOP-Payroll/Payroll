@@ -104,6 +104,7 @@ exports.getAllEmployee = async (req, res, next) => {
       const grade = employee.Grades.length > 0 ? employee.Grades[0].name : null;
 
       return {
+        id: employee.id,
         fullName: employee.fullname,
         gender: employee.sex,
         positionName: position,
