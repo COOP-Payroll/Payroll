@@ -32,21 +32,14 @@ router.get(
  *       scheme: bearer
  *       bearerFormat: JWT
  *
- * /api/companyIdFormat/{id}:
+ * /api/companyIdFormat:
  *   put:
  *     summary: Update company ID format
- *     description: Update the format for the company ID, including fields like company code, year, department, and separator.
+ *     description: Update the format for the company ID, including fields like company code, year, department, order, separator, and digit length.
  *     tags:
  *       - Company ID
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: The ID of the company ID format to be updated.
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -54,27 +47,27 @@ router.get(
  *           schema:
  *             type: object
  *             properties:
- *               companyCode:
- *                 type: string
- *                 description: The company code.
  *               year:
- *                 type: string
- *                 description: The year value (true/false).
+ *                 type: boolean
+ *                 description: The year value (true/false) to be used in the company ID format.
  *               department:
- *                 type: string
- *                 description: The department value (true/false).
- *               separator:
- *                 type: string
- *                 description: The separator used between the components (e.g., "/").
+ *                 type: boolean
+ *                 description: The department value (true/false) to be used in the company ID format.
  *               order:
  *                 type: string
- *                 description: The order of the components in the company ID (e.g., companyCode,department,year).
+ *                 description: The order of the components in the company ID (e.g., companyCode, department, year).
+ *               separator:
+ *                 type: string
+ *                 description: The separator used between the components (e.g., "-", "/").
+ *               digitLength:
+ *                 type: integer
+ *                 description: The length of the final ID.
  *             required:
- *               - companyCode
  *               - year
  *               - department
- *               - separator
  *               - order
+ *               - separator
+ *               - digitLength
  *     responses:
  *       '200':
  *         description: Successfully updated company ID format.
@@ -83,16 +76,16 @@ router.get(
  *             schema:
  *               type: object
  *               properties:
- *                 msg:
+ *                 message:
  *                   type: string
- *                   description: A success message.
- *                 updatedIdFormat:
+ *                   description: A success message indicating the ID format has been updated.
+ *                 data:
  *                   type: object
  *                   description: The updated company ID format object.
  *       '400':
  *         description: Bad Request - Missing or invalid parameters.
  *       '404':
- *         description: Not Found - The specified company ID format was not found.
+ *         description: Not Found - Company or active company ID format not found.
  *       '401':
  *         description: Unauthorized - Token is missing or invalid.
  *       '403':
@@ -102,7 +95,7 @@ router.get(
  */
 
 router.put(
-  "/:id",
+  "/",
   middleware.protectAll,
   middleware.validateUserAgent,
   middleware.restrictToAll("companyAdmin"),

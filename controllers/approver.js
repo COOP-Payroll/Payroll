@@ -76,8 +76,9 @@ exports.getAllActiveApprovers = async (req, res, next) => {
 
     res.status(200).json({
       count: approvers.length,
-      approvers: approvers,
-      Names: employeeNames,
+      message: "Data Fetched successfully",
+      data: approvers,
+      // Names: employeeNames,
     });
   } catch (error) {
     return next(
@@ -135,7 +136,7 @@ exports.getApproverById = async (req, res, next) => {
       return next(createError.createError(404, "Approver not found"));
       // return res.status(404).json({ error: "Approver not found" });
     }
-    res.json(approver);
+    res.json({ message: "Data Fetched successfully", data: approver });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")

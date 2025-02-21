@@ -1,6 +1,8 @@
 const IdFormat = require("../models/companyIdFormat");
 const createError = require(".././utils/error.js");
 const successResponse = require(".././utils/successResponse.js");
+const Company = require("../models/company.js");
+const { where } = require("sequelize");
 
 // create CompanyIdFormat
 exports.createCompanyIdFormat = async (req, res, next) => {
@@ -68,27 +70,121 @@ exports.deleteCompanyIdFormat = async (req, res, next) => {
     );
   }
 };
-
 exports.updateCompanyIdFormat = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { data } = req.body;
-    const idFormat = await IdFormat.findByPk(id);
-    if (!idFormat)
-      return next(createError.createError(404, "Invalid request data"));
-    // idFormat.isActive = false;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const { year, department, order, separator, digitLength } = req.body;
+// return res.json(separator)
+    // Validate required fields
+    if (!year || !department || !order || !digitLength || !separator) {
+      return next(
+        createError.createError(400, "Please provide all required fields")
+      );
+    }
 
-    const updatedIdFormat = await idFormat.update(req.body);
+    // Validate separator value
+    if (!["-", "/"].includes(separator)) {
+      return next(createError.createError(400, "Invalid separator value"));
+    }
 
-    return res
-      .status(200)
-      .json({ msg: "id format updated successfully", updatedIdFormat });
+    const company = await Company.findOne({
+      where: { id: Number(CompanyId) },
+    });
+
+    if (!company) {
+      return next(createError.createError(404, "Company not found"));
+    }
+
+    const activeCompanyId = await IdFormat.findOne({
+      where: { isActive: true, CompanyId: Number(CompanyId) },
+    });
+
+    if (!activeCompanyId) {
+      return next(
+        createError.createError(404, "Active company ID format not found")
+      );
+    }
+
+    console.log("Received Separator:", separator);
+
+    // Update ID format
+    await IdFormat.update(
+      {
+        companyCode: company.companyCode,
+        year,
+        department,
+        order,
+        separator, // Directly use validated separator
+        digitLength,
+      },
+      { where: { id: activeCompanyId.id } }
+    );
+
+    // Retrieve the updated record
+    const updatedIdFormat = await IdFormat.findOne({
+      where: { id: activeCompanyId.id },
+    });
+
+    return res.status(200).json({
+      message: "ID format updated successfully",
+      data: updatedIdFormat,
+    });
   } catch (error) {
+    console.error("Error updating ID format:", error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
   }
 };
+// exports.updateCompanyIdFormat = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+//     const { year, department, order ,digitLength} = req.body;
+
+//     if (!year || !department || !order) {
+//       return next(
+//         createError.createError(404, "Please provide all required field")
+//       );
+//     }
+
+//     const company = await Company.findOne({
+//       where: {
+//         id: Number(CompanyId),
+//       },
+//     });
+
+//     if (!company) {
+//       return next(createError.createError(404, "Company not found"));
+//     }
+
+//     const activeCompanyId = await IdFormat.findOne({
+//       where: { isActive: true, CompanyId: Number(CompanyId) },
+//     });
+//     if (!activeCompanyId)
+//       return next(createError.createError(404, "Active company id not found"));
+
+//     const updatedIdFormat = await IdFormat.update({
+//       companyCode: company.companyCode,
+//       year: year,
+//       department: department,
+//       order: order,
+//       digitLength: digitLength
+//     }, where:{
+//       id: companyIdFormat?.id
+//     });
+
+//     return res
+//       .status(200)
+//       .json({ message: "id format updated successfully", updatedIdFormat });
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 
 exports.getActiveCompany = async (req, res, next) => {
   try {
