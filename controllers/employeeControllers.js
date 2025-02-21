@@ -47,37 +47,20 @@ const EmployeeCustomRole = require("../models/employeeCustomRole.js");
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
 const upload4 = multer({ storage: storage4 }).single("file");
-
 exports.getAllEmployee = async (req, res, next) => {
   try {
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
-    const Employees = await Employee.findAll({
+
+    // Get pagination parameters from the query string
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
+    const offset = (page - 1) * limit; // Calculate the offset based on the current page
+
+    // Fetch employees with necessary relations and pagination
+    const { count, rows } = await Employee.findAndCountAll({
       where: { CompanyId },
       include: [
-        {
-          model: Address,
-          required: false,
-          where: { isActive: true },
-        },
-        {
-          model: Company,
-          required: false,
-          attributes: [
-            "id",
-            "companyCode",
-            "organizationName",
-            "numberOfEmployees",
-            "role",
-            "status",
-          ],
-        },
-
-        {
-          model: EmployeeInfo,
-          required: false,
-          where: { isActive: true },
-        },
         {
           model: Position,
           required: false,
@@ -99,116 +82,127 @@ exports.getAllEmployee = async (req, res, next) => {
           },
         },
         {
-          model: Projects,
-          required: false,
-          through: {
-            model: ProjectEmployee,
-            // where:{isActive:true}
-          },
-          include: [Sponsor],
-        },
-
-        {
-          model: AccountInfo,
-          required: false,
-          where: { isActive: true },
-        },
-        {
-          model: CustomRole,
-          required: false,
-        },
-        {
-          model: Loan,
-          required: false,
-        },
-        {
           model: Grade,
-
           through: {
             model: EmployeeGrade,
             where: {
               active: true,
             },
           },
-
-          include: [
-            {
-              model: Allowance, // Use the correct alias defined in the association
-              include: [AllowanceDefinition],
-            },
-            {
-              model: Deduction, // Use the correct alias defined in the association
-              include: [DeductionDefinition],
-            },
-            // { model: EmployeeGrade, where: { active: true } },
-          ],
         },
-        // {
-        //   model: EmployeeGrade,
-        //   where: { active: true },
-        // },
-        {
-          model: EmergencyContact,
-          required: false,
-        },
-        // {
-        //   model: CustomRole,
-        //   include: [Permission],
-        // },
-        {
-          model: AdditionalAllowance,
-          include: [AdditionalAllowanceDefinition],
-        },
-        {
-          model: AdditionalDeduction,
-          include: [AdditionalDeductionDefinition],
-        },
-        {
-          model: AdditionalPay,
-          include: [AdditionalPayDefinition],
-        },
-        //Address,
-        // EmployeeInfo,
-        // EmergencyContact,
-        // AccountInfo,
-        // Department,
-        // Grade,
-
-        // // Company,
-        // CustomRole,
       ],
+      limit, // Limit the number of records
+      offset, // Skip the number of records based on page
     });
 
-    // return res.json("fghgfdf")
+    // Transform the data to only include required fields
+    const employeeData = rows.map((employee) => {
+      const position =
+        employee.Positions.length > 0
+          ? employee.Positions[0].positionName
+          : null;
+      const grade = employee.Grades.length > 0 ? employee.Grades[0].name : null;
 
-    const sanitizedEmployees = Employees.map((employee) => {
-      // Destructure the employee object excluding the password field
-      const { password, ...sanitizedEmployee } = employee.dataValues;
-
-      // If there are nested associations, remove passwords from them as well
-      if (sanitizedEmployee.Companys) {
-        sanitizedEmployee.Companys = sanitizedEmployee.Companys.map((info) => {
-          const { password, ...sanitizedInfo } = info.dataValues;
-          return sanitizedInfo;
-        });
-      }
-
-      // Similarly, sanitize other nested associations if needed
-
-      return sanitizedEmployee;
+      return {
+        fullName: employee.fullname,
+        gender: employee.sex,
+        positionName: position,
+        gradeName: grade,
+        employeeId: employee.employee_id_number,
+      };
     });
 
-    res.status(200).json({
-      count: Employees.length,
-      message: "Data fetched sucessfully",
-      data: sanitizedEmployees,
+    // Calculate the total number of pages
+    const totalPages = Math.ceil(count / limit);
+
+    return res.json({
+      message: "Data fetched Successfully",
+
+      data: employeeData,
     });
   } catch (error) {
+    console.error("Error fetching employees:", error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
   }
 };
+
+// exports.getAllEmployee = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+//     // return res.json("data");
+//     const Employees = await Employee.findAll({
+//       where: { CompanyId },
+//       include: [
+//         {
+//           model: Position,
+//           required: false,
+//           through: {
+//             model: EmployeePosition,
+//             where: {
+//               isActive: true,
+//             },
+//           },
+//         },
+//         {
+//           model: Department,
+//           required: false,
+//           through: {
+//             model: EmployeeDepartment,
+//             where: {
+//               active: true,
+//             },
+//           },
+//         },
+
+//         // ,
+//         {
+//           model: Grade,
+
+//           through: {
+//             model: EmployeeGrade,
+//             where: {
+//               active: true,
+//             },
+//           },
+//         },
+//       ],
+//     });
+
+//     return res.json(Employees);
+
+//     const sanitizedEmployees = Employees.map((employee) => {
+//       // Destructure the employee object excluding the password field
+//       const { password, ...sanitizedEmployee } = employee.dataValues;
+
+//       // If there are nested associations, remove passwords from them as well
+//       if (sanitizedEmployee.Companys) {
+//         sanitizedEmployee.Companys = sanitizedEmployee.Companys.map((info) => {
+//           const { password, ...sanitizedInfo } = info.dataValues;
+//           return sanitizedInfo;
+//         });
+//       }
+
+//       // Similarly, sanitize other nested associations if needed
+
+//       return sanitizedEmployee;
+//     });
+
+//     res.status(200).json({
+//       count: Employees.length,
+//       message: "Data fetched sucessfully",
+//       data: sanitizedEmployees,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 exports.getEmployeeWithCustomRole = async (req, res, next) => {
   try {
     const getEmployeeWithCustomRole = await Employee.findAll({
@@ -379,14 +373,19 @@ exports.getEmployeeWithCustomRole = async (req, res, next) => {
 exports.getEmployeeById = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
     const employees = await Employee.findOne({
-      where: { id: id },
+      where: { id: id, CompanyId: CompanyId },
       attributes: {
         exclude: [
           "password",
           "acceptanceCode",
           "isActive",
           "isDeactivated",
+
           "joiningDate",
           "createdAt",
           "updatedAt",
@@ -399,25 +398,26 @@ exports.getEmployeeById = async (req, res, next) => {
           required: false,
           where: { isActive: true },
         },
-        {
-          model: Company,
-          required: false,
+        // {
+        //   model: Company,
+        //   required: false,
 
-          attributes: {
-            exclude: [
-              "password",
-              "acceptanceCode",
-              "isActive",
-              "isDeactivated",
-              "joiningDate",
-              "createdAt",
-              "updatedAt",
-              "CompanyId",
-              "resetPasswordToken",
-              "resetPasswordTokenCreatedAt",
-            ], // Exclude the password field
-          },
-        },
+        //   attributes: {
+        //     exclude: [
+
+        //       "password",
+        //       "acceptanceCode",
+        //       "isActive",
+        //       "isDeactivated",
+        //       "joiningDate",
+        //       "createdAt",
+        //       "updatedAt",
+        //       "CompanyId",
+        //       "resetPasswordToken",
+        //       "resetPasswordTokenCreatedAt",
+        //     ], // Exclude the password field
+        //   },
+        // },
         {
           model: EmployeeInfo,
           required: false,
@@ -487,25 +487,17 @@ exports.getEmployeeById = async (req, res, next) => {
       ],
     });
 
-    res.json({ employees });
-  } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} is required`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else if (error.name === "SequelizeUniqueConstraintError") {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = [`${err.path} must be unique`];
-      });
-
-      return res.status(404).json({ message: errors });
-    } else {
-      return res.status(503).json({ message: "Internal server error" });
+    if (!employees) {
+      return next(
+        createError.createError(400, "There is no such employee in the company")
+      );
     }
+    return res.json({ data: employees });
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 

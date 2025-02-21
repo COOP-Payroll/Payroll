@@ -222,14 +222,57 @@ router.put(
  * /api/employee:
  *   get:
  *     summary: Get all employees
- *     description: Retrieve a list of all employees.
+ *     description: Retrieve a list of all employees with pagination.
  *     tags:
  *       - Employee
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         description: Page number for pagination (defaults to 1).
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         description: Number of employees per page (defaults to 10).
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       '200':
  *         description: Successfully retrieved list of employees.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Data fetched Successfully"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       fullName:
+ *                         type: string
+ *                         example: "Alemu Tesfaye"
+ *                       gender:
+ *                         type: string
+ *                         example: "male"
+ *                       positionName:
+ *                         type: string
+ *                         example: "Director"
+ *                       gradeName:
+ *                         type: string
+ *                         example: "Grade X"
+ *                       employeeId:
+ *                         type: string
+ *                         example: "test3/HR /2023/0006"
  *       '401':
  *         description: Unauthorized - Token is missing or invalid.
  *       '403':
@@ -301,6 +344,83 @@ router.get(
   // }),
   newEmployeeController.downloadEmployeeTemplate
 );
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ * /api/employee/{id}:
+ *   get:
+ *     summary: Get an employee by ID
+ *     description: Retrieve a specific employee's details by their ID.
+ *     tags:
+ *       - Employee
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: The ID of the employee to fetch.
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved employee details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 123
+ *                     fullName:
+ *                       type: string
+ *                       example: "Alemu Tesfaye"
+ *                     gender:
+ *                       type: string
+ *                       example: "male"
+ *                     positionName:
+ *                       type: string
+ *                       example: "Director"
+ *                     gradeName:
+ *                       type: string
+ *                       example: "Grade X"
+ *                     employeeId:
+ *                       type: string
+ *                       example: "test3/HR /2023/0006"
+ *                     address:
+ *                       type: object
+ *                       properties:
+ *                         street:
+ *                           type: string
+ *                           example: "1234 Elm St."
+ *                         city:
+ *                           type: string
+ *                           example: "Nairobi"
+ *                         state:
+ *                           type: string
+ *                           example: "Nairobi"
+ *                         country:
+ *                           type: string
+ *                           example: "Kenya"
+ *       '400':
+ *         description: Bad Request - Employee not found or invalid request.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - Insufficient permissions to access the employee's details.
+ *       '500':
+ *         description: Internal Server Error.
+ */
 
 router.get(
   "/:id",
