@@ -372,7 +372,7 @@ const z = require("../controllers/zcontrollers.js");
 router.get(
   "/available-payrolls",
   middleware.protectAll,
-  // middleware.restrictToAll("approver"),
+  middleware.restrictToAll("approver"),
   payroll.getNotApprovedPayroll
 );
 
