@@ -2365,6 +2365,124 @@ exports.getProcessedPayroll = async (req, res, next) => {
 };
 
 //PROCESSED PAYROLL
+
+//UNPROCESSED PAYROLL
+exports.getUnprocessedPayroll = async (req, res, next) => {
+  try {
+    const payrollDefinitionId = req.params.id;
+    if (!payrollDefinitionId) {
+      return next(createError.createError(404, "Please specify the month"));
+    }
+
+    const payrollDefinition = await PayrollDefinition.findOne({
+      where: { id: payrollDefinitionId },
+    });
+
+    if (!payrollDefinition) {
+      return next(createError.createError(404, "Month not found"));
+    }
+
+    // Step 1: Get all EmployeeIds with payroll for the specified PayrollDefinitionId
+    const processedPayrolls = await Payroll.findAll({
+      where: { PayrollDefinitionId: payrollDefinitionId },
+      attributes: ["EmployeeId"], // Only select the EmployeeId
+    });
+
+    // Extract EmployeeIds from the processedPayrolls
+    const processedEmployeeIds = processedPayrolls.map(
+      (payroll) => payroll.EmployeeId
+    );
+
+    // Step 2: Fetch unprocessed employees
+    const employees = await Employee.findAll({
+      where: {
+        hireDate: {
+          [Sequelize.Op.lte]: payrollDefinition.endDate, // hireDate must be less than or equal to payrollEndDate
+        },
+        CompanyId: req.user.id, // Filter by company
+        id: {
+          [Sequelize.Op.notIn]: processedEmployeeIds, // Exclude processed EmployeeIds
+        },
+      },
+      include: [
+        {
+          model: Position,
+        },
+      ],
+    });
+
+    const transformedEmployees = employees.map((employee) => {
+      const {
+        id,
+        fullname,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+      } = employee;
+
+      const positions = employee.Positions
+        ? {
+            positionName: employee?.Positions[0].positionName,
+          }
+        : {};
+
+      // Extract necessary fields from the Payroll object
+      const payrollInfo = employee.Payroll
+        ? {
+            grossSalary: employee.Payroll.grossSalary,
+            basicSalary: employee.Payroll.basicSalary,
+            taxableIncome: employee.Payroll.taxableIncome,
+            incomeTax: employee.Payroll.incomeTax,
+            totalDeduction: employee.Payroll.totalDeduction,
+            totalAllowance: employee.Payroll.totalAllowance,
+            NetSalary: employee.Payroll.NetSalary,
+            employee_pension_amount: employee.Payroll.employee_pension_amount,
+            employer_pension_amount: employee.Payroll.employer_pension_amount,
+            status: employee.Payroll.status,
+            isPaid: employee.Payroll.isPaid,
+          }
+        : {};
+
+      return {
+        id,
+        fullname,
+        ...positions,
+        image,
+        sex,
+        date_of_birth,
+        role,
+        nationality,
+        marriageStatus,
+        employee_id_number,
+        email,
+        phoneNumber,
+        optionalNumber,
+        id_image,
+        id_type,
+        ...payrollInfo,
+      };
+    });
+    return res.status(200).json({
+      status: "success",
+      data: transformedEmployees,
+    });
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+
+//PROCESSED PAYROLL
 exports.getApprovedPay = async (req, res, next) => {
   try {
     const currentDate = new Date();
@@ -2478,122 +2596,6 @@ exports.getApprovedPay = async (req, res, next) => {
     return res.status(200).json({
       status: "true",
 
-      data: transformedEmployees,
-    });
-  } catch (error) {
-    return next(
-      createError.createError(503, "An error occurred, please try again later")
-    );
-  }
-};
-
-//UNPROCESSED PAYROLL
-exports.getUnprocessedPayroll = async (req, res, next) => {
-  try {
-    const payrollDefinitionId = req.params.id;
-    if (!payrollDefinitionId) {
-      return next(createError.createError(404, "Please specify the month"));
-    }
-
-    const payrollDefinition = await PayrollDefinition.findOne({
-      where: { id: payrollDefinitionId },
-    });
-
-    if (!payrollDefinition) {
-      return next(createError.createError(404, "Month not found"));
-    }
-
-    // Step 1: Get all EmployeeIds with payroll for the specified PayrollDefinitionId
-    const processedPayrolls = await Payroll.findAll({
-      where: { PayrollDefinitionId: payrollDefinitionId },
-      attributes: ["EmployeeId"], // Only select the EmployeeId
-    });
-
-    // Extract EmployeeIds from the processedPayrolls
-    const processedEmployeeIds = processedPayrolls.map(
-      (payroll) => payroll.EmployeeId
-    );
-
-    // Step 2: Fetch unprocessed employees
-    const employees = await Employee.findAll({
-      where: {
-        hireDate: {
-          [Sequelize.Op.lte]: payrollDefinition.endDate, // hireDate must be less than or equal to payrollEndDate
-        },
-        CompanyId: req.user.id, // Filter by company
-        id: {
-          [Sequelize.Op.notIn]: processedEmployeeIds, // Exclude processed EmployeeIds
-        },
-      },
-      include: [
-        {
-          model: Position,
-        },
-      ],
-    });
-
-    const transformedEmployees = employees.map((employee) => {
-      const {
-        id,
-        fullname,
-        image,
-        sex,
-        date_of_birth,
-        role,
-        nationality,
-        marriageStatus,
-        employee_id_number,
-        email,
-        phoneNumber,
-        optionalNumber,
-        id_image,
-        id_type,
-      } = employee;
-
-      const positions = employee.Positions
-        ? {
-            positionName: employee?.Positions[0].positionName,
-          }
-        : {};
-
-      // Extract necessary fields from the Payroll object
-      const payrollInfo = employee.Payroll
-        ? {
-            grossSalary: employee.Payroll.grossSalary,
-            basicSalary: employee.Payroll.basicSalary,
-            taxableIncome: employee.Payroll.taxableIncome,
-            incomeTax: employee.Payroll.incomeTax,
-            totalDeduction: employee.Payroll.totalDeduction,
-            totalAllowance: employee.Payroll.totalAllowance,
-            NetSalary: employee.Payroll.NetSalary,
-            employee_pension_amount: employee.Payroll.employee_pension_amount,
-            employer_pension_amount: employee.Payroll.employer_pension_amount,
-            status: employee.Payroll.status,
-            isPaid: employee.Payroll.isPaid,
-          }
-        : {};
-
-      return {
-        id,
-        fullname,
-        ...positions,
-        image,
-        sex,
-        date_of_birth,
-        role,
-        nationality,
-        marriageStatus,
-        employee_id_number,
-        email,
-        phoneNumber,
-        optionalNumber,
-        id_image,
-        id_type,
-        ...payrollInfo,
-      };
-    });
-    return res.status(200).json({
-      status: "success",
       data: transformedEmployees,
     });
   } catch (error) {
