@@ -196,15 +196,17 @@ async function saveApprover(
 exports.createApprover = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   // const transaction=
-  const CompanyId = req.user.id;
-  const { level, role, isActive, isMaster, EmployeeId } = req.body;
+  const CompanyId =
+    req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+  const { level, role, isMaster, EmployeeId } = req.body;
+
   try {
     if (!EmployeeId) {
       return next(createError.createError(400, "Please enter required fields"));
     }
 
     const approvalMethod = await ApprovalMethod.findOne({
-      where: { CompanyId: req.user.id, isActive: true },
+      where: { CompanyId: CompanyId, isActive: true },
     });
 
     if (!approvalMethod) {
@@ -256,17 +258,17 @@ exports.createApprover = async (req, res, next) => {
       const ApprovalMethodId = approvalMethod.id;
 
       const approvalMethodCount = await ApprovalMethod.count({
-        where: { CompanyId: req.user.id, isActive: true },
+        where: { CompanyId: CompanyId, isActive: true },
       });
 
       //add company id to get employee
       const employeeCount = await Employee.count({
-        where: { id: req.body?.EmployeeId, CompanyId: req.user.id },
+        where: { id: req.body?.EmployeeId, CompanyId: CompanyId },
       });
 
       const isSaved = await Approver.count({
         where: {
-          CompanyId: req.user.id,
+          CompanyId: CompanyId,
           EmployeeId: req.body.EmployeeId,
           isActive: true,
         },
@@ -280,7 +282,7 @@ exports.createApprover = async (req, res, next) => {
         return next(
           createError.createError(
             400,
-            "this employee is already assigned as approver"
+            "The employee is already assigned as approver"
           )
         );
         // res.json("this employee is already assigned as approver");
@@ -289,7 +291,7 @@ exports.createApprover = async (req, res, next) => {
         return next(
           createError.createError(
             400,
-            "you should define approval method for this company"
+            "You should define approval method for this company"
           )
         );
       }

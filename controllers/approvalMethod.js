@@ -9,15 +9,16 @@ const Employee = require("../models/employee.js");
 
 //GET ALL APPROVAL METHOD
 exports.getAllApprovalMethod = async (req, res, next) => {
-  const CompanyId = req.user.id;
+  const CompanyId =
+    req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
   try {
     const criteria = {
-      where: { CompanyId: req.user.id },
+      where: { CompanyId: CompanyId, isActive: true },
     };
     const approvalMethod = await ApprovalMethod.findAll(criteria);
     res.status(200).json({
       count: approvalMethod.length,
-      approvalMethod,
+      data: approvalMethod,
     });
   } catch (err) {
     return next(
@@ -98,7 +99,9 @@ async function saveApprovalMethod(
 
 exports.createApprovalMethod = async (req, res, next) => {
   try {
-    const CompanyId = req.user.id;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    // const CompanyId = req.user.id;
     let minimumApprover = req.body.minimumApprover;
     let approvalLevel = req.body.approvalLevel;
     const isCompleted = false;
@@ -108,10 +111,14 @@ exports.createApprovalMethod = async (req, res, next) => {
     const isActive = true;
 
     const criteria = {
-      where: { CompanyId: req.user.id, isActive: true },
+      where: { CompanyId: CompanyId, isActive: true },
     };
 
-    const isExist = await ApprovalMethod.count(criteria);
+    const isExist = await ApprovalMethod.count({
+      where: { CompanyId: CompanyId, isActive: true },
+    });
+
+    // return res.json({ isExist, CompanyId });
 
     if (isExist >= 1) {
       return next(
