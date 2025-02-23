@@ -185,44 +185,6 @@ const middleware = require("../middleware/auth.js");
 /**
  * @swagger
  * /api/pension/{id}:
- *   delete:
- *     summary: Delete a pension record by ID
- *     description: Deletes a pension record identified by the ID. Only `superAdmin` and `companyAdmin` can delete a pension record.
- *     tags:
- *       - Pensions
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: The ID of the pension record to delete.
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       '200':
- *         description: Successfully deleted the pension record.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Success message indicating the pension record was successfully deleted.
- *       '400':
- *         description: Bad Request - Invalid pension ID.
- *       '401':
- *         description: Unauthorized - Token is missing or invalid.
- *       '403':
- *         description: Forbidden - User does not have necessary permissions.
- *       '500':
- *         description: Internal Server Error - Something went wrong on the server.
- */
-
-/**
- * @swagger
- * /api/pension/{id}:
  *   put:
  *     summary: Update a pension record by ID
  *     description: Updates a specific pension record based on the provided ID. Only `superAdmin` and `companyAdmin` can perform the update.
@@ -384,14 +346,14 @@ router.put(
   pensionController.updatePension
 );
 
-router.delete(
-  "/:id",
-  middleware.protectAll,
-  middleware.validateUserAgent,
-  middleware.restrictToAll("superAdmin", "companyAdmin"),
+// router.delete(
+//   "/:id",
+//   middleware.protectAll,
+//   middleware.validateUserAgent,
+//   middleware.restrictToAll("superAdmin", "companyAdmin"),
 
-  pensionController.deletePension
-);
+//   pensionController.deletePension
+// );
 
 router.get(
   "/:id",
