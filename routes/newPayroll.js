@@ -497,6 +497,136 @@ const z = require("../controllers/zcontrollers.js");
  *       '500':
  *         description: Internal server error
  */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     Employee:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "123"
+ *         fullname:
+ *           type: string
+ *           example: "John Doe"
+ *         positionName:
+ *           type: string
+ *           example: "Software Engineer"
+ *         image:
+ *           type: string
+ *           format: uri
+ *           example: "https://example.com/profile.jpg"
+ *         sex:
+ *           type: string
+ *           example: "Male"
+ *         date_of_birth:
+ *           type: string
+ *           format: date
+ *           example: "1990-01-01"
+ *         role:
+ *           type: string
+ *           example: "Developer"
+ *         nationality:
+ *           type: string
+ *           example: "American"
+ *         marriageStatus:
+ *           type: string
+ *           example: "Single"
+ *         employee_id_number:
+ *           type: string
+ *           example: "EMP12345"
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "john.doe@example.com"
+ *         phoneNumber:
+ *           type: string
+ *           example: "+1234567890"
+ *         optionalNumber:
+ *           type: string
+ *           example: "+0987654321"
+ *         id_image:
+ *           type: string
+ *           format: uri
+ *           example: "https://example.com/id.jpg"
+ *         id_type:
+ *           type: string
+ *           example: "Passport"
+ *         grossSalary:
+ *           type: number
+ *           example: 5000
+ *         basicSalary:
+ *           type: number
+ *           example: 3000
+ *         taxableIncome:
+ *           type: number
+ *           example: 4000
+ *         incomeTax:
+ *           type: number
+ *           example: 500
+ *         totalDeduction:
+ *           type: number
+ *           example: 700
+ *         totalAllowance:
+ *           type: number
+ *           example: 1200
+ *         NetSalary:
+ *           type: number
+ *           example: 4300
+ *         employee_pension_amount:
+ *           type: number
+ *           example: 200
+ *         employer_pension_amount:
+ *           type: number
+ *           example: 300
+ *         status:
+ *           type: string
+ *           example: "unprocessed"
+ *         isPaid:
+ *           type: boolean
+ *           example: false
+ * 
+ * /api/newPayroll/get-unprocessed-payrolls/{id}:
+ *   get:
+ *     summary: Get Unprocessed Payrolls for a Specific Month
+ *     description: Retrieve a list of employees with unprocessed payrolls for a specific month.
+ *     tags:
+ *       - Payroll
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The ID of the payroll definition.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved unprocessed payrolls.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "true"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Employee'
+ *       '404':
+ *         description: Payroll definition not found.
+ *       '503':
+ *         description: Service unavailable.
+ */
 
 router.get(
   "/get-approved-payrolls",

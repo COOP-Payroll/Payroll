@@ -194,6 +194,40 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
  *                   type: string
  *                   example: "An error occurred, please try again later"
  */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ * /api/employee/download-excel:
+ *   get:
+ *     summary: Download Employee Template
+ *     description: Generates and downloads an Excel file containing employee data, departments, positions, grades, and instructions.
+ *     tags:
+ *       - Employee
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully generated and downloaded the employee template.
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       '400':
+ *         description: Bad Request - Possibly invalid parameters or access denied.
+ *       '401':
+ *         description: Unauthorized - Authentication failed or token missing.
+ *       '403':
+ *         description: Forbidden - User does not have permission to access this resource.
+ *       '500':
+ *         description: Internal Server Error.
+ */
 
 router.put(
   "/unassign-approver/:id",
@@ -336,12 +370,11 @@ router.get(
 
 router.get(
   "/download-excel",
-
-  // middleware.protectAll,
-  // middleware.restrictALL({
-  //   moduleName: "employeeinfo",
-  //   isAccessible: true,
-  // }),
+  middleware.protectAll,
+  middleware.restrictALL({
+    moduleName: "employeeinfo",
+    isAccessible: true,
+  }),
   newEmployeeController.downloadEmployeeTemplate
 );
 /**

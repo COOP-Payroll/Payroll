@@ -289,7 +289,7 @@ const middleware = require("../middleware/auth.js");
 
 /**
  * @swagger
- * /api/pension/{restore-to-default}:
+ * /api/pension/restore-to-default:
  *   put:
  *     summary: Restore the pension settings to default
  *     description: Resets the pension data for the company, deactivates the current pension record, and creates a default one with zero contributions. Only `superAdmin` and `companyAdmin` can restore to default.

@@ -61,7 +61,9 @@ exports.generateProjectSalaryReport = async (req, res, next) => {
 
     return res.status(200).json({ data: formattedData });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -169,7 +171,9 @@ exports.getPayrollPublishedReport2 = async (req, res, next) => {
 
     return res.status(200).json(formattedData);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.getPayrollPublishedReport1 = async (req, res, next) => {
@@ -261,7 +265,9 @@ exports.getPayrollPublishedReport1 = async (req, res, next) => {
     // Return the formatted data as JSON response
     return res.status(200).json(formattedData);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -362,9 +368,11 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
     });
 
     // Return the sorted array as JSON response
-    return res.status(200).json(result);
+    return res.status(200).json({ data: result });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -435,7 +443,9 @@ exports.getPayrollPublishedReportBasedOnSiteLocation = async (
       data: formattedResult,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -526,7 +536,9 @@ exports.downloadPayrollPublishedReport = async (req, res, next) => {
       pdfFilename,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -988,7 +1000,9 @@ exports.downloadExcelReport = async (req, res, next) => {
     // Send Excel buffer as response
     res.send(excelBuffer);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -1044,6 +1058,8 @@ exports.getPayrollPublishedReportPerMonth = async (req, res, next) => {
     });
     return res.status(200).json(data);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

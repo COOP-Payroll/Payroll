@@ -366,8 +366,9 @@ router.get(
   "/current-year",
   middleware.protectAll,
   middleware.validateUserAgent,
-  // middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
+  middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
   payroll.getAllPayrollForCurrentYear
+  // payroll.getPayrollBeforeCurrentMonth
 );
 router.get(
   "/latest",

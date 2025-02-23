@@ -212,6 +212,7 @@ exports.getAllPensionIncludingInActive = async (req, res, next) => {
 
 exports.restoreToDefault = async (req, res, next) => {
   try {
+    // return res.json("dataa");
     const deletedData = await Pension.update(
       {
         isActive: false,
@@ -238,6 +239,7 @@ exports.restoreToDefault = async (req, res, next) => {
       data: pension,
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

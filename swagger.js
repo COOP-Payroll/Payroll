@@ -41,7 +41,7 @@ const options = {
       },
     ],
   },
-  apis: ["./routes/*.js"], // Path to your API routes  //
+  apis: ["./routes/*.js", "./utils/swaggerfiles.js"], // Path to your API routes  //
   
 };
 

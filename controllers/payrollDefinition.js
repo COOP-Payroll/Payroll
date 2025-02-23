@@ -273,3 +273,41 @@ exports.getCurrentMonth = async (req, res, next) => {
     );
   }
 };
+
+
+
+exports.getPayrollBeforeCurrentMonth = async (req, res, next) => {
+  try {
+    const CompanyId = req.user.id;
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1); // January 1st of the current year
+    const startOfMonth = new Date(currentYear, currentDate.getMonth(), 1); // First day of the current month
+
+    const payrollDefinitions = await PayrollDefinition.findAll({
+      where: {
+        CompanyId,
+        startDate: {
+          [Op.gte]: startOfYear, // From the start of the year
+          [Op.lt]: startOfMonth, // Before the current month starts
+        },
+      },
+    });
+
+    if (payrollDefinitions.length === 0) {
+      return res.status(404).json({
+        message:
+          "No payroll definitions found before this month in the current year.",
+      });
+    } else {
+      return res.status(200).json({
+        count: payrollDefinitions.length,
+        payrollDefinition:payrollDefinitions,
+      });
+    }
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};

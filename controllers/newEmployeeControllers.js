@@ -1315,137 +1315,6 @@ const createSendToken = (employee, statusCode, res) => {
   }
 };
 
-// exports.getEmployeeHistory = async (req, res, next) => {
-//   try {
-//     const EmployeeId = Number(req?.params?.id);
-//     const employeeHistory = await Employee.findOne({
-//       where: { id: EmployeeId },
-//       include: [
-//         {
-//           model: Position,
-//           required: false,
-//           through: {
-//             model: EmployeePosition,
-//             where: { isActive: false }
-//           }
-//         },
-//         {
-//           model: EmployeeInfo,
-//           where: { isActive: false },
-//           required: false
-//         },
-//         {
-//           model: Department,
-//           required: false,
-//           through: {
-//             model: EmployeeDepartment,
-//             where: { active: false }
-//           }
-//         },
-//         {
-//           model: Grade,
-//           through: {
-//             model: EmployeeGrade,
-//             where: { active: false }
-//           }
-//         },
-//       ],
-//       // attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
-//       attributes: ['id']
-//     });
-
-//     if (!employeeHistory ||
-//       (employeeHistory.Positions.length === 0 &&
-//        employeeHistory.EmployeeInfos.length === 0 &&
-//        employeeHistory.Departments.length === 0 &&
-//        employeeHistory.Grades.length === 0)) {
-//     return res.status(404).json({ message: "No previous history found" });
-//   }
-//     return res.status(200).json(employeeHistory);
-//   } catch (error) {
-//     console.error(error);
-//     return next(createError.createError(503, 'Internal Server Error'));
-//   }
-// }
-
-// exports.getEmployeeHistory = async (req,res,next)=>{
-//   try {
-// const EmployeeId = Number(req?.params?.id);
-//     const employeeHistory = await Employee.findOne({
-//       where:{id: EmployeeId},
-//         include:[
-//           {
-//             model: Position,
-//             required: true,
-//             // attributes:[],
-//             through: {
-//               model: EmployeePosition,
-//               where: {
-//                 isActive: false
-//               }
-//             }
-//           },
-//           {
-//             model: EmployeeInfo,
-//             where:{isActive:false},
-//             required: true
-//           },
-//           {
-//             model: Department,
-//             required: true,
-//             through: {
-//               model: EmployeeDepartment,
-//               where: {
-//                 active: false
-//               }
-//             }
-//           },
-//           {
-//             model: Grade,
-//             through: {
-//               model: EmployeeGrade,
-//               where: {
-//                 active: false,
-//               },
-//             },
-
-//             // include: [
-//             //   {
-//             //     model: Allowance, // Use the correct alias defined in the association
-//             //     include: [AllowanceDefinition]
-//             //   },
-//             //   {
-//             //     model: Deduction, // Use the correct alias defined in the association
-//             //     include: [DeductionDefinition]
-//             //   }
-//             //   // { model: EmployeeGrade, where: { active: true } },
-//             // ]
-//           },
-//           {
-//             model: AccountInfo,
-//             required: false,
-//             where: {
-//               isActive: false
-//             }
-//           }
-//         ],
-//         attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
-
-//     })
-//     return res.status(200).json(employeeHistory === null ?
-
-//       res.status(404).json({message:"No previous history found"}) :
-
-//        res.status(200).json([employeeHistory]
-//         ))
-//     return res.status(200).json([employeeHistory]
-//     )
-//   } catch (error) {
-//     console.log(error)
-//     return next(createError.createError(503, 'Internal Server Error'))
-//   }
-// }
-
 exports.updateEmployementInfo = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
@@ -1499,152 +1368,26 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
   }
 };
 
-// exports.downloadEmployeeTemplate = async (req, res, next) => {
-//   try {
-//     const departments = await Department.findAll();
-//     const positions = await Position.findAll();
-//     const grades = await Grade.findAll();
-//     const workbook = new ExcelJS.Workbook();
-
-//     // Define your dropdown options
-//     const idTypeOptions = {
-//       "Driving License": "Driving License",
-//       Passport: "Passport",
-//       // Add more options as needed
-//     };
-
-//     // Employee data sheet
-//     const employeeSheet = workbook.addWorksheet("Employees");
-//     employeeSheet.columns = [
-//       { header: "fullname", key: "fullname", width: 30 },
-//       { header: "sex", key: "sex", width: 10 },
-//       { header: "date_of_birth", key: "date_of_birth", width: 15 },
-//       { header: "DepartmentId", key: "DepartmentId", width: 15 },
-//       { header: "GradeId", key: "GradeId", width: 15 },
-//       { header: "marriageStatus", key: "marriageStatus", width: 15 },
-//       { header: "isActive", key: "isActive", width: 10 },
-//       { header: "nationality", key: "nationality", width: 15 },
-//       { header: "email", key: "email", width: 30 },
-//       { header: "phoneNumber", key: "phoneNumber", width: 20 },
-//       { header: "optionalPhoneNumber", key: "optionalPhoneNumber", width: 20 },
-//       { header: "id_type", key: "id_type", width: 15 },
-//       { header: "id_Number", key: "id_Number", width: 20 },
-//       { header: "country", key: "country", width: 15 },
-//       { header: "state", key: "state", width: 15 },
-//       { header: "zone_or_city", key: "zone_or_city", width: 15 },
-//       { header: "woreda", key: "woreda", width: 15 },
-//       { header: "kebele", key: "kebele", width: 15 },
-//       { header: "houseNumber", key: "houseNumber", width: 15 },
-//       { header: "employeeTIN", key: "employeeTIN", width: 20 },
-//       { header: "hireDate", key: "hireDate", width: 20 },
-//       { header: "employee_Code", key: "employee_Code", width: 20 },
-//       { header: "basicSalary", key: "basicSalary", width: 20 },
-//       { header: "position", key: "position", width: 15 },
-//       { header: "siteLocation", key: "siteLocation", width: 15 },
-//       { header: "emergency_relation", key: "emergency_relation", width: 20 },
-//       {
-//         header: "emergency_phoneNumber",
-//         key: "emergency_phoneNumber",
-//         width: 20,
-//       },
-//       { header: "emergency_fullname", key: "emergency_fullname", width: 30 },
-//       { header: "accountNumber", key: "accountNumber", width: 30 },
-//     ];
-
-//     // Apply data validation for the id_type column using dropdown with mapped options
-//     employeeSheet
-//       .getColumn("id_type")
-//       .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
-//         if (rowNumber === 1) return; // Skip header row
-//         cell.dataValidation = {
-//           type: "list",
-//           allowBlank: true,
-//           formula1: Object.values(idTypeOptions), // Using Object.values to get the values array
-//           showErrorMessage: true,
-//           errorTitle: "Invalid Option",
-//           error: "Please select a valid option",
-//         };
-//       });
-
-//     // Apply date format for the date_of_birth column
-//     employeeSheet
-//       .getColumn("date_of_birth")
-//       .eachCell({ includeEmpty: true }, (cell, rowNumber) => {
-//         if (rowNumber === 1) return; // Skip header row
-//         cell.numFmt = "mm/dd/yyyy"; // Apply date format
-//         cell.dataValidation = {
-//           type: "date",
-//           operator: "greaterThan",
-//           formula1: "1900-01-01", // Date must be after this date
-//           showErrorMessage: true,
-//           errorTitle: "Invalid Date",
-//           error: "Please enter a valid date",
-//         };
-//       });
-
-//     // Department data sheet
-//     const departmentSheet = workbook.addWorksheet("Departments");
-//     departmentSheet.columns = [
-//       { header: "Department ID", key: "id", width: 15 },
-//       { header: "Department Name", key: "deptName", width: 30 },
-//     ];
-//     departments.forEach((department) => {
-//       departmentSheet.addRow({
-//         id: department.id,
-//         deptName: department.deptName,
-//       });
-//     });
-
-//     // Position data sheet
-//     const positionSheet = workbook.addWorksheet("Positions");
-//     positionSheet.columns = [
-//       { header: "Position ID", key: "id", width: 15 },
-//       { header: "Position Name", key: "name", width: 30 },
-//     ];
-//     positions.forEach((position) => {
-//       positionSheet.addRow({ id: position.id, name: position.positionName });
-//     });
-
-//     // Grade data sheet
-//     const gradeSheet = workbook.addWorksheet("Grades");
-//     gradeSheet.columns = [
-//       { header: "Grade ID", key: "id", width: 15 },
-//       { header: "Grade Name", key: "name", width: 20 },
-//       { header: "minSalary", key: "minSalary", width: 20 },
-//       { header: "maxSalary", key: "maxSalary", width: 20 },
-//     ];
-//     grades.forEach((grade) => {
-//       gradeSheet.addRow({
-//         id: grade.id,
-//         name: grade.name,
-//         minSalary: grade.minSalary,
-//         maxSalary: grade.maxSalary,
-//       });
-//     });
-
-//     // Set the response content type
-//     res.setHeader(
-//       "Content-Type",
-//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//     );
-//     res.setHeader(
-//       "Content-Disposition",
-//       "attachment; filename=employee_template.xlsx"
-//     );
-
-//     await workbook.xlsx.write(res);
-//     res.end();
-//   } catch (error) {
-//     console.error("Error generating template:", error);
-//     next(createError.createError(503, "Internal Server Error"));
-//   }
-// };
-
 exports.downloadEmployeeTemplate = async (req, res, next) => {
   try {
-    const departments = await Department.findAll();
-    const positions = await Position.findAll();
-    const grades = await Grade.findAll();
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    const departments = await Department.findAll({
+      where: {
+        CompanyId: CompanyId,
+      },
+    });
+    const positions = await Position.findAll({
+      where: {
+        CompanyId: CompanyId,
+      },
+    });
+    const grades = await Grade.findAll({
+      where: {
+        CompanyId: CompanyId,
+      },
+    });
     const workbook = new ExcelJS.Workbook();
 
     // Add an instructions sheet
@@ -1740,20 +1483,12 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
         maxSalary: grade.maxSalary,
       });
 
-      // Align the body content to the left
       row.eachCell((cell) => {
         cell.font = { bold: true, size: 12 };
         cell.alignment = { vertical: "middle", horizontal: "left" }; // Align content to left
       });
     });
-    // grades.forEach((grade, index) => {
-    //   gradeSheet.addRow({
-    //     id: grade.id,
-    //     name: grade.name,
-    //     minSalary: grade.minSalary,
-    //     maxSalary: grade.maxSalary,
-    //   });
-    // });
+
 
     employeeSheet.columns = [
       { header: "FULL NAME", key: "fullname", width: 30 },
