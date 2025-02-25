@@ -550,6 +550,8 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
       approvalMethod,
     } = req.body;
 
+
+    return res.json("data")
     if (!approvalMethod) {
       return next(createError.createError(400, "Set approvalMethod"));
     }
