@@ -75,7 +75,7 @@ exports.updateCompanyIdFormat = async (req, res, next) => {
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const { year, department, order, separator, digitLength } = req.body;
-// return res.json(separator)
+return res.json(req.body)
     // Validate required fields
     if (!year || !department || !order || !digitLength || !separator) {
       return next(

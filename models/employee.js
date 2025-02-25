@@ -3,9 +3,14 @@ const sequelize = require("../database/db.js");
 const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
 
-const EmployeeHistory= require("./employeeHistory.js")
+const EmployeeHistory = require("./employeeHistory.js");
 
 const Employee = sequelize.define("Employee", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true, // Ensure auto-increment
+    primaryKey: true, // Explicitly set primary key
+  },
   fullname: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -84,10 +89,10 @@ const Employee = sequelize.define("Employee", {
     allowNull: true,
   },
 
- totalPercent:{
-  type: DataTypes.INTEGER,
-  defaultValue:0
- },
+  totalPercent: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
   isConfirmed: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
@@ -120,40 +125,36 @@ Employee.beforeUpdate((employee, options) => {
   }
 });
 
-
-
 Employee.beforeUpdate(async (employee, options) => {
-    const existingEmployee = await Employee.findByPk(employee.id);
-    console.log(existingEmployee.phoneNumber)
-    await EmployeeHistory.create({
-      fullname: existingEmployee.fullname,
-      image: existingEmployee.image,
-      sex: existingEmployee.sex,
-      date_of_birth: existingEmployee.date_of_birth,
-      role: existingEmployee.role,
-      nationality: existingEmployee.nationality,
-      marriageStatus: existingEmployee.marriageStatus,
-      employee_id_number: existingEmployee.employee_id_number,
-      email: existingEmployee.email,     
-      phoneNumber: existingEmployee.phoneNumber,
-      optionalNumber: existingEmployee.optionalNumber,
-      id_image: existingEmployee.id_image,
-      id_type: existingEmployee.id_type,
-      id_Number: existingEmployee.id_Number,
-      isDeactivated: existingEmployee.isDeactivated,
-      hireDate: existingEmployee.hireDate,
-      joiningDate: existingEmployee.joiningDate,
-      password: existingEmployee.password,      
-      isActive: false,
-      originalEmployeeId: existingEmployee.id,
-      EmployeeId: employee.id,
-      CompanyId: employee.CompanyId,
-      changeTimestamp: new Date(),
-    });
+  const existingEmployee = await Employee.findByPk(employee.id);
+  console.log(existingEmployee.phoneNumber);
+  await EmployeeHistory.create({
+    fullname: existingEmployee.fullname,
+    image: existingEmployee.image,
+    sex: existingEmployee.sex,
+    date_of_birth: existingEmployee.date_of_birth,
+    role: existingEmployee.role,
+    nationality: existingEmployee.nationality,
+    marriageStatus: existingEmployee.marriageStatus,
+    employee_id_number: existingEmployee.employee_id_number,
+    email: existingEmployee.email,
+    phoneNumber: existingEmployee.phoneNumber,
+    optionalNumber: existingEmployee.optionalNumber,
+    id_image: existingEmployee.id_image,
+    id_type: existingEmployee.id_type,
+    id_Number: existingEmployee.id_Number,
+    isDeactivated: existingEmployee.isDeactivated,
+    hireDate: existingEmployee.hireDate,
+    joiningDate: existingEmployee.joiningDate,
+    password: existingEmployee.password,
+    isActive: false,
+    originalEmployeeId: existingEmployee.id,
+    EmployeeId: employee.id,
+    CompanyId: employee.CompanyId,
+    changeTimestamp: new Date(),
+  });
   // }
 });
-
-
 
 // Department.hasMany(Employee);
 // Employee.belongsTo(Department);

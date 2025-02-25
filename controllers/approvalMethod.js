@@ -676,8 +676,23 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
     });
 
     if (!foundApprovalMethod) {
-      await transaction.rollback();
-      return next(createError.createError(400, "No approval method found"));
+      // await transaction.rollback();
+      // return next(createError.createError(400, "No approval method found"));
+
+
+      const appMethod = await ApprovalMethod.create(
+        {
+          minimumApprover,
+          approvalLevel,
+          approvalMethod,
+          isCompleted: false,
+          isThereMasterApprover,
+          isActive,
+        },
+        { transaction }
+      );
+  
+      await appMethod.setCompany(CompanyId, { transaction });
     }
 
     // Check for duplicate approval method
