@@ -522,6 +522,7 @@ exports.payrollDraft1 = async (req, res, next) => {
       },
     });
 
+    return res.json(currentMonthPayrolls);
     if (currentMonthPayrolls.length === 0) {
       return res.status(204).json({
         message: "No payrolls defined for this month",

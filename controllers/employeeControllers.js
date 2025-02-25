@@ -722,6 +722,7 @@ exports.createEmployee = async (req, res, next) => {
       conflicts,
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

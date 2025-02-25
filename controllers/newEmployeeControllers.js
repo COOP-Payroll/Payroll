@@ -297,6 +297,7 @@ exports.createEmployee = async (req, res, next) => {
       });
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(
         503,
@@ -1488,7 +1489,6 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
         cell.alignment = { vertical: "middle", horizontal: "left" }; // Align content to left
       });
     });
-
 
     employeeSheet.columns = [
       { header: "FULL NAME", key: "fullname", width: 30 },

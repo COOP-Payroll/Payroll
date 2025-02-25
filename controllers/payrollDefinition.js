@@ -95,52 +95,50 @@ exports.getLatestPayroll = async (req, res, next) => {
 };
 exports.createPayroll = async (req, res, next) => {
   try {
-    // const criteria = {
-    //   CompanyId: CompanyId,
-    // };
     const CompanyId = req.user.id;
 
-    // const payrollData = req.body;
-    // Ensure req.body is an array
-    const payrollData = Array.isArray(req.body)
-      ? req.body
-      : Object.values(req.body);
+    // Ensure req.body is always an array
+    const payrollData = Array.isArray(req.body) ? req.body : [req.body];
 
-    // return res.json(payrollData);
+    // Validate endDate
+    for (const data of payrollData) {
+      const endDate = new Date(data.endDate);
+      // if (isNaN(endDate.getTime())) {
+      //   return next(createError.createError(400, `Invalid endDate: ${data.endDate}`));
+      // }
+    }
 
-    // return res.json(payrollData);
+    // Extract payroll names from request
+    const payrollNames = payrollData.map((data) => data.payrollName);
 
-    // Check if any of the provided payroll names already exist for the given CompanyId
-    const existingPayrollNames = await PayrollDefinition.findAll({
+    // Check if payroll names already exist for this company
+    const existingPayrolls = await PayrollDefinition.findAll({
       where: {
         CompanyId,
-        payrollName: payrollData.map((data) => data.payrollName),
+        payrollName: { [Op.in]: payrollNames }, // Use Sequelize Op.in for array queries
       },
     });
 
-    if (existingPayrollNames.length > 0) {
-      // Payroll names already exist, handle the case accordingly
-      const duplicateNames = existingPayrollNames.map(
+    if (existingPayrolls.length > 0) {
+      const duplicateNames = existingPayrolls.map(
         (record) => record.payrollName
       );
       return next(
         createError.createError(
           400,
-          `Payroll names already exist for the given Company: ${duplicateNames.join(
-            ", "
-          )}`
+          `Payroll names already exist: ${duplicateNames.join(", ")}`
         )
       );
-      // return res.status(400).json({
-      //   message: `Payroll names already exist for the given CompanyId: ${duplicateNames.join(', ')}`,
-      // });
     }
 
+    // Add CompanyId and ensure payPeriod is stored correctly
     const updatedPayrollData = payrollData.map((data) => ({
       ...data,
       CompanyId,
+      payPeriod: data.payPeriod.toString(), // Ensure payPeriod is always a string
     }));
 
+    // Insert new payroll definitions
     const payrollDefinition = await PayrollDefinition.bulkCreate(
       updatedPayrollData
     );
@@ -150,11 +148,74 @@ exports.createPayroll = async (req, res, next) => {
       data: payrollDefinition,
     });
   } catch (error) {
-    return next(
-      createError.createError(503, "An error occurred, please try again later")
-    );
+    console.error(error);
+    return next(createError.createError(503, "An error occurred, please try again later"));
   }
 };
+// exports.createPayroll = async (req, res, next) => {
+//   try {
+//     // const criteria = {
+//     //   CompanyId: CompanyId,
+//     // };
+//     const CompanyId = req.user.id;
+
+//     // const payrollData = req.body;
+//     // Ensure req.body is an array
+//     const payrollData = Array.isArray(req.body)
+//       ? req.body
+//       : Object.values(req.body);
+
+//     // return res.json(payrollData);
+
+//     // return res.json(payrollData);
+
+//     // Check if any of the provided payroll names already exist for the given CompanyId
+//     const existingPayrollNames = await PayrollDefinition.findAll({
+//       where: {
+//         CompanyId,
+//         payrollName: payrollData.map((data) => data.payrollName),
+//       },
+//     });
+
+//     if (existingPayrollNames.length > 0) {
+//       // Payroll names already exist, handle the case accordingly
+//       const duplicateNames = existingPayrollNames.map(
+//         (record) => record.payrollName
+//       );
+//       return next(
+//         createError.createError(
+//           400,
+//           `Payroll names already exist for the given Company: ${duplicateNames.join(
+//             ", "
+//           )}`
+//         )
+//       );
+
+//       // return res.status(400).json({
+//       //   message: `Payroll names already exist for the given CompanyId: ${duplicateNames.join(', ')}`,
+//       // });
+//     }
+
+//     const updatedPayrollData = payrollData.map((data) => ({
+//       ...data,
+//       CompanyId,
+//     }));
+//     const payrollDefinition = await PayrollDefinition.bulkCreate(
+//       updatedPayrollData
+//     );
+
+//     return res.status(201).json({
+//       message: "Successfully defined your payroll.",
+//       data: payrollDefinition,
+//     });
+//   } catch (error) {
+//     // clg(error);
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 
 exports.updatePayrollDefinition = async (req, res, next) => {
   const id = req.params.id;
@@ -274,8 +335,6 @@ exports.getCurrentMonth = async (req, res, next) => {
   }
 };
 
-
-
 exports.getPayrollBeforeCurrentMonth = async (req, res, next) => {
   try {
     const CompanyId = req.user.id;
@@ -302,7 +361,7 @@ exports.getPayrollBeforeCurrentMonth = async (req, res, next) => {
     } else {
       return res.status(200).json({
         count: payrollDefinitions.length,
-        payrollDefinition:payrollDefinitions,
+        payrollDefinition: payrollDefinitions,
       });
     }
   } catch (error) {
