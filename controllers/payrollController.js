@@ -279,31 +279,31 @@ exports.payrollDraft = async (req, res, next) => {
           required: false,
           where: { isActive: true },
         },
-        {
-          model: Position,
-          required: false,
-          through: {
-            model: EmployeePosition,
-            where: {
-              isActive: true,
-            },
-          },
-        },
-        {
-          model: Department,
-          required: false,
-          through: {
-            model: EmployeeDepartment,
-            where: {
-              active: true,
-            },
-          },
-        },
-        {
-          model: Projects,
-          required: false,
-          include: [Sponsor],
-        },
+        // {
+        //   model: Position,
+        //   required: false,
+        //   through: {
+        //     model: EmployeePosition,
+        //     where: {
+        //       isActive: true,
+        //     },
+        //   },
+        // },
+        // {
+        //   model: Department,
+        //   required: false,
+        //   through: {
+        //     model: EmployeeDepartment,
+        //     where: {
+        //       active: true,
+        //     },
+        //   },
+        // },
+        // {
+        //   model: Projects,
+        //   required: false,
+        //   include: [Sponsor],
+        // },
 
         {
           model: Loan,
@@ -346,6 +346,7 @@ exports.payrollDraft = async (req, res, next) => {
         },
       ],
     });
+
     const taxslabs = await Taxslab.findAll({
       where: {
         CompanyId: req.user.id,
@@ -498,6 +499,7 @@ exports.payrollDraft1 = async (req, res, next) => {
       0
     );
 
+
     const currentMonthPayrolls = await PayrollDefinition.findAll({
       where: {
         CompanyId: req.user.id,
@@ -521,8 +523,8 @@ exports.payrollDraft1 = async (req, res, next) => {
         ],
       },
     });
-
     return res.json(currentMonthPayrolls);
+    // return res.json("currentMonthPayrolls");
     if (currentMonthPayrolls.length === 0) {
       return res.status(204).json({
         message: "No payrolls defined for this month",
