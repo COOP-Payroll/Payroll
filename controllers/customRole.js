@@ -17,7 +17,9 @@ exports.getAllCustomRole = async (req, res, next) => {
       customRole,
     });
   } catch (error) {
-    return  next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -29,16 +31,19 @@ exports.getCustomRoleById = async (req, res, next) => {
     const customRole = await CustomRole.findByPk(id);
     res.status(200).json(customRole);
   } catch (error) {
-    return  next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
 //CREATE CUSTOM ROLE
 exports.createCustomRole = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const { name, permission } = req.body;
 
-    const CompanyId = req.user.id;
     if (permission.length === 0 || !permission) {
       return next(
         createError.createError(400, "Please select atleast on permission")
@@ -54,7 +59,7 @@ exports.createCustomRole = async (req, res, next) => {
     } else {
       const customRole = await CustomRole.create({
         name: name,
-        CompanyId: req.user.id,
+        CompanyId: CompanyId,
       });
       // await customRole.setCompany(req.user.id);
 
@@ -70,11 +75,14 @@ exports.createCustomRole = async (req, res, next) => {
 
       res.status(200).json({
         message: "Successfully Registered",
-        customRole,
+        data: customRole,
       });
     }
   } catch (error) {
-    return  next(createError.createError(503, "An error occurred, please try again later"));
+    console.log(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -130,7 +138,9 @@ exports.updateCustomRole = async (req, res, next) => {
       return res.status(404).json(updatedRole);
     }
   } catch (error) {
-    return  next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -142,56 +152,55 @@ exports.updateCustomRole = async (req, res, next) => {
 // EmployeeList;
 // reports;
 
+// exports.deleteCustomRole = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const CustomRole = await CustomRole.findOne({ where: { id: id } });
+//     if (CustomRole) {
+//       await CustomRole.destroy({ where: { id } });
+//       res.status(200).json({ message: "Deleted successfully" });
+//     } else {
+//       res
+//         .status(400)
+//         .json({ message: "There is no Deduction Definition with this ID" });
+//     }
+//   } catch (error) {
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
+
 exports.deleteCustomRole = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const CustomRole = await CustomRole.findOne({ where: { id: id } });
-    if (CustomRole) {
-      await CustomRole.destroy({ where: { id } });
-      res.status(200).json({ message: "Deleted successfully" });
-    } else {
-      res
-        .status(400)
-        .json({ message: "There is no Deduction Definition with this ID" });
+
+    // Find the Custom Role
+    const customRole = await CustomRole.findOne({ where: { id } });
+
+    if (!customRole) {
+      return next(
+        createError.createError(404, "There is no Custom Role with this ID")
+      );
+      // return res
+      //   .status(400)
+      //   .json({ message: "There is no Custom Role with this ID" });
     }
+
+    // Delete all permissions associated with this Custom Role
+    await Permission.destroy({ where: { CustomRoleId: id } });
+
+    // Delete the custom role itself
+    await CustomRole.destroy({ where: { id } });
+
+    res.status(200).json({ message: "Deleted successfully" });
   } catch (error) {
-    return  next(createError.createError(503, "An error occurred, please try again later"));
+    console.error(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
-
-// exports.assignToEmployee = async (req, res, next) => {
-//   try {
-//     const { employeeId, roleId } = req.body;
-
-//     const getRole = await CustomRole.findOne({ where: { id: Number(roleId) } });
-//     const getEmployee = await Employee.findOne({
-//       where: { id: Number(employeeId) },
-//     });
-
-//     if (!getRole) {
-//       res.status(404).json({ message: "There is no Role with this ID" });
-//     }
-//     if (!getEmployee) {
-//       res.status(404).json({ message: "There is no Employee with this ID" });
-//     }
-
-//     const checkAssignedRole = await Employee.findOne({
-//       where: { id: Number(employeeId), CustomRoleId: Number(roleId) },
-//     });
-//     if (checkAssignedRole) {
-//       return next(
-//         createError.createError(400, "Role already assigned to Employee")
-//       );
-//     }
-
-//     const assignedRole = await getEmployee.setCustomRole(Number(roleId));
-//     res
-//       .status(200)
-//       .json({ message: "Role Assigned successfully", assignedRole });
-//   } catch (error) {
-//     return return next(createError.createError(503, "An error occurred, please try again later"));
-//   }
-// };
 
 exports.assignToEmployee = async (req, res, next) => {
   try {
@@ -226,13 +235,15 @@ exports.assignToEmployee = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Role assigned successfully",
-      employee: {
+      data: {
         id: getEmployee.id,
         fullname: getEmployee.fullname,
         CustomRoleId: getEmployee.CustomRoleId,
       },
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
