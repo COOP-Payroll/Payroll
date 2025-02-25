@@ -5,6 +5,11 @@ const Company = require("./company.js");
 const Payroll = require("./Payroll.js");
 
 const PayrollDefinition = sequelize.define("PayrollDefinition", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true, // Ensure auto-increment
+    primaryKey: true, // Explicitly set primary key
+  },
   payrollName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -58,7 +63,6 @@ const PayrollDefinition = sequelize.define("PayrollDefinition", {
     defaultValue: 0,
   },
 });
-
 
 module.exports = PayrollDefinition;
 

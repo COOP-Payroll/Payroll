@@ -97,61 +97,87 @@ exports.createPayroll = async (req, res, next) => {
   try {
     const CompanyId = req.user.id;
 
-    // Ensure req.body is always an array
-    const payrollData = Array.isArray(req.body) ? req.body : [req.body];
+    // Convert object to array if the payload is an object with numeric keys
+    const payrollData = Array.isArray(req.body)
+      ? req.body
+      : Object.values(req.body);
 
-    // Validate endDate
-    for (const data of payrollData) {
-      const endDate = new Date(data.endDate);
-      // if (isNaN(endDate.getTime())) {
-      //   return next(createError.createError(400, `Invalid endDate: ${data.endDate}`));
-      // }
-    }
+    // Debug log the payload to ensure it's an array now
+    console.log("Received Payroll Data:", payrollData);
 
-    // Extract payroll names from request
-    const payrollNames = payrollData.map((data) => data.payrollName);
+    // return res.json(payrollData)
 
-    // Check if payroll names already exist for this company
-    const existingPayrolls = await PayrollDefinition.findAll({
+    // Check if any of the provided payroll names already exist for the given CompanyId and different year
+    const existingPayrollNames = await PayrollDefinition.findAll({
       where: {
         CompanyId,
-        payrollName: { [Op.in]: payrollNames }, // Use Sequelize Op.in for array queries
+        payrollName: payrollData.map((data) => data.payrollName),
       },
     });
 
-    if (existingPayrolls.length > 0) {
-      const duplicateNames = existingPayrolls.map(
+    // Filter existing records to check if any payroll name exists with the same year
+    const duplicatePayrolls = existingPayrollNames.filter((existing) => {
+      return payrollData.some((data) => {
+        const existingYear = new Date(existing.startDate).getFullYear();
+        const newYear = new Date(data.startDate).getFullYear();
+        return (
+          existing.payrollName === data.payrollName && existingYear === newYear
+        );
+      });
+    });
+
+    if (duplicatePayrolls.length > 0) {
+      // Payroll names already exist for the same year, handle the case accordingly
+      const duplicateNames = duplicatePayrolls.map(
         (record) => record.payrollName
       );
       return next(
         createError.createError(
           400,
-          `Payroll names already exist: ${duplicateNames.join(", ")}`
+          `Payroll names already exist for the given Company in the same year: ${duplicateNames.join(
+            ", "
+          )}`
         )
       );
     }
 
-    // Add CompanyId and ensure payPeriod is stored correctly
     const updatedPayrollData = payrollData.map((data) => ({
       ...data,
       CompanyId,
-      payPeriod: data.payPeriod.toString(), // Ensure payPeriod is always a string
     }));
-
-    // Insert new payroll definitions
+    // return res.json(updatedPayrollData)
     const payrollDefinition = await PayrollDefinition.bulkCreate(
       updatedPayrollData
     );
+    // const payrollDefinition = await PayrollDefinition.bulkCreate([
+    //   {id: 18,
+    //     payrollName: "February Payroll",
+    //     startDate: new Date("2025-02-01"),
+    //     endDate: new Date("2025-02-28"),
+    //     payDate: new Date("2025-03-05"),
+    //     payPeriod: "February 2025",
+    //     status: "created",
+    //     isRollBacked: false,
+    //     isPaid: false,
+    //     totalNoOfEmployee: 0,
+    //     totalNoOfprocessedEmployee: 0,
+    //     processedInPercent: 0,
+    //     CompanyId: 1,
+    //   },
+    // ]);
 
     return res.status(201).json({
       message: "Successfully defined your payroll.",
-      data: payrollDefinition,
+      payrollDefinition,
     });
   } catch (error) {
-    console.error(error);
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    console.log(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
+
 // exports.createPayroll = async (req, res, next) => {
 //   try {
 //     // const criteria = {
