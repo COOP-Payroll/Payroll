@@ -153,7 +153,7 @@ const router = express.Router();
  *           type: boolean
  *           description: Indicates whether there is a master approver.
  *           example: false
- * 
+ *
  * /api/approvalmethod/recreate:
  *   post:
  *     summary: Recreate an approval method
