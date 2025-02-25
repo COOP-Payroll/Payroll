@@ -485,6 +485,143 @@ exports.payrollDraft = async (req, res, next) => {
   }
 };
 
+// exports.payrollDraft1 = async (req, res, next) => {
+//   try {
+//     const currentDate = new Date();
+//     const startOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth(),
+//       1
+//     );
+//     const endOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth() + 1,
+//       0
+//     );
+
+//     const currentMonthPayrolls = await PayrollDefinition.findAll({
+//       where: {
+//         CompanyId: req.user.id,
+//         [Op.or]: [
+//           {
+//             startDate: {
+//               [Op.between]: [startOfMonth, endOfMonth],
+//             },
+//             endDate: {
+//               [Op.between]: [startOfMonth, endOfMonth],
+//             },
+//           },
+//           {
+//             startDate: {
+//               [Op.lt]: startOfMonth,
+//             },
+//             endDate: {
+//               [Op.gte]: startOfMonth,
+//             },
+//           },
+//         ],
+//       },
+//     });
+//     return res.json(currentMonthPayrolls);
+//     // return res.json("currentMonthPayrolls");
+//     if (currentMonthPayrolls.length === 0) {
+//       return res.status(204).json({
+//         message: "No payrolls defined for this month",
+//       });
+//     }
+
+//     // return res.json(currentMonthPayrolls[0]?.id)
+
+//     const payrollData = await Payroll.findAll({
+//       where: {
+//         CompanyId: req.user.id,
+//         PayrollDefinitionId: currentMonthPayrolls[0]?.id,
+//         status: {
+//           [Op.or]: ["processed", "pending"],
+//         },
+//         //
+//         // isActive:true,
+//       },
+//       include: [{ model: Employee, attributes: ["id", "fullname"] }],
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       data: payrollData,
+//     });
+//   } catch (error) {
+//     return createError.createError(503, "Internal server error");
+//   }
+// };
+// exports.payrollDraft1 = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+//     const currentDate = new Date();
+//     const startOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth(),
+//       1
+//     );
+//     const endOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth() + 1,
+//       0
+//     );
+
+//     const currentMonthPayrolls = await PayrollDefinition.findAll({
+//       where: {
+//         CompanyId: CompanyId,
+//         [Op.or]: [
+//           {
+//             startDate: {
+//               [Op.between]: [startOfMonth, endOfMonth],
+//             },
+//           },
+//           {
+//             endDate: {
+//               [Op.between]: [startOfMonth, endOfMonth],
+//             },
+//           },
+//           {
+//             startDate: {
+//               [Op.lte]: startOfMonth,
+//             },
+//             endDate: {
+//               [Op.gte]: endOfMonth,
+//             },
+//           },
+//         ],
+//       },
+//     });
+
+//     if (currentMonthPayrolls.length === 0) {
+//       return res.status(204).json({
+//         message: "No payrolls defined for this month",
+//       });
+//     }
+
+//     const payrollData = await Payroll.findAll({
+//       where: {
+//         CompanyId: CompanyId,
+//         PayrollDefinitionId: currentMonthPayrolls[0]?.id,
+//         status: {
+//           [Op.or]: ["processed", "pending"],
+//         },
+//         //
+//         // isActive:true,
+//       },
+//       include: [{ model: Employee, attributes: ["id", "fullname"] }],
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       data: payrollData,
+//     });
+//   } catch (error) {
+//     return createError.createError(503, "Internal server error");
+//   }
+// };
 exports.payrollDraft1 = async (req, res, next) => {
   try {
     const currentDate = new Date();
@@ -499,62 +636,56 @@ exports.payrollDraft1 = async (req, res, next) => {
       0
     );
 
-
     const currentMonthPayrolls = await PayrollDefinition.findAll({
       where: {
         CompanyId: req.user.id,
         [Op.or]: [
+          { startDate: { [Op.between]: [startOfMonth, endOfMonth] } },
+          { endDate: { [Op.between]: [startOfMonth, endOfMonth] } },
           {
-            startDate: {
-              [Op.between]: [startOfMonth, endOfMonth],
-            },
-            endDate: {
-              [Op.between]: [startOfMonth, endOfMonth],
-            },
-          },
-          {
-            startDate: {
-              [Op.lt]: startOfMonth,
-            },
-            endDate: {
-              [Op.gte]: startOfMonth,
-            },
+            startDate: { [Op.lte]: startOfMonth },
+            endDate: { [Op.gte]: endOfMonth },
           },
         ],
       },
     });
-    return res.json(currentMonthPayrolls);
-    // return res.json("currentMonthPayrolls");
+
     if (currentMonthPayrolls.length === 0) {
-      return res.status(204).json({
-        message: "No payrolls defined for this month",
-      });
+      return res
+        .status(204)
+        .json({ message: "No payrolls defined for this month" });
     }
 
-    // return res.json(currentMonthPayrolls[0]?.id)
+    // Pagination parameters
+    let { page = 1, limit = 10 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const offset = (page - 1) * limit;
 
-    const payrollData = await Payroll.findAll({
+    const { count, rows: payrollData } = await Payroll.findAndCountAll({
       where: {
         CompanyId: req.user.id,
         PayrollDefinitionId: currentMonthPayrolls[0]?.id,
-        status: {
-          [Op.or]: ["processed", "pending"],
-        },
-        //
-        // isActive:true,
+        status: { [Op.or]: ["processed", "pending"] },
       },
       include: [{ model: Employee, attributes: ["id", "fullname"] }],
+      limit,
+      offset,
     });
 
     return res.status(200).json({
       success: true,
+      // totalRecords: count,
+      // totalPages: Math.ceil(count / limit),
+      // currentPage: page,
+      // pageSize: limit,
       data: payrollData,
     });
   } catch (error) {
-    return createError.createError(503, "Internal server error");
+    console.error("Error fetching payroll:", error);
+    return res.status(503).json({ error: "Internal server error" });
   }
 };
-
 exports.getPayrollPerProject = async (req, res, next) => {
   try {
     const projectId = req?.params?.projectId;

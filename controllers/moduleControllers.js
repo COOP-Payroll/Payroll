@@ -1,31 +1,34 @@
-
 const Modules = require("../models/addModules.js");
 const Employee = require("../models/employee.js");
-const createError= require("../utils/error.js")
+const createError = require("../utils/error.js");
 
 // Define controller methods for handling User requests for deduction definition
 exports.getAllModules = async (req, res, next) => {
   try {
-  
     const Moduless = await Modules.findAll({
+      attributes: {
+        exclude: ["CreateCustomRoleId", "updatedAt", "createdAt"],
+      },
     });
     res.status(200).json({
-      count: Moduless.length,
-      Moduless,
+      // count: Moduless.length,
+      success: true,
+      data: Moduless,
     });
   } catch (error) {
-    return next(createError.createError(503,"Internal server error"))
+    console.log(error);
+    return next(createError.createError(503, "Internal server error"));
   }
 };
 
-exports.getAllowanceById = async (req, res,next) => {
+exports.getAllowanceById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const module = await Modules.findByPk(id);
     res.json(module);
   } catch (error) {
-    return next(createError.createError(503,"Internal server error"))
+    return next(createError.createError(503, "Internal server error"));
   }
 };
 
@@ -33,26 +36,22 @@ exports.createModules = async (req, res, next) => {
   try {
     //insert required field
     const name = req.body.name;
-const getAllModules = await Modules.findAll({where:{name:name}});
+    const getAllModules = await Modules.findAll({ where: { name: name } });
 
+    if (getAllModules.length != 0) {
+      return next(createError.createError(400, "Module already Registered"));
+    }
 
-if(getAllModules.length != 0 ){
-  return next(createError.createError(400,"Module already Registered"))
-}
+    const Moduless = await Modules.create({ name });
 
-      const Moduless = await Modules.create({ name });
- 
-      res.status(200).json({
-        message: "Successfully Registered",
-        Moduless,
-      });
-
-
-
-
-}
-   catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    res.status(200).json({
+      message: "Successfully Registered",
+      Moduless,
+    });
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.updateModules = async (req, res, next) => {
@@ -64,7 +63,6 @@ exports.updateModules = async (req, res, next) => {
     if (amount) {
       updates.amount = amount;
     }
- 
 
     const checkModules = await Modules.findOne({
       where: { id: id, CompanyId: req.user.id },
@@ -79,11 +77,13 @@ exports.updateModules = async (req, res, next) => {
         message: "updated successfully",
         result,
       });
-      } else {
+    } else {
       res.status(404).json("No such Id");
     }
   } catch (error) {
-     return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -100,15 +100,13 @@ exports.deleteModules = async (req, res, next) => {
       return next(createError.createError(404, "Module not found"));
     }
   } catch (error) {
-
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
-exports.updateModule=async(req,res,next)=>{
-  try{
-
-  }catch(err){
-
-  }
-}
+exports.updateModule = async (req, res, next) => {
+  try {
+  } catch (err) {}
+};
