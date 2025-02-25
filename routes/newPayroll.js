@@ -627,6 +627,86 @@ const z = require("../controllers/zcontrollers.js");
  *       '503':
  *         description: Service unavailable.
  */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     Payroll:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: The unique identifier of the payroll.
+ *         PayrollDefinitionId:
+ *           type: integer
+ *           description: The ID of the associated payroll definition.
+ *         CompanyId:
+ *           type: integer
+ *           description: The ID of the company.
+ *         status:
+ *           type: string
+ *           enum: [processed, pending]
+ *           description: The current status of the payroll.
+ *         Employee:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *               description: The unique identifier of the employee.
+ *             fullname:
+ *               type: string
+ *               description: The full name of the employee.
+ *
+ * /api/newPayroll/payroll-draft:
+ *   get:
+ *     summary: Get payroll draft for the current month
+ *     description: Fetches payroll drafts within the current month for the authenticated company.
+ *     tags:
+ *       - Payroll
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         description: The page number for pagination (default is 1).
+ *         schema:
+ *           type: integer
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         description: The number of records per page (default is 10).
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved payroll drafts.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Payroll'
+ *       '204':
+ *         description: No payrolls defined for this month.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have the necessary permissions.
+ *       '503':
+ *         description: Internal Server Error - Something went wrong on the server.
+ */
 
 router.get(
   "/get-approved-payrolls",

@@ -13,7 +13,7 @@ exports.getAllAllowance = async (req, res, next) => {
     const allowances = await Allowance.findAll({ where: { CompanyId } });
     res.status(200).json({
       count: allowances.length,
-      allowances,
+      data: allowances,
     });
   } catch (error) {
     return next(
@@ -31,7 +31,7 @@ exports.getAllowanceById = async (req, res, next) => {
     if (!allowance) {
       return next(createError.createError(404, "Resource not found"));
     } else {
-      res.status(200).json(allowance);
+      res.status(200).json({ data: allowance });
     }
   } catch (error) {
     return next(
@@ -84,7 +84,7 @@ exports.createAllowance = async (req, res, next) => {
     await allowance.setGrade(grade);
     res.status(200).json({
       message: "Successfully Registered",
-      allowance,
+      data: allowance,
     });
   } catch (error) {
     return next(

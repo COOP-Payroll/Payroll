@@ -12,9 +12,10 @@ exports.getAllDeduction = async (req, res, next) => {
     });
     return res.status(200).json({
       count: deductions.length,
-      deductions,
+      data: deductions,
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
@@ -24,12 +25,18 @@ exports.getAllDeduction = async (req, res, next) => {
 exports.getDeductionById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deduction = await Deduction.findByPk(id);
+    const deduction = await Deduction.findOne({
+      where: {
+        id: id,
+        CompanyId: req.user.id,
+      },
+    });
     if (!deduction) {
-      return res.status(404).json({ message: "There is no deduction" });
+      return next(createError.createError(404, "There is no deduction"));
+      // return res.status(404).json({ message: "There is no deduction" });
     }
     {
-      return res.json(deduction);
+      return res.json({ data: deduction });
     }
   } catch (error) {
     return next(
@@ -40,16 +47,26 @@ exports.getDeductionById = async (req, res, next) => {
 
 exports.createDeduction = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     //insert required field
     const amount = req.body.amount;
     const gradeId = req.body.gradeId;
     const deductinDefinitionId = req.body.deductinDefinitionId;
 
     //   await deduction.setDeductionDefinition(deductionDefinitionId);
-    const grade = await Grade.findByPk(gradeId);
-    const dedDefinition = await DeductionDefinition.findByPk(
-      deductinDefinitionId
-    );
+    const grade = await Grade.findOne({
+      where: {
+        id: gradeId,
+        CompanyId: CompanyId,
+      },
+    });
+    const dedDefinition = await DeductionDefinition.findOne({
+      where: {
+        id: deductinDefinitionId,
+        CompanyId: CompanyId,
+      },
+    });
     if (!grade) {
       res.status(404).json("Grade is not defined");
     } else if (!dedDefinition) {
@@ -61,7 +78,7 @@ exports.createDeduction = async (req, res, next) => {
       await deduction.setDeductionDefinition(deductinDefinitionId);
       res.status(200).json({
         message: "Successfully Registered",
-        deduction,
+        data: deduction,
       });
     }
   } catch (error) {
