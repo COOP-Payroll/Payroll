@@ -51,10 +51,11 @@ const Payroll = sequelize.define("Payroll", {
   },
 });
 
+
+
+module.exports = Payroll;
 Payroll.belongsTo(Employee);
 Employee.hasOne(Payroll);
 
 Company.hasMany(Payroll);
 Payroll.belongsTo(Company)
-
-module.exports = Payroll;

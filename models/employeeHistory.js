@@ -109,7 +109,7 @@ const EmployeeHistory = sequelize.define("EmployeeHistory", {
 
 // EmployeeHistory.sync({force:true})
 
-Company.hasMany(EmployeeHistory);
-EmployeeHistory.belongsTo(Company);
 
 module.exports = EmployeeHistory;
+Company.hasMany(EmployeeHistory);
+EmployeeHistory.belongsTo(Company);

@@ -2,10 +2,9 @@ const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Employee = require("../models/employee.js");
 const Company = require("../models/company.js");
-const ApprovalMethod = require("../models/approvalMethod.js")
+const ApprovalMethod = require("../models/approvalMethod.js");
 
 const Approver = sequelize.define("Approver", {
-  
   level: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -61,13 +60,16 @@ const Approver = sequelize.define("Approver", {
 //     throw error;
 //   }
 // });
-Approver.belongsTo(Company,{ as: 'Company', foreignKey: 'CompanyId' });
+
+module.exports = Approver;
+Approver.belongsTo(Company, { as: "Company", foreignKey: "CompanyId" });
 Company.hasMany(Approver);
 
-Approver.belongsTo(ApprovalMethod,{ as: 'ApprovalMethod', foreignKey: 'ApprovalMethodId' });
+Approver.belongsTo(ApprovalMethod, {
+  as: "ApprovalMethod",
+  foreignKey: "ApprovalMethodId",
+});
 ApprovalMethod.hasMany(Approver);
 
 Approver.belongsTo(Employee);
 Employee.hasOne(Approver);
-
-module.exports = Approver;

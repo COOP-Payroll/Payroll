@@ -33,10 +33,9 @@ const ProjectEmployeeHistory = sequelize.define("ProjectEmployeeHistory", {
     },
   });
 
-  Company.hasMany(ProjectEmployeeHistory);
-  ProjectEmployeeHistory.belongsTo(Company);
-
 
 
   // ProjectEmployeeHistory.sync({ force: true }).then(() => console.log('Projects model is ready'));
   module.exports = ProjectEmployeeHistory;
+  Company.hasMany(ProjectEmployeeHistory);
+  ProjectEmployeeHistory.belongsTo(Company);

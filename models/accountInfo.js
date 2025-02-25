@@ -29,12 +29,12 @@ const AccountInfo = sequelize.define("AccountInfo", {
   },
 });
 
+
+
+module.exports = AccountInfo;
 Employee.hasMany(AccountInfo);
 AccountInfo.belongsTo(Employee);
 
 
 Company.hasMany(AccountInfo);
 AccountInfo.belongsTo(Company);
-
-
-module.exports = AccountInfo;

@@ -14,6 +14,8 @@ const Deduction = sequelize.define("Deduction", {
   //Deduction id
 });
 
+
+module.exports = Deduction;
 Deduction.belongsTo(DeductionDefinition);
 DeductionDefinition.hasMany(Deduction);
 
@@ -22,4 +24,3 @@ Grade.hasMany(Deduction);
 
 Deduction.belongsTo(Company);
 Company.hasMany(Deduction);
-module.exports = Deduction;

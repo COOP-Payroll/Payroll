@@ -13,6 +13,9 @@ const Allowance = sequelize.define("Allowance", {
   //grade id
   //allowance id
 });
+
+
+module.exports = Allowance;
 Allowance.belongsTo(AllowanceDefinition);
 AllowanceDefinition.hasMany(Allowance);
 
@@ -21,5 +24,3 @@ Grade.hasMany(Allowance);
 
 Allowance.belongsTo(Company);
 Company.hasMany(Allowance);
-
-module.exports = Allowance;

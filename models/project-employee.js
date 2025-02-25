@@ -28,8 +28,6 @@ const ProjectEmployee = sequelize.define("ProjectEmployee", {
     defaultValue: true
   }
 });
-ProjectEmployee.belongsTo(Company);
-Company.hasMany(ProjectEmployee);
 
 // PositionProjectAssociation.hasMany(ProjectEmployee);
 // ProjectEmployee.belongsTo(PositionProjectAssociation);
@@ -37,3 +35,5 @@ Company.hasMany(ProjectEmployee);
 
 // ProjectEmployee.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = ProjectEmployee;
+ProjectEmployee.belongsTo(Company);
+Company.hasMany(ProjectEmployee);

@@ -24,10 +24,10 @@ const LoanDefinition = sequelize.define("LoanDefinition", {
 
 });
 
-LoanDefinition.belongsTo(Company);
-Company.hasMany(LoanDefinition);
-
-LoanDefinition.belongsTo(Company);
-Company.hasMany(LoanDefinition);
 
 module.exports = LoanDefinition;
+LoanDefinition.belongsTo(Company);
+Company.hasMany(LoanDefinition);
+
+LoanDefinition.belongsTo(Company);
+Company.hasMany(LoanDefinition);

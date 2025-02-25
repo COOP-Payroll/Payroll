@@ -11,6 +11,8 @@ const CreateCustomRole = sequelize.define("CreateCustomRole", {
   },
 });
 
+
+module.exports = CreateCustomRole;
 Employee.hasOne(CreateCustomRole);
 CreateCustomRole.belongsTo(Employee);
 
@@ -20,4 +22,3 @@ CreateCustomRole.belongsTo(Company);
 
 Modules.belongsTo(CreateCustomRole);
 CreateCustomRole.hasMany(Modules);
-module.exports = CreateCustomRole;

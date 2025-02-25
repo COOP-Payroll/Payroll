@@ -16,11 +16,12 @@ const CompanyPermission = sequelize.define("CompanyPermission", {
   },
 });
 
+
+
+module.exports = CompanyPermission;
 Company.belongsToMany(Permissions, {
   through: CompanyPermission,
 });
 Permissions.belongsToMany(Company, {
   through: CompanyPermission,
 });
-
-module.exports = CompanyPermission;

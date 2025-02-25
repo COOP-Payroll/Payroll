@@ -45,7 +45,8 @@ const EmployeeInfo = sequelize.define("EmployeeInfo", {
 });
 
 
-Employee.hasMany(EmployeeInfo);
-EmployeeInfo.belongsTo(Employee);
+
 // EmployeeInfo.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = EmployeeInfo;
+Employee.hasMany(EmployeeInfo);
+EmployeeInfo.belongsTo(Employee);

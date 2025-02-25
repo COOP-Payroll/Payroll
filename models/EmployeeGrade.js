@@ -19,11 +19,12 @@ const EmployeeGrade = sequelize.define("EmployeeGrade", {
   }
 });
 
+
+
+module.exports = EmployeeGrade;
 Employee.belongsToMany(Grade, {
   through: EmployeeGrade,
 });
 Grade.belongsToMany(Employee, {
   through: EmployeeGrade,
 });
-
-module.exports = EmployeeGrade;

@@ -15,11 +15,11 @@ const EmployeeDepartment = sequelize.define("EmployeeDepartment", {
   },
 });
 
+
+module.exports = EmployeeDepartment;
 Employee.belongsToMany(Department, {
   through: EmployeeDepartment,
 });
 Department.belongsToMany(Employee, {
   through: EmployeeDepartment,
 });
-
-module.exports = EmployeeDepartment;

@@ -28,8 +28,7 @@ const Department = sequelize.define("Department", {
   // }],
 });
 
-Company.hasMany(Department);
-Department.belongsTo(Company);
+
 
 // Department.hasMany(Employee);
 // Employee.belongsTo(Department);
@@ -37,3 +36,5 @@ Department.belongsTo(Company);
 // Department.hasMany(Employee, { foreignKey: "departmentId" });
 
 module.exports = Department;
+Company.hasMany(Department);
+Department.belongsTo(Company);

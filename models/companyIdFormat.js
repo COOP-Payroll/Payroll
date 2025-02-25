@@ -44,7 +44,7 @@ const IdFormat = sequelize.define("IdFormat", {
   },
 });
 
-IdFormat.belongsTo(Company);
-Company.hasOne(IdFormat);
 
 module.exports = IdFormat;
+IdFormat.belongsTo(Company);
+Company.hasOne(IdFormat);

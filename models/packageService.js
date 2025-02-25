@@ -19,11 +19,12 @@ const PackageServices = sequelize.define("PackageServices", {
 });
 
 
+
+
+module.exports = PackageServices;
 Services.belongsToMany(PackageInfo, {
   through: PackageServices,
 });
 PackageInfo.belongsToMany(Services, {
   through: PackageServices,
 });
-
-module.exports = PackageServices;

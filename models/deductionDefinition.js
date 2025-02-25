@@ -17,7 +17,8 @@ const DeductionDefinition = sequelize.define("DeductionDefinition", {
   // },
 });
 
-DeductionDefinition.belongsTo(Company);
-Company.hasMany(DeductionDefinition);
 
 module.exports = DeductionDefinition;
+
+DeductionDefinition.belongsTo(Company);
+Company.hasMany(DeductionDefinition);

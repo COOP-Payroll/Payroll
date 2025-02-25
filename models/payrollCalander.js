@@ -61,10 +61,11 @@ const PayrollCalander = sequelize.define("PayrollCalander", {
   },
 });
 
+
+
+module.exports = PayrollCalander;
 PayrollCalander.belongsTo(Company);
 Company.hasMany(PayrollCalander);
 
 PayrollDefinition.hasOne(Payroll);
 Payroll.belongsTo(PayrollCalander);
-
-module.exports = PayrollCalander;

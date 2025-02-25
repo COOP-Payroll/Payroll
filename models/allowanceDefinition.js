@@ -26,7 +26,8 @@ const AllowanceDefinition = sequelize.define("AllowanceDefinition", {
   
 });
 
-AllowanceDefinition.belongsTo(Company);
-Company.hasMany(AllowanceDefinition);
 
 module.exports = AllowanceDefinition;
+
+AllowanceDefinition.belongsTo(Company);
+Company.hasMany(AllowanceDefinition);

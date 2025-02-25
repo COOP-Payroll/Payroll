@@ -27,10 +27,11 @@ const Sponsor = sequelize.define("Sponsor", {
 
 
 });
+
+// Sponsor.sync({ force: false }).then(() => console.log('Sponsor model is ready'));
+module.exports = Sponsor;
 Sponsor.belongsTo(Company);
 Company.hasMany(Sponsor);
 
 Sponsor.hasMany(AccountInfo);
 AccountInfo.belongsTo(Sponsor);
-// Sponsor.sync({ force: false }).then(() => console.log('Sponsor model is ready'));
-module.exports = Sponsor;

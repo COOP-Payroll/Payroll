@@ -32,8 +32,9 @@ isActive: {
   defaultValue: true
 }
 });
-PositionProjectAssociation.belongsTo(Company);
-Company.hasMany(PositionProjectAssociation);
+
 
 // PositionProjectAssociation.sync({ force: true }).then(() => console.log('Projects model is ready'));
 module.exports = PositionProjectAssociation;
+PositionProjectAssociation.belongsTo(Company);
+Company.hasMany(PositionProjectAssociation);

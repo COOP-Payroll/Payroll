@@ -38,14 +38,14 @@ const EmployeePromotion = sequelize.define("EmployeePromotion", {
 
 
 
-Employee.belongsToMany( Grade,{
-    through: EmployeePromotion,
-    unique: false, // Allow duplicate associations
-  });
-Grade.belongsToMany(Employee,{
-    through: EmployeePromotion,
-    unique: false, // Allow duplicate associations
-  });
 
   
 module.exports = EmployeePromotion;
+Employee.belongsToMany( Grade,{
+  through: EmployeePromotion,
+  unique: false, // Allow duplicate associations
+});
+Grade.belongsToMany(Employee,{
+  through: EmployeePromotion,
+  unique: false, // Allow duplicate associations
+});

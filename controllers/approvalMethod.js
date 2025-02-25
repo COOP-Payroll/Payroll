@@ -540,6 +540,119 @@ exports.reCreateApprovalMethods = async (req, res, next) => {
   }
 };
 
+// exports.reCreateApprovalMethod = async (req, res, next) => {
+//   // return res.json("dddldl")
+//   const transaction = await sequelize.transaction();
+//   try {
+//     const {
+//       minimumApprover,
+//       approvalLevel,
+//       isThereMasterApprover,
+//       approvalMethod,
+//     } = req.body;
+
+//     // return res.json("data")
+//     if (!approvalMethod) {
+//       return next(createError.createError(400, "Set approvalMethod"));
+//     }
+//     const isActive = true;
+//     const CompanyId = req.user.id;
+//     const foundApprovalMethod = await ApprovalMethod.findOne({
+//       where: {
+//         isActive: isActive,
+//         CompanyId: CompanyId,
+//       },
+//     });
+
+//     // return res.json(isThereMasterApprover);
+//     if (!foundApprovalMethod) {
+//       return next(createError.createError(400, "No approval method found"));
+//     }
+//     const approvalMethods = await ApprovalMethod.findOne({
+//       where: {
+//         minimumApprover: minimumApprover,
+//         approvalLevel: approvalLevel,
+//         isThereMasterApprover: isThereMasterApprover,
+//         approvalMethod: approvalMethod,
+//         CompanyId: CompanyId,
+//         isActive: isActive,
+//       },
+//     });
+
+//     // return res.json(approvalMethods);
+
+//     if (approvalMethods) {
+//       return next(
+//         createError.createError(400, "Similar with previous approval methods")
+//       );
+//     }
+
+//     const getAllApprovers = await Approver.findAll({
+//       where: {
+//         isActive: true,
+//         ApprovalMethodId: foundApprovalMethod.id,
+//       },
+//     });
+//     const employeeIds = [
+//       ...new Set(getAllApprovers.map((employee) => employee.EmployeeId)),
+//     ];
+//     if (employeeIds.length > 0) {
+//       const updatedEmployee = await sequelize.query(
+//         `
+//   UPDATE "Employees"
+//   SET "role" = 'employee'
+//   WHERE "id" IN (${employeeIds.join(",")})
+//   `,
+//         { transaction }
+//       );
+
+//       // const updatedEmployee = await Employee.update(
+//       //   { role: 'employee' },
+//       //   {
+//       //     where: {
+//       //       id: employeeIds
+//       //     },
+//       //     transaction
+//       //   }
+//       // );
+//     }
+
+//     const appMethod = await ApprovalMethod.create(
+//       {
+//         minimumApprover,
+//         approvalLevel,
+//         approvalMethod,
+//         isCompleted: false,
+//         isThereMasterApprover,
+//         isActive,
+//       },
+//       { transaction }
+//     );
+//     await appMethod.setCompany(CompanyId, { transaction });
+
+//     const approver = await Approver.update(
+//       { isActive: false },
+//       {
+//         where: { ApprovalMethodId: foundApprovalMethod?.id },
+//       },
+//       { transaction }
+//     );
+
+//     await foundApprovalMethod.update({ isActive: false }, { transaction });
+//     await transaction.commit();
+//     return res.status(200).json({
+//       success: true,
+//       message: "Recreated successfully",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     await transaction.rollback();
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
+
 exports.reCreateApprovalMethod = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
@@ -550,69 +663,64 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
       approvalMethod,
     } = req.body;
 
-
-    return res.json("data")
     if (!approvalMethod) {
+      await transaction.rollback();
       return next(createError.createError(400, "Set approvalMethod"));
     }
+
     const isActive = true;
     const CompanyId = req.user.id;
+
     const foundApprovalMethod = await ApprovalMethod.findOne({
-      where: {
-        isActive: isActive,
-        CompanyId: CompanyId,
-      },
+      where: { isActive, CompanyId },
     });
+
     if (!foundApprovalMethod) {
+      await transaction.rollback();
       return next(createError.createError(400, "No approval method found"));
     }
-    const approvalMethods = await ApprovalMethod.findOne({
+
+    // Check for duplicate approval method
+    const existingApprovalMethod = await ApprovalMethod.findOne({
       where: {
-        minimumApprover: minimumApprover,
-        approvalLevel: approvalLevel,
-        isThereMasterApprover: isThereMasterApprover,
-        approvalMethod: approvalMethod,
-        CompanyId: CompanyId,
-        isActive: isActive,
+        minimumApprover,
+        approvalLevel,
+        isThereMasterApprover,
+        approvalMethod,
+        CompanyId,
+        isActive,
       },
     });
 
-    if (approvalMethods) {
+    if (existingApprovalMethod) {
+      await transaction.rollback();
       return next(
         createError.createError(400, "Similar with previous approval methods")
       );
     }
 
+    // Retrieve current approvers
     const getAllApprovers = await Approver.findAll({
-      where: {
-        isActive: true,
-        ApprovalMethodId: foundApprovalMethod.id,
-      },
+      where: { isActive: true, ApprovalMethodId: foundApprovalMethod.id },
     });
+
     const employeeIds = [
       ...new Set(getAllApprovers.map((employee) => employee.EmployeeId)),
     ];
+
+    // Update employee roles if needed
     if (employeeIds.length > 0) {
-      const updatedEmployee = await sequelize.query(
+      await sequelize.query(
         `
-  UPDATE "Employees"
-  SET "role" = 'employee'
-  WHERE "id" IN (${employeeIds.join(",")})
-  `,
+        UPDATE "Employees"
+        SET "role" = 'employee'
+        WHERE "id" IN (${employeeIds.join(",")})
+        `,
         { transaction }
       );
-
-      // const updatedEmployee = await Employee.update(
-      //   { role: 'employee' },
-      //   {
-      //     where: {
-      //       id: employeeIds
-      //     },
-      //     transaction
-      //   }
-      // );
     }
 
+    // Create new approval method with auto-generated ID
     const appMethod = await ApprovalMethod.create(
       {
         minimumApprover,
@@ -624,23 +732,28 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
       },
       { transaction }
     );
+
     await appMethod.setCompany(CompanyId, { transaction });
 
-    const approver = await Approver.update(
+    // Deactivate previous approvers
+    await Approver.update(
       { isActive: false },
       {
-        where: { ApprovalMethodId: foundApprovalMethod?.id },
-      },
-      { transaction }
+        where: { ApprovalMethodId: foundApprovalMethod.id },
+        transaction,
+      }
     );
 
+    // Deactivate old approval method
     await foundApprovalMethod.update({ isActive: false }, { transaction });
+
     await transaction.commit();
     return res.status(200).json({
       success: true,
       message: "Recreated successfully",
     });
   } catch (error) {
+    console.error(error);
     await transaction.rollback();
     return next(
       createError.createError(503, "An error occurred, please try again later")

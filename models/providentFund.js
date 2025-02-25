@@ -16,10 +16,10 @@ const ProvidentFund = sequelize.define("ProvidentFund", {
   },
 });
 
+
+module.exports = ProvidentFund;
 Company.hasMany(ProvidentFund);
 ProvidentFund.belongsTo(Company);
 
 User.hasMany(ProvidentFund);
 ProvidentFund.belongsTo(User);
-
-module.exports = ProvidentFund;

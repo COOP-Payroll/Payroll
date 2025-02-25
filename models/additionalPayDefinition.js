@@ -24,7 +24,7 @@ const AdditionalPayDefinition = sequelize.define(
   }
 );
 
-AdditionalPayDefinition.belongsTo(Company);
-Company.hasMany(AdditionalPayDefinition);
 
 module.exports = AdditionalPayDefinition;
+AdditionalPayDefinition.belongsTo(Company);
+Company.hasMany(AdditionalPayDefinition);

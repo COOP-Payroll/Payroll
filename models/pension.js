@@ -16,10 +16,11 @@ const Pension = sequelize.define("Pension", {
   },
 });
 
+
+
+module.exports = Pension;
 Company.hasMany(Pension);
 Pension.belongsTo(Company);
 
 User.hasMany(Pension);
 Pension.belongsTo(User);
-
-module.exports = Pension;

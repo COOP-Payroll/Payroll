@@ -21,6 +21,9 @@ const EmployeePosition = sequelize.define('EmployeePosition', {
   }
 })
 // EmployeePosition.sync({ force: true }).then(() => console.log('positon model is ready'));
+
+
+module.exports = EmployeePosition
 Employee.belongsToMany(Position, {
   through: EmployeePosition,
 });
@@ -29,5 +32,3 @@ Position.belongsToMany(Employee, {
 });
 Company.hasMany(EmployeePosition)
 EmployeePosition.belongsTo(Company)
-
-module.exports = EmployeePosition

@@ -203,7 +203,6 @@ exports.protectAll = async (req, res, next) => {
       );
     }
 
-    
     const decoded = await promisify(jwt.verify)(token, accessTokenSecret);
 
     let currentUser;

@@ -216,6 +216,13 @@ router.get(
   middleware.restrictTo("companyAdmin"),
   approvalMethod.getAllInActiveApprovalMethod
 );
+router.post(
+  "/recreate",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictTo("companyAdmin"),
+  approvalMethod.reCreateApprovalMethod
+);
 
 //add new approval
 router.post(
@@ -227,13 +234,6 @@ router.post(
 );
 
 //add additional  approval method
-router.post(
-  "/recreate",
-  middleware.protectAll,
-  middleware.validateUserAgent,
-  middleware.restrictTo("companyAdmin"),
-  approvalMethod.reCreateApprovalMethod
-);
 
 //update single approval method
 router.put(

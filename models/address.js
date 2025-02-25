@@ -30,7 +30,8 @@ const Address = sequelize.define("Address", {
   },
 });
 
-Employee.hasOne(Address);
-Address.belongsTo(Employee);
+
 
 module.exports = Address;
+Employee.hasOne(Address);
+Address.belongsTo(Employee);

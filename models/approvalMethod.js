@@ -34,11 +34,10 @@ const ApprovalMethod = sequelize.define("ApprovalMethod", {
   isActive: {
     type: DataTypes.BOOLEAN,
     default: true,
-    allowNull:false
+    allowNull: false,
   },
 });
 
+module.exports = ApprovalMethod;
 ApprovalMethod.belongsTo(Company);
 Company.hasOne(ApprovalMethod);
-
-module.exports = ApprovalMethod;

@@ -24,7 +24,8 @@ const EmergencyContact = sequelize.define("EmergencyContact", {
   ///Employee ID
 });
 
-Employee.hasMany(EmergencyContact);
-EmergencyContact.belongsTo(Employee);
+
 
 module.exports = EmergencyContact;
+Employee.hasMany(EmergencyContact);
+EmergencyContact.belongsTo(Employee);

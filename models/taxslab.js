@@ -74,10 +74,11 @@ const Taxslab = sequelize.define("Taxslab", {
 //   return values;
 // };
 
+
+
+module.exports = Taxslab;
 Company.hasMany(Taxslab);
 Taxslab.belongsTo(Company);
 
 User.hasMany(Taxslab);
 Taxslab.belongsTo(User);
-
-module.exports = Taxslab;

@@ -17,6 +17,8 @@ const Loan = sequelize.define("Loan", {
   //employee id
   //allowance id
 });
+
+module.exports = Loan;
 Loan.belongsTo(LoanDefinition);
 LoanDefinition.hasMany(Loan);
 
@@ -25,5 +27,3 @@ Employee.hasMany(Loan);
 
 Loan.belongsTo(Company);
 Company.hasMany(Loan);
-
-module.exports = Loan;

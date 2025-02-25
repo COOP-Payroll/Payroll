@@ -29,10 +29,11 @@ const Subscription = sequelize.define("Subscription", {
   },
 });
 
+
+
+module.exports = Subscription;
 Subscription.belongsTo(Package);
 Package.hasOne(Subscription);
 
 Subscription.belongsTo(Company);
 Company.hasOne(Subscription);
-
-module.exports = Subscription;

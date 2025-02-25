@@ -16,11 +16,12 @@ const CompanyCustomRole = sequelize.define("CompanyCustomRole", {
   },
 });
 
+
+
+module.exports = CompanyCustomRole;
 Company.belongsToMany(CustomRole, {
   through: CompanyCustomRole,
 });
 CustomRole.belongsToMany(Company, {
   through: CompanyCustomRole,
 });
-
-module.exports = CompanyCustomRole;

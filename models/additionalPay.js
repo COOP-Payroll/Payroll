@@ -15,6 +15,9 @@ const AdditionalPay = sequelize.define("AdditionalPay", {
   //grade id
   //AdditionalAllowance id
 });
+
+
+module.exports = AdditionalPay;
 AdditionalPay.belongsTo(AdditionalpayDefinition);
 AdditionalpayDefinition.hasMany(AdditionalPay);
 
@@ -26,5 +29,3 @@ Employee.hasMany(AdditionalPay);
 
 AdditionalPay.belongsTo(Company);
 Company.hasMany(AdditionalPay);
-
-module.exports = AdditionalPay;

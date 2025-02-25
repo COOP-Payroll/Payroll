@@ -120,8 +120,7 @@ Employee.beforeUpdate((employee, options) => {
   }
 });
 
-Company.hasMany(Employee);
-Employee.belongsTo(Company);
+
 
 Employee.beforeUpdate(async (employee, options) => {
     const existingEmployee = await Employee.findByPk(employee.id);
@@ -166,3 +165,5 @@ Employee.beforeUpdate(async (employee, options) => {
 // Employee.belongsTo(Address);
 // Employee.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Employee;
+Company.hasMany(Employee);
+Employee.belongsTo(Company);

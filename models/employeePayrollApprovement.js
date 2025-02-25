@@ -37,6 +37,11 @@ const EmployeePayrollApprovement = sequelize.define(
     },
   );
 
+
+module.exports = EmployeePayrollApprovement;
+
+
+
 EmployeePayrollApprovement.belongsTo(Payroll);
 Payroll.hasMany(EmployeePayrollApprovement);
 
@@ -48,7 +53,3 @@ Company.hasMany(EmployeePayrollApprovement);
 
 EmployeePayrollApprovement.belongsTo(Employee);
 Employee.hasMany(EmployeePayrollApprovement);
-
-module.exports = EmployeePayrollApprovement;
-
-

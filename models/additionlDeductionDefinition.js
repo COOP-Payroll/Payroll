@@ -22,11 +22,11 @@ const AdditionalDeductionDefinition = sequelize.define(
   }
 );
 
-AdditionalDeductionDefinition.belongsTo(Company);
-Company.hasMany(AdditionalDeductionDefinition);
-
 
 // AdditionalDeductionDefinition.belongsTo(Employee);
 // Employee.hasMany(AdditionalDeductionDefinition);
 
 module.exports = AdditionalDeductionDefinition;
+
+AdditionalDeductionDefinition.belongsTo(Company);
+Company.hasMany(AdditionalDeductionDefinition);
