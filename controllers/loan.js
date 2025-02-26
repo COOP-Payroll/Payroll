@@ -15,7 +15,7 @@ exports.getAllLoan = async (req, res, next) => {
     const loans = await Loan.findAll({ where: { CompanyId, isActive: true } });
     res.status(200).json({
       count: loans.length,
-      loans,
+      data: loans,
     });
   } catch (error) {
     return next(
@@ -105,7 +105,7 @@ exports.createLoan = async (req, res, next) => {
       // Return a successful response
       res.status(201).json({
         message: "Loan successfully registered.",
-        loan,
+        data: loan,
       });
     }
   } catch (error) {

@@ -10,11 +10,12 @@ exports.getAllCustomRole = async (req, res, next) => {
     // return res.json("data")
     const customRole = await CustomRole.findAll({
       where: { CompanyId: req.user.id },
-      include: [Permission],
+      attributes: { exclude: ["CompanyId", "createdAt", "updatedAt"] },
+      // include: [Permission],
     });
     res.status(200).json({
       count: customRole.length,
-      customRole,
+      data: customRole,
     });
   } catch (error) {
     return next(

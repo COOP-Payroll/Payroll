@@ -215,6 +215,56 @@ const router = express.Router();
  *       '500':
  *         description: Internal Server Error - Something went wrong on the server.
  */
+/**
+ * @swagger
+ * /api/customRole:
+ *   get:
+ *     summary: Retrieve all custom roles for the company
+ *     description: Fetches all custom roles associated with the authenticated company.
+ *     tags:
+ *       - Custom Roles
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: A list of custom roles.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   example: 3
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         example: "Manager"
+ *                       description:
+ *                         type: string
+ *                         example: "Manages team operations"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-02-26T12:34:56Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-02-26T12:34:56Z"
+ *       '401':
+ *         description: Unauthorized - Missing or invalid token.
+ *       '403':
+ *         description: Forbidden - User does not have access to this resource.
+ *       '503':
+ *         description: Internal Server Error - Something went wrong on the server.
+ */
 
 router.get(
   "/",
