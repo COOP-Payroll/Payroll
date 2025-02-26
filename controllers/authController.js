@@ -161,7 +161,11 @@ const signTokenCompany = (company, res) => {
             isAccessible: true,
           },
           {
-            module: "payrollpublishedreportsai",
+            module: "payrollpublishedreports",
+            isAccessible: true,
+          },
+          {
+            module: "ai",
             isAccessible: true,
           },
         ],
@@ -230,7 +234,11 @@ const signTokenCompany = (company, res) => {
             isAccessible: true,
           },
           {
-            module: "payrollpublishedreportsai",
+            module: "payrollpublishedreports",
+            isAccessible: true,
+          },
+          {
+            module: "ai",
             isAccessible: true,
           },
         ],
