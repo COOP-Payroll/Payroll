@@ -95,9 +95,10 @@ const signTokenCompany = (company, res) => {
       secondary_Color,
       secondary_Font_Color,
       secondary_Gradient_Color,
-      Permissions,
+      // Permissions,
       isProjectBased,
       isSetted,
+      Permissions,
     } = company;
 
     const token = jwt.sign(
@@ -118,9 +119,52 @@ const signTokenCompany = (company, res) => {
         secondary_Color,
         secondary_Font_Color,
         secondary_Gradient_Color,
-        Permissions,
+        // Permissions,
         isProjectBased,
         isSetted,
+
+        permissions: [
+          {
+            module: "dashboard",
+            isAccessible: true,
+          },
+          {
+            module: "systemsettings",
+            isAccessible: true,
+          },
+          {
+            module: "employeelist",
+            isAccessible: true,
+          },
+          {
+            module: "newemployee",
+            isAccessible: true,
+          },
+          {
+            module: "payrollsetups",
+            isAccessible: true,
+          },
+          {
+            module: "payrollprocess",
+            isAccessible: true,
+          },
+          {
+            module: "payrollpublished",
+            isAccessible: true,
+          },
+          {
+            module: "payrollpayment",
+            isAccessible: true,
+          },
+          {
+            module: "unprocessedsalary",
+            isAccessible: true,
+          },
+          {
+            module: "payrollpublishedreportsai",
+            isAccessible: true,
+          },
+        ],
       },
       accessTokenSecret,
       {
@@ -148,6 +192,48 @@ const signTokenCompany = (company, res) => {
         // Permissions,
         isProjectBased,
         isSetted,
+        permissions: [
+          {
+            module: "dashboard",
+            isAccessible: true,
+          },
+          {
+            module: "systemsettings",
+            isAccessible: true,
+          },
+          {
+            module: "employeelist",
+            isAccessible: true,
+          },
+          {
+            module: "newemployee",
+            isAccessible: true,
+          },
+          {
+            module: "payrollsetups",
+            isAccessible: true,
+          },
+          {
+            module: "payrollprocess",
+            isAccessible: true,
+          },
+          {
+            module: "payrollpublished",
+            isAccessible: true,
+          },
+          {
+            module: "payrollpayment",
+            isAccessible: true,
+          },
+          {
+            module: "unprocessedsalary",
+            isAccessible: true,
+          },
+          {
+            module: "payrollpublishedreportsai",
+            isAccessible: true,
+          },
+        ],
       },
       refreshTokenSecret,
       {
