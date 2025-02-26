@@ -5,17 +5,58 @@ const Employee = require("../models/employee.js");
 const createError = require("../utils/error.js");
 
 //GET ALL CUSTOM ROLE
+// exports.getAllCustomRole = async (req, res, next) => {
+//   try {
+//     // return res.json("data")
+//     const customRole = await CustomRole.findAll({
+//       where: { CompanyId: req.user.id },
+//       attributes: { exclude: ["CompanyId", "createdAt", "updatedAt"] },
+//       include: [
+//         {
+//           model: Permission,
+//           // as: "permissions", // Rename the include key
+//         },
+//       ],
+//     });
+
+//     // Rename `Permissions` to `permissions` in the response
+//     const formattedRoles = customRole.map((role) => {
+//       return {
+//         ...role.toJSON(),
+//         permissions: role.Permissions, // Rename "Permissions" to "permissions"
+//       };
+//     });
+//     res.status(200).json({
+//       count: customRole.length,
+//       data: formattedRoles,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 exports.getAllCustomRole = async (req, res, next) => {
   try {
-    // return res.json("data")
-    const customRole = await CustomRole.findAll({
+    const customRoles = await CustomRole.findAll({
       where: { CompanyId: req.user.id },
       attributes: { exclude: ["CompanyId", "createdAt", "updatedAt"] },
-      include: [Permission],
+      include: [{ model: Permission }], // Keep original association
     });
+
+    // Rename and remove the original "Permissions" key
+    const modifiedRoles = customRoles.map((role) => {
+      const roleJSON = role.toJSON();
+      roleJSON.permissions = roleJSON.Permissions; // Rename
+      delete roleJSON.Permissions; // Remove duplicate
+
+      return roleJSON;
+    });
+
     res.status(200).json({
-      count: customRole.length,
-      data: customRole,
+      count: modifiedRoles.length,
+      data: modifiedRoles,
     });
   } catch (error) {
     return next(
