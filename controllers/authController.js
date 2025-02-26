@@ -123,7 +123,7 @@ const signTokenCompany = (company, res) => {
         isProjectBased,
         isSetted,
 
-        permissions: [
+        Permissions: [
           {
             module: "dashboard",
             isAccessible: true,
@@ -196,7 +196,7 @@ const signTokenCompany = (company, res) => {
         // Permissions,
         isProjectBased,
         isSetted,
-        permissions: [
+        Permissions: [
           {
             module: "dashboard",
             isAccessible: true,
