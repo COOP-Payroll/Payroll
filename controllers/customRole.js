@@ -37,18 +37,64 @@ const createError = require("../utils/error.js");
 //     );
 //   }
 // };
+// exports.getAllCustomRole = async (req, res, next) => {
+//   try {
+//     const customRoles = await CustomRole.findAll({
+//       where: { CompanyId: req.user.id },
+//       attributes: { exclude: ["CompanyId", "createdAt", "updatedAt"] },
+//       include: [
+//         {
+//           model: Permission,
+//           // include:['module' ]
+//           attributes: ["id", "module", "isAccessible"],
+//         },
+//       ], // Keep original association
+//     });
+
+//     // Rename and remove the original "Permissions" key
+//     const modifiedRoles = customRoles.map((role) => {
+//       const roleJSON = role.toJSON();
+//       roleJSON.permissions = roleJSON.Permissions; // Rename
+//       delete roleJSON.Permissions; // Remove duplicate
+
+//       return roleJSON;
+//     });
+
+//     res.status(200).json({
+//       count: modifiedRoles.length,
+//       data: modifiedRoles,
+//     });
+//   } catch (error) {
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
+const sequelize = require("../database/db.js");
 exports.getAllCustomRole = async (req, res, next) => {
   try {
     const customRoles = await CustomRole.findAll({
       where: { CompanyId: req.user.id },
-      attributes: { exclude: ["CompanyId", "createdAt", "updatedAt"] },
+      attributes: {
+        exclude: ["CompanyId", "createdAt", "updatedAt"],
+        include: [
+          [
+            sequelize.fn("COUNT", sequelize.col("Employees.id")),
+            "employeeCount",
+          ],
+        ],
+      },
       include: [
         {
           model: Permission,
-          // include:['module' ]
           attributes: ["id", "module", "isAccessible"],
         },
-      ], // Keep original association
+        {
+          model: Employee,
+          attributes: [], // We only need the count, no specific employee details
+        },
+      ],
+      group: ["CustomRole.id", "Permissions.id"], // Group by role ID to prevent duplicate counts
     });
 
     // Rename and remove the original "Permissions" key
@@ -65,6 +111,7 @@ exports.getAllCustomRole = async (req, res, next) => {
       data: modifiedRoles,
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
