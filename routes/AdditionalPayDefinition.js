@@ -2,6 +2,65 @@ const express = require("express");
 const additionPayDefinition = require("../controllers/AdditionalPayDefinition.js");
 const middleware = require("../middleware/auth.js");
 const router = express.Router();
+/**
+ * @swagger
+ * /api/additionalPay:
+ *   post:
+ *     summary: Create an additional pay definition
+ *     description: Creates a new additional pay definition for the company.
+ *     tags:
+ *       - Additional Pay Definitions
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The name of the additional pay definition.
+ *               type:
+ *                 type: string
+ *                 description: The type of the additional pay definition.
+ *                 enum:
+ *                   - hourly
+ *                   - amount
+ *                 example: amount  # This shows the default option or an example
+ *     responses:
+ *       '200':
+ *         description: Successfully created the additional pay definition.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message.
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: The additional pay definition ID.
+ *                     name:
+ *                       type: string
+ *                       description: The name of the additional pay definition.
+ *                     type:
+ *                       type: string
+ *                       description: The type of the additional pay definition.
+ *       '400':
+ *         description: Bad Request - Invalid data or additional pay definition already exists.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have necessary permissions.
+ *       '500':
+ *         description: Internal Server Error - Something went wrong on the server.
+ */
 
 /**
  * @swagger
@@ -97,61 +156,62 @@ const router = express.Router();
  *       '500':
  *         description: Internal Server Error - Something went wrong on the server.
  */
-/**
- * @swagger
- * /api/additionalPay:
- *   post:
- *     summary: Create an additional pay definition
- *     description: Creates a new additional pay definition for the company.
- *     tags:
- *       - Additional Pay Definitions
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 description: The name of the additional pay definition.
- *               type:
- *                 type: string
- *                 description: The type of the additional pay definition.
- *     responses:
- *       '200':
- *         description: Successfully created the additional pay definition.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Success message.
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       description: The additional pay definition ID.
- *                     name:
- *                       type: string
- *                       description: The name of the additional pay definition.
- *                     type:
- *                       type: string
- *                       description: The type of the additional pay definition.
- *       '400':
- *         description: Bad Request - Invalid data or additional pay definition already exists.
- *       '401':
- *         description: Unauthorized - Token is missing or invalid.
- *       '403':
- *         description: Forbidden - User does not have necessary permissions.
- *       '500':
- *         description: Internal Server Error - Something went wrong on the server.
- */
+// /**
+//  * @swagger
+//  * /api/additionalPay:
+//  *   post:
+//  *     summary: Create an additional pay definition
+//  *     description: Creates a new additional pay definition for the company.
+//  *     tags:
+//  *       - Additional Pay Definitions
+//  *     security:
+//  *       - bearerAuth: []
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             type: object
+//  *             properties:
+//  *               name:
+//  *                 type: string
+//  *                 description: The name of the additional pay definition.
+//  *               type:
+//  *                 type: string
+//  *                 description: The type of the additional pay definition.
+//  *     responses:
+//  *       '200':
+//  *         description: Successfully created the additional pay definition.
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 message:
+//  *                   type: string
+//  *                   description: Success message.
+//  *                 data:
+//  *                   type: object
+//  *                   properties:
+//  *                     id:
+//  *                       type: integer
+//  *                       description: The additional pay definition ID.
+//  *                     name:
+//  *                       type: string
+//  *                       description: The name of the additional pay definition.
+//  *                     type:
+//  *                       type: string
+//  *                       description: The type of the additional pay definition.
+//  *       '400':
+//  *         description: Bad Request - Invalid data or additional pay definition already exists.
+//  *       '401':
+//  *         description: Unauthorized - Token is missing or invalid.
+//  *       '403':
+//  *         description: Forbidden - User does not have necessary permissions.
+//  *       '500':
+//  *         description: Internal Server Error - Something went wrong on the server.
+//  */
+
 /**
  * @swagger
  * /api/additionalPay/update/{id}:

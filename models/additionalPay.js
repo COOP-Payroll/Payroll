@@ -12,6 +12,12 @@ const AdditionalPay = sequelize.define("AdditionalPay", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
+  description: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+
   //grade id
   //AdditionalAllowance id
 });

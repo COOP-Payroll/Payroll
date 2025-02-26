@@ -55,6 +55,10 @@ const router = express.Router();
  *                 type: number
  *                 format: float
  *                 description: The amount of additional pay to be given to the employee
+ *               description:
+ *                 type: string
+ *                 format: string
+ *                 description: Description
  *               employeeId:
  *                 type: integer
  *                 description: The ID of the employee receiving the pay

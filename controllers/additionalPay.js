@@ -43,9 +43,14 @@ exports.getAdditionalPayById = async (req, res, next) => {
 };
 exports.createAdditionalPay = async (req, res, next) => {
   try {
-    const { amount, employeeId, additionalPayDefinitionId } = req.body;
+    const { amount, employeeId, description, additionalPayDefinitionId } =
+      req.body;
     const CompanyId = req.user.id;
-
+    if (!amount || !employeeId || !description || !additionalPayDefinitionId) {
+      return next(
+        createError.createError(400, "All required fields must be provided.")
+      );
+    }
     // Step 1: Check if the employee exists for the given CompanyId
     const employee = await Employee.findOne({
       where: { id: employeeId, CompanyId },
@@ -74,17 +79,17 @@ exports.createAdditionalPay = async (req, res, next) => {
       },
     });
 
-    if (existingAdditionalPay) {
-      return next(
-        createError.createError(
-          400,
-          "Duplicate resource: Employee already has this additional pay type."
-        )
-      );
-    }
+    // if (existingAdditionalPay) {
+    //   return next(
+    //     createError.createError(
+    //       400,
+    //       "Duplicate resource: Employee already has this additional pay type."
+    //     )
+    //   );
+    // }
 
     // Step 4: Create the new additional pay
-    const additionalPay = await AdditionalPay.create({ amount });
+    const additionalPay = await AdditionalPay.create({ amount, description });
 
     // Step 5: Associate the created additional pay with the employee, definition, and company
     await additionalPay.setCompany(CompanyId);

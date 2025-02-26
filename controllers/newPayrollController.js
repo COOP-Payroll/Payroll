@@ -49,7 +49,7 @@ exports.createPayroll1 = async (req, res, next) => {
     const employeeID = employeeIds.map((id) => parseInt(id));
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
     const company = req.user.id;
-    // return res.json("dddd")
+
     // return res.json(req.user.isProjectBased)
     if (!payrolldef) {
       return res.status(404).json({ message: "payroll is not defined" });
@@ -126,17 +126,17 @@ exports.createPayroll1 = async (req, res, next) => {
             },
           });
 
-          if (payroll != null) {
-            // return res.json("data")
-            return next(
-              createError.createError(
-                400,
-                "Payroll has already been run for one or more employees."
-              )
-            );
-          }
+          // if (payroll != null) {
+          //   // return res.json("data")
+          //   return next(
+          //     createError.createError(
+          //       400,
+          //       "Payroll has already been run for one or more employees."
+          //     )
+          //   );
+          // }
 
-          const resp = await runPayroll(req, res, {
+          const resp = await runPayroll(req, res, next, {
             employeeId,
             company,
             payrollDefinitionId,
@@ -156,11 +156,16 @@ exports.createPayroll1 = async (req, res, next) => {
       // await payrolldef.save();
     }
 
-    return res.status(201).json({ msg: "Payroll created successfully!  " });
+    return res.status(201).json({ message: "Payroll created successfully!  " });
   } catch (error) {
-    return res
-      .status(503)
-      .json({ msg: "Error occurred while creating payroll:", error });
+    console.log(error);
+
+    return next(
+      createError.createError(503, "Error occurred while creating payroll ")
+    );
+    // return res
+    //   .status(503)
+    //   .json({ message: "Error occurred while creating payroll:" });
   }
 };
 
@@ -268,6 +273,7 @@ exports.getAll = async (req, res) => {
 async function runPayroll(
   req,
   res,
+  next,
   { employeeId, company, payrollDefinitionId }
 ) {
   try {
@@ -331,7 +337,7 @@ async function runPayroll(
         where: { CompanyId: company, EmployeeId: employeeId },
       }),
     ]);
-    // return res.json(otpayment)
+    return res.json(additionalAllowances);
     const employee_pension = pension?.employeeContribution ?? 0;
     const employer_pension = pension?.employerContribution ?? 0;
 
@@ -471,9 +477,14 @@ async function runPayroll(
     // }
     return 1;
   } catch (error) {
-    return res.status(404).json({
-      message: `Error occur on Some employee please check `,
-    });
+    console.log(error);
+
+    return next(
+      createError.createError(503, "Error occur on Some employee please check ")
+    );
+    // return res.status(404).json({
+    //   message: `Error occur on Some employee please check `,
+    // });
   }
 }
 // EMPLOYEE WITH NO PAYROLL ON CURRENT MONTH
