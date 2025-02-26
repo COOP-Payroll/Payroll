@@ -126,15 +126,15 @@ exports.createPayroll1 = async (req, res, next) => {
             },
           });
 
-          // if (payroll != null) {
-          //   // return res.json("data")
-          //   return next(
-          //     createError.createError(
-          //       400,
-          //       "Payroll has already been run for one or more employees."
-          //     )
-          //   );
-          // }
+          if (payroll != null) {
+            // return res.json("data")
+            return next(
+              createError.createError(
+                400,
+                "Payroll has already been run for one or more employees."
+              )
+            );
+          }
 
           const resp = await runPayroll(req, res, next, {
             employeeId,
@@ -337,7 +337,7 @@ async function runPayroll(
         where: { CompanyId: company, EmployeeId: employeeId },
       }),
     ]);
-    return res.json(additionalAllowances);
+
     const employee_pension = pension?.employeeContribution ?? 0;
     const employer_pension = pension?.employerContribution ?? 0;
 
