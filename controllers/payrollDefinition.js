@@ -380,14 +380,20 @@ exports.getPayrollBeforeCurrentMonth = async (req, res, next) => {
     });
 
     if (payrollDefinitions.length === 0) {
-      return res.status(404).json({
-        message:
-          "No payroll definitions found before this month in the current year.",
-      });
+      return next(
+        createError.createError(
+          404,
+          "No payroll definitions found before this month in the current year."
+        )
+      );
+      // return res.status(404).json({
+      //   message:
+      //     "No payroll definitions found before this month in the current year.",
+      // });
     } else {
       return res.status(200).json({
         count: payrollDefinitions.length,
-        payrollDefinition: payrollDefinitions,
+        data: payrollDefinitions,
       });
     }
   } catch (error) {

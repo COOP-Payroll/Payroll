@@ -73,8 +73,10 @@ const createError = require("../utils/error.js");
 const sequelize = require("../database/db.js");
 exports.getAllCustomRole = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const customRoles = await CustomRole.findAll({
-      where: { CompanyId: req.user.id },
+      where: { CompanyId: CompanyId },
       attributes: {
         exclude: ["CompanyId", "createdAt", "updatedAt"],
         include: [

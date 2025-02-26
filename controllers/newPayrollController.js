@@ -548,30 +548,30 @@ exports.getNonPayrollEmployee1 = async (req, res, next) => {
           include: [
             {
               model: Allowance,
-              include: [AllowanceDefinition],
+              // include: [AllowanceDefinition],
             },
             {
               model: Deduction,
-              include: [DeductionDefinition],
+              // include: [DeductionDefinition],
             },
           ],
         },
-        {
-          model: AccountInfo,
-          where: { isActive: true },
-          required: false,
-        },
+        // {
+        //   model: AccountInfo,
+        //   where: { isActive: true },
+        //   required: false,
+        // },
         {
           model: Loan,
           required: false,
         },
         {
           model: AdditionalAllowances,
-          include: [AdditionalAllowanceDefinition],
+          // include: [AdditionalAllowanceDefinition],
         },
         {
           model: AdditionalDeduction,
-          include: [AdditionalDeductionDefinition],
+          // include: [AdditionalDeductionDefinition],
         },
       ],
       where: {
@@ -652,6 +652,126 @@ exports.getNonPayrollEmployee1 = async (req, res, next) => {
     );
   }
 };
+// exports.getNonPayrollEmployee1 = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+//     const { id } = req.params;
+
+//     const payrollDef = await PayrollDefinition.findOne({
+//       where: {
+//         id: id,
+//         CompanyId: CompanyId,
+//       },
+//     });
+//     if (!payrollDef) {
+//       return next(createError.createError(404, "Payroll definition not found"));
+//     }
+
+//     const employees = await Employee.findAll({
+//       attributes: [
+//         "id",
+//         "fullname",
+//         "image",
+//         "sex",
+//         "date_of_birth",
+//         "role",
+//         "nationality",
+//         "marriageStatus",
+//         "employee_id_number",
+//         "email",
+//         "phoneNumber",
+//         "optionalNumber",
+//         "id_image",
+//         "id_type",
+//         "id_Number",
+//         "isDeactivated",
+//         "hireDate",
+//         "joiningDate",
+//         "isActive",
+//         "CompanyId",
+//       ],
+//       where: { CompanyId: CompanyId },
+//       include: [
+//         { model: Payroll, required: false, where: { PayrollDefinitionId: id } },
+//         { model: EmployeeInfo, where: { isActive: true }, required: false },
+//         {
+//           model: Grade,
+//           through: { model: EmployeeGrade },
+//           include: [{ model: Allowance }, { model: Deduction }],
+//         },
+//         { model: Loan, required: false },
+//         { model: AdditionalAllowances },
+//         { model: AdditionalDeduction },
+//       ],
+//       where: { "$Payroll.id$": null, CompanyId: req.user.id },
+//     });
+
+//     const pension = await Pension.findOne({
+//       where: { CompanyId: req.user.id, isActive: true },
+//     });
+//     const taxslabs = await Taxslab.findAll({
+//       where: { CompanyId: req.user.id, isActive: true },
+//     });
+
+//     const employee_pension = pension?.employeeContribution ?? 0;
+//     const employer_pension = pension?.employerContribution ?? 0;
+
+//     const enrichedEmployees = employees.map((employee) => {
+//       let totalDeduction = 0;
+//       let totalAllowance = 0;
+//       let additionalAllowance = 0;
+//       let additionalDeduction = 0;
+//       let totalLoan = 0;
+//       let taxableIncome = employee?.EmployeeInfos[0]?.basicSalary || 0;
+//       let grossEarning = 0;
+
+//       employee.Grades?.[0]?.Allowances.forEach((allowance) => {
+//         totalAllowance += parseFloat(allowance.amount || 0);
+//       });
+//       employee.Grades?.[0]?.Deductions.forEach((deduction) => {
+//         totalDeduction += parseFloat(deduction.amount || 0);
+//       });
+//       employee.AdditionalAllowances?.forEach((allowance) => {
+//         additionalAllowance += parseFloat(allowance.amount || 0);
+//       });
+//       employee.AdditionalDeductions?.forEach((deduction) => {
+//         additionalDeduction += parseFloat(deduction.amount || 0);
+//       });
+//       employee.Loan?.forEach((loan) => {
+//         totalLoan += parseFloat(loan.amount || 0);
+//       });
+
+//       const totalAllowancesCombined = totalAllowance + additionalAllowance;
+//       const totalDeductionsCombined = totalDeduction + additionalDeduction;
+
+//       grossEarning =
+//         taxableIncome +
+//         totalAllowancesCombined +
+//         (taxableIncome * employer_pension) / 100 -
+//         totalDeductionsCombined;
+
+//       return {
+//         ...employee.toJSON(),
+//         totalAllowances: totalAllowancesCombined,
+//         totalDeductions: totalDeductionsCombined,
+//         totalLoan,
+//         taxableIncome,
+//         grossEarning,
+//         employerContribution: (taxableIncome * employer_pension) / 100,
+//       };
+//     });
+
+//     return res
+//       .status(200)
+//       .json({ count: enrichedEmployees.length, data: enrichedEmployees });
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 
 exports.deselectRunnedPayroll = async (req, res, next) => {
   try {

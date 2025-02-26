@@ -370,6 +370,64 @@ router.get(
   payroll.getAllPayrollForCurrentYear
   // payroll.getPayrollBeforeCurrentMonth
 );
+/**
+ * @swagger
+ * /api/payrolldefinition/previous-months:
+ *   get:
+ *     summary: Retrieve payroll definitions before the current month
+ *     description: Fetches payroll definitions for the current year but only before the current month.
+ *     tags:
+ *       - Payroll Definitions
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully fetched payroll definitions before the current month.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   description: Number of payroll definitions found.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: Payroll definition ID.
+ *                       payrollName:
+ *                         type: string
+ *                         description: Payroll name.
+ *                       startDate:
+ *                         type: string
+ *                         format: date
+ *                         description: Payroll start date.
+ *                       endDate:
+ *                         type: string
+ *                         format: date
+ *                         description: Payroll end date.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have necessary permissions.
+ *       '404':
+ *         description: Not Found - No payroll definitions found before this month.
+ *       '503':
+ *         description: Service Unavailable - An error occurred, please try again later.
+ */
+
+router.get(
+  "/previous-months",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "payrollsetup", isAccessible: true }),
+  // payroll.getAllPayrollForCurrentYear
+  payroll.getPayrollBeforeCurrentMonth
+);
 router.get(
   "/latest",
   middleware.protectAll,
