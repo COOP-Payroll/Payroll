@@ -10,20 +10,22 @@ const AdditionalPayDefinition = sequelize.define(
       allowNull: false,
     },
     type: {
-      type: DataTypes.ENUM('allowance', 'deduction'), // Replace with your actual ENUM values
-      defaultValue: 'allowance', // Set a default value from your ENUM values
-    }
-  }, {
+      type: DataTypes.ENUM("hourly", "amount"), // Replace with your actual ENUM values
+      defaultValue: "amount", // Set a default value from your ENUM values
+    },
+  },
+  {
     validate: {
       validateEnumValue() {
-        if (!['allowance', 'deduction'].includes(this.type)) {
-          throw new Error('Invalid value for "type". It must be "allowance" or "deduction".');
+        if (!["hourly", "amount"].includes(this.type)) {
+          throw new Error(
+            'Invalid value for "type". It must be "hourly" or "amount".'
+          );
         }
-      }
-    }
+      },
+    },
   }
 );
-
 
 module.exports = AdditionalPayDefinition;
 AdditionalPayDefinition.belongsTo(Company);

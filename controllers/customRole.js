@@ -42,7 +42,13 @@ exports.getAllCustomRole = async (req, res, next) => {
     const customRoles = await CustomRole.findAll({
       where: { CompanyId: req.user.id },
       attributes: { exclude: ["CompanyId", "createdAt", "updatedAt"] },
-      include: [{ model: Permission }], // Keep original association
+      include: [
+        {
+          model: Permission,
+          // include:['module' ]
+          attributes: ["id", "module", "isAccessible"],
+        },
+      ], // Keep original association
     });
 
     // Rename and remove the original "Permissions" key

@@ -169,7 +169,7 @@ async function testConnection() {
   }
 }
 // sequelize
-//   .sync({ alter: true }) // Use force: true carefully, as it drops existing tables
+//   .sync({ alter: true }) 
 //   .then(() => {
 //     console.log("Database synchronized successfully.");
 //   })

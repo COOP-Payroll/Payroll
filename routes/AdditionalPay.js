@@ -2,7 +2,6 @@ const express = require("express");
 const additionalPay = require("../controllers/additionalPay.js");
 const middleware = require("../middleware/auth.js");
 const router = express.Router();
-
 /**
  * @swagger
  * /api/additionalpay:
@@ -10,7 +9,7 @@ const router = express.Router();
  *     summary: Get all Additional Pay records
  *     description: Fetches all the additional pay records for the company of the logged-in user.
  *     tags:
- *       - Additional Pay
+ *       - AdditionalPay
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -42,7 +41,7 @@ const router = express.Router();
  *     summary: Create an additional pay record
  *     description: Creates a new additional pay record for an employee in the company.
  *     tags:
- *       - Additional Pay
+ *       - AdditionalPay
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -54,18 +53,16 @@ const router = express.Router();
  *             properties:
  *               amount:
  *                 type: number
- *                 description: The amount of additional pay
+ *                 format: float
+ *                 description: The amount of additional pay to be given to the employee
  *               employeeId:
  *                 type: integer
  *                 description: The ID of the employee receiving the pay
  *               additionalPayDefinitionId:
  *                 type: integer
- *                 description: The ID of the additional pay definition
- *               payrollDefinitionId:
- *                 type: integer
- *                 description: The ID of the payroll definition
+ *                 description: The ID of the additional pay definition to associate with this pay
  *     responses:
- *       '200':
+ *       '201':
  *         description: Successfully created the additional pay record
  *         content:
  *           application/json:
@@ -75,21 +72,16 @@ const router = express.Router();
  *                 message:
  *                   type: string
  *                   description: Success message
+ *                   example: "Successfully registered additional pay"
  *                 data:
  *                   $ref: '#/definitions/AdditionalPay'
  *       '400':
- *         description: Invalid input - Missing or incorrect parameters
+ *         description: Invalid input - Duplicate resource or missing parameters
  *       '404':
- *         description: Employee or resource not found
+ *         description: Employee or additional pay definition not found
  *       '500':
  *         description: Internal Server Error - Something went wrong on the server
  *
-
- *
- */
-
-/**
- * @swagger
  * definitions:
  *   AdditionalPay:
  *     type: object
@@ -99,6 +91,7 @@ const router = express.Router();
  *         description: The unique ID of the additional pay record
  *       amount:
  *         type: number
+ *         format: float
  *         description: The amount of additional pay
  *       createdAt:
  *         type: string
@@ -108,6 +101,15 @@ const router = express.Router();
  *         type: string
  *         format: date-time
  *         description: The last update date of the additional pay record
+ *       employeeId:
+ *         type: integer
+ *         description: The ID of the employee receiving the pay
+ *       additionalPayDefinitionId:
+ *         type: integer
+ *         description: The ID of the additional pay definition that applies to this record
+ *       CompanyId:
+ *         type: integer
+ *         description: The ID of the company that the additional pay is linked to
  */
 
 router.get(
