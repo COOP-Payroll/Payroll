@@ -874,6 +874,14 @@ router.post(
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
   payroll.projectBasedPayroll
 );
+
+router.post(
+  "/paymentProcess",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictToAll("companyAdmin", "approver"),
+  payroll.getPayrollPaymentProcess
+);
 router.post(
   "/deselect",
   middleware.protectAll,
