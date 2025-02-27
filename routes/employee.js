@@ -322,6 +322,187 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
  *         description: Service Unavailable - An error occurred, please try again later.
  */
 
+/**
+ * @swagger
+ * /api/employee/update-contact-info/{employeeId}:
+ *   put:
+ *     summary: Update an employee's contact information
+ *     description: Updates an employee's email, phone number, and address details.
+ *     tags:
+ *       - Employee
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: employeeId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the employee whose contact info is being updated.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Employee's email address.
+ *               phoneNumber:
+ *                 type: string
+ *                 description: Employee's phone number.
+ *               country:
+ *                 type: string
+ *                 description: Country of residence.
+ *               state:
+ *                 type: string
+ *                 description: State of residence.
+ *               region:
+ *                 type: string
+ *                 description: Region of residence.
+ *               zone_or_city:
+ *                 type: string
+ *                 description: City or zone of residence.
+ *               woreda:
+ *                 type: string
+ *                 description: Woreda (administrative division).
+ *               kebele:
+ *                 type: string
+ *                 description: Kebele (smallest administrative unit).
+ *               houseNumber:
+ *                 type: string
+ *                 description: House number.
+ *     responses:
+ *       '200':
+ *         description: Contact information updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Contact info updated successfully.
+ *       '400':
+ *         description: Bad request - Invalid input data.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have necessary permissions.
+ *       '404':
+ *         description: Not Found - Employee does not exist.
+ *       '503':
+ *         description: Service Unavailable - An error occurred, please try again later.
+ */
+/**
+ * @swagger
+ * /api/employee/update-account-info/{employeeId}:
+ *   put:
+ *     summary: Update an employee's account information
+ *     description: Updates an employee's bank account details, including account number and verification status. Allows uploading an account image.
+ *     tags:
+ *       - Employee
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: employeeId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the employee whose account info is being updated.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               accountId:
+ *                 type: integer
+ *                 description: The ID of the account to be updated.
+ *               accountNumber:
+ *                 type: string
+ *                 description: Employee's account number.
+ *                 example: "123456789"
+ *               accountImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Upload a new account image.
+ *               isVerified:
+ *                 type: boolean
+ *                 description: Whether the account is verified or not.
+ *                 example: true
+ *     responses:
+ *       '200':
+ *         description: Account information updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Account information updated successfully.
+ *       '400':
+ *         description: Bad request - Missing account number.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have necessary permissions.
+ *       '404':
+ *         description: Not Found - Account not found.
+ *       '503':
+ *         description: Service Unavailable - An error occurred, please try again later.
+ */
+/**
+ * @swagger
+ * /api/employee/employee-history/{id}:
+ *   get:
+ *     summary: Retrieve an employee's historical positions
+ *     description: Fetches all historical positions for an employee, showing only inactive positions.
+ *     tags:
+ *       - Employee
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the employee whose history is being retrieved.
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved employee history.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   PositionId:
+ *                     type: integer
+ *                     description: The ID of the historical position.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have necessary permissions.
+ *       '404':
+ *         description: Not Found - Employee not found.
+ *       '503':
+ *         description: Service Unavailable - An error occurred, please try again later.
+ */
+
 router.put(
   "/unassign-approver/:id",
   middleware.validateUserAgent,
@@ -337,6 +518,7 @@ router.put(
   middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.updateContactInfo
 );
+
 /**
  * @swagger
  * components:
@@ -572,6 +754,7 @@ router.get(
   middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   newEmployeeController.getEmployeeHistory
 );
+
 router.get(
   "/department/:departmentId",
   middleware.protectAll,

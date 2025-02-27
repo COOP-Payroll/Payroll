@@ -30,6 +30,7 @@ const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const Company = require("../models/company.js");
 const { clearScreenDown } = require("readline");
+const EmployeeHistory = require("../models/employeeHistory.js");
 
 exports.createEmployee = async (req, res, next) => {
   const {
@@ -1145,32 +1146,40 @@ exports.updateAccountInfo = async (req, res, next) => {
 exports.getEmployeeHistory = async (req, res, next) => {
   try {
     const EmployeeId = Number(req?.params?.id);
-    // Fetch all historical positions for the employee
-    const allHistoricalPositions = await EmployeePosition.findAll({
+
+    // Fetch all historical records for the employee from EmployeeHistory model
+    const allHistoricalRecords = await EmployeeHistory.findAll({
       where: {
         EmployeeId,
-        isActive: false, // Assuming 'isActive' field indicates inactive positions
+        // isActive: false, // Assuming 'isActive' field indicates past records
       },
-      attributes: ["PositionId"], // Fetch only the position IDs
+      attributes: {
+        exclude: [
+          "password",
+          "isActive",
+          "rejectionCode",
+          "acceptanceCode",
+          "EmployeeId",
+          "CompanyId",
+          "isDeactivated",
+          "totalPercent",
+          "isConfirmed",
+          "changeTimestamp",
+        ],
+      },
+      // attributes: ["PositionId", "startDate", "endDate", "remarks"], // Fetch relevant details
       order: [["createdAt", "DESC"]], // Order by creation date in descending order
       raw: true,
     });
 
-    // return res.status(200).json(allHistoricalPositions)
-    // Fetch all historical positions for the employee
-    const filteredPositions = allHistoricalPositions.filter((position) => {
-      // Check if the position object has a 'name' property before using the 'includes' method
-      if (position && position.name) {
-        // Example: Filter positions based on position name containing 'Manager'
-        return position.name.includes("Manager");
-      }
-      return false; // Default to false if 'name' property does not exist
-    });
+    if (!allHistoricalRecords.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No history found for this employee",
+      });
+    }
 
-    // Further processing or displaying of filtered positions
-
-    // Return response with filtered positions
-    return res.status(200).json(filteredPositions);
+    return res.status(200).json({ success: true, data: allHistoricalRecords });
   } catch (error) {
     return next(
       createError.createError(503, "An error occurred, please try again later")
