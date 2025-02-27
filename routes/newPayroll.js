@@ -591,7 +591,7 @@ const z = require("../controllers/zcontrollers.js");
  *         isPaid:
  *           type: boolean
  *           example: false
- * 
+ *
  * /api/newPayroll/get-unprocessed-payrolls/{id}:
  *   get:
  *     summary: Get Unprocessed Payrolls for a Specific Month
@@ -706,6 +706,109 @@ const z = require("../controllers/zcontrollers.js");
  *         description: Forbidden - User does not have the necessary permissions.
  *       '503':
  *         description: Internal Server Error - Something went wrong on the server.
+ */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     PayrollCreationResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: The success message of the payroll creation.
+ *         error:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: List of error messages, if any.
+ *     PayrollRequest:
+ *       type: object
+ *       required:
+ *         - payrollDefinitionId
+ *         - employeeIds
+ *       properties:
+ *         payrollDefinitionId:
+ *           type: integer
+ *           description: The ID of the payroll definition.
+ *           example: 123
+ *         employeeIds:
+ *           type: array
+ *           items:
+ *             type: integer
+ *           description: A list of employee IDs for which payroll will be created.
+ *           example: [1, 2, 3]
+ * /api/newPayroll:
+ *   post:
+ *     summary: Create payroll for employees
+ *     description: Creates payroll records for the provided list of employees based on the payroll definition.
+ *     tags:
+ *       - Payroll
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PayrollRequest'
+ *     responses:
+ *       '201':
+ *         description: Successfully created payroll.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PayrollCreationResponse'
+ *       '400':
+ *         description: Bad Request - Payroll has already been run for one or more employees, or employees not fully assigned projects.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Some employees have not been fully assigned projects. Please ensure all employees are assigned projects totaling 100%."
+ *                 employees:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                   example: [1, 2]
+ *       '404':
+ *         description: Not Found - Payroll definition or employees not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "payroll is not defined"
+ *       '503':
+ *         description: Service Unavailable - Error occurred while creating payroll.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "There is a problem creating payroll."
+ *       '500':
+ *         description: Internal Server Error - Unexpected error occurred.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Error occurred while creating payroll."
  */
 
 router.get(

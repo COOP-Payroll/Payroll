@@ -68,7 +68,7 @@ exports.createPayroll1 = async (req, res, next) => {
 
     if (nonExistingEmployeeIds.length > 0) {
       return res.status(404).json({
-        error: "employee not found",
+        message: "Some Employee not found",
         employees: nonExistingEmployeeIds,
       });
     }

@@ -13,18 +13,17 @@ const EmployeeGrade = sequelize.define("EmployeeGrade", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
-  letter:{
-    type: DataTypes.STRING
-
-  }
+  letter: {
+    type: DataTypes.STRING,
+  },
 });
-
-
 
 module.exports = EmployeeGrade;
 Employee.belongsToMany(Grade, {
   through: EmployeeGrade,
+  unique: false,
 });
 Grade.belongsToMany(Employee, {
   through: EmployeeGrade,
+  unique: false,
 });
