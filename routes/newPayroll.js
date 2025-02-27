@@ -810,6 +810,102 @@ const z = require("../controllers/zcontrollers.js");
  *                   type: string
  *                   example: "Error occurred while creating payroll."
  */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     PayrollPaymentProcessRequest:
+ *       type: object
+ *       required:
+ *         - processIds
+ *       properties:
+ *         processIds:
+ *           type: array
+ *           items:
+ *             type: integer
+ *           description: A list of payroll process IDs to be processed.
+ *           example: [1, 2, 3]
+ *     PayrollPaymentProcessResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: The success message of the payroll payment process.
+ *         data:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *                 description: The unique identifier of the payment transaction.
+ *               status:
+ *                 type: string
+ *                 description: The status of the transaction.
+ *               message:
+ *                 type: string
+ *                 description: A message related to the transaction.
+ *               transactionId:
+ *                 type: string
+ *                 description: The unique identifier for the transaction.
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: A description of the error.
+ *         error:
+ *           type: string
+ *           description: A specific error message.
+ * /api/newPayroll/paymentProcess:
+ *   post:
+ *     summary: Process payroll payments
+ *     description: Processes payroll payments for the provided process IDs.
+ *     tags:
+ *       - Payroll
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PayrollPaymentProcessRequest'
+ *     responses:
+ *       '200':
+ *         description: Payroll payments processed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PayrollPaymentProcessResponse'
+ *       '400':
+ *         description: Invalid or empty process IDs, or some payrolls not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have the necessary permissions.
+ *       '503':
+ *         description: Internal Server Error - Payment processing failed.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '500':
+ *         description: Internal Server Error - An unexpected error occurred during processing.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 
 router.get(
   "/get-approved-payrolls",

@@ -40,6 +40,7 @@ const Sponsor = require("../models/sponsor.js");
 const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const OTPayment = require("../models/otPayModel.js");
+const TransactionHistory = require("../models/transactionHistory.js");
 
 exports.createPayroll1 = async (req, res, next) => {
   try {
@@ -1245,7 +1246,7 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
 
     return res.status(200).json({
       message: "Payroll processed successfully",
-      transactionStatuses,
+      data: transactionStatuses,
     });
   } catch (error) {
     console.error(error);
