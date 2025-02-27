@@ -275,7 +275,7 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
   try {
     // Fetch data from the database
     const payrollPublishedReport = await PayrollDefinition.findAll({
-      where: { status: "created", CompanyId: req.user.id },
+      where: { CompanyId: req.user.id },
       include: [
         {
           model: Payroll,
@@ -304,9 +304,10 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
 
     // Iterate over each payroll entry and group employees by payroll name
     payrollPublishedReport.forEach((payroll) => {
-      const { payrollName, startDate, endDate } = payroll;
+      const { id, payrollName, startDate, endDate } = payroll;
       if (!formattedData[payrollName]) {
         formattedData[payrollName] = {
+          id,
           payrollName,
           startDate,
           endDate,
