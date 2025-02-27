@@ -971,13 +971,7 @@ exports.updatedBasicInfo = async (req, res, next) => {
       message: "Employee basic information updated successfully",
     });
   } catch (error) {
-    // console.log(req?.files?.idImage[0].path? req?.files?.idImage[0].path: null );
-
-    // console.log(req?.files?.imagePath1);
-    // const idImagePath = req.files?.['image']
-    // ? req.files?.['image']?.[0]?.path
-    // : employee.image
-
+    console.log(error);
     await transaction.rollback();
     return next(
       createError.createError(503, "An error occurred, please try again later")

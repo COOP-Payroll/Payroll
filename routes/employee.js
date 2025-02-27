@@ -228,15 +228,108 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
  *       '500':
  *         description: Internal Server Error.
  */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
+ * /api/employee/employees-with-custom-role:
+ *   get:
+ *     summary: Get all employees with a custom role
+ *     description: Retrieve a list of all employees with a custom role.
+ *     tags:
+ *       - System User
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved list of employees with a custom role.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - Insufficient permissions to access the employee list.
+ *       '500':
+ *         description: Internal Server Error.
+ */
+/**
+ * @swagger
+ * /api/employee/update-basic-info/{id}:
+ *   put:
+ *     summary: Update an employee's basic information
+ *     description: Updates an employee's basic details including name, marriage status, and ID details. Allows updating the ID image.
+ *     tags:
+ *       - Employee
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the employee to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullname:
+ *                 type: string
+ *                 description: Employee's full name.
+ *               marriageStatus:
+ *                 type: string
+ *                 enum: [Single, Married, Divorced]
+ *                 description: Employee's marital status.
+ *               id_type:
+ *                 type: string
+ *                 description: Type of identification document.
+ *               id_Number:
+ *                 type: string
+ *                 description: Identification document number.
+ *               id_image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Upload an image of the ID.
+ *     responses:
+ *       '200':
+ *         description: Employee basic information updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Employee basic information updated successfully.
+ *       '400':
+ *         description: Bad request - Invalid input data.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - User does not have necessary permissions.
+ *       '404':
+ *         description: Not Found - Employee does not exist.
+ *       '503':
+ *         description: Service Unavailable - An error occurred, please try again later.
+ */
 
 router.put(
   "/unassign-approver/:id",
   middleware.validateUserAgent,
   middleware.protectAll,
-
   middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.UnAssignApprovers
 );
+
 router.put(
   "/update-contact-info/:employeeId",
   middleware.protectAll,
@@ -323,34 +416,6 @@ router.get(
   employeeController.getAllEmployee
 );
 
-/**
- * @swagger
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *
- * /api/employee/employees-with-custom-role:
- *   get:
- *     summary: Get all employees with a custom role
- *     description: Retrieve a list of all employees with a custom role.
- *     tags:
- *       - System User
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       '200':
- *         description: Successfully retrieved list of employees with a custom role.
- *       '401':
- *         description: Unauthorized - Token is missing or invalid.
- *       '403':
- *         description: Forbidden - Insufficient permissions to access the employee list.
- *       '500':
- *         description: Internal Server Error.
- */
-
 router.get(
   "/employees-with-custom-role",
   middleware.protectAll,
@@ -361,7 +426,6 @@ router.get(
 
 router.get(
   "/get-all-projects/:employeeId",
-
   middleware.protectAll,
   middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
@@ -526,21 +590,6 @@ router.put(
   }),
   employeeController.addAddionalPay
 );
-
-// router.put(
-//   "/updateBasicInfo/:id",
-//   upload.fields([
-//     // { name: "image", maxCount: 1 },
-//     { name: "id_image", maxCount: 1 },
-//   ]),
-
-//   middleware.protectAll,
-//   middleware.restrictALL({
-//     moduleName: "employeeinfo",
-//     isAccessible: true,
-//   }),
-//   newEmployeeController.updatedBasicInfo
-// );
 
 router.put(
   "/update-basic-info/:id",
