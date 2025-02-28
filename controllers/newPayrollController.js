@@ -2292,8 +2292,7 @@ exports.getApprovedPay = async (req, res, next) => {
           model: Payroll,
           // required: true,
           where: {
-            // status: "approved",
-            isPaid: true,
+            status: "approved",
             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id, // Filter for payroll records of the specific month
             // required:true
           },
