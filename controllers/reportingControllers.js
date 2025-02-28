@@ -279,7 +279,7 @@ exports.getPayrollPublishedReport = async (req, res, next) => {
       include: [
         {
           model: Payroll,
-          where: { status: "processed" },
+          where: { isPaid: true },
           required: true,
           include: [
             {
