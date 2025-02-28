@@ -2292,7 +2292,8 @@ exports.getApprovedPay = async (req, res, next) => {
           model: Payroll,
           // required: true,
           where: {
-            status: "approved",
+            // status: "approved",
+            isPaid: true,
             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id, // Filter for payroll records of the specific month
             // required:true
           },
@@ -2365,7 +2366,6 @@ exports.getApprovedPay = async (req, res, next) => {
 
     return res.status(200).json({
       status: "true",
-
       data: transformedEmployees,
     });
   } catch (error) {
