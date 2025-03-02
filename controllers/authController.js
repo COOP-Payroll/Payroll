@@ -320,7 +320,16 @@ const createSendToken = async (company, statusCode, res) => {
             isAccessible: perm.isAccessible,
           }))
         : [];
-    const company1 = await Company.findOne({ where: { id: 1 } });
+    const company1 = await Company.findOne({
+      where: { id: company?.CompanyId },
+      attributes: [
+        "id",
+        "organizationName",
+        "companyCode",
+        "isProjectBased",
+        "isSetted",
+      ],
+    });
     // return res.json(company1);
 
     const { token, refreshToken } = signToken(
@@ -332,7 +341,7 @@ const createSendToken = async (company, statusCode, res) => {
       company1.organizationName,
       company1.isSetted,
       company1.isProjectBased,
-      company
+      company1
     );
 
     company.password = undefined;
@@ -406,6 +415,7 @@ exports.login = async (req, res, next) => {
       return next(createError.createError(400, "Invalid credentials"));
     }
     if (company?.role === "employee" || company?.role === "approver") {
+      // return res.json(company);
       createSendToken(company, 200, res);
     } else {
       if (company?.status === "active") {
