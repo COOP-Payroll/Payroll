@@ -100,10 +100,18 @@ exports.updateCompanyIdFormat = async (req, res, next) => {
         )
       );
     }
+
+    // Decode separator if encoded
+    const decodedSeparator =
+      separator === "&#x2F;" ? "/" : decodeURIComponent(separator);
+    console.log("Decoded separator:", decodedSeparator);
+
     // Validate separator value
-    if (!["-", "/"].includes(separator)) {
+    if (!["-", "/"].includes(decodedSeparator)) {
       return next(createError.createError(400, "Invalid separator value"));
     }
+
+    // return res.json({ separator: decodedSeparator });
 
     const company = await Company.findOne({
       where: { id: Number(CompanyId) },
@@ -124,7 +132,7 @@ exports.updateCompanyIdFormat = async (req, res, next) => {
     }
 
     console.log("Received Separator:", separator);
-
+    // return res.json()
     // Update ID format
     await IdFormat.update(
       {
@@ -132,7 +140,7 @@ exports.updateCompanyIdFormat = async (req, res, next) => {
         year,
         department,
         order,
-        separator, // Directly use validated separator
+        separator: decodedSeparator, // Directly use validated separator
         digitLength,
       },
       { where: { id: activeCompanyId.id } }
