@@ -679,7 +679,6 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
       // await transaction.rollback();
       // return next(createError.createError(400, "No approval method found"));
 
-
       const appMethod = await ApprovalMethod.create(
         {
           minimumApprover,
@@ -691,7 +690,7 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
         },
         { transaction }
       );
-  
+
       await appMethod.setCompany(CompanyId, { transaction });
     }
 
@@ -723,15 +722,21 @@ exports.reCreateApprovalMethod = async (req, res, next) => {
       ...new Set(getAllApprovers.map((employee) => employee.EmployeeId)),
     ];
 
-    // Update employee roles if needed
+    // // Update employee roles if needed
+    // if (employeeIds.length > 0) {
+    //   await sequelize.query(
+    //     `
+    //     UPDATE "Employees"
+    //     SET "role" = 'employee'
+    //     WHERE "id" IN (${employeeIds.join(",")})
+    //     `,
+    //     { transaction }
+    //   );
+    // }
     if (employeeIds.length > 0) {
-      await sequelize.query(
-        `
-        UPDATE "Employees"
-        SET "role" = 'employee'
-        WHERE "id" IN (${employeeIds.join(",")})
-        `,
-        { transaction }
+      await Employee.update(
+        { role: "employee" },
+        { where: { id: employeeIds }, individualHooks: true, transaction }
       );
     }
 

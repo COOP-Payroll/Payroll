@@ -169,7 +169,7 @@ async function testConnection() {
   }
 }
 // sequelize
-//   .sync({ alter: true }) 
+//   .sync({ alter: true })
 //   .then(() => {
 //     console.log("Database synchronized successfully.");
 //   })

@@ -75,14 +75,31 @@ exports.updateCompanyIdFormat = async (req, res, next) => {
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const { year, department, order, separator, digitLength } = req.body;
-return res.json(req.body)
     // Validate required fields
-    if (!year || !department || !order || !digitLength || !separator) {
+    // if (!year || !department || !order || !digitLength || !separator) {
+    //   return next(
+    //     createError.createError(400, "Please provide all required fields")
+    //   );
+    // }
+    const requiredFields = [
+      "year",
+      "department",
+      "separator",
+      "digitLength",
+      "order",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !req.body.hasOwnProperty(field)
+    );
+
+    if (missingFields.length > 0) {
       return next(
-        createError.createError(400, "Please provide all required fields")
+        createError.createError(
+          400,
+          `Missing required fields: ${missingFields.join(", ")}`
+        )
       );
     }
-
     // Validate separator value
     if (!["-", "/"].includes(separator)) {
       return next(createError.createError(400, "Invalid separator value"));

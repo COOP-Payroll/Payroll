@@ -4,6 +4,7 @@ const Company = require("../models/company.js");
 const bcrypt = require("bcrypt");
 
 const EmployeeHistory = require("./employeeHistory.js");
+const { closeSync } = require("fs");
 
 const Employee = sequelize.define("Employee", {
   id: {
@@ -126,6 +127,7 @@ Employee.beforeUpdate((employee, options) => {
 });
 
 Employee.beforeUpdate(async (employee, options) => {
+  console.log("Gemechu Bulti");
   const existingEmployee = await Employee.findByPk(employee.id);
   console.log(existingEmployee.phoneNumber);
   await EmployeeHistory.create({

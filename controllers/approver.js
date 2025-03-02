@@ -369,6 +369,7 @@ exports.createApprover = async (req, res, next) => {
                 message: "successfully saved you can approve your payroll",
               });
             } catch (error) {
+              console.log(error);
               await transaction.rollback();
               return next(
                 createError.createError(503, "Internal server error")
@@ -456,12 +457,20 @@ exports.createApprover = async (req, res, next) => {
                 transaction,
               });
               //update  employe role
+              // const updateEmployeeRole = await Employee.update(
+              //   { role: "approver" },
+              //   {
+              //     where: { id: EmployeeId },
+              //   },
+              //   { transaction }
+              // );
               const updateEmployeeRole = await Employee.update(
                 { role: "approver" },
                 {
                   where: { id: EmployeeId },
-                },
-                { transaction }
+                  transaction, // Move transaction inside this object
+                  individualHooks: true, // Ensures beforeUpdate hook is triggered
+                }
               );
 
               //update approval mehod
@@ -604,12 +613,20 @@ exports.createApprover = async (req, res, next) => {
                 transaction,
               });
               //update  employe role
+              // const updateEmployeeRole = await Employee.update(
+              //   { role: "approver" },
+              //   {
+              //     where: { id: EmployeeId },
+              //   },
+              //   { transaction }
+              // );
               const updateEmployeeRole = await Employee.update(
                 { role: "approver" },
                 {
                   where: { id: EmployeeId },
-                },
-                { transaction }
+                  transaction, // Move transaction inside this object
+                  individualHooks: true, // Ensures beforeUpdate hook is triggered
+                }
               );
 
               //update approval mehod
@@ -708,6 +725,7 @@ exports.createApprover = async (req, res, next) => {
               // return res.json("something is wrong");
             }
           } catch (error) {
+            console.log(error);
             await transaction.rollback();
             return next(
               createError.createError(
@@ -797,6 +815,7 @@ exports.createApprover = async (req, res, next) => {
       }
     }
   } catch (error) {
+    console.log(error);
     await transaction.rollback();
     return next(
       createError.createError(503, "An error occurred, please try again later")
