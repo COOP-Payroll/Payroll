@@ -69,8 +69,22 @@ exports.createDeduction = async (req, res, next) => {
     });
     if (!grade) {
       res.status(404).json("Grade is not defined");
-    } else if (!dedDefinition) {
-      res.status(404).json("Deduction definition is not defined");
+    }
+    const checkIfAssigned = await Deduction.findOne({
+      where: {
+        GradeId: gradeId,
+        DeductionDefinitionId: deductinDefinitionId,
+      },
+    });
+    if (!dedDefinition) {
+      return next(
+        createError.createError(404, "Deduction definition is not defined")
+      );
+    }
+    if (checkIfAssigned) {
+      return next(
+        createError.createError(404, "Deduction definition is already added")
+      );
     } else {
       const deduction = await Deduction.create({ amount });
       await deduction.setCompany(Number(req.user.id));
