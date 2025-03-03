@@ -9,6 +9,8 @@ const createError = require(".././utils/error.js");
 const CustomError = require(".././utils/customError.js");
 const successResponse = require(".././utils/successResponse.js");
 const { max } = require("moment/moment.js");
+const Deduction = require("../models/deduction.js");
+const DeductionDefinition = require("../models/deductionDefinition.js");
 
 //CREATE GRADE
 exports.getAllGrade = async (req, res, next) => {
@@ -24,6 +26,10 @@ exports.getAllGrade = async (req, res, next) => {
         {
           model: Allowance,
           include: [AllowanceDefinition],
+        },
+        {
+          model: Deduction,
+          include: [DeductionDefinition],
         },
       ],
     });
@@ -112,8 +118,7 @@ exports.createGrade = async (req, res, next) => {
       );
     }
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
