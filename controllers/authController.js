@@ -12,7 +12,9 @@ const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 const signToken = (
   id,
   role,
-  fullName,
+  name,
+  email,
+  companyCode,
   phoneNumber,
   permissions,
   organizationName,
@@ -25,7 +27,9 @@ const signToken = (
       {
         id,
         role,
-        fullName,
+        name,
+        email,
+        companyCode,
         phoneNumber,
         permissions,
         organizationName,
@@ -43,7 +47,9 @@ const signToken = (
       {
         id,
         role,
-        fullName,
+        name,
+        email,
+        companyCode,
         phoneNumber,
         permissions,
         organizationName,
@@ -416,12 +422,12 @@ const createSendToken = async (company, req, statusCode, res) => {
     // If role is "approver", ensure "payrollApprove" permission is added
     if (company.role === "approver") {
       const payrollPermissionExists = permissionsList.some(
-        (perm) => perm.module === "payrollApproval"
+        (perm) => perm.module === "payrollapproval"
       );
 
       if (!payrollPermissionExists) {
         permissionsList.push({
-          module: "payrollApproval",
+          module: "payrollapproval",
           isAccessible: true,
         });
       }
@@ -431,7 +437,9 @@ const createSendToken = async (company, req, statusCode, res) => {
     ({ token, refreshToken } = signToken(
       company.id,
       company.role,
-      company.fullName,
+      company.fullname,
+      company.email,
+      company1.companyCode,
       company.phoneNumber,
       permissionsList,
       company1.organizationName,
