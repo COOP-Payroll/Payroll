@@ -146,7 +146,9 @@ require("dotenv").config();
 const { Sequelize } = require("sequelize");
 // const CustomError = require("../utils/ErrorHandler");
 const sequelize = new Sequelize(
-  "postgresql://gemechu:t2FiTgh8zRhn6dyHYmgL0iV1pKZOOy9d@dpg-cuebgpt2ng1s7386p9k0-a.oregon-postgres.render.com/newpayroll",
+  "postgresql://superpayroll_user:mJLzh30FgR3hJBPcaDQRFwX1oCRi6QeP@dpg-cv2l2f2n91rc73bucevg-a.oregon-postgres.render.com/superpayroll",
+
+  // "postgresql://gemechu:t2FiTgh8zRhn6dyHYmgL0iV1pKZOOy9d@dpg-cuebgpt2ng1s7386p9k0-a.oregon-postgres.render.com/newpayroll",
   {
     dialect: "postgres",
     dialectOptions: {

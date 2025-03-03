@@ -35,13 +35,27 @@ const signToken = (
       },
       accessTokenSecret,
       {
-        expiresIn: "30000m",
+        expiresIn: "7d",
       }
     );
 
-    const refreshToken = jwt.sign({ id, role }, refreshTokenSecret, {
-      expiresIn: "30000m",
-    });
+    const refreshToken = jwt.sign(
+      {
+        id,
+        role,
+        fullName,
+        phoneNumber,
+        permissions,
+        organizationName,
+        isSetted,
+        isProjectBased,
+        company,
+      },
+      refreshTokenSecret,
+      {
+        expiresIn: "7d",
+      }
+    );
     return { token, refreshToken };
   } catch (error) {
     return next(
@@ -55,14 +69,14 @@ const signTokenSuperAdmin = (id, role, fullName, phoneNumber, email) => {
       { id, role, fullName, phoneNumber, email },
       accessTokenSecret,
       {
-        expiresIn: "30000m",
+        expiresIn: "7d",
       }
     );
     const refreshToken = jwt.sign(
       { id, role, fullName, phoneNumber, email },
       refreshTokenSecret,
       {
-        expiresIn: "30000m", // Set your desired expiration time for refresh tokens
+        expiresIn: "7d", // Set your desired expiration time for refresh tokens
       }
     );
 
@@ -245,7 +259,7 @@ const signTokenCompany = (company, res) => {
       },
       refreshTokenSecret,
       {
-        expiresIn: "30000m", // Set your desired expiration time for refresh tokens
+        expiresIn: "7d", // Set your desired expiration time for refresh tokens
       }
     );
 
@@ -309,10 +323,88 @@ const createSendTokenSuperAdmin = async (company, statusCode, res) => {
     // return next(createError.createError(503, error.message));
   }
 };
+
 // CREATESEND TOKEN
-const createSendToken = async (company, statusCode, res) => {
+// const createSendToken = async (company, req, statusCode, res) => {
+//   try {
+//     const CompanyId =
+//       company.role === "companyAdmin" ? company.id : company.CompanyId;
+
+//     // return res.json(CompanyId)
+//     const permissionsList =
+//       company.CustomRole && Array.isArray(company.CustomRole.Permissions)
+//         ? company.CustomRole.Permissions.map((perm) => ({
+//             id: perm.id,
+//             module: perm.module,
+//             isAccessible: perm.isAccessible,
+//           }))
+//         : [];
+//     const company1 = await Company.findOne({
+//       where: { id: CompanyId },
+//       attributes: [
+//         "id",
+//         "organizationName",
+//         "companyCode",
+//         "isSetted",
+//         "isProjectBased",
+//       ],
+//     });
+//     // return res.json(company1);
+
+//     company.role === "companyAdmin"
+//       ? ({ token, refreshToken } = signToken(
+//           company.id,
+//           company.role,
+//           company.fullName,
+//           company.phoneNumber,
+//           permissionsList,
+//           company1.organizationName,
+//           company1.isSetted,
+//           company1.isProjectBased,
+//           company
+//         ))
+//       : ({ token, refreshToken } = signToken(
+//           company.id,
+//           company.role,
+//           company.fullName,
+//           company.phoneNumber,
+//           permissionsList,
+//           company1.organizationName,
+//           company1.isSetted,
+//           company1.isProjectBased,
+//           company1
+//         ));
+
+//     company.password = undefined;
+//     res.status(statusCode).json({
+//       token,
+//       refreshToken,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(503).json({ message: "Internal server error" });
+//     // return next(createError.createError(503, error.message));
+//   }
+// };
+const createSendToken = async (company, req, statusCode, res) => {
   try {
-    const permissionsList =
+    const CompanyId =
+      company.role === "companyAdmin" ? company.id : company.CompanyId;
+
+    // Fetch company details
+    const company1 = await Company.findOne({
+      where: { id: CompanyId },
+      attributes: [
+        "id",
+        "organizationName",
+        "companyCode",
+        "isSetted",
+        "isProjectBased",
+      ],
+    });
+
+    // Extract permissions
+    let permissionsList =
       company.CustomRole && Array.isArray(company.CustomRole.Permissions)
         ? company.CustomRole.Permissions.map((perm) => ({
             id: perm.id,
@@ -320,19 +412,23 @@ const createSendToken = async (company, statusCode, res) => {
             isAccessible: perm.isAccessible,
           }))
         : [];
-    const company1 = await Company.findOne({
-      where: { id: company?.CompanyId },
-      attributes: [
-        "id",
-        "organizationName",
-        "companyCode",
-        "isProjectBased",
-        "isSetted",
-      ],
-    });
-    // return res.json(company1);
 
-    const { token, refreshToken } = signToken(
+    // If role is "approver", ensure "payrollApprove" permission is added
+    if (company.role === "approver") {
+      const payrollPermissionExists = permissionsList.some(
+        (perm) => perm.module === "payrollApproval"
+      );
+
+      if (!payrollPermissionExists) {
+        permissionsList.push({
+          module: "payrollApproval",
+          isAccessible: true,
+        });
+      }
+    }
+
+    // Generate tokens
+    ({ token, refreshToken } = signToken(
       company.id,
       company.role,
       company.fullName,
@@ -342,7 +438,7 @@ const createSendToken = async (company, statusCode, res) => {
       company1.isSetted,
       company1.isProjectBased,
       company1
-    );
+    ));
 
     company.password = undefined;
     res.status(statusCode).json({
@@ -352,15 +448,14 @@ const createSendToken = async (company, statusCode, res) => {
   } catch (error) {
     console.log(error);
     return res.status(503).json({ message: "Internal server error" });
-    // return next(createError.createError(503, error.message));
   }
 };
 
 exports.login = async (req, res, next) => {
   try {
-    // return res.json("dkjhgf");?
     let company;
     const { email, password, companyCode } = req.body;
+
     if (!email || !password || !companyCode) {
       return res
         .status(404)
@@ -379,7 +474,7 @@ exports.login = async (req, res, next) => {
         },
       ],
     });
-    // return res.json(company);
+
     if (company === null) {
       company = await Employee.findOne({
         where: { email },
@@ -387,6 +482,13 @@ exports.login = async (req, res, next) => {
           {
             model: CustomRole,
             include: [Permission],
+          },
+
+          {
+            model: Company,
+            where: {
+              companyCode: companyCode,
+            },
           },
         ],
       });
@@ -400,28 +502,46 @@ exports.login = async (req, res, next) => {
         )
       );
     }
-
-    if (company?.role === "companyAdmin") {
+    if (company.role === "companyAdmin") {
       if (
         !company ||
-        company?.companyCode != companyCode ||
-        !(await bcrypt.compare(password, company?.password))
+        company.companyCode != companyCode ||
+        !(await bcrypt.compare(password, company.password))
       ) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
     }
 
-    if (company == null) {
-      return next(createError.createError(400, "Invalid credentials"));
-    }
-    if (company?.role === "employee" || company?.role === "approver") {
+    if (company.role === "employee" || company.role === "approver") {
+      // return res.json(email)
+      const newEmployee = await Employee.findAll({
+        where: {
+          email: email,
+        },
+        include: {
+          model: Company,
+          where: {
+            companyCode: companyCode,
+          },
+        },
+      });
+      // return res.json(newEmployee);
+      // Validate password
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        newEmployee[0]?.password
+      );
+      if (!isPasswordValid || !newEmployee) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
       // return res.json(company);
-      createSendToken(company, 200, res);
+      createSendToken(company, req, 200, res);
     } else {
-      if (company?.status === "active") {
+      if (company.status === "active") {
         createSendTokenCompany(company, 200, res);
       } else {
-        switch (company?.status) {
+        switch (company.status) {
           case "pending":
             return res.status(401).json({
               message: "your request is being processed please stay tune",
@@ -518,7 +638,7 @@ exports.refreshToken = async (req, res, next) => {
       { id: decoded.id, role: decoded.role },
       accessTokenSecret,
       {
-        expiresIn: "30000m",
+        expiresIn: "7d",
       }
     );
 
