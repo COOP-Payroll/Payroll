@@ -1,179 +1,185 @@
-const EmployeePayrollApprovement = require('../models/employeePayrollApprovement')
-const { Op } = require('sequelize')
+const EmployeePayrollApprovement = require("../models/employeePayrollApprovement");
+const { Op } = require("sequelize");
 //define model needed here {approvamethod}
-const ApprovalMethod = require('../models/approvalMethod')
-const Payroll = require('../models/Payroll')
-const PayrollDefinition = require('../models/payrollDefinition')
-const Approver = require('../models/approver')
-const Employee = require('../models/employee')
-const createError = require('../utils/error')
-const { Sequelize } = require('sequelize')
-const sequelize = require('../database/db')
-const { exit } = require('shelljs')
+const ApprovalMethod = require("../models/approvalMethod");
+const Payroll = require("../models/Payroll");
+const PayrollDefinition = require("../models/payrollDefinition");
+const Approver = require("../models/approver");
+const Employee = require("../models/employee");
+const createError = require("../utils/error");
+const { Sequelize } = require("sequelize");
+const sequelize = require("../database/db");
+const { exit } = require("shelljs");
 // Controller actions
-const getAllApprovements = async (req, res,next) => {
+const getAllApprovements = async (req, res, next) => {
   try {
-    const approvements = await EmployeePayrollApprovement.findAll()
-    res.json(approvements)
+    const approvements = await EmployeePayrollApprovement.findAll();
+    res.json(approvements);
   } catch (error) {
-  return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
-const getApprovementById = async (req, res,next) => {
-  const { id } = req.params
+const getApprovementById = async (req, res, next) => {
+  const { id } = req.params;
   try {
     const approvement = await Payroll.findAll({
       where: {
-        PayrollDefinitionId: id
-      }
-    })
+        PayrollDefinitionId: id,
+      },
+    });
     if (!approvement) {
-      return res.status(404).json({ message: 'Approvement not found' })
+      return res.status(404).json({ message: "Approvement not found" });
     }
-    res.json(approvement)
+    res.json(approvement);
   } catch (error) {
-  return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
 const createApprovement = async (req, res, next) => {
   // Define constant variable here for this endpoint
-  const companyId = Number(req.user.id) // Company ID
-  const payrollId = Number(req.body.Payrolls)
-  const approverId = Number(req.body.approverId)
+  const companyId = Number(req.user.id); // Company ID
+  const payrollId = Number(req.body.Payrolls);
+  const approverId = Number(req.body.approverId);
 
   try {
     //check if payroll exitst and processed
     const payroll = await Payroll.findOne({
       where: {
-        id: payrollId
+        id: payrollId,
         // status: "processed",
-      }
-    })
+      },
+    });
     if (!payroll) {
-      return 'no such a payroll created'
+      return "no such a payroll created";
     }
-    const employeeId = Number(payroll.EmployeeId)
+    const employeeId = Number(payroll.EmployeeId);
 
     //approval method
     const approvalMethods = await ApprovalMethod.findOne({
       where: {
         CompanyId: companyId,
-        isActive: true
-      }
-    })
+        isActive: true,
+      },
+    });
 
     //is master approval
     const isThereMaster = await ApprovalMethod.findOne({
       where: {
         CompanyId: companyId,
-        isActive: true
+        isActive: true,
         // isThereMasterApprover: true,
-      }
-    })
+      },
+    });
 
-    console.log('alls')
+    console.log("alls");
     if (approvalMethods === null || approvalMethods === undefined) {
       return res.json(
-        'this company has no active approval method pleaase define one '
-      )
+        "this company has no active approval method pleaase define one "
+      );
     }
 
     //does this payroll processed//rejected
     const payrolls = await Payroll.findOne({
       where: {
-        id: payrollId
-      }
-    })
+        id: payrollId,
+      },
+    });
     if (!payrolls) {
-      return 'Payroll record not found'
+      return "Payroll record not found";
     }
 
     //what is status of definition
-    const payrollDefinitionId = payrolls.PayrollDefinitionId
+    const payrollDefinitionId = payrolls.PayrollDefinitionId;
 
     const payrollDefinition = await PayrollDefinition.findOne({
-      attributes: ['status'],
+      attributes: ["status"],
       where: {
-        id: payrollDefinitionId
-      }
-    })
+        id: payrollDefinitionId,
+      },
+    });
 
     //am i approver
     const iAmApprover = await Approver.findOne({
       where: {
         id: approverId,
-        isActive: true
-      }
-    })
+        isActive: true,
+      },
+    });
     if (iAmApprover === null || iAmApprover === undefined) {
-      return res.json('access denied, you are not active approver')
+      return res.json("access denied, you are not active approver");
     }
-    const approverLevel = iAmApprover.level
+    const approverLevel = iAmApprover.level;
     //am i master approver
     const iAmMasterApprover = await Approver.findOne({
       where: {
         id: approverId,
         isActive: true,
-        isMaster: true
-      }
-    })
+        isMaster: true,
+      },
+    });
 
     //checking for company approval method
     const hasActiveApprovalMethods =
-      approvalMethods !== null && approvalMethods !== undefined
+      approvalMethods !== null && approvalMethods !== undefined;
     const isMasterApproverAvailable =
-      isThereMaster !== null && isThereMaster !== undefined
-    const companyApprovalMethod = approvalMethods.approvalMethod
-    const companyApprovalLevel = approvalMethods.approvalLevel
-    const companyMinimumApprover = approvalMethods.minimumApprover
-    const isComplete = approvalMethods.isCompleted
+      isThereMaster !== null && isThereMaster !== undefined;
+    const companyApprovalMethod = approvalMethods.approvalMethod;
+    const companyApprovalLevel = approvalMethods.approvalLevel;
+    const companyMinimumApprover = approvalMethods.minimumApprover;
+    const isComplete = approvalMethods.isCompleted;
     if (isComplete !== true) {
-      return res.json('the appoval method is not completed contact your admin ')
+      return res.json(
+        "the appoval method is not completed contact your admin "
+      );
     }
 
     //checkjing for payroll
-    const isPayrollProcessed = payroll !== null && payroll !== undefined
+    const isPayrollProcessed = payroll !== null && payroll !== undefined;
 
     //checking for payrolldefinition
     const isPayrollDefinitionOrdered =
-      payrollDefinition !== null && payrollDefinition !== undefined
-    const payrollDefinitionStatus = payrollDefinition.status
+      payrollDefinition !== null && payrollDefinition !== undefined;
+    const payrollDefinitionStatus = payrollDefinition.status;
     //checking on approver
-    const amIActiveApprover = iAmApprover !== null && iAmApprover !== undefined
+    const amIActiveApprover = iAmApprover !== null && iAmApprover !== undefined;
     const amIMasterApprover =
-      iAmMasterApprover !== null && iAmMasterApprover !== undefined
+      iAmMasterApprover !== null && iAmMasterApprover !== undefined;
     //check if approved by me
 
     const employepayrollapprove = await EmployeePayrollApprovement.count({
       where: {
         ApproverId: approverId,
-        PayrollId: payrollId
-      }
-    })
+        PayrollId: payrollId,
+      },
+    });
     if (employepayrollapprove >= 1) {
-      return res.json('you already approved this')
+      return res.json("you already approved this");
     }
     //do algorithm now
     if (hasActiveApprovalMethods) {
       //check if payroll ordered
-      if (payrollDefinitionStatus !== 'ordered') {
-        return res.json('sorry,this payroll is not ordered yet!')
+      if (payrollDefinitionStatus !== "ordered") {
+        return res.json("sorry,this payroll is not ordered yet!");
       }
       //check if i am active
       if (!amIActiveApprover) {
         return res.json(
-          'sorry, Your account does not have the necessary permissions to proceed'
-        )
+          "sorry, Your account does not have the necessary permissions to proceed"
+        );
       }
       //check if company has master approver
       if (!isMasterApproverAvailable) {
         //check approval method of company
 
-        if (companyApprovalMethod === 'hierarchy') {
+        if (companyApprovalMethod === "hierarchy") {
           //call herarchical method
-          const eachPayrollStatus = payrolls.status
+          const eachPayrollStatus = payrolls.status;
 
           const herreturn = await handleHierarchicalApprove(
             payrollDefinitionId,
@@ -187,11 +193,11 @@ const createApprovement = async (req, res, next) => {
             approverLevel,
             employeeId,
             res
-          )
-          return res.json(herreturn)
-        } else if (companyApprovalMethod === 'horizontal') {
+          );
+          return res.json(herreturn);
+        } else if (companyApprovalMethod === "horizontal") {
           //call horizontal method
-          const eachPayrollStatus = payrolls.status
+          const eachPayrollStatus = payrolls.status;
 
           const horreturn = await handleHorizontalApprove(
             companyId,
@@ -203,19 +209,19 @@ const createApprovement = async (req, res, next) => {
             approverId,
             approverLevel,
             employeeId
-          )
-          return res.json(horreturn)
+          );
+          return res.json(horreturn);
         } else {
-          return res.json('sorry, undefined approval method')
+          return res.json("sorry, undefined approval method");
         }
       } else {
         //check if i am master approver
 
         if (!amIMasterApprover) {
           //check approval method of company
-          if (companyApprovalMethod === 'hierarchy') {
+          if (companyApprovalMethod === "hierarchy") {
             //call herarchical method
-            const eachPayrollStatus = payrolls.status
+            const eachPayrollStatus = payrolls.status;
 
             const herreturn = await handleHierarchicalApprove(
               payrollDefinitionId,
@@ -229,9 +235,9 @@ const createApprovement = async (req, res, next) => {
               approverLevel,
               employeeId,
               res
-            )
-            return res.status(200).json(herreturn)
-          } else if (companyApprovalMethod === 'horizontal') {
+            );
+            return res.status(200).json(herreturn);
+          } else if (companyApprovalMethod === "horizontal") {
             //call horizontal method
             const horreturn = await handleHorizontalApprove(
               companyId,
@@ -243,182 +249,185 @@ const createApprovement = async (req, res, next) => {
               approverId,
               approverLevel,
               employeeId
-            )
-            return res.json(horreturn)
+            );
+            return res.json(horreturn);
           } else {
-            return res.json('sorry, undefined approval method')
+            return res.json("sorry, undefined approval method");
           }
         } else if (amIMasterApprover) {
           //check payroll is approved
           const isApproved = await Payroll.findOne({
             where: {
               id: payrollId,
-              status: 'approved'
-            }
-          })
+              status: "approved",
+            },
+          });
           const isActivated = await Payroll.findOne({
             where: {
               id: payrollId,
-              status: 'active'
-            }
-          })
+              status: "active",
+            },
+          });
           if (isActivated) {
-            return res.json('already activated')
+            return res.json("already activated");
           }
           if (!isApproved) {
-            return res.json('not approved')
+            return res.json("not approved");
           }
-          await isApproved.update({ status: 'active' })
-          return res.json('payroll activated  successfully')
+          await isApproved.update({ status: "active" });
+          return res.json("payroll activated  successfully");
         }
       }
     } else {
-      return res.json('your approval method is not active')
+      return res.json("your approval method is not active");
     }
   } catch (error) {
-  return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
-const getApprovementByPayrollId = async (req, res,next) => {
-  const { id } = req.params
+};
+const getApprovementByPayrollId = async (req, res, next) => {
+  const { id } = req.params;
   try {
     const approvement = await Payroll.findAll({
       where: {
-        PayrollDefinitionId: id
+        PayrollDefinitionId: id,
       },
-      attributes: ['id'],
-      raw: true
-    })
+      attributes: ["id"],
+      raw: true,
+    });
 
     if (!approvement) {
-      return res.status(404).json({ message: 'Approvement not found' })
+      return res.status(404).json({ message: "Approvement not found" });
     }
 
-    const payrollIds = approvement.map(item => item.id)
+    const payrollIds = approvement.map((item) => item.id);
 
     const payrolls = await EmployeePayrollApprovement.findAll({
       where: {
         id: {
-          [Op.in]: payrollIds
-        }
-      }
-    })
+          [Op.in]: payrollIds,
+        },
+      },
+    });
 
-    res.json(payrolls)
+    res.json(payrolls);
   } catch (error) {
-    console.log(error)
-  return next(createError.createError(503, "An error occurred, please try again later"));
+    console.log(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
-const updateApprovement = async (req, res,next) => {
+const updateApprovement = async (req, res, next) => {
   try {
-    const approvement = await EmployeePayrollApprovement.findByPk(id)
+    const approvement = await EmployeePayrollApprovement.findByPk(id);
     if (!approvement) {
-      return res.status(404).json({ message: 'Approvement not found' })
+      return res.status(404).json({ message: "Approvement not found" });
     }
-    res.json('update approve')
+    res.json("update approve");
   } catch (error) {
-    console.error(error)
-    res.status(503).json({ message: 'Internal server error' })
+    console.error(error);
+    res.status(503).json({ message: "Internal server error" });
   }
-}
+};
 
 const deleteApprovement = async (req, res) => {
   try {
-    const approvement = await EmployeePayrollApprovement.findByPk(id)
+    const approvement = await EmployeePayrollApprovement.findByPk(id);
     if (!approvement) {
-      return res.status(404).json({ message: 'Approvement not found' })
+      return res.status(404).json({ message: "Approvement not found" });
     }
 
-    res.status(204).json('deleted successfully')
+    res.status(204).json("deleted successfully");
   } catch (error) {
-    console.error(error)
-    res.status(503).json({ message: 'Internal server error' })
+    console.error(error);
+    res.status(503).json({ message: "Internal server error" });
   }
-}
+};
 
 const arrayApproveApprovement = async (req, res, next) => {
   // Define constant variables here for this endpoint
 
   try {
     const companyId =
-      req.user.role === 'approver' ? req.user.CompanyId : Number(req.user.id) // Company ID
-    const payrollIds = req.body.Payrolls // Array of Payroll IDs
-    const approverId = Number(req.body.approverId)
-    const results = []
+      req.user.role === "approver" ? req.user.CompanyId : Number(req.user.id); // Company ID
+    const payrollIds = req.body.Payrolls; // Array of Payroll IDs
+    const approverId = Number(req.body.approverId);
+    const results = [];
 
-    const role = req.user.role //
+    const role = req.user.role; //
 
     // return res.json(req?.user?.CompanyId)
     // Iterate over the array of payroll IDs
     for (const payrollId of payrollIds) {
       if (isNaN(payrollId) || payrollId === NaN) {
-       
-        continue // Skip to the next iteration
+        continue; // Skip to the next iteration
       }
       try {
         // Check if payroll exists and is processed
         const payroll = await Payroll.findOne({
           where: {
-            id: payrollId
-          }
-        })
+            id: payrollId,
+          },
+        });
 
         if (!payroll) {
-          results.push(`No such payroll created: ${payrollId}`)
-          continue // Skip to the next iteration
+          results.push(`No such payroll created: ${payrollId}`);
+          continue; // Skip to the next iteration
         }
 
-        const employeeId = Number(payroll.EmployeeId)
+        const employeeId = Number(payroll.EmployeeId);
 
         // Approval method
         const approvalMethods = await ApprovalMethod.findOne({
           where: {
             CompanyId: companyId,
-            isActive: true
-          }
-        })
+            isActive: true,
+          },
+        });
 
         // Is there a master approval?
         const isThereMaster = await ApprovalMethod.findOne({
           where: {
             CompanyId: companyId,
             isActive: true,
-            isThereMasterApprover: true
-          }
-        })
+            isThereMasterApprover: true,
+          },
+        });
 
         if (!approvalMethods) {
           return next(
             createError.createError(
               404,
-              'This company has no active approval method. Please define one'
+              "This company has no active approval method. Please define one"
             )
-          )
+          );
         }
 
         // Does this payroll processed/rejected?
         const payrolls = await Payroll.findOne({
           where: {
-            id: payrollId
-          }
-        })
+            id: payrollId,
+          },
+        });
 
         if (!payrolls) {
-          results.push('Payroll record not found')
-          continue // Skip to the next iteration
+          results.push("Payroll record not found");
+          continue; // Skip to the next iteration
         }
 
         // What is the status of the definition?
-        const payrollDefinitionId = payrolls.PayrollDefinitionId
+        const payrollDefinitionId = payrolls.PayrollDefinitionId;
 
         const payrollDefinition = await PayrollDefinition.findOne({
-          attributes: ['status'],
+          attributes: ["status"],
           where: {
-            id: payrollDefinitionId
-          }
-        })
+            id: payrollDefinitionId,
+          },
+        });
 
         // return res.json(payrollDefinitionId )
 
@@ -426,88 +435,88 @@ const arrayApproveApprovement = async (req, res, next) => {
         const iAmApprover = await Approver.findOne({
           where: {
             id: approverId,
-            isActive: true
-          }
-        })
+            isActive: true,
+          },
+        });
 
         if (!iAmApprover) {
-          results.push('Access denied. You are not an active approver.')
-          continue // Skip to the next iteration
+          results.push("Access denied. You are not an active approver.");
+          continue; // Skip to the next iteration
         }
 
-        const approverLevel = iAmApprover.level
+        const approverLevel = iAmApprover.level;
 
         // Am I a master approver?
         const iAmMasterApprover = await Approver.findOne({
           where: {
             id: approverId,
             isActive: true,
-            isMaster: true
-          }
-        })
+            isMaster: true,
+          },
+        });
 
         // Checking for company approval method
-        const hasActiveApprovalMethods = !!approvalMethods
-        const isMasterApproverAvailable = !!isThereMaster
-        const companyApprovalMethod = approvalMethods.approvalMethod
-        const companyApprovalLevel = approvalMethods.approvalLevel
-        const companyMinimumApprover = approvalMethods.minimumApprover
-        const isComplete = approvalMethods.isCompleted
+        const hasActiveApprovalMethods = !!approvalMethods;
+        const isMasterApproverAvailable = !!isThereMaster;
+        const companyApprovalMethod = approvalMethods.approvalMethod;
+        const companyApprovalLevel = approvalMethods.approvalLevel;
+        const companyMinimumApprover = approvalMethods.minimumApprover;
+        const isComplete = approvalMethods.isCompleted;
 
         if (!isComplete) {
           results.push(
-            'The approval method is not completed. Contact your admin.'
-          )
-          continue // Skip to the next iteration
+            "The approval method is not completed. Contact your admin."
+          );
+          continue; // Skip to the next iteration
         }
 
         // Check for payroll
-        const isPayrollProcessed = !!payroll
+        const isPayrollProcessed = !!payroll;
 
         // Checking for payroll definition
         const isPayrollDefinitionOrdered =
-          (payrollDefinition && payrollDefinition.status === 'ordered') ||
-          payrollDefinition.status === 'pending' ||
-          payrollDefinition.status === 'approved'
+          (payrollDefinition && payrollDefinition.status === "ordered") ||
+          payrollDefinition.status === "pending" ||
+          payrollDefinition.status === "approved";
 
         // Checking on approver
-        const amIActiveApprover = !!iAmApprover
-        const amIMasterApprover = !!iAmMasterApprover
+        const amIActiveApprover = !!iAmApprover;
+        const amIMasterApprover = !!iAmMasterApprover;
 
         // Check if approved by me
         const employepayrollapprove = await EmployeePayrollApprovement.count({
           where: {
             ApproverId: approverId,
             PayrollId: payrollId,
-            status: 'approved'
-          }
-        })
+            status: "approved",
+          },
+        });
 
         if (employepayrollapprove >= 1) {
-          results.push('You have already approved this payroll.')
-          continue // Skip to the next iteration
+          results.push("You have already approved this payroll.");
+          continue; // Skip to the next iteration
         }
 
         // Perform the approval algorithm
         if (hasActiveApprovalMethods) {
           // Check if payroll is ordered
           if (!isPayrollDefinitionOrdered) {
-            results.push('Sorry, this payroll is not ordered yet!')
-            continue // Skip to the next iteration
+            results.push("Sorry, this payroll is not ordered yet!");
+            continue; // Skip to the next iteration
           }
 
           // Check if I am an active approver
           if (!amIActiveApprover) {
             results.push(
-              'Sorry, your account does not have the necessary permissions to proceed.'
-            )
-            continue // Skip to the next iteration
+              "Sorry, your account does not have the necessary permissions to proceed."
+            );
+            continue; // Skip to the next iteration
           }
 
           // Check if the company has a master approver
           if (!isMasterApproverAvailable) {
             // Check the company's approval method
-            if (companyApprovalMethod === 'hierarchy') {
+            if (companyApprovalMethod === "hierarchy") {
               // Call hiereachPayrollStatus
               //  const eachPayrollStatus = payrolls.status;
               const herreturn = await handleHierarchicalApprove(
@@ -522,11 +531,11 @@ const arrayApproveApprovement = async (req, res, next) => {
                 approverLevel,
                 employeeId,
                 res
-              )
-              results.push(herreturn)
-            } else if (companyApprovalMethod === 'horizontal') {
+              );
+              results.push(herreturn);
+            } else if (companyApprovalMethod === "horizontal") {
               // Call horizontal method
-              const eachPayrollStatus = payrolls.status
+              const eachPayrollStatus = payrolls.status;
               const horreturn = await handleHorizontalApprove(
                 companyId,
                 companyMinimumApprover,
@@ -537,10 +546,10 @@ const arrayApproveApprovement = async (req, res, next) => {
                 approverId,
                 approverLevel,
                 employeeId
-              )
-              results.push(horreturn)
+              );
+              results.push(horreturn);
             } else {
-              results.push('Sorry, undefined approval method.')
+              results.push("Sorry, undefined approval method.");
             }
           }
 
@@ -549,9 +558,9 @@ const arrayApproveApprovement = async (req, res, next) => {
             // Check if I am a master approver
             if (!amIMasterApprover) {
               // Check the company's approval method
-              if (companyApprovalMethod === 'hierarchy') {
+              if (companyApprovalMethod === "hierarchy") {
                 // Call hierarchical method
-                const eachPayrollStatus = payrolls.status
+                const eachPayrollStatus = payrolls.status;
 
                 // const employeePayrollApprovement= await Payroll.findAll(
                 // );
@@ -572,13 +581,13 @@ const arrayApproveApprovement = async (req, res, next) => {
                   approverLevel,
                   employeeId,
                   res
-                )
+                );
 
                 // return res.json({isPayrollDefinitionOrdered:isPayrollDefinitionOrdered})
-                results.push(herreturn)
-              } else if (companyApprovalMethod === 'horizontal') {
+                results.push(herreturn);
+              } else if (companyApprovalMethod === "horizontal") {
                 // Call horizontal method
-                const eachPayrollStatus = payrolls.status
+                const eachPayrollStatus = payrolls.status;
                 const horreturn = await handleHorizontalApprove(
                   companyId,
                   companyMinimumApprover,
@@ -589,28 +598,28 @@ const arrayApproveApprovement = async (req, res, next) => {
                   approverId,
                   approverLevel,
                   employeeId
-                )
-                results.push(horreturn)
+                );
+                results.push(horreturn);
               } else {
-                results.push('Sorry, undefined approval method.')
+                results.push("Sorry, undefined approval method.");
               }
             } else if (amIMasterApprover) {
               // Check if the payroll is already approved
               const isApproved = await Payroll.findOne({
                 where: {
                   id: payrollId,
-                  status: 'approved'
-                }
-              })
+                  status: "approved",
+                },
+              });
 
               // return res.json({"payrolls.status":!isApproved})
               // does payroll activated
               const isActivated = await Payroll.findOne({
                 where: {
                   id: payrollId,
-                  status: 'active'
-                }
-              })
+                  status: "active",
+                },
+              });
 
               // const isActivated = await Payroll.findOne({
               //   where: {
@@ -625,31 +634,33 @@ const arrayApproveApprovement = async (req, res, next) => {
               // }
 
               if (!isApproved) {
-                results.push('Not approved.')
-                continue // Skip to the next iteration
+                results.push("Not approved.");
+                continue; // Skip to the next iteration
               }
-              return res.status(200).json(isApproved)
-              const data = await isApproved.update({ status: 'active' })
+              return res.status(200).json(isApproved);
+              const data = await isApproved.update({ status: "active" });
               // return res.status(200).json("data");
-              results.push('Payroll activated successfully.')
+              results.push("Payroll activated successfully.");
             }
           }
         } else {
-          results.push('Your approval method is not active.')
+          results.push("Your approval method is not active.");
         }
       } catch (error) {
-        console.error(`Error processing payroll with ID ${payrollId}:`, error)
-        continue 
+        console.error(`Error processing payroll with ID ${payrollId}:`, error);
+        continue;
       }
     }
 
-    return res.status(200).json(results)
+    return res.status(200).json(results);
   } catch (error) {
-  return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
-async function handleHierarchicalApprove (
+async function handleHierarchicalApprove(
   payrollDefinitionId,
   companyId,
   companyMinimumApprover,
@@ -677,39 +688,39 @@ async function handleHierarchicalApprove (
   const employeeApprovement = await EmployeePayrollApprovement.findOne({
     where: {
       CompanyId: companyId,
-      level: approverLevel - 1
-    }
-  })
+      level: approverLevel - 1,
+    },
+  });
   // return res.status(400).json({"Previous levels have not been approved":eachPayrollStatus})
   if (!isPayrollDefinitionOrdered) {
     // return next()
-    return res.status(400).json('This payroll has not been ordered yet.')
+    return res.status(400).json("This payroll has not been ordered yet.");
   }
 
-  const allowedStatuses = ['ordered', 'processed', 'rejected']
-  if (eachPayrollStatus === 'approved') {
-    return 'This payroll has already been approved.'
+  const allowedStatuses = ["ordered", "processed", "rejected"];
+  if (eachPayrollStatus === "approved") {
+    return "This payroll has already been approved.";
   } else if (allowedStatuses.includes(eachPayrollStatus)) {
     if (Number(approverLevel) !== 1) {
-      return 'The level 1 approver should approve first.'
+      return "The level 1 approver should approve first.";
     }
 
     const updatePayroll = await Payroll.findOne({
       where: {
-        id: payrollId
-      }
-    })
+        id: payrollId,
+      },
+    });
 
     if (!updatePayroll) {
-      return 'Payroll record not found.'
+      return "Payroll record not found.";
     }
 
-    const eachPayrollStatus = 'pending'
-    const employeestatus = 'approved'
-    const level = 1
+    const eachPayrollStatus = "pending";
+    const employeestatus = "approved";
+    const level = 1;
     // const payrollDefinitionId= payrollDefinitionId;
-    const payrollDefinitionStatus = 'pending'
-    const approvedDate = new Date()
+    const payrollDefinitionStatus = "pending";
+    const approvedDate = new Date();
 
     const approveResult = await handlePayrollApprove(
       payrollDefinitionId,
@@ -722,55 +733,55 @@ async function handleHierarchicalApprove (
       approverId,
       employeeId,
       companyId
-    )
+    );
 
-    return `Payroll approved successfully. Level: ${level}`
-  } else if (eachPayrollStatus === 'pending') {
+    return `Payroll approved successfully. Level: ${level}`;
+  } else if (eachPayrollStatus === "pending") {
     const previousApprover = await EmployeePayrollApprovement.findOne({
       where: {
         level: approverLevel - 1,
-        CompanyId: companyId
-      }
-    })
+        CompanyId: companyId,
+      },
+    });
     // return res.json("previusApprover",previousApprover)
     if (!previousApprover) {
       return res.status(400).json({
-        message: 'Previous levels have not been approved   '
+        message: "Previous levels have not been approved   ",
         // previousApprover
-      })
+      });
     }
     const foundHeriarchialApprovement =
       await EmployeePayrollApprovement.findOne({
         where: {
-          status: 'Approved',
-          level: approverLevel
-        }
-      })
+          status: "Approved",
+          level: approverLevel,
+        },
+      });
 
     if (foundHeriarchialApprovement) {
       return res.status(400).json({
-        message: 'This level is approved already  '
+        message: "This level is approved already  ",
         // previousApprover
-      })
+      });
     }
 
     const updatePayroll = await Payroll.findOne({
       where: {
-        id: payrollId
-      }
-    })
+        id: payrollId,
+      },
+    });
 
     if (!updatePayroll) {
-      return 'Payroll record not found.'
+      return "Payroll record not found.";
     }
 
     const eachPayrollStatus =
-      companyApprovalLevel === approverLevel ? 'approved' : 'pending'
-    const employeestatus = 'approved'
-    const level = app
-    const approvedDate = new Date()
+      companyApprovalLevel === approverLevel ? "approved" : "pending";
+    const employeestatus = "approved";
+    const level = app;
+    const approvedDate = new Date();
     const payrollDefinitionStatus =
-      companyApprovalLevel == approverLevel ? 'approved' : 'pending'
+      companyApprovalLevel == approverLevel ? "approved" : "pending";
 
     const approveresult = await handlePayrollApprove(
       payrollDefinitionId,
@@ -783,9 +794,9 @@ async function handleHierarchicalApprove (
       approverId,
       employeeId,
       companyId
-    )
+    );
 
-    return `Payroll approved successfully. Level: ${level}`
+    return `Payroll approved successfully. Level: ${level}`;
   }
 
   // return res.json(checkApprover)
@@ -904,11 +915,11 @@ async function handleHierarchicalApprove (
   //   // }
   // }
   else {
-    return 'Undefined payroll status.'
+    return "Undefined payroll status.";
   }
 }
 
-async function handleHorizontalApprove (
+async function handleHorizontalApprove(
   companyId,
   companyMinimumApprover,
   companyApprovalLevel,
@@ -920,36 +931,36 @@ async function handleHorizontalApprove (
   employeeId
 ) {
   if (!isPayrollDefinitionOrdered) {
-    return 'This payroll has not been ordered yet.'
+    return "This payroll has not been ordered yet.";
   }
 
   const isMinimumApproved = await EmployeePayrollApprovement.count({
     where: {
-      PayrollId: payrollId
-    }
-  })
+      PayrollId: payrollId,
+    },
+  });
 
-  const compLevel = Number(companyMinimumApprover)
-  const approved = Number(isMinimumApproved)
-  const isLast = approved + 1
+  const compLevel = Number(companyMinimumApprover);
+  const approved = Number(isMinimumApproved);
+  const isLast = approved + 1;
 
   if (approved >= compLevel) {
-    return 'This payroll has already been approved.'
+    return "This payroll has already been approved.";
   } else if (isLast < compLevel) {
     const updatePayroll = await Payroll.findOne({
       where: {
-        id: payrollId
-      }
-    })
+        id: payrollId,
+      },
+    });
 
     if (!updatePayroll) {
-      return 'Payroll record not found.'
+      return "Payroll record not found.";
     }
 
-    const eachPayrollStatus = 'pending'
-    const employeestatus = 'approved'
-    const level = 1
-    const approvedDate = new Date()
+    const eachPayrollStatus = "pending";
+    const employeestatus = "approved";
+    const level = 1;
+    const approvedDate = new Date();
 
     const approveresult = await handlePayrollApprove(
       payrollId,
@@ -960,24 +971,24 @@ async function handleHorizontalApprove (
       approverId,
       employeeId,
       companyId
-    )
+    );
 
-    return `Payroll approved successfully. Level: ${level}`
+    return `Payroll approved successfully. Level: ${level}`;
   } else if (isLast === compLevel) {
     const updatePayroll = await Payroll.findOne({
       where: {
-        id: payrollId
-      }
-    })
+        id: payrollId,
+      },
+    });
 
     if (!updatePayroll) {
-      return 'Payroll record not found.'
+      return "Payroll record not found.";
     }
 
-    const eachPayrollStatus = 'approved'
-    const employeestatus = 'approved'
-    const level = 1
-    const approvedDate = new Date()
+    const eachPayrollStatus = "approved";
+    const employeestatus = "approved";
+    const level = 1;
+    const approvedDate = new Date();
 
     const approveresult = await handlePayrollApprove(
       payrollId,
@@ -988,15 +999,15 @@ async function handleHorizontalApprove (
       approverId,
       employeeId,
       companyId
-    )
+    );
 
-    return `Payroll approved successfully. Level: ${level}`
+    return `Payroll approved successfully. Level: ${level}`;
   } else {
-    return 'Some error occurred.'
+    return "Some error occurred.";
   }
 }
 
-async function handlePayrollApprove (
+async function handlePayrollApprove(
   payrollDefinitionId,
   payrollDefinitionStatus,
   payrollId,
@@ -1008,68 +1019,68 @@ async function handlePayrollApprove (
   employeeId,
   companyId
 ) {
-  const payroll = await Payroll.findOne({ where: { id: payrollId } })
+  const payroll = await Payroll.findOne({ where: { id: payrollId } });
   const payrollDefinition = await PayrollDefinition.findOne({
-    where: { CompanyId: companyId, id: payrollDefinitionId }
-  })
+    where: { CompanyId: companyId, id: payrollDefinitionId },
+  });
   if (!payroll) {
-    return 'Payroll not found.'
+    return "Payroll not found.";
   }
 
   const newApprovement = await EmployeePayrollApprovement.create({
     status: employeestatus,
-    remark: '',
+    remark: "",
     level: level,
     approvedDate: approvedDate,
     PayrollId: payrollId,
     ApproverId: approverId,
     EmployeeId: employeeId,
-    CompanyId: companyId
-  })
-  await payroll.update({ status: eachPayrollStatus })
-  await payrollDefinition.update({ status: payrollDefinitionStatus })
+    CompanyId: companyId,
+  });
+  await payroll.update({ status: eachPayrollStatus });
+  await payrollDefinition.update({ status: payrollDefinitionStatus });
 
   return {
-    message: 'Payroll activated successfully.',
+    message: "Payroll activated successfully.",
     payroll: payroll,
-    approvement: newApprovement
-  }
+    approvement: newApprovement,
+  };
 }
 
 const rejectPayroll = async (req, res, next) => {
-  const companyId = Number(req.user.id) // Company ID
+  const companyId = Number(req.user.id); // Company ID
   const payrollIds = Array.isArray(req.body.Payrolls)
     ? req.body.Payrolls
-    : [Number(req.body.Payrolls)] // Convert to an array
-  const approverId = Number(req.body.approverId)
-  const results = []
-  const remark = req.body.remark
+    : [Number(req.body.Payrolls)]; // Convert to an array
+  const approverId = Number(req.body.approverId);
+  const results = [];
+  const remark = req.body.remark;
 
   try {
     // check if company has active approval method
     const activeApprovalMethod = await ApprovalMethod.findOne({
       where: {
         CompanyId: companyId,
-        isActive: true
-      }
-    })
+        isActive: true,
+      },
+    });
 
     if (!activeApprovalMethod) {
       return res.json(
-        'Your company has no active approval method defined. Contact the admin!'
-      )
+        "Your company has no active approval method defined. Contact the admin!"
+      );
     }
 
     // check if I am an active approver
     const activeApprover = await Approver.findOne({
       where: {
         id: approverId,
-        isActive: true
-      }
-    })
+        isActive: true,
+      },
+    });
 
     if (!activeApprover) {
-      return res.json('You are not an active approver.')
+      return res.json("You are not an active approver.");
     }
 
     // Process each payroll ID in the array
@@ -1077,52 +1088,52 @@ const rejectPayroll = async (req, res, next) => {
       // Check if payroll exists
       const thisPayroll = await Payroll.findOne({
         where: {
-          id: payrollId
-        }
-      })
+          id: payrollId,
+        },
+      });
 
       if (!thisPayroll) {
-        results.push({ payrollId, status: 'not found' })
+        results.push({ payrollId, status: "not found" });
       } else {
         // Update EmployeePayrollApprovement record
         const recordToUpdateOnApprovement =
           await EmployeePayrollApprovement.update(
             {
-              status: 'rejected',
+              status: "rejected",
               rejectedBy: approverId,
-              remark: remark
+              remark: remark,
             },
             {
               where: {
-                PayrollId: payrollId
-              }
+                PayrollId: payrollId,
+              },
             }
-          )
+          );
 
         if (!recordToUpdateOnApprovement) {
-          results.push({ payrollId, status: 'approvement record not found' })
+          results.push({ payrollId, status: "approvement record not found" });
         } else {
-          await thisPayroll.update({ status: 'rejected' })
+          await thisPayroll.update({ status: "rejected" });
 
           results.push({
             payrollId,
-            status: 'rejected',
+            status: "rejected",
             rejectedBy: approverId,
-            remark: 'revice allowance'
-          })
+            remark: "revice allowance",
+          });
         }
       }
     }
 
-    return res.json(results)
+    return res.json(results);
   } catch (error) {
     return res
       .status(503)
-      .json({ error: 'An error occurred while updating payrolls.' })
+      .json({ error: "An error occurred while updating payrolls." });
   }
-}
+};
 
-async function handleHierarchical (
+async function handleHierarchical(
   payroll,
   payrollDefinitionId,
   companyId,
@@ -1140,18 +1151,18 @@ async function handleHierarchical (
   const employeeApprovement = await EmployeePayrollApprovement.findOne({
     where: {
       CompanyId: companyId,
-      level: approverLevel - 1
-    }
-  })
+      level: approverLevel - 1,
+    },
+  });
   // return res.status(400).json({"Previous levels have not been approved":eachPayrollStatus})
   if (!isPayrollDefinitionOrdered) {
     // return next()
-    return res.status(400).json('This payroll has not been ordered yet.')
+    return res.status(400).json("This payroll has not been ordered yet.");
   }
 
-  const allowedStatuses = ['ordered', 'processed']
-  if (eachPayrollStatus === 'approved') {
-    return 'This payroll has already been approved.'
+  const allowedStatuses = ["ordered", "processed"];
+  if (eachPayrollStatus === "approved") {
+    return "This payroll has already been approved.";
   } else if (allowedStatuses.includes(eachPayrollStatus)) {
     // return res.status(200).json("data1111")
 
@@ -1159,17 +1170,17 @@ async function handleHierarchical (
       return next(
         createError.createError(
           400,
-          'The level 1 approver should approve first.'
+          "The level 1 approver should approve first."
         )
-      )
+      );
     }
 
-    const eachPayrollStatus = 'pending'
-    const employeestatus = 'approved'
-    const level = 1
+    const eachPayrollStatus = "pending";
+    const employeestatus = "approved";
+    const level = 1;
     // const payrollDefinitionId= payrollDefinitionId;
-    const payrollDefinitionStatus = 'pending'
-    const approvedDate = new Date()
+    const payrollDefinitionStatus = "pending";
+    const approvedDate = new Date();
 
     const approveResult = await handlePayrollA(
       payrollDefinitionId,
@@ -1182,29 +1193,29 @@ async function handleHierarchical (
       approverId,
       employeeId,
       companyId
-    )
+    );
 
-    return `Payroll approved successfully. Level: ${level}`
-  } else if (eachPayrollStatus === 'pending') {
+    return `Payroll approved successfully. Level: ${level}`;
+  } else if (eachPayrollStatus === "pending") {
     const previousApprover = await EmployeePayrollApprovement.findOne({
       where: {
         level: approverLevel - 1,
-        CompanyId: companyId
-      }
-    })
+        CompanyId: companyId,
+      },
+    });
     if (!previousApprover && approverLevel != 1) {
       return res.status(400).json({
-        message: 'Previous levels have not been approved   '
+        message: "Previous levels have not been approved   ",
         // previousApprover
-      })
+      });
     }
     const foundHeriarchialApprovement =
       await EmployeePayrollApprovement.findOne({
         where: {
-          status: 'Approved',
-          level: approverLevel
-        }
-      })
+          status: "Approved",
+          level: approverLevel,
+        },
+      });
 
     // if(foundHeriarchialApprovement){
     //   return res.status(400).json({message:"This level is approved already  ",
@@ -1212,12 +1223,12 @@ async function handleHierarchical (
     //   })
     // }
     const eachPayrollStatus =
-      companyApprovalLevel === approverLevel ? 'approved' : 'pending'
-    const employeestatus = 'approved'
-    const level = approverLevel
-    const approvedDate = new Date()
+      companyApprovalLevel === approverLevel ? "approved" : "pending";
+    const employeestatus = "approved";
+    const level = approverLevel;
+    const approvedDate = new Date();
     const payrollDefinitionStatus =
-      companyApprovalLevel == approverLevel ? 'approved' : 'pending'
+      companyApprovalLevel == approverLevel ? "approved" : "pending";
 
     const approveresult = await handlePayrollApprove(
       payrollDefinitionId,
@@ -1230,9 +1241,9 @@ async function handleHierarchical (
       approverId,
       employeeId,
       companyId
-    )
+    );
 
-    return `Payroll approved successfully. Level: ${level}`
+    return `Payroll approved successfully. Level: ${level}`;
   }
 
   // return res.json(checkApprover)
@@ -1351,11 +1362,11 @@ async function handleHierarchical (
   //   // }
   // }
   else {
-    return 'Undefined payroll status.'
+    return "Undefined payroll status.";
   }
 }
 
-async function handlePayrollA (
+async function handlePayrollA(
   payrollDefinitionId,
   payrollDefinitionStatus,
   payrollId,
@@ -1367,71 +1378,69 @@ async function handlePayrollA (
   employeeId,
   companyId
 ) {
-
-  const payroll = await Payroll.findOne({ where: { id: payrollId } })
+  const payroll = await Payroll.findOne({ where: { id: payrollId } });
   const payrollDefinition = await PayrollDefinition.findOne({
-    where: { CompanyId: companyId, id: payrollDefinitionId }
-  })
+    where: { CompanyId: companyId, id: payrollDefinitionId },
+  });
   if (!payroll) {
-    return 'Payroll not found.'
+    return "Payroll not found.";
   }
   const newApprovement = await EmployeePayrollApprovement.create({
     status: employeestatus,
-    remark: '',
+    remark: "",
     level: level,
     approvedDate: approvedDate,
     PayrollId: payrollId,
     ApproverId: approverId,
     EmployeeId: employeeId,
-    CompanyId: companyId
-  })
-  await payroll.update({ status: eachPayrollStatus })
-  await payrollDefinition.update({ status: payrollDefinitionStatus })
+    CompanyId: companyId,
+  });
+  await payroll.update({ status: eachPayrollStatus });
+  await payrollDefinition.update({ status: payrollDefinitionStatus });
 
   return {
-    message: 'Payroll activated successfully.',
+    message: "Payroll activated successfully.",
     payroll: payroll,
-    approvement: newApprovement
-  }
+    approvement: newApprovement,
+  };
 }
 
 const arrayApprove2Approvement = async (req, res) => {
   // Define constant variables here for this endpoint
-  const companyId = Number(req.user.id) // Company ID
-  const payrollIds = req.body.Payrolls // Array of Payroll IDs
-  const approverId = Number(req.body.approverId)
-  const results = []
+  const companyId = Number(req.user.id); // Company ID
+  const payrollIds = req.body.Payrolls; // Array of Payroll IDs
+  const approverId = Number(req.body.approverId);
+  const results = [];
   try {
     // Iterate over the array of payroll IDs
     for (const payrollId of payrollIds) {
       if (isNaN(payrollId) || payrollId === NaN) {
-       
-        continue // Skip to the next iteration
+        continue; // Skip to the next iteration
       }
       try {
         // Check if payroll exists and is processed
         const payroll = await Payroll.findOne({
           where: {
-            id: payrollId
-          }
-        })
+            id: payrollId,
+          },
+        });
 
         // return res.json(payroll)
 
         if (!payroll) {
-          results.push(`No such payroll created: ${payrollId}`)
-          continue // Skip to the next iteration
+          results.push(`No such payroll created: ${payrollId}`);
+          continue; // Skip to the next iteration
         }
 
-        const employeeId = Number(payroll.EmployeeId)
+        const employeeId = Number(payroll.EmployeeId);
 
         // Approval method
         const approvalMethods = await ApprovalMethod.findOne({
           where: {
             CompanyId: companyId,
-            isActive: true
-          }
-        })
+            isActive: true,
+          },
+        });
         // return res.status(200).json("data1111",approvalMethods  )
 
         // Is there a master approval?
@@ -1439,9 +1448,9 @@ const arrayApprove2Approvement = async (req, res) => {
           where: {
             CompanyId: companyId,
             isActive: true,
-            isThereMasterApprover: true
-          }
-        })
+            isThereMasterApprover: true,
+          },
+        });
 
         // return res.status(200).json("data1111")
 
@@ -1455,111 +1464,111 @@ const arrayApprove2Approvement = async (req, res) => {
         // Does this payroll processed/rejected?
         const payrolls = await Payroll.findOne({
           where: {
-            id: payrollId
-          }
-        })
+            id: payrollId,
+          },
+        });
 
         if (!payrolls) {
-          results.push('Payroll record not found')
-          continue // Skip to the next iteration
+          results.push("Payroll record not found");
+          continue; // Skip to the next iteration
         }
 
         // What is the status of the definition?
-        const payrollDefinitionId = payrolls.PayrollDefinitionId
+        const payrollDefinitionId = payrolls.PayrollDefinitionId;
 
         const payrollDefinition = await PayrollDefinition.findOne({
-          attributes: ['status'],
+          attributes: ["status"],
           where: {
-            id: payrollDefinitionId
-          }
-        })
+            id: payrollDefinitionId,
+          },
+        });
 
         // Am I an approver?
         const iAmApprover = await Approver.findOne({
           where: {
             id: approverId,
-            isActive: true
-          }
-        })
+            isActive: true,
+          },
+        });
 
         if (!iAmApprover) {
-          results.push('Access denied. You are not an active approver.')
-          continue // Skip to the next iteration
+          results.push("Access denied. You are not an active approver.");
+          continue; // Skip to the next iteration
         }
 
-        const approverLevel = iAmApprover.level
+        const approverLevel = iAmApprover.level;
 
         // Am I a master approver?
         const iAmMasterApprover = await Approver.findOne({
           where: {
             id: approverId,
             isActive: true,
-            isMaster: true
-          }
-        })
+            isMaster: true,
+          },
+        });
 
         // Checking for company approval method
-        const hasActiveApprovalMethods = !!approvalMethods
-        const isMasterApproverAvailable = !!isThereMaster
-        const companyApprovalMethod = approvalMethods.approvalMethod
-        const companyApprovalLevel = approvalMethods.approvalLevel
-        const companyMinimumApprover = approvalMethods.minimumApprover
-        const isComplete = approvalMethods.isCompleted
+        const hasActiveApprovalMethods = !!approvalMethods;
+        const isMasterApproverAvailable = !!isThereMaster;
+        const companyApprovalMethod = approvalMethods.approvalMethod;
+        const companyApprovalLevel = approvalMethods.approvalLevel;
+        const companyMinimumApprover = approvalMethods.minimumApprover;
+        const isComplete = approvalMethods.isCompleted;
 
         if (!isComplete) {
           results.push(
-            'The approval method is not completed. Contact your admin.'
-          )
-          continue // Skip to the next iteration
+            "The approval method is not completed. Contact your admin."
+          );
+          continue; // Skip to the next iteration
         }
 
         // Check for payroll
-        const isPayrollProcessed = !!payroll
+        const isPayrollProcessed = !!payroll;
 
         // Checking for payroll definition
         const isPayrollDefinitionOrdered =
-          payrollDefinition && payrollDefinition.status === 'ordered'
+          payrollDefinition && payrollDefinition.status === "ordered";
 
         // Checking on approver
-        const amIActiveApprover = !!iAmApprover
-        const amIMasterApprover = !!iAmMasterApprover
+        const amIActiveApprover = !!iAmApprover;
+        const amIMasterApprover = !!iAmMasterApprover;
 
         // Check if approved by me
         const employepayrollapprove = await EmployeePayrollApprovement.count({
           where: {
             ApproverId: approverId,
             PayrollId: payrollId,
-            status: 'approved'
-          }
-        })
+            status: "approved",
+          },
+        });
 
         if (employepayrollapprove >= 1) {
-          results.push('You have already approved this payroll.')
-          continue // Skip to the next iteration
+          results.push("You have already approved this payroll.");
+          continue; // Skip to the next iteration
         }
 
         // Perform the approval algorithm
         if (hasActiveApprovalMethods) {
           // Check if payroll is ordered
           if (!isPayrollDefinitionOrdered) {
-            results.push('Sorry, this payroll is not ordered yet!')
-            continue // Skip to the next iteration
+            results.push("Sorry, this payroll is not ordered yet!");
+            continue; // Skip to the next iteration
           }
 
           // Check if I am an active approver
           if (!amIActiveApprover) {
             results.push(
-              'Sorry, your account does not have the necessary permissions to proceed.'
-            )
-            continue // Skip to the next iteration
+              "Sorry, your account does not have the necessary permissions to proceed."
+            );
+            continue; // Skip to the next iteration
           }
 
           // Check if the company has a master approver
           if (!isMasterApproverAvailable) {
             // Check the company's approval method
-            if (companyApprovalMethod === 'hierarchy') {
+            if (companyApprovalMethod === "hierarchy") {
               // Call hierarchical method
-              const eachPayrollStatus = payrolls.status
+              const eachPayrollStatus = payrolls.status;
               const herreturn = await handleHierarchicalApprove(
                 companyId,
                 companyMinimumApprover,
@@ -1570,11 +1579,11 @@ const arrayApprove2Approvement = async (req, res) => {
                 approverId,
                 approverLevel,
                 employeeId
-              )
-              results.push(herreturn)
-            } else if (companyApprovalMethod === 'horizontal') {
+              );
+              results.push(herreturn);
+            } else if (companyApprovalMethod === "horizontal") {
               // Call horizontal method
-              const eachPayrollStatus = payrolls.status
+              const eachPayrollStatus = payrolls.status;
               const horreturn = await handleHorizontalApprove(
                 companyId,
                 companyMinimumApprover,
@@ -1585,18 +1594,18 @@ const arrayApprove2Approvement = async (req, res) => {
                 approverId,
                 approverLevel,
                 employeeId
-              )
-              results.push(horreturn)
+              );
+              results.push(horreturn);
             } else {
-              results.push('Sorry, undefined approval method.')
+              results.push("Sorry, undefined approval method.");
             }
           } else {
             // Check if I am a master approver
             if (!amIMasterApprover) {
               // Check the company's approval method
-              if (companyApprovalMethod === 'hierarchy') {
+              if (companyApprovalMethod === "hierarchy") {
                 // Call hierarchical method
-                const eachPayrollStatus = payrolls.status
+                const eachPayrollStatus = payrolls.status;
                 const herreturn = await handleHierarchicalApprove(
                   companyId,
                   companyMinimumApprover,
@@ -1607,11 +1616,11 @@ const arrayApprove2Approvement = async (req, res) => {
                   approverId,
                   approverLevel,
                   employeeId
-                )
-                results.push(herreturn)
-              } else if (companyApprovalMethod === 'horizontal') {
+                );
+                results.push(herreturn);
+              } else if (companyApprovalMethod === "horizontal") {
                 // Call horizontal method
-                const eachPayrollStatus = payrolls.status
+                const eachPayrollStatus = payrolls.status;
                 const horreturn = await handleHorizontalApprove(
                   companyId,
                   companyMinimumApprover,
@@ -1622,129 +1631,129 @@ const arrayApprove2Approvement = async (req, res) => {
                   approverId,
                   approverLevel,
                   employeeId
-                )
-                results.push(horreturn)
+                );
+                results.push(horreturn);
               } else {
-                results.push('Sorry, undefined approval method.')
+                results.push("Sorry, undefined approval method.");
               }
             } else if (amIMasterApprover) {
               // Check if the payroll is already approved
               const isApproved = await Payroll.findOne({
                 where: {
                   id: payrollId,
-                  status: 'approved'
-                }
-              })
+                  status: "approved",
+                },
+              });
               // does payroll activated
               const isActivated = await Payroll.findOne({
                 where: {
                   id: payrollId,
-                  status: 'active'
-                }
-              })
+                  status: "active",
+                },
+              });
 
               if (isActivated) {
-                results.push('Already activated.')
-                continue // Skip to the next iteration
+                results.push("Already activated.");
+                continue; // Skip to the next iteration
               }
 
               if (!isApproved) {
-                results.push('Not approved.')
-                continue // Skip to the next iteration
+                results.push("Not approved.");
+                continue; // Skip to the next iteration
               }
 
-              await isApproved.update({ status: 'active' })
+              await isApproved.update({ status: "active" });
 
-              results.push('Payroll activated successfully.')
+              results.push("Payroll activated successfully.");
             }
           }
         } else {
-          results.push('Your approval method is not active.')
+          results.push("Your approval method is not active.");
         }
       } catch (error) {
-        console.error(`Error processing payroll with ID ${payrollId}:`, error)
-        continue // Skip to the next iteration
+        console.error(`Error processing payroll with ID ${payrollId}:`, error);
+        continue; // Skip to the next iteration
       }
     }
 
-    return res.json(results)
+    return res.json(results);
   } catch (error) {
-    console.error(error)
+    console.error(error);
     // return res.status(503).json({ message: 'Internal server error' });
   }
-}
+};
 
 const approveStatusOfPayroll = async (req, res, next) => {
   try {
     const companyId =
-      req.user.role === 'approver' ? req.user.CompanyId : Number(req.user.id) 
-    const payrollIds = req.body.Payrolls 
+      req.user.role === "approver" ? req.user.CompanyId : Number(req.user.id);
+    const payrollIds = req.body.Payrolls;
 
-    const employeeId = Number(req.user.id)
-    const results = []
+    const employeeId = Number(req.user.id);
+    const results = [];
 
-    const role = req.user.role //
+    const role = req.user.role; //
     const uniquePayrollDefinitionIds = await Payroll.findAll({
       attributes: [
         [
           sequelize.literal('DISTINCT "PayrollDefinitionId"'),
-          'PayrollDefinitionId'
-        ]
+          "PayrollDefinitionId",
+        ],
       ],
       where: {
-        id: payrollIds
+        id: payrollIds,
       },
-      distinct: true
-    })
+      distinct: true,
+    });
 
     if (uniquePayrollDefinitionIds.length !== 1) {
       return next(
         createError.createError(
           400,
-          'Payrolls have different PayrollDefinitionId values.'
+          "Payrolls have different PayrollDefinitionId values."
         )
-      )
+      );
     }
 
     const payrollDefinitionID =
-      uniquePayrollDefinitionIds[0].PayrollDefinitionId
+      uniquePayrollDefinitionIds[0].PayrollDefinitionId;
 
     const approver = await Approver.findOne({
-      where: { EmployeeId: employeeId, isActive: true }
-    })
+      where: { EmployeeId: employeeId, isActive: true },
+    });
 
     if (!approver) {
-      return next(createError.createError(404, 'Approver not found'))
+      return next(createError.createError(404, "Approver not found"));
     }
-    const approverId = Number(approver?.id)
+    const approverId = Number(approver?.id);
     const approvalMethods = await ApprovalMethod.findOne({
       where: {
         CompanyId: companyId,
-        isActive: true
-      }
-    })
+        isActive: true,
+      },
+    });
 
     if (!approvalMethods) {
-      return next(createError.createError(404, 'Define approval method first'))
+      return next(createError.createError(404, "Define approval method first"));
     }
 
     if (!approvalMethods.isCompleted) {
-      return next(createError.createError(404, 'Assign all approver first'))
+      return next(createError.createError(404, "Assign all approver first"));
     }
-    const isMasterApproverAvailable = approvalMethods.isThereMasterApprover
-    const isActiveApprover = !!approver
-    const approverLevel = approver.level
-    const isMasterApprover = approver.isMaster
-    const companyApprovalLevel = approvalMethods.approvalLevel
-    const approvalType = approvalMethods.approvalMethod
-    const minimumApprover = approvalMethods.minimumApprover
-    let checkMaximumReached = false
+    const isMasterApproverAvailable = approvalMethods.isThereMasterApprover;
+    const isActiveApprover = !!approver;
+    const approverLevel = approver.level;
+    const isMasterApprover = approver.isMaster;
+    const companyApprovalLevel = approvalMethods.approvalLevel;
+    const approvalType = approvalMethods.approvalMethod;
+    const minimumApprover = approvalMethods.minimumApprover;
+    let checkMaximumReached = false;
     const checkPayrolls = await Payroll.findAll({
       where: {
         id: payrollIds,
-        status: 'approved'
-      }
-    })
+        status: "approved",
+      },
+    });
 
     if (checkPayrolls.length != 0) {
       return next(
@@ -1752,73 +1761,72 @@ const approveStatusOfPayroll = async (req, res, next) => {
           400,
           `   ${checkPayrolls.length}  Payroll already approved}`
         )
-      )
+      );
     }
     const foundHeriarchialApprovement =
       await EmployeePayrollApprovement.findAll({
         where: {
-          status: ['approved', 'pending'],
+          status: ["approved", "pending"],
           level: approverLevel,
-          PayrollId: payrollIds
-        }
-      })
+          PayrollId: payrollIds,
+        },
+      });
 
-    if (approvalType === 'hierarchy') {
-      if (isMasterApprover && approvalType === 'hierarchy') {
+    if (approvalType === "hierarchy") {
+      if (isMasterApprover && approvalType === "hierarchy") {
         const previousApprovers = await EmployeePayrollApprovement.findAll({
           attributes: [
-            'PayrollId',
-            [sequelize.fn('MAX', sequelize.col('level')), 'maxLevel']
+            "PayrollId",
+            [sequelize.fn("MAX", sequelize.col("level")), "maxLevel"],
           ],
           where: {
             CompanyId: companyId,
-            PayrollId: payrollIds
+            PayrollId: payrollIds,
           },
-          group: ['PayrollId']
-        })
+          group: ["PayrollId"],
+        });
 
-        const formattedResponse = payrollIds.map(payrollId => {
+        const formattedResponse = payrollIds.map((payrollId) => {
           const foundPayroll = previousApprovers.find(
-            prevApprover => prevApprover?.PayrollId === payrollId
-          )
+            (prevApprover) => prevApprover?.PayrollId === payrollId
+          );
           return {
             PayrollId: payrollId,
-            maxLevel: foundPayroll ? foundPayroll?.dataValues?.maxLevel : 0
-          }
-        })
+            maxLevel: foundPayroll ? foundPayroll?.dataValues?.maxLevel : 0,
+          };
+        });
 
-        formattedResponse.forEach(item => {
-       
+        formattedResponse.forEach((item) => {
           //
           if (item.maxLevel < companyApprovalLevel) {
-            checkMaximumReached = true
-            return
+            checkMaximumReached = true;
+            return;
           }
-        })
+        });
         if (checkMaximumReached) {
           return next(
             createError.createError(
               400,
               `At least one payroll has not reached the required approval level.`
             )
-          )
+          );
         }
 
         if (formattedResponse.length === 0) {
           return next(
             createError.createError(
               400,
-              'Payrolls have reached the required approval level.'
+              "Payrolls have reached the required approval level."
             )
-          )
+          );
         }
         const previousApprover = await EmployeePayrollApprovement.findAll({
           where: {
             level: companyApprovalLevel,
             CompanyId: companyId,
-            PayrollId: payrollIds
-          }
-        })
+            PayrollId: payrollIds,
+          },
+        });
 
         if (previousApprover.length === 0) {
           return next(
@@ -1826,7 +1834,7 @@ const approveStatusOfPayroll = async (req, res, next) => {
               400,
               `Its have to be approved first by other approvers`
             )
-          )
+          );
         }
       }
 
@@ -1836,15 +1844,15 @@ const approveStatusOfPayroll = async (req, res, next) => {
             400,
             ` ${foundHeriarchialApprovement.length} payroll is  approved at this level `
           )
-        )
+        );
       }
       const checkApproved = await EmployeePayrollApprovement.findAll({
         where: {
           ApproverId: approverId,
-          PayrollId: payrollIds
+          PayrollId: payrollIds,
           // status:"approved"
-        }
-      })
+        },
+      });
 
       if (checkApproved.length != 0 && !isMasterApprover) {
         return next(
@@ -1852,497 +1860,829 @@ const approveStatusOfPayroll = async (req, res, next) => {
             400,
             `   ${checkApproved.length}  Payroll already approved by the approver}`
           )
-        )
+        );
       }
     }
 
-    if (approvalType === 'horizontal') {
+    if (approvalType === "horizontal") {
       const result = await EmployeePayrollApprovement.findAll({
         attributes: [
-          'PayrollId',
-          [sequelize.fn('COUNT', sequelize.col('ApproverId')), 'approverCount']
+          "PayrollId",
+          [sequelize.fn("COUNT", sequelize.col("ApproverId")), "approverCount"],
         ],
         where: {
-          PayrollId: payrollIds
+          PayrollId: payrollIds,
         },
-        group: ['PayrollId'],
-        having: sequelize.literal('COUNT(DISTINCT "ApproverId") < 2')
-      })
+        group: ["PayrollId"],
+        having: sequelize.literal('COUNT(DISTINCT "ApproverId") < 2'),
+      });
 
       const checkApproved = await EmployeePayrollApprovement.findAll({
         where: {
           ApproverId: approverId,
-          PayrollId: payrollIds
+          PayrollId: payrollIds,
           // status:"approved"
-        }
-      })
+        },
+      });
       if (checkApproved.length != 0 && !isMasterApprover) {
         return next(
           createError.createError(
             400,
             `   ${checkApproved.length}  Payroll already approved by the approver}`
           )
-        )
+        );
       }
 
       const getAprovedPayroll = await EmployeePayrollApprovement.findAll({
         where: {
           // status: ["Approved" , "pending"],
           // level:approverLevel,
-          PayrollId: payrollIds
-        }
-      })
+          PayrollId: payrollIds,
+        },
+      });
     }
 
     for (const payroll in payrollIds) {
-      if (approvalType === 'hierarchy') {
+      if (approvalType === "hierarchy") {
         if (approverLevel != 1 && !isMasterApprover) {
           const previousApprover = await EmployeePayrollApprovement.findOne({
             where: {
               level: approverLevel - 1,
               CompanyId: companyId,
-              PayrollId: payrollIds[payroll]
-            }
-          })
+              PayrollId: payrollIds[payroll],
+            },
+          });
 
           if (!previousApprover || previousApprover?.length === 0) {
             return next(
               createError.createError(
                 400,
-                'Previous levels have not been approved'
+                "Previous levels have not been approved"
               )
-            )
+            );
           }
         }
       }
     }
 
     if (isMasterApproverAvailable) {
-      const transaction = await sequelize.transaction()
-      if (approvalType === 'horizontal') {
+      const transaction = await sequelize.transaction();
+      if (approvalType === "horizontal") {
         if (isMasterApprover) {
-          const level = 1
-          const approvedDate = new Date()
-          const approvementsData = payrollIds.map(async payrollId => {
+          const level = 1;
+          const approvedDate = new Date();
+          const approvementsData = payrollIds.map(async (payrollId) => {
             // try {
             const getAprovedPayroll = await EmployeePayrollApprovement.findAll({
               where: {
-                PayrollId: payrollId
-              }
-            })
+                PayrollId: payrollId,
+              },
+            });
 
             if (getAprovedPayroll.length < minimumApprover) {
               return next(
-                createError.createError(400, 'minimum approvel not reached')
-              )
+                createError.createError(400, "minimum approvel not reached")
+              );
             }
             const payroll = await Payroll.findOne({
-              where: { id: payrollId } 
-            })
+              where: { id: payrollId },
+            });
             await payroll.update(
               {
                 status:
                   getAprovedPayroll?.length + 1 >= minimumApprover &&
                   isMasterApprover
-                    ? 'approved'
-                    : 'pending'
+                    ? "approved"
+                    : "pending",
               },
               { transaction }
-            )
+            );
             if (payroll && payroll.EmployeeId) {
               return {
-                status: 'approved',
-                remark: '',
+                status: "approved",
+                remark: "",
                 level: level,
                 approvedDate: approvedDate,
                 PayrollId: payrollId,
                 ApproverId: approverId,
                 EmployeeId: payroll.EmployeeId,
-                CompanyId: companyId
-              }
+                CompanyId: companyId,
+              };
             } else {
-              console.error(`No Payroll found for PayrollId: ${payrollId}`)
+              console.error(`No Payroll found for PayrollId: ${payrollId}`);
               return next(
                 createError.createError(
                   404,
                   `No payroll found for payroll id  ${payrollId}`
                 )
-              )
+              );
             }
-          })
+          });
 
           const validApprovementsData = (
             await Promise.all(approvementsData)
-          ).filter(Boolean)
+          ).filter(Boolean);
 
           try {
             const newApprovements = await EmployeePayrollApprovement.bulkCreate(
               validApprovementsData,
               { transaction }
-            )
+            );
 
-            await transaction.commit()
+            await transaction.commit();
 
             const checkAllPayrollApproved = await Payroll.count({
               where: {
                 PayrollDefinitionId: payrollDefinitionID,
                 status: {
-                  [Op.not]: 'approved' 
-                }
-              }
-            })
+                  [Op.not]: "approved",
+                },
+              },
+            });
 
             if (checkAllPayrollApproved === 0) {
               if (payrollDefinitionID) {
                 const updated = await PayrollDefinition.update(
-                  { status: 'approved' },
+                  { status: "approved" },
                   { where: { id: payrollDefinitionID } }
-                )
+                );
               }
             }
 
             return res.status(200).json({
-              message: 'Payroll approved successfully.',
-              data: validApprovementsData
-            })
+              message: "Payroll approved successfully.",
+              data: validApprovementsData,
+            });
           } catch (error) {
-            await transaction.rollback()
-            console.error('Error creating bulk records:', error)
+            await transaction.rollback();
+            console.error("Error creating bulk records:", error);
             return next(
-              createError.createError(503, 'Error creating bulk records')
-            )
+              createError.createError(503, "Error creating bulk records")
+            );
           }
         }
 
-
-        const level = 1 
-        const approvementsData = payrollIds.map(async payrollId => {
+        const level = 1;
+        const approvementsData = payrollIds.map(async (payrollId) => {
           const getAprovedPayroll = await EmployeePayrollApprovement.findAll({
             where: {
-              PayrollId: payrollId
-            }
-          })
+              PayrollId: payrollId,
+            },
+          });
 
           if (getAprovedPayroll.length >= minimumApprover) {
             return next(
               createError.createError(
                 400,
-                'Minimum approver is reached waiting for Master approver'
+                "Minimum approver is reached waiting for Master approver"
               )
-            )
+            );
           }
           const payroll = await Payroll.findOne({
-            where: { id: payrollId } 
-          })
-          await payroll.update({ status: 'pending' }, { transaction })
+            where: { id: payrollId },
+          });
+          await payroll.update({ status: "pending" }, { transaction });
           if (payroll && payroll.EmployeeId) {
             return {
-              status: 'approved',
-              remark: '',
+              status: "approved",
+              remark: "",
               level: level,
               approvedDate: approvedDate,
               PayrollId: payrollId,
               ApproverId: approverId,
               EmployeeId: payroll.EmployeeId,
-              CompanyId: companyId
-            }
+              CompanyId: companyId,
+            };
           } else {
-            console.error(`No Payroll found for PayrollId: ${payrollId}`)
+            console.error(`No Payroll found for PayrollId: ${payrollId}`);
             return next(
               createError.createError(
                 404,
                 `No payroll found for payroll id  ${payrollId}`
               )
-            )
+            );
           }
-        })
+        });
 
         const validApprovementsData = (
           await Promise.all(approvementsData)
-        ).filter(Boolean)
+        ).filter(Boolean);
 
         const newApprovements = await EmployeePayrollApprovement.bulkCreate(
           validApprovementsData,
           { transaction }
-        )
-        await transaction.commit()
+        );
+        await transaction.commit();
         return res.status(200).json({
-          message: 'Payroll approved successfully.',
-          data: validApprovementsData
-        })
+          message: "Payroll approved successfully.",
+          data: validApprovementsData,
+        });
       }
 
-      if (approvalType === 'hierarchy') {
-        const transaction = await sequelize.transaction()
-        const level = approverLevel
-        const approvedDate = new Date()
-        const approvementsData = payrollIds.map(
-          async payrollId => {
-            // try {
-            const payroll = await Payroll.findOne({
-              where: { id: payrollId }
-            })
+      if (approvalType === "hierarchy") {
+        const transaction = await sequelize.transaction();
+        const level = approverLevel;
+        const approvedDate = new Date();
+        const approvementsData = payrollIds.map(async (payrollId) => {
+          // try {
+          const payroll = await Payroll.findOne({
+            where: { id: payrollId },
+          });
 
-            await payroll.update(
-              { status: isMasterApprover ? 'approved' : 'pending' },
-              { transaction }
-            )
-            if (payroll && payroll.EmployeeId) {
-              return {
-                status: 'approved',
-                remark: '',
-                level: level,
-                approvedDate: approvedDate,
-                PayrollId: payrollId,
-                ApproverId: approverId,
-                EmployeeId: payroll.EmployeeId,
-                CompanyId: companyId
-              }
-            } else {
-              console.error(`No Payroll found for PayrollId: ${payrollId}`)
-              return next(
-                createError.createError(
-                  404,
-                  `No payroll found for payroll id  ${payrollId}`
-                )
+          await payroll.update(
+            { status: isMasterApprover ? "approved" : "pending" },
+            { transaction }
+          );
+          if (payroll && payroll.EmployeeId) {
+            return {
+              status: "approved",
+              remark: "",
+              level: level,
+              approvedDate: approvedDate,
+              PayrollId: payrollId,
+              ApproverId: approverId,
+              EmployeeId: payroll.EmployeeId,
+              CompanyId: companyId,
+            };
+          } else {
+            console.error(`No Payroll found for PayrollId: ${payrollId}`);
+            return next(
+              createError.createError(
+                404,
+                `No payroll found for payroll id  ${payrollId}`
               )
-            }
+            );
           }
-        )
+        });
         const validApprovementsData = (
           await Promise.all(approvementsData)
-        ).filter(Boolean)
+        ).filter(Boolean);
 
         try {
           const newApprovements = await EmployeePayrollApprovement.bulkCreate(
             validApprovementsData,
             { transaction }
-          )
-          await transaction.commit()
+          );
+          await transaction.commit();
           const checkAllPayrollApproved = await Payroll.count({
             where: {
               PayrollDefinitionId: payrollDefinitionID,
               status: {
-                [Op.not]: 'approved' 
-              }
-            }
-          })
+                [Op.not]: "approved",
+              },
+            },
+          });
           if (checkAllPayrollApproved === 0) {
             if (payrollDefinitionID) {
               const updated = await PayrollDefinition.update(
-                { status: 'approved' },
+                { status: "approved" },
                 { where: { id: payrollDefinitionID } }
-              )
+              );
             }
           }
           return res.status(200).json({
-            message: 'Payroll approved successfully.',
-            data: validApprovementsData
-          })
+            message: "Payroll approved successfully.",
+            data: validApprovementsData,
+          });
         } catch (error) {
-          await transaction.rollback()
+          await transaction.rollback();
           console.error(
-            'Error creating bulk records   vertical is master approvers:',
+            "Error creating bulk records   vertical is master approvers:",
             error
-          )
-          return next(createError.createError(503, "An error occurred, please try again later"));
+          );
+          return next(
+            createError.createError(
+              503,
+              "An error occurred, please try again later"
+            )
+          );
         }
       }
     }
     if (!isMasterApproverAvailable) {
-      const transaction = await sequelize.transaction()
-      if (approvalType === 'horizontal') {
-        const level = 1
-        const approvedDate = new Date()
-        const approvementsData = payrollIds.map(async payrollId => {
+      const transaction = await sequelize.transaction();
+      if (approvalType === "horizontal") {
+        const level = 1;
+        const approvedDate = new Date();
+        const approvementsData = payrollIds.map(async (payrollId) => {
           try {
             const getAprovedPayroll = await EmployeePayrollApprovement.findAll({
               where: {
                 // status: ["Approved" , "pending"],
                 // level:approverLevel,
-                PayrollId: payrollId
-              }
-            })
+                PayrollId: payrollId,
+              },
+            });
             const payroll = await Payroll.findOne({
-              where: { id: payrollId }
-            })
+              where: { id: payrollId },
+            });
 
             await payroll.update(
               {
                 status:
                   getAprovedPayroll?.length + 1 < minimumApprover
-                    ? 'pending'
-                    : 'approved'
+                    ? "pending"
+                    : "approved",
               },
               { transaction }
-            )
+            );
             if (payroll && payroll.EmployeeId) {
               return {
-                status: 'approved',
-                remark: '',
+                status: "approved",
+                remark: "",
                 level: level,
                 approvedDate: approvedDate,
                 PayrollId: payrollId,
                 ApproverId: approverId,
                 EmployeeId: payroll.EmployeeId,
-                CompanyId: companyId
-              }
+                CompanyId: companyId,
+              };
             } else {
-              console.error(`No Payroll found for PayrollId: ${payrollId}`)
+              console.error(`No Payroll found for PayrollId: ${payrollId}`);
               return next(
                 createError.createError(
                   404,
                   `No payroll found for payroll id  ${payrollId}`
                 )
-              )
+              );
             }
           } catch (error) {
             // await transaction.rollback();
             console.error(
               `Error retrieving Payroll for PayrollId: ${payrollId}`,
               error
-            )
+            );
             return next(
-              createError.createError(503, 'Error retrieving payrolls')
-            )
+              createError.createError(503, "Error retrieving payrolls")
+            );
           }
-        })
+        });
 
         const validApprovementsData = (
           await Promise.all(approvementsData)
-        ).filter(Boolean)
+        ).filter(Boolean);
 
         try {
           const newApprovements = await EmployeePayrollApprovement.bulkCreate(
             validApprovementsData,
             { transaction }
-          )
-          await transaction.commit()
+          );
+          await transaction.commit();
 
           const checkAllPayrollApproved = await Payroll.count({
             where: {
               PayrollDefinitionId: payrollDefinitionID,
               status: {
-                [Op.not]: 'approved' // Exclude payrolls with status 'approved'
-              }
-            }
-          })
+                [Op.not]: "approved", // Exclude payrolls with status 'approved'
+              },
+            },
+          });
 
           if (checkAllPayrollApproved === 0) {
             if (payrollDefinitionID) {
               const updated = await PayrollDefinition.update(
-                { status: 'approved' },
+                { status: "approved" },
                 { where: { id: payrollDefinitionID } }
-              )
+              );
             }
           }
 
           return res.status(200).json({
-            message: 'Payroll approved successfully.',
-            data: validApprovementsData
-          })
+            message: "Payroll approved successfully.",
+            data: validApprovementsData,
+          });
         } catch (error) {
-          await transaction.rollback()
-          console.error('Error creating bulk records:', error)
+          await transaction.rollback();
+          console.error("Error creating bulk records:", error);
 
-          return createError.createError(503, 'Internal server error')
+          return createError.createError(503, "Internal server error");
         }
       }
-      if (approvalType === 'hierarchy') {
-
-        const level = approverLevel
-        const approvedDate = new Date()
-        const approvementsData = payrollIds.map(async payrollId => {
+      if (approvalType === "hierarchy") {
+        const level = approverLevel;
+        const approvedDate = new Date();
+        const approvementsData = payrollIds.map(async (payrollId) => {
           try {
             const payroll = await Payroll.findOne({
-              where: { id: payrollId }
-            })
+              where: { id: payrollId },
+            });
 
             await payroll.update(
               {
                 status:
-                  companyApprovalLevel != approverLevel ? 'pending' : 'approved'
+                  companyApprovalLevel != approverLevel
+                    ? "pending"
+                    : "approved",
               },
               { transaction }
-            )
+            );
             if (payroll && payroll.EmployeeId) {
               return {
-                status: 'approved',
-                remark: '',
+                status: "approved",
+                remark: "",
                 level: level,
                 approvedDate: approvedDate,
                 PayrollId: payrollId,
                 ApproverId: approverId,
                 EmployeeId: payroll.EmployeeId,
-                CompanyId: companyId
-              }
+                CompanyId: companyId,
+              };
             } else {
-              console.error(`No Payroll found for PayrollId: ${payrollId}`)
+              console.error(`No Payroll found for PayrollId: ${payrollId}`);
               return next(
                 createError.createError(
                   404,
                   `No payroll found for payroll id  ${payrollId}`
                 )
-              )
+              );
             }
           } catch (error) {
             console.error(
               `Error retrieving Payroll for PayrollId: ${payrollId}`,
               error
-            )
+            );
             return createError.createError(
               503,
-              'Error retrieving Payroll for PayrollId:'
-            )
+              "Error retrieving Payroll for PayrollId:"
+            );
           }
-        })
+        });
 
         const validApprovementsData = (
           await Promise.all(approvementsData)
-        ).filter(Boolean)
+        ).filter(Boolean);
 
         try {
           const newApprovements = await EmployeePayrollApprovement.bulkCreate(
             validApprovementsData,
             { transaction }
-          )
-          await transaction.commit()
+          );
+          await transaction.commit();
 
           const checkAllPayrollApproved = await Payroll.count({
             where: {
               PayrollDefinitionId: payrollDefinitionID,
               status: {
-                [Op.not]: 'approved'
-              }
-            }
-          })
+                [Op.not]: "approved",
+              },
+            },
+          });
 
           if (checkAllPayrollApproved === 0) {
             if (payrollDefinitionID) {
               const updated = await PayrollDefinition.update(
-                { status: 'approved' },
+                { status: "approved" },
                 { where: { id: payrollDefinitionID } }
-              )
+              );
             }
           }
 
           return res.status(200).json({
-            message: 'Payroll approved successfully.',
-            data: validApprovementsData
-          })
+            message: "Payroll approved successfully.",
+            data: validApprovementsData,
+          });
         } catch (error) {
           // await transaction.rollback();
-          console.error('Error creating bulk records:', error)
-          return next(createError.createError(503, "An error occurred, please try again later"));
+          console.error("Error creating bulk records:", error);
+          return next(
+            createError.createError(
+              503,
+              "An error occurred, please try again later"
+            )
+          );
         }
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
-}
+};
 
+const approveStatusOfPayroll1 = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const companyId =
+      req.user.role === "approver" ? req.user.CompanyId : Number(req.user.id);
+    const payrollIds = req.body.Payrolls; // Multiple payrolls
+    const employeeId = Number(req.user.id);
+
+    if (!payrollIds || !Array.isArray(payrollIds) || payrollIds.length === 0) {
+      return next(createError.createError(400, "No payroll IDs provided"));
+    }
+
+    // Check if all payrollIds exist in the database
+    const existingPayrolls = await Payroll.findAll({
+      where: {
+        id: payrollIds,
+      },
+      attributes: ["id"],
+    });
+
+    const existingPayrollIds = existingPayrolls.map((payroll) => payroll.id);
+
+    // Check if any payrollId is missing
+    const missingPayrollIds = payrollIds.filter(
+      (payrollId) => !existingPayrollIds.includes(payrollId)
+    );
+
+    if (missingPayrollIds.length > 0) {
+      return next(
+        createError.createError(
+          404,
+          `Some payroll IDs not found in the database`
+        )
+      );
+    }
+
+    // Fetch approver details
+    const approver = await Approver.findOne({
+      where: { EmployeeId: employeeId, isActive: true },
+    });
+    if (!approver)
+      return next(createError.createError(404, "Approver not found"));
+
+    // Fetch approval method details
+    const approvalMethods = await ApprovalMethod.findOne({
+      where: { CompanyId: companyId, isActive: true },
+    });
+
+    if (!approvalMethods)
+      return next(createError.createError(404, "Define approval method first"));
+    if (!approvalMethods.isCompleted)
+      return next(createError.createError(404, "Assign all approvers first"));
+
+    const {
+      isThereMasterApprover,
+      approvalMethod,
+      approvalLevel, // Total number of levels (e.g., 3)
+      minimumApprover,
+    } = approvalMethods;
+    const { isMaster, level: approverLevel } = approver;
+
+    const checkPayrolls = await Payroll.findAll({
+      where: { id: payrollIds, status: "approved" },
+    });
+    if (checkPayrolls.length > 0) {
+      return next(
+        createError.createError(
+          400,
+          `${checkPayrolls.length} Payroll(s) already approved`
+        )
+      );
+    }
+
+    // Master Approver Case (Instant Approval)
+    if (isThereMasterApprover && isMaster) {
+      await Payroll.update(
+        { status: "approved" },
+        { where: { id: payrollIds }, transaction }
+      );
+
+      // Create multiple approval records
+      await EmployeePayrollApprovement.bulkCreate(
+        payrollIds.map((payrollId) => ({
+          status: "approved",
+          level: approverLevel,
+          approvedDate: new Date(),
+          PayrollId: payrollId,
+          ApproverId: approver.id,
+          CompanyId: companyId,
+          EmployeeId: employeeId,
+        })),
+        { transaction }
+      );
+
+      await transaction.commit();
+      return res
+        .status(200)
+        .json({ message: "All Payrolls approved by Master Approver" });
+    }
+
+    if (approvalMethod === "hierarchy") {
+      // Ensure previous level approvals exist before approving the next
+      if (approverLevel > 1) {
+        const previousApprovals = await EmployeePayrollApprovement.findAll({
+          where: {
+            PayrollId: payrollIds,
+            level: Number(approverLevel) - 1,
+            status: "approved",
+          },
+        });
+
+        if (previousApprovals.length !== payrollIds.length) {
+          return next(
+            createError.createError(
+              400,
+              "Previous levels have not approved all payrolls"
+            )
+          );
+        }
+      }
+
+      // Check if the payroll is already approved at the current level
+      const existingApproval = await EmployeePayrollApprovement.findOne({
+        where: {
+          PayrollId: payrollIds,
+          level: Number(approverLevel),
+          status: "approved",
+        },
+      });
+
+      if (existingApproval) {
+        return next(
+          createError.createError(
+            400,
+            `Payroll has already been approved at level ${approverLevel}`
+          )
+        );
+        // return res.status(400).json({
+        //   message: `Payroll has already been approved at level ${approverLevel}`,
+        // });
+      }
+
+      // Create approval records
+      await EmployeePayrollApprovement.bulkCreate(
+        payrollIds.map((payrollId) => ({
+          status: "approved",
+          level: Number(approverLevel),
+          approvedDate: new Date(),
+          PayrollId: payrollId,
+          ApproverId: approver.id,
+          CompanyId: companyId,
+          EmployeeId: employeeId,
+        })),
+        { transaction }
+      );
+
+      // Update Payroll status
+      if (Number(approverLevel) === Number(approvalLevel)) {
+        await Payroll.update(
+          { status: "approved" },
+          { where: { id: payrollIds }, transaction }
+        );
+      } else {
+        await Payroll.update(
+          { status: "pending" },
+          { where: { id: payrollIds }, transaction }
+        );
+      }
+    }
+
+    // if (approvalMethod === "horizontal") {
+    //   const currentApprovalCounts = await EmployeePayrollApprovement.findAll({
+    //     where: { PayrollId: payrollIds, status: "approved" },
+    //     attributes: ["PayrollId", [sequelize.fn("COUNT", "id"), "count"]],
+    //     group: ["PayrollId"],
+    //     raw: true,
+    //   });
+
+    //   const approvalMap = {};
+    //   currentApprovalCounts.forEach((item) => {
+    //     approvalMap[item.PayrollId] = item.count;
+    //   });
+
+    //   // Create approval records
+    //   await EmployeePayrollApprovement.bulkCreate(
+    //     payrollIds.map((payrollId) => ({
+    //       status: "approved",
+    //       level: approverLevel,
+    //       approvedDate: new Date(),
+    //       PayrollId: payrollId,
+    //       ApproverId: approver.id,
+    //       CompanyId: companyId,
+    //       EmployeeId: employeeId,
+    //     })),
+    //     { transaction }
+    //   );
+
+    //   // Check if minimum approval is reached
+    //   const approvedPayrolls = payrollIds.filter(
+    //     (payrollId) => (approvalMap[payrollId] || 0) + 1 >= minimumApprover
+    //   );
+
+    //   if (approvedPayrolls.length > 0) {
+    //     await Payroll.update(
+    //       { status: "approved" },
+    //       { where: { id: approvedPayrolls }, transaction }
+    //     );
+    //   }
+
+    //   const remainingPayrolls = payrollIds.filter(
+    //     (payrollId) => !approvedPayrolls.includes(payrollId)
+    //   );
+    //   if (remainingPayrolls.length > 0) {
+    //     await Payroll.update(
+    //       { status: "pending" },
+    //       { where: { id: remainingPayrolls }, transaction }
+    //     );
+    //   }
+    // }
+    if (approvalMethod === "horizontal") {
+      const currentApprovalCounts = await EmployeePayrollApprovement.findAll({
+        where: { PayrollId: payrollIds, status: "approved" },
+        attributes: ["PayrollId", [sequelize.fn("COUNT", "id"), "count"]],
+        group: ["PayrollId"],
+        raw: true,
+      });
+
+      const approvalMap = {};
+      currentApprovalCounts.forEach((item) => {
+        approvalMap[item.PayrollId] = item.count;
+      });
+
+      // If a master approver is found and is approving
+      if (isThereMasterApprover && isMaster) {
+        // Create approval records for the master approver
+        await EmployeePayrollApprovement.bulkCreate(
+          payrollIds.map((payrollId) => ({
+            status: "approved",
+            level: approverLevel,
+            approvedDate: new Date(),
+            PayrollId: payrollId,
+            ApproverId: approver.id,
+            CompanyId: companyId,
+            EmployeeId: employeeId,
+          })),
+          { transaction }
+        );
+
+        // Automatically approve all payrolls by updating their status
+        await Payroll.update(
+          { status: "approved" },
+          { where: { id: payrollIds }, transaction }
+        );
+      } else {
+        // Check if the approver has already approved the payroll at the current level
+        const duplicateApprovals = await EmployeePayrollApprovement.findAll({
+          where: {
+            PayrollId: payrollIds,
+            ApproverId: approver.id,
+            status: "approved",
+          },
+        });
+
+        if (duplicateApprovals.length > 0) {
+          return next(
+            createError.createError(
+              400,
+              "Approver has already approved these payroll(s)"
+            )
+          );
+        }
+
+        // Create approval records for the current approver
+        await EmployeePayrollApprovement.bulkCreate(
+          payrollIds.map((payrollId) => ({
+            status: "approved",
+            level: approverLevel,
+            approvedDate: new Date(),
+            PayrollId: payrollId,
+            ApproverId: approver.id,
+            CompanyId: companyId,
+            EmployeeId: employeeId,
+          })),
+          { transaction }
+        );
+
+        // Check if minimum approval is reached for each payroll
+        const approvedPayrolls = payrollIds.filter(
+          (payrollId) => (approvalMap[payrollId] || 0) + 1 >= minimumApprover
+        );
+
+        if (approvedPayrolls.length > 0) {
+          await Payroll.update(
+            { status: "approved" },
+            { where: { id: approvedPayrolls }, transaction }
+          );
+        }
+
+        const remainingPayrolls = payrollIds.filter(
+          (payrollId) => !approvedPayrolls.includes(payrollId)
+        );
+        if (remainingPayrolls.length > 0) {
+          await Payroll.update(
+            { status: "pending" },
+            { where: { id: remainingPayrolls }, transaction }
+          );
+        }
+      }
+    }
+
+    await transaction.commit();
+
+    return res
+      .status(200)
+      .json({ message: "All Payroll approvals recorded successfully" });
+  } catch (error) {
+    console.log(error);
+    await transaction.rollback();
+    next(createError.createError(503, "Internal server error"));
+  }
+};
 module.exports = {
+  approveStatusOfPayroll1,
   getAllApprovements,
   arrayApprove2Approvement,
   rejectPayroll,
@@ -2352,5 +2692,5 @@ module.exports = {
   deleteApprovement,
   arrayApproveApprovement,
   getApprovementByPayrollId,
-  approveStatusOfPayroll
-}
+  approveStatusOfPayroll,
+};
