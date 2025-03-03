@@ -97,7 +97,7 @@ exports.createGrade = async (req, res, next) => {
 
     if (parseFloat(minSalary) < parseFloat(maxSalary)) {
       const grade = await Grade.create({ name, minSalary, maxSalary });
-      await grade.setCompany(companyId);
+      await grade.setCompany(CompanyId);
 
       return res.status(200).json({
         message: "Successfully Registered",
@@ -112,6 +112,8 @@ exports.createGrade = async (req, res, next) => {
       );
     }
   } catch (error) {
+
+    console.log(error)
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
