@@ -890,7 +890,7 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
         message: "No payrolls defined for this month",
       });
     }
-    // return res.json({data:currentMonthPayrolls?.[0].id})
+
     if (approver?.ApprovalMethod?.approvalMethod === "horizontal") {
       const minimumApprovers = Number(approver.ApprovalMethod.minimumApprover);
       if (approver.isMaster) {
@@ -905,26 +905,26 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
           include: [
             { model: Employee, attributes: ["id", "fullname"] },
 
-            {
-              model: EmployeePayrollApprovement,
-              attributes: [
-                [
-                  Sequelize.fn("COUNT", Sequelize.literal("*")),
-                  "approvalCount",
-                ],
-              ],
-              where: {
-                status: "approved",
-              },
-              required: false, // Keep this line
-              duplicating: false,
-            },
+            // {
+            //   model: EmployeePayrollApprovement,
+            //   attributes: [
+            //     [
+            //       Sequelize.fn("COUNT", Sequelize.literal("*")),
+            //       "approvalCount",
+            //     ],
+            //   ],
+            //   where: {
+            //     status: "approved",
+            //   },
+            //   required: false, // Keep this line
+            //   duplicating: false,
+            // },
           ],
-          group: ["Payroll.id"], // Add this line
-          having: Sequelize.literal(
-            `COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`
-          ),
-          raw: true,
+          // group: ["Payroll.id"], // Add this line
+          // having: Sequelize.literal(
+          //   `COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`
+          // ),
+          // raw: true,
         });
 
         return res.status(200).json({
@@ -999,6 +999,7 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
         data: payrolls,
       });
     }
+
     if (approver?.ApprovalMethod?.approvalMethod === "hierarchy") {
       // return res.json("Hi")
       const approvalLevel = Number(approver?.level);
@@ -1007,25 +1008,23 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
       if (approver.isMaster) {
         const payrolls = await Payroll.findAll({
           where: {
+            CompanyId: CompanyId,
             status: {
               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
             },
             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+            // id: {
+            //   [Sequelize.Op.notIn]: Sequelize.literal(
+            //     '(SELECT "PayrollId" FROM "EmployeePayrollApprovements")'
+            //   ),
+            // },
           },
           include: [
-            { model: Employee, attributes: ["id", "fullname"] },
-
             {
-              model: EmployeePayrollApprovement,
-              where: {
-                status: "approved",
-                level: companyApprovalLevel,
-              },
-              required: true, // Keep this line
-              duplicating: false,
+              model: Employee,
+              attributes: ["id", "fullname"],
             },
           ],
-          raw: true,
         });
 
         return res.status(200).json({
@@ -1054,25 +1053,6 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
             },
           ],
         });
-        // const payrolls = await Payroll.findAll({
-        //   where:{
-        //     status: {
-        //       [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
-        //     },
-        //   },
-        //   include: [
-        //     {
-        //       model: EmployeePayrollApprovement,
-        //        where: {
-        //         status: 'approved',
-        //         level:1
-        //       },
-        //       required: true, // Keep this line
-        //       duplicating: false,
-        //     },
-        //   ],
-        //   raw: true,
-        // });
 
         return res.status(200).json({
           success: true,
@@ -1085,6 +1065,14 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
             status: {
               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
             },
+            PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+            id: {
+              [Sequelize.Op.notIn]: Sequelize.literal(`
+                (SELECT "PayrollId" 
+                 FROM "EmployeePayrollApprovements" 
+                 WHERE "status" = 'approved' AND "level" = ${approvalLevel})
+              `),
+            },
           },
           include: [
             {
@@ -1093,16 +1081,24 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
                 status: "approved",
                 level: approvalLevel - 1,
               },
-              required: true, // Keep this line
-              duplicating: false,
+              required: true, // Ensures only matching records are returned
+            },
+            {
+              model: Employee, // Include Employee details
+              attributes: ["id", "fullname"],
             },
           ],
-          raw: true,
+          raw: false, // Ensure it returns nested objects
+          nest: true, // Ensures proper nesting instead of flattening
         });
 
+        const cleanedPayrolls = payrolls.map((payroll) => {
+          const { EmployeePayrollApprovements, ...rest } = payroll.toJSON(); // Convert instance to JSON and remove field
+          return rest;
+        });
         return res.status(200).json({
           success: true,
-          data: payrolls,
+          data: cleanedPayrolls,
         });
       }
     }
@@ -1113,6 +1109,280 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
     );
   }
 };
+
+// exports.getNotApprovedPayroll = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+//     // return res.json(CompanyId);
+//     // return res.json("Gemechu")
+//     const approver = await Approver.findOne({
+//       where: { EmployeeId: req.user.id, isActive: true },
+//       include: {
+//         model: ApprovalMethod,
+//         as: "ApprovalMethod",
+//         where: {
+//           CompanyId: CompanyId,
+//           isActive: true,
+//         },
+//       },
+//     });
+
+//     // return res.json(approver)
+
+//     if (approver?.ApprovalMethod === null) {
+//       return next(createError.createError(400, "Define approval method first"));
+//     }
+
+//     const currentDate = new Date();
+//     const startOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth(),
+//       1
+//     );
+//     const endOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth() + 1,
+//       0
+//     );
+//     const currentMonthPayrolls = await PayrollDefinition.findAll({
+//       where: {
+//         CompanyId: CompanyId,
+//         startDate: {
+//           [Op.between]: [startOfMonth, endOfMonth],
+//         },
+//       },
+//     });
+
+//     if (currentMonthPayrolls.length === 0) {
+//       return res.status(204).json({
+//         message: "No payrolls defined for this month",
+//       });
+//     }
+//     // return res.json({data:currentMonthPayrolls?.[0].id})
+//     if (approver?.ApprovalMethod?.approvalMethod === "horizontal") {
+//       const minimumApprovers = Number(approver.ApprovalMethod.minimumApprover);
+//       if (approver.isMaster) {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             CompanyId: CompanyId,
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+//           },
+//           include: [
+//             { model: Employee, attributes: ["id", "fullname"] },
+
+//             {
+//               model: EmployeePayrollApprovement,
+//               attributes: [
+//                 [
+//                   Sequelize.fn("COUNT", Sequelize.literal("*")),
+//                   "approvalCount",
+//                 ],
+//               ],
+//               where: {
+//                 status: "approved",
+//               },
+//               required: false, // Keep this line
+//               duplicating: false,
+//             },
+//           ],
+//           group: ["Payroll.id"], // Add this line
+//           having: Sequelize.literal(
+//             `COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`
+//           ),
+//           raw: true,
+//         });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       }
+//       const payrolls = await Payroll.findAll({
+//         attributes: [
+//           "id",
+//           "grossSalary",
+//           "basicSalary",
+//           "taxableIncome",
+//           "incomeTax",
+//           "totalDeduction",
+//           "totalAllowance",
+//           "NetSalary",
+//           "employee_pension_amount",
+//           "employer_pension_amount",
+//           "status",
+//           "isPaid",
+//           "createdAt",
+//           "updatedAt",
+//           "EmployeeId",
+//           "CompanyId",
+//           "PayrollDefinitionId",
+//         ],
+//         include: [
+//           {
+//             model: Employee,
+//             attributes: ["id", "fullname", "phoneNumber", "nationality"],
+//           },
+//           {
+//             model: EmployeePayrollApprovement, // Ensure this matches the model name
+//             attributes: ["id"],
+//             where: { status: "pending", ApproverId: { [Op.ne]: approver.id } },
+//             required: false, // Ensure LEFT JOIN
+//           },
+//         ],
+//         where: {
+//           status: { [Op.notIn]: ["approved", "rejected"] },
+//           PayrollDefinitionId: currentMonthPayrolls?.[0].id,
+//           id: {
+//             [Op.notIn]: Sequelize.literal(`(
+//               SELECT DISTINCT "PayrollId" FROM "EmployeePayrollApprovements"
+//               WHERE  "ApproverId" = ${approver.id}
+//             )`), // Exclude payrolls already approved by the current approver
+//           },
+//         },
+//         group: [
+//           "Payroll.id",
+//           "Employee.id",
+//           "EmployeePayrollApprovements.id", // Ensure alias matches JOIN
+//         ],
+//         having: Sequelize.literal(
+//           'COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < 2'
+//         ),
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         data: payrolls,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         data: payrolls,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         data: payrolls,
+//       });
+//     }
+//     if (approver?.ApprovalMethod?.approvalMethod === "hierarchy") {
+//       // return res.json("Hi")
+//       const approvalLevel = Number(approver?.level);
+
+//       const companyApprovalLevel = approver?.ApprovalMethod?.approvalLevel;
+//       if (approver.isMaster) {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+//           },
+//           include: [
+//             { model: Employee, attributes: ["id", "fullname"] },
+
+//             {
+//               model: EmployeePayrollApprovement,
+//               where: {
+//                 status: "approved",
+//                 level: companyApprovalLevel,
+//               },
+//               required: true, // Keep this line
+//               duplicating: false,
+//             },
+//           ],
+//           raw: true,
+//         });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       }
+//       if (approvalLevel === 1) {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             CompanyId: CompanyId,
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+//             id: {
+//               [Sequelize.Op.notIn]: Sequelize.literal(
+//                 '(SELECT "PayrollId" FROM "EmployeePayrollApprovements")'
+//               ),
+//             },
+//           },
+//           include: [
+//             {
+//               model: Employee,
+//               attributes: ["id", "fullname"],
+//             },
+//           ],
+//         });
+//         // const payrolls = await Payroll.findAll({
+//         //   where:{
+//         //     status: {
+//         //       [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+//         //     },
+//         //   },
+//         //   include: [
+//         //     {
+//         //       model: EmployeePayrollApprovement,
+//         //        where: {
+//         //         status: 'approved',
+//         //         level:1
+//         //       },
+//         //       required: true, // Keep this line
+//         //       duplicating: false,
+//         //     },
+//         //   ],
+//         //   raw: true,
+//         // });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       } else {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             CompanyId: CompanyId,
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//           },
+//           include: [
+//             {
+//               model: EmployeePayrollApprovement,
+//               where: {
+//                 status: "approved",
+//                 level: approvalLevel - 1,
+//               },
+//               required: true, // Keep this line
+//               duplicating: false,
+//             },
+//           ],
+//           raw: true,
+//         });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 exports.getPayrollPaymentProcess = async (req, res, next) => {
   try {
     let { processIds } = req.body;
