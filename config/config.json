@@ -1,45 +1,58 @@
 {
-    "development": {
-      "username": "payroll",
-      "password": "payroll@123",
-      "database": "payrolldb",
-      "host": "10.1.152.35",
-      "port": 5432,
-      "dialect": "postgres",
-      "dialectOptions": {
-        "ssl": {
-          "require": true,
-          "rejectUnauthorized": false
-        }
+  "development": {
+    "username": "payroll",
+    "password": "payroll@123",
+    "database": "payrolldb",
+    "host": "10.1.152.35",
+    "port": 5432,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
       }
-    },
-    "test": {
-      "username": "payroll",
-      "password": "payroll@123",
-      "database": "payrolldb",
-      "host": "10.1.152.35",
-      "port": 5432,
-      "dialect": "postgres",
-      "dialectOptions": {
-        "ssl": {
-          "require": true,
-          "rejectUnauthorized": false
-        }
+    }
+  },
+
+  "development1": {
+    "username": "superpayroll_user",
+    "password": "mJLzh30FgR3hJBPcaDQRFwX1oCRi6QeP",
+    "database": "superpayroll",
+    "host": "dpg-cv2l2f2n91rc73bucevg-a.oregon-postgres.render.com",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
       }
-    },
-    "production": {
-      "username": "payroll",
-      "password": "payroll@123",
-      "database": "payrolldb",
-      "host": "10.1.152.35",
-      "port": 5432,
-      "dialect": "postgres",
-      "dialectOptions": {
-        "ssl": {
-          "require": true,
-          "rejectUnauthorized": false
-        }
+    }
+  },
+  "test": {
+    "username": "payroll",
+    "password": "payroll@123",
+    "database": "payrolldb",
+    "host": "10.1.152.35",
+    "port": 5432,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "production": {
+    "username": "payroll",
+    "password": "payroll@123",
+    "database": "payrolldb",
+    "host": "10.1.152.35",
+    "port": 5432,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
       }
     }
   }
-
+}
