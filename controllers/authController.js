@@ -500,6 +500,10 @@ exports.login = async (req, res, next) => {
           },
         ],
       });
+
+      if (!company) {
+        return next(createError.createError(400, "Invalid credentials"));
+      }
     }
 
     if (company?.status === "pending") {
@@ -510,7 +514,7 @@ exports.login = async (req, res, next) => {
         )
       );
     }
-    if (company.role === "companyAdmin") {
+    if (company?.role === "companyAdmin") {
       if (
         !company ||
         company.companyCode != companyCode ||
@@ -520,7 +524,7 @@ exports.login = async (req, res, next) => {
       }
     }
 
-    if (company.role === "employee" || company.role === "approver") {
+    if (company?.role === "employee" || company?.role === "approver") {
       // return res.json(email)
       const newEmployee = await Employee.findAll({
         where: {

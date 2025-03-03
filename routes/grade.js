@@ -95,6 +95,132 @@ router.get(
  *       scheme: bearer
  *       bearerFormat: JWT
  *
+ * /api/grade/allowance/{id}:
+ *   get:
+ *     summary: Get allowances for a grade by ID
+ *     description: Retrieve the list of allowances associated with a specific salary grade.
+ *     tags:
+ *       - Grades
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The unique ID of the grade.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved the list of allowances.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: Allowance ID.
+ *                       name:
+ *                         type: string
+ *                         description: Name of the allowance.
+ *                       amount:
+ *                         type: number
+ *                         format: float
+ *                         description: Allowance amount.
+ *       '404':
+ *         description: Grade not found or no allowances available.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - Insufficient permissions to access allowances.
+ *       '500':
+ *         description: Internal Server Error - Something went wrong on the server.
+ *
+ * /api/grade/deduction/{id}:
+ *   get:
+ *     summary: Get deductions for a grade by ID
+ *     description: Retrieve the list of deductions associated with a specific salary grade.
+ *     tags:
+ *       - Grades
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The unique ID of the grade.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved the list of deductions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: Deduction ID.
+ *                       name:
+ *                         type: string
+ *                         description: Name of the deduction.
+ *                       amount:
+ *                         type: number
+ *                         format: float
+ *                         description: Deduction amount.
+ *       '404':
+ *         description: Grade not found or no deductions available.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '403':
+ *         description: Forbidden - Insufficient permissions to access deductions.
+ *       '500':
+ *         description: Internal Server Error - Something went wrong on the server.
+ */
+
+router.get(
+  "/allowance/:id",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+  grade.fetchAllowanceByGradeById
+);
+
+router.get(
+  "/deduction/:id",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictALL({ moduleName: "generalsetup", isAccessible: true }),
+  grade.fetchDeductionByGradeById
+);
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *
  * /api/grade:
  *   post:
  *     summary: Create a new grade

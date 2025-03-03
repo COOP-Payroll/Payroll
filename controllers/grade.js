@@ -58,6 +58,16 @@ exports.getGradeById = async (req, res, next) => {
     const id = req.params.id;
     const grade = await Grade.findOne({
       where: { id, CompanyId },
+      include: [
+        {
+          model: Allowance,
+          include: [AllowanceDefinition],
+        },
+        {
+          model: Deduction,
+          include: [DeductionDefinition],
+        },
+      ],
     });
     if (!grade) {
       return next(
@@ -73,6 +83,65 @@ exports.getGradeById = async (req, res, next) => {
   }
 };
 
+//FETCH ALLOWANCE BY GRADE ID
+
+exports.fetchAllowanceByGradeById = async (req, res, next) => {
+  try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const id = req.params.id;
+    const grade = await Grade.findOne({
+      where: { id, CompanyId },
+      include: [
+        {
+          model: Allowance,
+          include: [AllowanceDefinition],
+        },
+      ],
+    });
+    if (!grade) {
+      return next(
+        createError.createError(404, "There is no Grade with this ID")
+      );
+    } else {
+      res.json({ message: "Fetched successfully", data: grade });
+    }
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
+
+//FETCH ALLOWANCE BY GRADE ID
+
+exports.fetchDeductionByGradeById = async (req, res, next) => {
+  try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const id = req.params.id;
+    const grade = await Grade.findOne({
+      where: { id, CompanyId },
+      include: [
+        {
+          model: Deduction,
+          include: [DeductionDefinition],
+        },
+      ],
+    });
+    if (!grade) {
+      return next(
+        createError.createError(404, "There is no Grade with this ID")
+      );
+    } else {
+      res.json({ message: "Fetched successfully", data: grade });
+    }
+  } catch (error) {
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
+  }
+};
 //CREATE GRADE
 exports.createGrade = async (req, res, next) => {
   try {
