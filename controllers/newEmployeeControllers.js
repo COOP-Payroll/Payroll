@@ -291,10 +291,10 @@ exports.createEmployee = async (req, res, next) => {
 
       return res.status(201).json({
         success: true,
-        message: "created successfully",
-        basicInfo: createEmployee,
-        address: createAddress,
-        employeeInfo: createEmployeeInfo,
+        message: "Registered successfully",
+        // basicInfo: createEmployee,
+        // address: createAddress,
+        // employeeInfo: createEmployeeInfo,
       });
     });
   } catch (error) {

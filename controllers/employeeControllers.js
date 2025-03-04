@@ -717,9 +717,9 @@ exports.createEmployee = async (req, res, next) => {
     }
 
     res.status(200).json({
-      basicInfo1,
-      message,
-      conflicts,
+      // basicInfo1,
+      // message,
+      // conflicts,
     });
   } catch (error) {
     console.log(error);
@@ -1645,8 +1645,6 @@ exports.updateContactInfo = async (req, res, next) => {
     );
   }
 };
-
-
 
 exports.UnAssignApprovers = async (req, res, next) => {
   const transaction = await sequelize.transaction();

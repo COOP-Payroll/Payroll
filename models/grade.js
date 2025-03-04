@@ -12,7 +12,6 @@ const Grade = sequelize.define("Grade", {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
-
   maxSalary: {
     type: DataTypes.FLOAT,
     allowNull: false,

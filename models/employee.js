@@ -158,15 +158,6 @@ Employee.beforeUpdate(async (employee, options) => {
   // }
 });
 
-// Department.hasMany(Employee);
-// Employee.belongsTo(Department);
-
-// EmployeeInfo.hasOne(Employee);
-// Employee.belongsTo(EmployeeInfo);
-
-// Address.hasOne(Employee);
-// Employee.belongsTo(Address);
-// Employee.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Employee;
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
