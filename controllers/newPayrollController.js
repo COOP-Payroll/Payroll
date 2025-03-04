@@ -465,6 +465,7 @@ async function runPayroll(
       ...payrollData,
       PayrollDefinitionId: payrollDefinitionId,
       EmployeeId: employeeId,
+      CompanyId: company,
     });
     // await data.setCompany(Number(req.user.id));
     // const payroll = await oldPayroll.update(payrollData);
@@ -903,28 +904,21 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
           },
           include: [
-            { model: Employee, attributes: ["id", "fullname"] },
-
-            // {
-            //   model: EmployeePayrollApprovement,
-            //   attributes: [
-            //     [
-            //       Sequelize.fn("COUNT", Sequelize.literal("*")),
-            //       "approvalCount",
-            //     ],
-            //   ],
-            //   where: {
-            //     status: "approved",
-            //   },
-            //   required: false, // Keep this line
-            //   duplicating: false,
-            // },
+            {
+              model: Employee,
+              attributes: [
+                "id",
+                "fullname",
+                "phoneNumber",
+                "nationality",
+                "marriageStatus",
+                "date_of_birth",
+                "sex",
+                "employee_id_number",
+                "email",
+              ],
+            },
           ],
-          // group: ["Payroll.id"], // Add this line
-          // having: Sequelize.literal(
-          //   `COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`
-          // ),
-          // raw: true,
         });
 
         return res.status(200).json({
@@ -932,6 +926,7 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
           data: payrolls,
         });
       }
+
       const payrolls = await Payroll.findAll({
         attributes: [
           "id",
@@ -955,7 +950,26 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
         include: [
           {
             model: Employee,
-            attributes: ["id", "fullname", "phoneNumber", "nationality"],
+            as: "Employee",
+            attributes: [
+              "id",
+              "fullname",
+              "phoneNumber",
+              "nationality",
+              "marriageStatus",
+              "date_of_birth",
+              "sex",
+              "employee_id_number",
+              "email",
+            ],
+            include: [
+              {
+                model: Position,
+                as: "Positions", // Ensure this matches your model associations
+                attributes: ["id", "positionName", "description"],
+                through: { attributes: [] }, // Exclude junction table fields
+              },
+            ],
           },
           {
             model: EmployeePayrollApprovement, // Ensure this matches the model name
@@ -974,24 +988,56 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
             )`), // Exclude payrolls already approved by the current approver
           },
         },
+        // group: [
+        //   "Payroll.id",
+        //   "Employee.id",
+        //   "EmployeePayrollApprovements.id", // Ensure alias matches JOIN
+        // ],
+
         group: [
           "Payroll.id",
           "Employee.id",
-          "EmployeePayrollApprovements.id", // Ensure alias matches JOIN
+          "Employee->Positions.id", // Correct alias reference
+          "EmployeePayrollApprovements.id",
         ],
         having: Sequelize.literal(
           'COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < 2'
         ),
       });
-
-      return res.status(200).json({
-        success: true,
-        data: payrolls,
+      const formattedPayrolls = payrolls.map((payroll) => {
+        return {
+          id: payroll.id,
+          grossSalary: payroll.grossSalary,
+          basicSalary: payroll.basicSalary,
+          taxableIncome: payroll.taxableIncome,
+          incomeTax: payroll.incomeTax,
+          totalDeduction: payroll.totalDeduction,
+          totalAllowance: payroll.totalAllowance,
+          NetSalary: payroll.NetSalary,
+          employee_pension_amount: payroll.employee_pension_amount,
+          employer_pension_amount: payroll.employer_pension_amount,
+          status: payroll.status,
+          isPaid: payroll.isPaid,
+          createdAt: payroll.createdAt,
+          updatedAt: payroll.updatedAt,
+          EmployeeId: payroll.EmployeeId,
+          CompanyId: payroll.CompanyId,
+          PayrollDefinitionId: payroll.PayrollDefinitionId,
+          fullname: payroll.Employee?.fullname,
+          phoneNumber: payroll.Employee?.phoneNumber,
+          nationality: payroll.Employee?.nationality,
+          marriageStatus: payroll.Employee?.marriageStatus,
+          date_of_birth: payroll.Employee?.date_of_birth,
+          sex: payroll.Employee?.sex,
+          employee_id_number: payroll.Employee?.employee_id_number,
+          email: payroll.Employee?.email,
+          positionName: payroll.Employee?.Positions?.[0]?.positionName || null, // Extracting only the first position
+        };
       });
 
       return res.status(200).json({
         success: true,
-        data: payrolls,
+        data: formattedPayrolls,
       });
 
       return res.status(200).json({
@@ -1022,7 +1068,17 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
           include: [
             {
               model: Employee,
-              attributes: ["id", "fullname"],
+              attributes: [
+                "id",
+                "fullname",
+                "phoneNumber",
+                "nationality",
+                "marriageStatus",
+                "date_of_birth",
+                "sex",
+                "employee_id_number",
+                "email",
+              ],
             },
           ],
         });
@@ -1049,7 +1105,17 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
           include: [
             {
               model: Employee,
-              attributes: ["id", "fullname"],
+              attributes: [
+                "id",
+                "fullname",
+                "phoneNumber",
+                "nationality",
+                "marriageStatus",
+                "date_of_birth",
+                "sex",
+                "employee_id_number",
+                "email",
+              ],
             },
           ],
         });
