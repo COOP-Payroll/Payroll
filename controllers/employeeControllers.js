@@ -22,7 +22,7 @@ const nodemailer = require("nodemailer");
 
 const sequelize = require("../database/db");
 const multer = require("multer");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail.js");
 const { Op, json } = require("sequelize");

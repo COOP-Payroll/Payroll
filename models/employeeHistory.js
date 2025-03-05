@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const Company = require("../models/company.js");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const Employee=require("../models/employee.js")
 const EmployeeHistory = sequelize.define("EmployeeHistory", {
   fullname: {
