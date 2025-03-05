@@ -722,7 +722,7 @@ router.post(
     moduleName: "EmployeeList",
     isAccessible: true,
   }),
-  // employeeController.createEmployee
+  // employeeController.createEmployeed
   newEmployeeController.createEmployee
 );
 

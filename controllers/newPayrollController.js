@@ -41,7 +41,8 @@ const CustomRole = require("../models/customRole.js");
 const Permission = require("../models/permission.js");
 const OTPayment = require("../models/otPayModel.js");
 const TransactionHistory = require("../models/transactionHistory.js");
-
+const XLSX = require("xlsx");
+const ExcelJS = require("exceljs");
 exports.createPayroll1 = async (req, res, next) => {
   try {
     const isProjectBased = req.user.isProjectBased;
@@ -2708,5 +2709,53 @@ exports.getApprovedPay = async (req, res, next) => {
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
+  }
+};
+
+exports.downloadEmployeeTemplate = async (req, res, next) => {
+  try {
+    // Create a new workbook and add a worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("EmployeeTemplate");
+
+    // Add headers to the worksheet
+    worksheet.columns = [
+      { header: "Name", key: "Name", width: 30 },
+      { header: "Position", key: "Position", width: 23 },
+      { header: "PhoneNumber", key: "PhoneNumber", width: 23 },
+      { header: "BankName", key: "BankName", width: 23 },
+      { header: "AccountNumber", key: "AccountNumber", width: 23 },
+      { header: "Email", key: "Email", width: 30 },
+    ];
+
+    // Format the header row
+    worksheet.getRow(1).font = {
+      bold: true,
+      size: 14, // Increase the size for the header
+      color: { argb: "FFFFFF" }, // White color
+    };
+
+    worksheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "4F81BD" }, // Background color (blue)
+    };
+
+    // Set the response headers to download the file
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=employee_template.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    // Write the Excel file to the response
+    await workbook.xlsx.write(res);
+
+    res.end();
+  } catch (error) {
+    next(error);
   }
 };

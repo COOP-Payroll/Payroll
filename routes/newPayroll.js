@@ -915,6 +915,12 @@ router.get(
 );
 
 router.get(
+  "/download-template",
+  // middleware.protectAll,
+  // middleware.restrictToAll("companyAdmin"),
+  payroll.downloadEmployeeTemplate
+);
+router.get(
   "/available-payrolls",
   middleware.protectAll,
   middleware.restrictToAll("approver"),
