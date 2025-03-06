@@ -96,6 +96,191 @@ const signTokenSuperAdmin = (id, role, fullName, phoneNumber, email) => {
 };
 
 //SIGNTOKEN FOR COMPANY
+// const signTokenCompany = (company, res) => {
+//   try {
+//     const {
+//       id,
+//       name,
+//       numberOfEmployees,
+//       status,
+//       organizationName,
+//       email,
+//       role,
+//       jobTitle,
+//       companyCode,
+//       country,
+//       primary_Color,
+//       primary_Font_Color,
+//       primary_Gradient_Color,
+//       secondary_Color,
+//       secondary_Font_Color,
+//       secondary_Gradient_Color,
+//       // Permissions,
+//       isProjectBased,
+//       isSetted,
+//       Permissions,
+//     } = company;
+
+//     const token = jwt.sign(
+//       {
+//         id,
+//         name,
+//         numberOfEmployees,
+//         status,
+//         organizationName,
+//         email,
+//         role,
+//         jobTitle,
+//         companyCode,
+//         country,
+//         primary_Color,
+//         primary_Font_Color,
+//         primary_Gradient_Color,
+//         secondary_Color,
+//         secondary_Font_Color,
+//         secondary_Gradient_Color,
+//         // Permissions,
+//         isProjectBased,
+//         isSetted,
+//         permissions: [
+//           {
+//             module: "dashboard",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "systemsettings",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "employeelist",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "newemployee",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollsetups",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollprocess",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollpublished",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollpayment",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "unprocessedsalary",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollpublishedreports",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "ai",
+//             isAccessible: true,
+//           },
+//         ],
+//         if(isLoanGranted) {
+//           permissions.push({ module: "loangranted", isAccessible: true });
+//         },
+//       },
+//       accessTokenSecret,
+//       {
+//         expiresIn: "30000m",
+//       }
+//     );
+//     const refreshToken = jwt.sign(
+//       {
+//         id,
+//         name,
+//         numberOfEmployees,
+//         status,
+//         organizationName,
+//         email,
+//         role,
+//         jobTitle,
+//         companyCode,
+//         country,
+//         primary_Color,
+//         primary_Font_Color,
+//         primary_Gradient_Color,
+//         secondary_Color,
+//         secondary_Font_Color,
+//         secondary_Gradient_Color,
+//         // Permissions,
+//         isProjectBased,
+//         isSetted,
+//         permissions: [
+//           {
+//             module: "dashboard",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "systemsettings",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "employeelist",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "newemployee",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollsetups",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollprocess",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollpublished",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollpayment",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "unprocessedsalary",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "payrollpublishedreports",
+//             isAccessible: true,
+//           },
+//           {
+//             module: "ai",
+//             isAccessible: true,
+//           },
+//         ],
+//       },
+//       refreshTokenSecret,
+//       {
+//         expiresIn: "7d", // Set your desired expiration time for refresh tokens
+//       }
+//     );
+
+//     return { token, refreshToken };
+//     // jwt.sign({ id, isProjectBased,isSetted, role }, "secret", {
+//     //   expiresIn: "90d",
+//     // });
+//   } catch (err) {
+//     // throw new Error("Internal server error");
+//     console.error("Error in signTokenCompany:", err); //
+//   }
+// };
+
 const signTokenCompany = (company, res) => {
   try {
     const {
@@ -115,11 +300,31 @@ const signTokenCompany = (company, res) => {
       secondary_Color,
       secondary_Font_Color,
       secondary_Gradient_Color,
-      // Permissions,
       isProjectBased,
       isSetted,
+      isLoanGranted, // Extract isLoanGranted
       Permissions,
     } = company;
+
+    // Default permissions
+    let permissions = [
+      { module: "dashboard", isAccessible: true },
+      { module: "systemsettings", isAccessible: true },
+      { module: "employeelist", isAccessible: true },
+      { module: "newemployee", isAccessible: true },
+      { module: "payrollsetups", isAccessible: true },
+      { module: "payrollprocess", isAccessible: true },
+      { module: "payrollpublished", isAccessible: true },
+      { module: "payrollpayment", isAccessible: true },
+      { module: "unprocessedsalary", isAccessible: true },
+      { module: "payrollpublishedreports", isAccessible: true },
+      { module: "ai", isAccessible: true },
+    ];
+
+    // Add "loangranted" permission if isLoanGranted is true
+    if (isLoanGranted) {
+      permissions.push({ module: "grantloan", isAccessible: true });
+    }
 
     const token = jwt.sign(
       {
@@ -139,62 +344,14 @@ const signTokenCompany = (company, res) => {
         secondary_Color,
         secondary_Font_Color,
         secondary_Gradient_Color,
-        // Permissions,
         isProjectBased,
         isSetted,
-
-        permissions: [
-          {
-            module: "dashboard",
-            isAccessible: true,
-          },
-          {
-            module: "systemsettings",
-            isAccessible: true,
-          },
-          {
-            module: "employeelist",
-            isAccessible: true,
-          },
-          {
-            module: "newemployee",
-            isAccessible: true,
-          },
-          {
-            module: "payrollsetups",
-            isAccessible: true,
-          },
-          {
-            module: "payrollprocess",
-            isAccessible: true,
-          },
-          {
-            module: "payrollpublished",
-            isAccessible: true,
-          },
-          {
-            module: "payrollpayment",
-            isAccessible: true,
-          },
-          {
-            module: "unprocessedsalary",
-            isAccessible: true,
-          },
-          {
-            module: "payrollpublishedreports",
-            isAccessible: true,
-          },
-          {
-            module: "ai",
-            isAccessible: true,
-          },
-        ],
+        permissions, // Updated permissions array
       },
       accessTokenSecret,
-      {
-        expiresIn: "30000m",
-      }
+      { expiresIn: "30000m" }
     );
+
     const refreshToken = jwt.sign(
       {
         id,
@@ -213,69 +370,17 @@ const signTokenCompany = (company, res) => {
         secondary_Color,
         secondary_Font_Color,
         secondary_Gradient_Color,
-        // Permissions,
         isProjectBased,
         isSetted,
-        permissions: [
-          {
-            module: "dashboard",
-            isAccessible: true,
-          },
-          {
-            module: "systemsettings",
-            isAccessible: true,
-          },
-          {
-            module: "employeelist",
-            isAccessible: true,
-          },
-          {
-            module: "newemployee",
-            isAccessible: true,
-          },
-          {
-            module: "payrollsetups",
-            isAccessible: true,
-          },
-          {
-            module: "payrollprocess",
-            isAccessible: true,
-          },
-          {
-            module: "payrollpublished",
-            isAccessible: true,
-          },
-          {
-            module: "payrollpayment",
-            isAccessible: true,
-          },
-          {
-            module: "unprocessedsalary",
-            isAccessible: true,
-          },
-          {
-            module: "payrollpublishedreports",
-            isAccessible: true,
-          },
-          {
-            module: "ai",
-            isAccessible: true,
-          },
-        ],
+        permissions, // Updated permissions array
       },
       refreshTokenSecret,
-      {
-        expiresIn: "7d", // Set your desired expiration time for refresh tokens
-      }
+      { expiresIn: "7d" }
     );
 
     return { token, refreshToken };
-    // jwt.sign({ id, isProjectBased,isSetted, role }, "secret", {
-    //   expiresIn: "90d",
-    // });
   } catch (err) {
-    // throw new Error("Internal server error");
-    console.error("Error in signTokenCompany:", err); //
+    console.error("Error in signTokenCompany:", err);
   }
 };
 
@@ -392,6 +497,74 @@ const createSendTokenSuperAdmin = async (company, statusCode, res) => {
 //     // return next(createError.createError(503, error.message));
 //   }
 // };
+// const createSendToken = async (company, req, statusCode, res) => {
+//   try {
+//     const CompanyId =
+//       company.role === "companyAdmin" ? company.id : company.CompanyId;
+
+//     // Fetch company details
+//     const company1 = await Company.findOne({
+//       where: { id: CompanyId },
+//       attributes: [
+//         "id",
+//         "organizationName",
+//         "companyCode",
+//         "isSetted",
+//         "isProjectBased",
+//         "isLoanGranted"
+//       ],
+//     });
+
+//     // Extract permissions
+//     let permissionsList =
+//       company.CustomRole && Array.isArray(company.CustomRole.Permissions)
+//         ? company.CustomRole.Permissions.map((perm) => ({
+//             id: perm.id,
+//             module: perm.module,
+//             isAccessible: perm.isAccessible,
+//           }))
+//         : [];
+
+//     // If role is "approver", ensure "payrollApprove" permission is added
+//     if (company.role === "approver") {
+//       const payrollPermissionExists = permissionsList.some(
+//         (perm) => perm.module === "payrollapproval"
+//       );
+
+//       if (!payrollPermissionExists) {
+//         permissionsList.push({
+//           module: "payrollapproval",
+//           isAccessible: true,
+//         });
+//       }
+//     }
+
+//     // Generate tokens
+//     ({ token, refreshToken } = signToken(
+//       company.id,
+//       company.role,
+//       company.fullname,
+//       company.email,
+//       company1.companyCode,
+//       company.phoneNumber,
+//       permissionsList,
+//       company1.organizationName,
+//       company1.isSetted,
+//       company1.isProjectBased,
+//       company1
+//     ));
+
+//     company.password = undefined;
+//     res.status(statusCode).json({
+//       token,
+//       refreshToken,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(503).json({ message: "Internal server error" });
+//   }
+// };
+
 const createSendToken = async (company, req, statusCode, res) => {
   try {
     const CompanyId =
@@ -406,6 +579,7 @@ const createSendToken = async (company, req, statusCode, res) => {
         "companyCode",
         "isSetted",
         "isProjectBased",
+        "isLoanGranted",
       ],
     });
 
@@ -419,12 +593,35 @@ const createSendToken = async (company, req, statusCode, res) => {
           }))
         : [];
 
-    // If role is "approver", ensure "payrollApprove" permission is added
+    // Always add "payslip" permission
+    const payslipExists = permissionsList.some(
+      (perm) => perm.module === "payslip"
+    );
+    if (!payslipExists) {
+      permissionsList.push({
+        module: "payslip",
+        isAccessible: true,
+      });
+    }
+
+    // If isLoanGranted is true, add "accessloan" permission
+    if (company1.isLoanGranted) {
+      const loanPermissionExists = permissionsList.some(
+        (perm) => perm.module === "accessloan"
+      );
+      if (!loanPermissionExists) {
+        permissionsList.push({
+          module: "accessloan",
+          isAccessible: true,
+        });
+      }
+    }
+
+    // If role is "approver", ensure "payrollapproval" permission is added
     if (company.role === "approver") {
       const payrollPermissionExists = permissionsList.some(
         (perm) => perm.module === "payrollapproval"
       );
-
       if (!payrollPermissionExists) {
         permissionsList.push({
           module: "payrollapproval",

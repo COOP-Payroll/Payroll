@@ -573,6 +573,46 @@ exports.getAllCompany = async (req, res, next) => {
     );
   }
 };
+exports.updateLoanStatus = async (req, res, next) => {
+  try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const { isLoanGranted } = req.body; // Expecting { isLoanGranted: true/false }
+
+    // Ensure isLoanGranted is a boolean
+    if (typeof isLoanGranted !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "Invalid value. Expected boolean (true/false)." });
+    }
+
+    // Find company by ID
+    const company = await Company.findByPk(CompanyId);
+    if (!company) {
+      return next(createError.createError(404, "Company not found "));
+    }
+
+    // Check if the value is already the same
+    if (company.isLoanGranted === isLoanGranted) {
+      return next(
+        createError.createError(
+          400,
+          `Loan status is already set to ${isLoanGranted} `
+        )
+      );
+    }
+
+    // Update the loan status
+    company.isLoanGranted = isLoanGranted;
+    await company.save();
+
+    return res.status(200).json({
+      message: "Loan status updated successfully",
+    });
+  } catch (error) {
+    return next(createError.createError(503, "An error occurred, please try again later"));
+  }
+};
 
 exports.updateProjectBased = async (req, res, next) => {
   try {

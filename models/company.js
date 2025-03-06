@@ -130,6 +130,11 @@ const Company = sequelize.define("Company", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+
+  isLoanGranted: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   resetPasswordToken: {
     type: DataTypes.STRING,
   },

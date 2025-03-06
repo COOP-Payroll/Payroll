@@ -193,6 +193,38 @@ const middleware = require("../middleware/auth.js");
  *       '401':
  *         description: Unauthorized - Token is missing or invalid.
  */
+/**
+ * @swagger
+ * /api/company/update-loan-status:
+ *   put:
+ *     summary: Update loan status for a company
+ *     description: Updates the loan status of a company. Only accessible by company admins.
+ *     tags:
+ *       - Company
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isLoanGranted:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       '200':
+ *         description: Loan status updated successfully.
+ *       '400':
+ *         description: Bad request - Invalid input or loan status is already set.
+ *       '401':
+ *         description: Unauthorized - Token is missing or invalid.
+ *       '404':
+ *         description: Company not found.
+ *       '503':
+ *         description: Service unavailable - An error occurred, please try again later.
+ */
 
 router.put(
   "/setpassword/:token",
@@ -220,6 +252,14 @@ router.get(
   companyController.getAllCompany
 );
 
+router.put(
+  "/update-loan-status",
+  middleware.protectAll,
+  middleware.restrictToAll("companyAdmin"),
+  middleware.sanitizeInput,
+  middleware.validateUserAgent,
+  companyController.updateLoanStatus
+);
 router.get(
   "/:id",
   middleware.validateUserAgent,

@@ -57,7 +57,12 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.STRING,
   },
   id_type: {
-    type: DataTypes.ENUM("kebele", "passport", "driving _License" ,"nationalID"),
+    type: DataTypes.ENUM(
+      "kebele",
+      "passport",
+      "driving _License",
+      "nationalID"
+    ),
     defaultValue: "kebele",
   },
   id_Number: {
@@ -95,6 +100,10 @@ const Employee = sequelize.define("Employee", {
     defaultValue: 0,
   },
   isConfirmed: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  isLoanEnabled: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
