@@ -589,6 +589,29 @@ router.put(
  *       '500':
  *         description: Internal Server Error.
  */
+/**
+ * @swagger
+ * /api/employee/download-employee-registration-pdf:
+ *   get:
+ *     summary: Download API documentation as PDF
+ *     description: Generates and downloads the API documentation in PDF format.
+ *     tags:
+ *       - API Documentation
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: PDF document downloaded successfully
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       '401':
+ *         description: Unauthorized - Invalid or missing token
+ *       '500':
+ *         description: Internal server error
+ */
 
 router.get(
   "/",
@@ -623,6 +646,14 @@ router.get(
   }),
   newEmployeeController.downloadEmployeeTemplate
 );
+
+// Route for downloading the employee registration PDF
+router.get(
+  "/download-employee-registration-pdf",
+  middleware.protectAll,
+  newEmployeeController.downloadEmployeeRegistrationDoc
+);
+
 /**
  * @swagger
  * components:
