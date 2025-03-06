@@ -1383,11 +1383,11 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
         <title>Employee Registration API Documentation</title>
       </head>
       <body>
-        <h1>Employee Registration API Documentation</h1>
-        <h2>Endpoint: POST /api/employee/register</h2>
+        <h2>Employee Registration API Documentation</h2>
+        <h3>Endpoint: POST /api/employee/register</h3>
         <p>Use this endpoint to register a new employee in the system.</p>
         
-        <h3>Request Body</h3>
+        <h2>Request Body</h2>
         <pre>
 {
     "address": {
@@ -1442,7 +1442,7 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
 }
         </pre>
 
-        <h3>Response</h3>
+        <h2>Response</h2>
         <p>A successful registration will return a response with status 200 and a message confirming the registration.</p>
         
         <h4>Response Example</h4>
