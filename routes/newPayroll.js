@@ -4,6 +4,31 @@ const payroll1 = require("../controllers/payrollController.js");
 const middleware = require("../middleware/auth");
 const router = express.Router();
 const z = require("../controllers/zcontrollers.js");
+/**
+ * @swagger
+ * /api/newPayroll/download-template:
+ *   get:
+ *     summary: Download Employee Template
+ *     description: Generates and downloads an Excel template for employee data.
+ *     tags:
+ *       - Payroll
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully downloaded employee template.
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       '401':
+ *         description: Unauthorized - Invalid or missing token.
+ *       '403':
+ *         description: Forbidden - User does not have access.
+ *       '500':
+ *         description: Internal server error.
+ */
 
 /**
  * @swagger
