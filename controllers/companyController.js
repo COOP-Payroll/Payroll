@@ -610,7 +610,9 @@ exports.updateLoanStatus = async (req, res, next) => {
       message: "Loan status updated successfully",
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -618,6 +620,7 @@ exports.updateProjectBased = async (req, res, next) => {
   try {
     const { isProjectBased } = req.body;
 
+    // Validate isProjectBased
     if (typeof isProjectBased !== "boolean") {
       return next(
         createError.createError(
@@ -626,32 +629,86 @@ exports.updateProjectBased = async (req, res, next) => {
         )
       );
     }
-    const checkProject = await Company.findByPk(Number(req.user.id));
 
-    if (!checkProject) {
-      return next(createError.createError(404, "company not found"));
+    // Fetch the company
+    const company = await Company.findByPk(Number(req.user.id));
+
+    if (!company) {
+      return next(createError.createError(404, "Company not found"));
     }
 
-    if (checkProject?.isProjectBased) {
-      return next(
-        createError.createError(400, "company already is project based")
-      );
-    } else {
-      const company = await Company.findByPk(Number(req.user.id));
-      company.isProjectBased = isProjectBased;
-      company.isSetted = true;
-      await company.save();
-      return res.status(200).json({
-        success: true,
-        message: "Project based company updated successfully",
-      });
+    // return res.json(company);
+    // // Check if the value is already set
+    // if (company.isProjectBased === isProjectBased) {
+    //   return next(
+    //     createError.createError(
+    //       400,
+    //       "Company already has this project-based status"
+    //     )
+    //   );
+    // }
+
+    // Ensure updates are being applied correctly
+    const [updatedRows] = await Company.update(
+      { isProjectBased, isSetted: true },
+      { where: { id: req.user.id } }
+    );
+
+    if (updatedRows === 0) {
+      return next(createError.createError(500, "Failed to update company"));
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Project-based company updated successfully",
+    });
   } catch (error) {
+    console.error("Update error:", error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
   }
 };
+
+// exports.updateProjectBased = async (req, res, next) => {
+//   try {
+//     const { isProjectBased } = req.body;
+
+//     if (typeof isProjectBased !== "boolean") {
+//       return next(
+//         createError.createError(
+//           400,
+//           "Invalid value for isProjectBased. Must be a boolean."
+//         )
+//       );
+//     }
+
+//     const checkProject = await Company.findByPk(Number(req.user.id));
+
+//     if (!checkProject) {
+//       return next(createError.createError(404, "company not found"));
+//     }
+
+//     if (checkProject?.isProjectBased === isProjectBased) {
+//       return next(
+//         createError.createError(400, "company already is project based")
+//       );
+//     } else {
+//       const company = await Company.findByPk(Number(req.user.id));
+//       company.isProjectBased = isProjectBased;
+//       company.isSetted = true;
+//       await company.save();
+//       return res.status(200).json({
+//         success: true,
+//         message: "Project based company updated successfully",
+//       });
+//     }
+//   } catch (error) {
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 exports.getCompanyById = async (req, res, next) => {
   const { id } = req.params;
 
