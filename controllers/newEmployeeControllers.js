@@ -1374,6 +1374,126 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
   }
 };
 
+// exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
+//   try {
+//     // The content of the HTML for the PDF
+//     const apiDocumentationHtml = `
+//       <html>
+//       <head>
+//         <title>Employee Registration API Documentation</title>
+//       </head>
+//       <body>
+//         <h3>Employee Registration API Documentation</h3>
+//         <h5>Endpoint: POST /api/employee/register</h5>
+//         <p>Use this endpoint to register a new employee in the system.</p>
+        
+//         <h4>Request Body</h4>
+//         <pre>
+// {
+//     "address": {
+//         "country": "Ethiopia",
+//         "state": "Addis Ababa",
+//         "zone_or_city": "Bole",
+//         "woreda": "13",
+//         "kebele": "05",
+//         "houseNumber": "09345"
+//     },
+//     "employeeInfo": {
+//         "employeeTIN": "4324324",
+//         "title": "Mr",
+//         "employeeType": "permanent",
+//         "hireDate": "2025-02-25",
+//         "employee_Code": "CG34",
+//         "basicSalary": "3000",
+//         "position": "2",
+//         "siteLocation": "AA"
+//     },
+//     "emergencyInfo": [
+//         {
+//             "fullname": "Daniel",
+//             "relation": "Father",
+//             "phoneNumber": "0943243243",
+//             "address": "Addis Ababa"
+//         }
+//     ],
+//     "basicInfo": {
+//         "fullname": "Samuel Daniel",
+//         "images": "",
+//         "sex": "male",
+//         "date_of_birth": "1998-02-25",
+//         "DepartmentId": "2",
+//         "GradeId": "7",
+//         "marriageStatus": "Single",
+//         "isActive": true,
+//         "nationality": "ET",
+//         "email": "samuel@gmail.com",
+//         "phoneNumber": "09324324324",
+//         "optionalPhoneNumber": "",
+//         "id_type": "passport",
+//         "id_Number": "kb432432"
+//     },
+//     "accountInformation": [
+//         {
+//             "bankName": "Coop",
+//             "accountNumber": "1000022299229294444",
+//             "isVerified": true
+//         }
+//     ]
+// }
+//         </pre>
+
+//         <h4>Response</h4>
+//         <p>A successful registration will return a response with status 200 and a message confirming the registration.</p>
+        
+//         <h4>Response Example</h4>
+//         <pre>
+// {
+//     "status": "success",
+//     "message": "Employee registered successfully"
+// }
+//         </pre>
+
+//         <h4>Errors</h4>
+//         <p>If there are any errors during the registration, the API will return an appropriate status code and error message.</p>
+        
+//         <h5>Error Response Example</h5>
+//         <pre>
+// {
+//     "status": "error",
+//     "message": "Invalid request data"
+// }
+//         </pre>
+        
+//         <h4>Security</h4>
+//         <p>This API requires a valid token in the Authorization header to access. Use Bearer Token for authentication.</p>
+//       </body>
+//       </html>
+//     `;
+
+//     // return res.json(apiDocumentationHtml);
+//     // Convert the HTML to PDF
+//     const options = { format: "A4" };
+//     pdf.create(apiDocumentationHtml, options).toBuffer((err, buffer) => {
+//       if (err) {
+//         return next(
+//           createError.createError(400, "An error occour while downloading")
+//         );
+//       }
+
+//       // Set the response headers for PDF download
+//       res.setHeader("Content-Type", "application/pdf");
+//       res.setHeader(
+//         "Content-Disposition",
+//         "attachment; filename=employee_registration_api_documentation.pdf"
+//       );
+
+//       // Send the PDF buffer as a response
+//       res.end(buffer);
+//     });
+//   } catch (error) {
+//     return next(createError.createError(503, "Internal server error"));
+//   }
+// };
 exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
   try {
     // The content of the HTML for the PDF
@@ -1381,13 +1501,47 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
       <html>
       <head>
         <title>Employee Registration API Documentation</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            font-size: 10px; /* Set default font size */
+            line-height: 1.2; /* Set line height to reduce spacing */
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+          }
+
+          h3, h4, h5 {
+            margin: 5px 0; /* Reduced margin for headings */
+            padding: 0;
+          }
+
+          p, pre {
+            margin: 5px 0; /* Reduced margin for paragraphs and pre-formatted text */
+            padding: 0;
+          }
+
+          pre {
+            font-size: 8px; /* Reduce font size for pre elements */
+            white-space: pre-wrap; /* Allow text to wrap inside <pre> */
+            word-wrap: break-word; /* Break long words for better fit */
+            margin: 0;
+            padding: 0;
+          }
+
+  
+
+      
+        </style>
       </head>
       <body>
-        <h2>Employee Registration API Documentation</h2>
-        <h3>Endpoint: POST /api/employee/register</h3>
+        <h3>Employee Registration API Documentation</h3>
+        <h5>Endpoint: POST /api/employee/register</h5>
         <p>Use this endpoint to register a new employee in the system.</p>
         
-        <h2>Request Body</h2>
+        <h4>Request Body</h4>
         <pre>
 {
     "address": {
@@ -1442,7 +1596,7 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
 }
         </pre>
 
-        <h2>Response</h2>
+        <h4>Response</h4>
         <p>A successful registration will return a response with status 200 and a message confirming the registration.</p>
         
         <h4>Response Example</h4>
@@ -1453,10 +1607,10 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
 }
         </pre>
 
-        <h3>Errors</h3>
+        <h4>Errors</h4>
         <p>If there are any errors during the registration, the API will return an appropriate status code and error message.</p>
         
-        <h4>Error Response Example</h4>
+        <h5>Error Response Example</h5>
         <pre>
 {
     "status": "error",
@@ -1464,28 +1618,22 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
 }
         </pre>
         
-        <h3>Security</h3>
+        <h4>Security</h4>
         <p>This API requires a valid token in the Authorization header to access. Use Bearer Token for authentication.</p>
       </body>
       </html>
     `;
 
-    // return res.json(apiDocumentationHtml);
     // Convert the HTML to PDF
     const options = { format: "A4" };
     pdf.create(apiDocumentationHtml, options).toBuffer((err, buffer) => {
       if (err) {
-        return next(
-          createError.createError(400, "An error occour while downloading")
-        );
+        return next(createError.createError(400, "An error occurred while downloading"));
       }
 
       // Set the response headers for PDF download
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=employee_registration_api_documentation.pdf"
-      );
+      res.setHeader("Content-Disposition", "attachment; filename=employee_registration_api_documentation.pdf");
 
       // Send the PDF buffer as a response
       res.end(buffer);
