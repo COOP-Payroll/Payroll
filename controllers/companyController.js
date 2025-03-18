@@ -637,7 +637,7 @@ exports.updateProjectBased = async (req, res, next) => {
       return next(createError.createError(404, "Company not found"));
     }
 
-    // return res.json(company);
+    return res.json(company);
     // // Check if the value is already set
     // if (company.isProjectBased === isProjectBased) {
     //   return next(
