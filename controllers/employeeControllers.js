@@ -43,6 +43,9 @@ const Approver = require("../models/approver.js");
 const ApprovalMethod = require("../models/approvalMethod.js");
 const { model } = require("mongoose");
 const EmployeeCustomRole = require("../models/employeeCustomRole.js");
+const Region = require("../models/region.js");
+const Zone = require("../models/zone.js");
+const Woreda = require("../models/woreda.js");
 
 const storage4 = multer.memoryStorage();
 // create instance of multer and specify storage engine
@@ -90,6 +93,18 @@ exports.getAllEmployee = async (req, res, next) => {
             },
           },
         },
+        {
+          model: Region,
+          as: "region",
+        },
+        {
+          model: Zone,
+          as: "zone",
+        },
+        {
+          model: Woreda,
+          as: "woreda",
+        },
       ],
       limit, // Limit the number of records
       offset, // Skip the number of records based on page
@@ -102,7 +117,15 @@ exports.getAllEmployee = async (req, res, next) => {
           ? employee.Positions[0].positionName
           : null;
       const grade = employee.Grades.length > 0 ? employee.Grades[0].name : null;
-
+      const region = employee.region
+        ? { id: employee.region.id, name: employee.region.name }
+        : null;
+      const zone = employee.zone
+        ? { id: employee.zone.id, name: employee.zone.name }
+        : null;
+      const woreda = employee.woreda
+        ? { id: employee.woreda.id, name: employee.woreda.name }
+        : null;
       return {
         id: employee.id,
         fullName: employee.fullname,
@@ -110,6 +133,9 @@ exports.getAllEmployee = async (req, res, next) => {
         positionName: position,
         gradeName: grade,
         employeeId: employee.employee_id_number,
+        region,
+        zone ,
+        woreda,
       };
     });
 

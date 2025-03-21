@@ -5,9 +5,9 @@ const router = express.Router();
 
 router.get(
   "/",
-  middleware.validateUserAgent,
-  middleware.protectAll,
-  middleware.restrictToAll("superAdmin"),
+  // middleware.validateUserAgent,
+  // middleware.protectAll,
+  // middleware.restrictToAll("superAdmin"),
 
   userController.getAllUser
 );
@@ -20,9 +20,9 @@ router.get(
 );
 router.post(
   "/",
-  middleware.validateUserAgent,
-  middleware.protectAll,
-  middleware.restrictTo("superAdmin"),
+  // middleware.validateUserAgent,
+  // middleware.protectAll,
+  // middleware.restrictTo("superAdmin"),
   userController.createUser
 );
 

@@ -31,7 +31,7 @@ exports.createUser = async (req, res, next) => {
         email,
         phoneNumber: phoneNumber,
         AccountNumber: AccountNumber,
-        password: "pass",
+        password: password,
         role: role ?? "superAdmin",
       });
       return res.status(200).json({
@@ -47,7 +47,9 @@ exports.createUser = async (req, res, next) => {
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -59,9 +61,11 @@ exports.getAllUser = async (req, res, next) => {
     });
     delete users.createdAt;
     delete users.updatedAt;
-    return res.status(200).json(users);
+    return res.status(200).json({ data: users });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -77,7 +81,9 @@ exports.getUserById = async (req, res, next) => {
 
     return res.json(user);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -114,7 +120,9 @@ exports.updateUser = async (req, res, next) => {
       message: "updated successfully",
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -127,7 +135,9 @@ exports.deleteUser = async (req, res, next) => {
     await user.destroy();
     return res.json("user deleted successfully");
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -196,9 +206,10 @@ exports.updateCompanyStatus1 = async (req, res, next) => {
       .status(200)
       .json({ message: `Company status updated successfully` });
   } catch (error) {
-   
     // await transaction.rollback();
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 // exports.updateCompanyStatus1 = async (req, res, next) => {
@@ -351,7 +362,9 @@ exports.updateCompanyStatus = async (req, res, next) => {
       .json({ message: "Company status activated successfully" });
   } catch (error) {
     await transaction.rollback();
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.verifyCompanyAccount = async (req, res, next) => {
@@ -391,7 +404,9 @@ exports.verifyCompanyAccount = async (req, res, next) => {
     return res.status(200).json({ message: "Account verified successfully" });
   } catch (error) {
     await transaction.rollback();
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -446,6 +461,8 @@ exports.activateUser = async (req, res, next) => {
       }
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

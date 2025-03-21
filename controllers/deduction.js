@@ -7,8 +7,10 @@ const createError = require("../utils/error.js");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllDeduction = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const deductions = await Deduction.findAll({
-      where: { CompanyId: req.user.id },
+      where: { CompanyId: CompanyId },
     });
     return res.status(200).json({
       count: deductions.length,
@@ -25,10 +27,13 @@ exports.getAllDeduction = async (req, res, next) => {
 exports.getDeductionById = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const deduction = await Deduction.findOne({
       where: {
         id: id,
-        CompanyId: req.user.id,
+        CompanyId: CompanyId,
       },
     });
     if (!deduction) {
@@ -68,7 +73,8 @@ exports.createDeduction = async (req, res, next) => {
       },
     });
     if (!grade) {
-      res.status(404).json("Grade is not defined");
+      return next(createError.createError(404, "Grade not defined"));
+      // res.status(404).json("Grade is not defined");
     }
     const checkIfAssigned = await Deduction.findOne({
       where: {
@@ -87,7 +93,7 @@ exports.createDeduction = async (req, res, next) => {
       );
     } else {
       const deduction = await Deduction.create({ amount });
-      await deduction.setCompany(Number(req.user.id));
+      await deduction.setCompany(Number(CompanyId));
       await deduction.setGrade(gradeId);
       await deduction.setDeductionDefinition(deductinDefinitionId);
       res.status(200).json({

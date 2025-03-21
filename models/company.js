@@ -1,21 +1,15 @@
 const { Sequelize, DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 const bcrypt = require("bcryptjs");
+const Region = require("./region.js");
+const Zone = require("./zone.js");
+const Woreda = require("./woreda.js");
 
 const Company = sequelize.define("Company", {
-  // id: {
-  //   type: Sequelize.INTEGER,
-  //   primaryKey: true,
-  //   autoIncrement: true, // Auto-increments the id field
+  // numberOfEmployees: {
+  //   type: DataTypes.INTEGER,
+  //   allowNull: false,
   // },
-  name: {
-    type: DataTypes.STRING,
-    // allowNull: false,
-  },
-  numberOfEmployees: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
   status: {
     type: DataTypes.ENUM,
     values: ["pending", "active", "reject", "denied"],
@@ -32,19 +26,43 @@ const Company = sequelize.define("Company", {
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
+  },
+  phoneNumber: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   password: {
     type: DataTypes.STRING,
     // allowNull: false,
   },
-  color: {
-    type: DataTypes.STRING,
-    defaultValue: "#FFF",
-  },
-  companyLogo: {
-    type: DataTypes.STRING,
-  },
+
+  // regionId: {
+  //   type: DataTypes.INTEGER,
+  //   allowNull: false,
+  //   references: {
+  //     model: "Regions",
+  //     // key: "id",
+  //   },
+  // },
+
+  // zoneId: {
+  //   type: DataTypes.INTEGER,
+  //   allowNull: true,
+  //   references: {
+  //     model: "Zones",
+  //     key: "id",
+  //   },
+  // },
+
+  // woredaId: {
+  //   type: DataTypes.INTEGER,
+  //   allowNull: true,
+  //   references: {
+  //     model: "Woredas",
+  //     key: "id",
+  //   },
+  // },
 
   phoneNumber: {
     type: DataTypes.STRING,
@@ -55,80 +73,10 @@ const Company = sequelize.define("Company", {
     type: DataTypes.STRING,
     defaultValue: "companyAdmin",
   },
-  jobTitle: {
-    type: DataTypes.STRING,
-    // allowNull: false,
-  },
+
   companyCode: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
-  country: {
-    type: DataTypes.STRING,
-    defaultValue: "Ethiopia",
-  },
-  header: {
-    type: DataTypes.STRING,
-  },
-  footer: {
-    type: DataTypes.STRING,
-  },
-  //NEW CHANGE
-  companyBanner: {
-    type: DataTypes.STRING,
-  },
-  primary_Color: {
-    type: DataTypes.STRING,
-    defaultValue: "#00adef",
-  },
-  primary_Font_Color: {
-    type: DataTypes.STRING,
-    defaultValue: "#000000",
-  },
-  primary_Gradient_Color: {
-    type: DataTypes.STRING,
-    defaultValue: "",
-  },
-  secondary_Color: {
-    type: DataTypes.STRING,
-    defaultValue: "#008000",
-  },
-  secondary_Font_Color: {
-    type: DataTypes.STRING,
-    defaultValue: "#ffffff",
-  },
-  secondary_Gradient_Color: {
-    type: DataTypes.STRING,
-    defaultValue: "",
-  },
-  social_Media_Images: {
-    type: DataTypes.BOOLEAN,
-
-    defaultValue: false,
-  },
-  region_or_City: {
-    type: DataTypes.STRING,
-  },
-  fax: {
-    type: DataTypes.STRING,
-  },
-  address_Street: {
-    type: DataTypes.STRING,
-  },
-  notes: {
-    type: DataTypes.STRING,
-  },
-
-  accountNumber: {
-    type: DataTypes.STRING,
-  },
-  isProjectBased: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  },
-  isSetted: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
   },
 
   isLoanGranted: {
@@ -173,3 +121,10 @@ Company.beforeUpdate((company, options) => {
 
 // Company.sync({ force: true }).then(() => console.log('positon model is ready'));
 module.exports = Company;
+Company.belongsTo(Region, { foreignKey: "regionId", as: "region" });
+Region.hasMany(Company, { foreignKey: "regionId", as: "companies" });
+Company.belongsTo(Zone, { foreignKey: "zoneId", as: "zone" });
+Zone.hasMany(Company, { foreignKey: "zoneId", as: "companies" });
+
+Company.belongsTo(Woreda, { foreignKey: "woredaId", as: "Woreda" });
+Woreda.hasMany(Company, { foreignKey: "woredaId", as: "companies" });

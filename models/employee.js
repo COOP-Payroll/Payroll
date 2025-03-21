@@ -5,6 +5,9 @@ const bcrypt = require("bcryptjs");
 
 const EmployeeHistory = require("./employeeHistory.js");
 const { closeSync } = require("fs");
+const Region = require("./region.js");
+const Zone = require("./zone.js");
+const Woreda = require("./woreda.js");
 
 const Employee = sequelize.define("Employee", {
   id: {
@@ -107,6 +110,28 @@ const Employee = sequelize.define("Employee", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  // New fields for Region, Zone, and Woreda
+  regionId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: Region,
+      key: "id",
+    },
+  },
+  zoneId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: Zone,
+      key: "id",
+    },
+  },
+  woredaId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: Woreda,
+      key: "id",
+    },
+  },
 });
 
 Employee.beforeCreate((employee, options) => {
@@ -170,3 +195,6 @@ Employee.beforeUpdate(async (employee, options) => {
 module.exports = Employee;
 Company.hasMany(Employee);
 Employee.belongsTo(Company);
+Employee.belongsTo(Region, { foreignKey: "regionId", as: "region" });
+Employee.belongsTo(Zone, { foreignKey: "zoneId", as: "zone" });
+Employee.belongsTo(Woreda, { foreignKey: "woredaId", as: "woreda" });

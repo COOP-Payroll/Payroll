@@ -5,10 +5,11 @@ const createError = require("../utils/error");
 
 //GET ALL DEDUCTION DEFINITION
 exports.getAllDeductionDefinition = async (req, res, next) => {
-  const Company = req.user.id;
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const criteria = {
-      CompanyId: req.user.id,
+      CompanyId: CompanyId,
     };
     const deductionDefinitions = await DeductionDefinition.findAll({
       where: criteria,
@@ -42,8 +43,10 @@ exports.getDeductionDefinitionById = async (req, res, next) => {
 
 //CREATE DEDUCTION DEFINITION
 exports.createDeductionDefinition = async (req, res, next) => {
-  const companyId = req.user.id;
+  // const companyId = req.user.id;
   try {
+    const CompanyId =
+    req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const name = req.body.name;
 
     const checkDeductionDefinition = await DeductionDefinition.findAll({
@@ -57,7 +60,7 @@ exports.createDeductionDefinition = async (req, res, next) => {
         name: name,
       });
 
-      const company = await Company.findByPk(companyId);
+      const company = await Company.findByPk(CompanyId);
       if (company) {
         await deductionDefinition.setCompany(company);
       } else {

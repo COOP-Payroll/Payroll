@@ -24,19 +24,19 @@ const User = sequelize.define("User", {
     // allowNull: false,
   },
   role: {
-    type: DataTypes.ENUM('superAdmin', 'approver','manager'),
+    type: DataTypes.ENUM("superAdmin", "approver", "manager", "MOH-ADMIN"),
     defaultValue: "superAdmin",
     // type: DataTypes.STRING,
     // defaultValue: "superAdmin",
   },
-  isActive:{
+  isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true
+    defaultValue: true,
   },
   lastLoggedIn: {
     type: DataTypes.DATE,
     // defaultValue: Date.now()
-  }
+  },
 });
 
 User.beforeCreate((user, options) => {

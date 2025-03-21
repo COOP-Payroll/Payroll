@@ -33,5 +33,5 @@ module.exports = Sponsor;
 Sponsor.belongsTo(Company);
 Company.hasMany(Sponsor);
 
-Sponsor.hasMany(AccountInfo);
-AccountInfo.belongsTo(Sponsor);
+// Sponsor.hasMany(AccountInfo);
+// AccountInfo.belongsTo(Sponsor);

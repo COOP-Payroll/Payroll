@@ -3,6 +3,7 @@ const AccountInfo = require("../models/accountInfo");
 const IdFormat = require("../models/companyIdFormat");
 const Department = require("../models/department");
 const Employee = require("../models/employee");
+
 const Grade = require("../models/grade");
 const Address = require("../models/address");
 const EmployeeInfo = require("../models/employeInfo");
@@ -17,7 +18,7 @@ const ProjectEmployee = require("../models/project-employee.js");
 const Position = require("../models/position.js");
 const EmployeePosition = require("../models/employeePosition.js");
 const createError = require("../utils/error.js");
-const { Sequelize } = require("sequelize");
+const { Sequelize, where } = require("sequelize");
 const EmployeePromotion = require("../models/employeePromotion.js");
 const { model } = require("mongoose");
 const xlsx = require("xlsx");
@@ -44,21 +45,61 @@ exports.createEmployee = async (req, res, next) => {
   } = req.body;
 
   try {
+    var regionId, zoneId, woredaId;
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    const company = await Company.findOne({ where: { id: CompanyId } });
+    const companyRegionId = company?.regionId;
+    const companyZoneId = company?.zoneId;
+    const companyWoredaId = company?.woredaId;
+
+    // Always set from company if not set in the request body
+    if (companyRegionId) {
+      basicInfo.regionId = companyRegionId; // Overwrite with company region
+    }
+
+    if (companyZoneId) {
+      basicInfo.zoneId = companyZoneId; // Overwrite with company zone
+    }
+
+    if (companyWoredaId) {
+      basicInfo.woredaId = companyWoredaId; // Overwrite with company woreda
+    }
 
     if (!basicInfo?.DepartmentId || !basicInfo?.GradeId) {
       return next(
         createError.createError(400, "Please provide all required information")
       );
     }
-
     if (
       !accountInformation ||
-      accountInformation?.[0]?.accountNumber === undefined
+      (accountInformation?.[0]?.accountNumber === '' &&
+        accountInformation?.[0]?.phoneNumber === '')
     ) {
-      return next(createError.createError(400, "Account number is required"));
+      return next(createError.createError(400, "Account number or phone number is required"));
     }
+    if (accountInformation[0]?.paymentMethod === "phone" && (!accountInformation[0]?.phoneNumber || accountInformation[0]?.phoneNumber === "")) {
+      return next(createError.createError(400, "Phone number is required when payment method is 'phone'."));
+    }
+    
+    // Check if account number is missing and payment method is not selected
+    if (!accountInformation[0]?.accountNumber || accountInformation[0]?.accountNumber === "") {
+      if (!accountInformation[0]?.paymentMethod) {
+        return next(createError.createError(400, "Either account number or payment method must be provided."));
+      }
+      // If payment method is selected but no account number, you can handle it differently if needed
+      if (accountInformation[0]?.paymentMethod && accountInformation[0]?.paymentMethod !== "phone") {
+        return next(createError.createError(400, "Account number is required unless payment method is 'phone'."));
+      }
+    }
+    
+    // If accountNumber is not provided, use phoneNumber
+    accountInformation.forEach((acct) => {
+      if (!acct.accountNumber && acct.phoneNumber) {
+        acct.accountNumber = acct.phoneNumber; // Default account number to phoneNumber
+      }
+    });
 
     const accountNumbers = accountInformation?.map(
       (acct) => acct.accountNumber
@@ -83,19 +124,15 @@ exports.createEmployee = async (req, res, next) => {
         }),
       ]);
 
-    const errors = [];
     if (!position) {
       return next(createError.createError(404, "Position not found"));
-      // errors.push({ error: 'Position does not exist.' })
     }
     if (!grade) {
       return next(createError.createError(404, "Grade not found"));
-      // errors.push({ error: 'Grade does not exist.' })
     }
 
     if (!department) {
       return next(createError.createError(404, "Department not found"));
-      // errors.push({ error: 'Department does not exist.' })
     }
     if (
       employeeInfo.basicSalary < grade?.minSalary ||
@@ -107,10 +144,6 @@ exports.createEmployee = async (req, res, next) => {
           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
         )
       );
-      // errors.push({
-
-      //   error: `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
-      // })
     }
 
     if (employee) {
@@ -120,22 +153,11 @@ exports.createEmployee = async (req, res, next) => {
           `Employee already exists with ${basicInfo?.email} email.`
         )
       );
-      // errors.push({
-      //   error: `Employee already exists with ${basicInfo?.email} email.`
-      // })
     }
 
     if (accountInfos.length > 0) {
       return next(createError.createError(404, "Account infos already exist."));
-      // errors.push({ error: 'Account infos already exist.' })
     }
-
-    // if (!idformat) {
-    //   errors.push({ error: 'ID format does not exist.' })
-    // }
-    // if (errors.length > 0) {
-    //   return res.status(404).json({ message: errors })
-    // }
 
     let password = req?.user?.companyCode?.substring(0, 4) + "0000";
 
@@ -146,6 +168,7 @@ exports.createEmployee = async (req, res, next) => {
 
       const formatElements = idformat?.order?.split(",");
       const lastEmployee = await Employee.findOne({
+        where:{CompanyId:CompanyId },
         order: [["createdAt", "DESC"]],
       });
       let paddedEmployeeCode = "00001";
@@ -248,55 +271,15 @@ exports.createEmployee = async (req, res, next) => {
           ...info,
           EmployeeId: createEmployee.id,
           isActive: info.isActive || true,
+          isVerified: false,
           image: accountImages[index],
         })),
         { transaction: t }
       );
 
-      const generateConfirmationToken = () => {
-        return crypto.randomBytes(20).toString("hex");
-      };
-      const token = generateConfirmationToken();
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 7);
-
-      const formattedExpirationDate = expirationDate.toDateString();
-
-      const acceptanceCode = token;
-      const rejectionCode = expirationDate;
-
-      const URL = "https://payroll-production.up.railway.app";
-      createEmployee.acceptanceCode = acceptanceCode;
-      createEmployee.rejectionCode = rejectionCode;
-      // createEmployee.save();
-      const message1 = {
-        from: "your-email@gmail.com",
-        to: createEmployee.email,
-        subject: "Employee Registration Confirmation",
-        html: `
-             
-      <p>Dear ${createEmployee.fullname},</p>
-      <p>Thank you for registering as an employee.</p>
-      <p>Your registration is valid until ${formattedExpirationDate}.</p>
-      <p>Please click one of the following links to accept or reject your registration:</p>
-      <a href="${URL}/confirm/${
-          createEmployee.id
-        }?token=${token}&expiry=${expirationDate.toISOString()}">Confirm Registration</a>
-      <p>This link will expire on ${expirationDate.toLocaleDateString()}.</p>
-      <p>Click this link to reject the registration</p>
-       <p>If you wish to reject the confirmation, click the following button:</p>
-     
-    `,
-      };
-
-      //  await sendEmail({ message1 });
-
       return res.status(201).json({
         success: true,
         message: "Registered successfully",
-        // basicInfo: createEmployee,
-        // address: createAddress,
-        // employeeInfo: createEmployeeInfo,
       });
     });
   } catch (error) {
@@ -307,11 +290,246 @@ exports.createEmployee = async (req, res, next) => {
         "An error occurred while creating the records."
       )
     );
-    // return res
-    //   .status(503)
-    //   .json({ error: 'An error occurred while creating the records.' })
   }
 };
+
+
+// exports.createEmployee = async (req, res, next) => {
+//   const {
+//     address,
+//     employeeInfo,
+//     emergencyInfo,
+//     basicInfo,
+//     accountInformation,
+//   } = req.body;
+
+//   try {
+//     var regionId, zoneId, woredaId;
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+//     const company = await Company.findOne({ where: { id: CompanyId } });
+//     const companyRegionId = company?.regionId;
+//     const companyZoneId = company?.zoneId;
+//     const companyWoredaId = company?.woredaId;
+
+//     // Always set from company if not set in the request body
+//     if (companyRegionId) {
+//       basicInfo.regionId = companyRegionId; // Overwrite with company region
+//     }
+
+//     if (companyZoneId) {
+//       basicInfo.zoneId = companyZoneId; // Overwrite with company zone
+//     }
+
+//     if (companyWoredaId) {
+//       basicInfo.woredaId = companyWoredaId; // Overwrite with company woreda
+//     }
+
+
+
+//     if (!basicInfo?.DepartmentId || !basicInfo?.GradeId) {
+//       return next(
+//         createError.createError(400, "Please provide all required information")
+//       );
+//     }
+
+//     if (
+//       !accountInformation ||
+//       accountInformation?.[0]?.accountNumber === undefined
+//     ) {
+//       return next(createError.createError(400, "Account number is required"));
+//     }
+
+//     const accountNumbers = accountInformation?.map(
+//       (acct) => acct.accountNumber
+//     );
+//     const [position, grade, department, employee, accountInfos, idformat] =
+//       await Promise.all([
+//         Position.findOne({
+//           where: { id: Number(employeeInfo.position), CompanyId: CompanyId },
+//         }),
+//         Grade.findOne({ where: { id: Number(basicInfo?.GradeId), CompanyId } }),
+//         Department.findOne({
+//           where: { id: Number(basicInfo?.DepartmentId), CompanyId },
+//         }),
+//         Employee.findOne({
+//           where: { email: basicInfo?.email, CompanyId },
+//         }),
+//         AccountInfo.findAll({
+//           where: { accountNumber: accountNumbers, CompanyId },
+//         }),
+//         IdFormat.findOne({
+//           where: { CompanyId, isActive: true },
+//         }),
+//       ]);
+
+//     if (!position) {
+//       return next(createError.createError(404, "Position not found"));
+//     }
+//     if (!grade) {
+//       return next(createError.createError(404, "Grade not found"));
+//     }
+
+//     if (!department) {
+//       return next(createError.createError(404, "Department not found"));
+//     }
+//     if (
+//       employeeInfo.basicSalary < grade?.minSalary ||
+//       employeeInfo.basicSalary > grade?.maxSalary
+//     ) {
+//       return next(
+//         createError.createError(
+//           404,
+//           `Basic salary must be between ${grade.minSalary} and ${grade.maxSalary}`
+//         )
+//       );
+//     }
+
+//     if (employee) {
+//       return next(
+//         createError.createError(
+//           404,
+//           `Employee already exists with ${basicInfo?.email} email.`
+//         )
+//       );
+//     }
+
+//     if (accountInfos.length > 0) {
+//       return next(createError.createError(404, "Account infos already exist."));
+//     }
+
+//     let password = req?.user?.companyCode?.substring(0, 4) + "0000";
+
+//     await sequelize.transaction(async (t) => {
+//       const imagePath = req?.files?.["basicInfo[image]"]?.[0]?.path || null;
+//       const idImagePath =
+//         req?.files?.["basicInfo[id_image]"]?.[0]?.path || null;
+
+//       const formatElements = idformat?.order?.split(",");
+//       const lastEmployee = await Employee.findOne({
+//         order: [["createdAt", "DESC"]],
+//       });
+//       let paddedEmployeeCode = "00001";
+
+//       if (lastEmployee) {
+//         const lastEmployeeId = lastEmployee.employee_id_number;
+//         const lastEmployeeCode = lastEmployeeId
+//           .split(idformat?.separator)
+//           ?.pop();
+//         const incrementedEmployeeCode = parseInt(lastEmployeeCode, 10) + 1;
+//         paddedEmployeeCode = incrementedEmployeeCode
+//           .toString()
+//           .padStart(idformat?.digitLength, "0");
+//       }
+
+//       let employeeId = "";
+//       for (let i = 0; i < formatElements.length; i++) {
+//         const element = formatElements[i];
+//         switch (element) {
+//           case "companyCode":
+//             employeeId += idformat?.companyCode;
+//             break;
+//           case "year":
+//             employeeId += employeeInfo.hireDate.split("-")[0];
+//             break;
+//           case "department":
+//             employeeId += department.shorthandRepresentation;
+//             break;
+//         }
+
+//         if (i !== formatElements.length - 1) {
+//           employeeId += idformat?.separator;
+//         }
+//       }
+
+//       employeeId += idformat?.separator + paddedEmployeeCode;
+//       const createEmployee = await Employee.create(
+//         {
+//           ...basicInfo,
+//           password,
+//           isActive: true,
+//           image: imagePath,
+//           id_image: idImagePath,
+//           CompanyId: Number(req.user.id),
+//           employee_id_number: employeeId,
+//         },
+//         { transaction: t }
+//       );
+//       const junctionCreate = await EmployeeDepartment.create(
+//         {
+//           EmployeeId: Number(createEmployee.id),
+//           DepartmentId: Number(department.id),
+//           active: true,
+//         },
+//         { transaction: t }
+//       );
+
+//       const junctionGrade = await EmployeeGrade.create(
+//         {
+//           EmployeeId: Number(createEmployee.id),
+//           GradeId: Number(grade.id),
+//           active: true,
+//         },
+//         { transaction: t }
+//       );
+
+//       const junctionPosition = await EmployeePosition.create(
+//         {
+//           EmployeeId: Number(createEmployee.id),
+//           PositionId: Number(position.id),
+//         },
+//         { transaction: t }
+//       );
+//       const createAddress = await Address.create(
+//         { ...address, EmployeeId: createEmployee.id, isActive: true },
+//         { transaction: t }
+//       );
+
+//       const createEmployeeInfo = await EmployeeInfo.create(
+//         { ...employeeInfo, isActive: true, EmployeeId: createEmployee.id },
+//         { transaction: t }
+//       );
+
+//       const createdEmergencyInfos = await EmergencyContact.bulkCreate(
+//         emergencyInfo.map((info) => ({
+//           ...info,
+//           isActive: true,
+//           EmployeeId: createEmployee.id,
+//         })),
+//         { transaction: t }
+//       );
+
+//       const accountImages = accountInformation.map((info, index) => {
+//         const key = `accountInformation[${index}][image]`;
+//         return req?.files?.[key]?.[0]?.path || null;
+//       });
+
+//       const createdAccountInformations = await AccountInfo.bulkCreate(
+//         accountInformation.map((info, index) => ({
+//           ...info,
+//           EmployeeId: createEmployee.id,
+//           isActive: info.isActive || true,
+//           image: accountImages[index],
+//         })),
+//         { transaction: t }
+//       );
+
+//       return res.status(201).json({
+//         success: true,
+//         message: "Registered successfully",
+//       });
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(
+//         503,
+//         "An error occurred while creating the records."
+//       )
+//     );
+//   }
+// };
 
 exports.updateEmployee = async (req, res, next) => {
   const transaction = await sequelize.transaction();
@@ -1386,7 +1604,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 //         <h3>Employee Registration API Documentation</h3>
 //         <h5>Endpoint: POST /api/employee/register</h5>
 //         <p>Use this endpoint to register a new employee in the system.</p>
-        
+
 //         <h4>Request Body</h4>
 //         <pre>
 // {
@@ -1444,7 +1662,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 
 //         <h4>Response</h4>
 //         <p>A successful registration will return a response with status 200 and a message confirming the registration.</p>
-        
+
 //         <h4>Response Example</h4>
 //         <pre>
 // {
@@ -1455,7 +1673,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 
 //         <h4>Errors</h4>
 //         <p>If there are any errors during the registration, the API will return an appropriate status code and error message.</p>
-        
+
 //         <h5>Error Response Example</h5>
 //         <pre>
 // {
@@ -1463,7 +1681,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 //     "message": "Invalid request data"
 // }
 //         </pre>
-        
+
 //         <h4>Security</h4>
 //         <p>This API requires a valid token in the Authorization header to access. Use Bearer Token for authentication.</p>
 //       </body>
@@ -1628,12 +1846,17 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
     const options = { format: "A4" };
     pdf.create(apiDocumentationHtml, options).toBuffer((err, buffer) => {
       if (err) {
-        return next(createError.createError(400, "An error occurred while downloading"));
+        return next(
+          createError.createError(400, "An error occurred while downloading")
+        );
       }
 
       // Set the response headers for PDF download
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", "attachment; filename=employee_registration_api_documentation.pdf");
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=employee_registration_api_documentation.pdf"
+      );
 
       // Send the PDF buffer as a response
       res.end(buffer);

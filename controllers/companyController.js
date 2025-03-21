@@ -28,6 +28,9 @@ const CompanyCustomRole = require("../models/companyCustomRole.js");
 // const createError=require("../utils/error.js")
 
 const Permissions = require("../models/permission.js");
+const Region = require("../models/region.js");
+const Woreda = require("../models/woreda.js");
+const Zone = require("../models/zone.js");
 
 // GET COMPANY PROFILES
 exports.getcompanyProfiles = async (req, res, next) => {
@@ -263,11 +266,17 @@ exports.createCompany = async (req, res, next) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { packageId, duration, ...companyData } = req.body;
-
-    // Extract required fields
-    const { fullName, email, companyCode, organizationName, phoneNumber } =
-      companyData;
+    const {
+      companyCode,
+      organizationName,
+      phoneNumber,
+      email,
+      regionId,
+      zoneId,
+      woredaId,
+      accountNumber,
+      // numberOfEmployees = 0,
+    } = req.body; // Get other necessary fields
 
     // Validate required fields
     if (
@@ -275,7 +284,8 @@ exports.createCompany = async (req, res, next) => {
       !companyCode?.trim() ||
       !organizationName?.trim() ||
       !phoneNumber?.trim() ||
-      !packageId
+      !regionId ||
+      !accountNumber
     ) {
       return next(
         createError.createError(400, "Please enter all required fields")
@@ -284,225 +294,98 @@ exports.createCompany = async (req, res, next) => {
 
     const existingCompany = await Company.findOne({
       where: {
-        [Op.or]: [
-          { email: companyData.email },
-          { companyCode: companyData.companyCode },
-        ],
+        [Op.or]: [{ email }, { companyCode }],
       },
-      // transaction
+      transaction,
     });
 
     if (existingCompany) {
-      // await transaction.rollback();
       return next(
         createError.createError(400, "Email or companyCode already exists")
       );
     }
 
-    const package = await Package.findByPk(packageId);
+    const region = await Region.findOne({ where: { id: Number(regionId) } });
 
-    if (!package) {
-      // await transaction.rollback();
-      return next(createError.createError(404, "Package does not exist"));
+    if (!region) {
+      return next(createError.createError(404, "Region Not found "));
     }
 
-    const imagePath = req?.files?.companyLogo?.[0]?.path || null;
-    const acctImagePath = req?.files?.acctImage?.[0]?.path || null;
-    const bannerPath = req?.files?.companyBanner?.[0]?.path || null;
+    if (zoneId) {
+      const zones = await Region.findOne({ where: { id: Number(zoneId) } });
 
-    const token = crypto.randomBytes(32).toString("hex");
-    const firstFourDigits = companyData.companyCode.slice(0, 4);
+      if (!zones) {
+        return next(createError.createError(404, "Zone not found "));
+      }
+    }
+
+    if (woredaId) {
+      if (!zoneId) {
+        return next(createError.createError(400, "Please insert zone"));
+      } else {
+        const woreda = await Woreda.findOne({
+          where: { id: Number(woredaId) },
+        });
+        if (!woreda) {
+          return next(createError.createError(404, "Woreda not found"));
+        }
+      }
+    }
+
+    // Create new company
     const company = await Company.create(
       {
-        ...companyData,
-        password: await bcrypt.hash(firstFourDigits + "C@#1234", 10),
-        primary_Color: "#00adef",
-        primary_Font_Color: "#000000",
-        primary_Gradient_Color: "",
-        secondary_Color: "#008000",
-        secondary_Font_Color: "#ffffff",
-        secondary_Gradient_Color: "",
-        companyLogo: imagePath,
-        companyBanner: bannerPath,
+        companyCode,
+        organizationName,
+        email,
+        phoneNumber,
+        // numberOfEmployees, // Include number of employees
+        status: "pending",
+        regionId, // Include regionId
+        zoneId, // Include zoneId
+        woredaId, // Include woredaId
+        role: "companyAdmin", // Default role
+        password: await bcrypt.hash(companyCode.slice(0, 4) + "C@#1234", 10), // Create a hashed password
+        isLoanGranted: false, // Default to false
       },
       { transaction }
     );
 
-    const currentDate = moment();
-    const subscription = await Subscription.create(
-      { duration: 1 },
-      { transaction }
-    );
-
-    await subscription.setPackage(packageId, { transaction });
-    await subscription.setCompany(company.id, { transaction });
-
-    const nextPaymentDate = await calculateNextPayment(
+    // Create company account info
+    const accountInfo = await AccountInfo.create(
       {
-        chargeType: package.packageType,
-        duration: 1,
-        normalDate: Date.now(),
-      },
-      { transaction }
-    );
-
-    const leftPaymentDate = nextPaymentDate.diff(currentDate, "days");
-
-    await subscription.update(
-      { nextPaymentDate, leftPaymentDate },
-      { transaction }
-    );
-
-    const superAdmin = await User.findOne({
-      where: { role: "superAdmin" },
-      // transaction
-    });
-
-    const [
-      taxSlabs,
-      // pensions,
-      additionalAllowanceDefinitions,
-      additionalDeductionDefinitions,
-    ] = await Promise.all([
-      Taxslab.findAll({ where: { UserId: superAdmin.id, isActive: true } }),
-      // Pension.findAll({ where: { UserId: superAdmin.id, isActive: true } }, ),
-      AdditionalAllowanceDefinition.findAll({ where: { CompanyId: null } }),
-      AdditionalDeductionDefinition.findAll({ where: { CompanyId: null } }),
-    ]);
-
-    const taxes = await Promise.all(
-      taxSlabs.map((taxSlab) =>
-        Taxslab.create(
-          {
-            from_Salary: Number(taxSlab.from_Salary),
-            to_Salary: Number(taxSlab.to_Salary),
-            income_tax_payable: Number(taxSlab.income_tax_payable),
-            deductible_Fee: Number(taxSlab.deductible_Fee),
-            CompanyId: company.id,
-            UserId: null,
-          },
-          { transaction }
-        )
-      )
-    );
-
-    // const pensiones = await Promise.all(
-    //   pensions.map(pension =>
-    //     Pension.create(
-    //       {
-    //         employerContribution: pension.employerContribution,
-    //         employeeContribution: pension.employeeContribution,
-    //         UserId: null,
-    //         CompanyId: company.id
-    //       },
-    //       { transaction }
-    //     )
-    //   )
-    // );
-
-    const additionalAllowances = await Promise.all(
-      additionalAllowanceDefinitions.map((allowance) =>
-        AdditionalAllowanceDefinition.create(
-          {
-            name: allowance.name,
-            isTaxable: allowance.isTaxable,
-            isExempted: allowance.isExempted,
-            exemptedAmount: allowance.exemptedAmount,
-            startingAmount: allowance.startingAmount,
-            CompanyId: company.id,
-          },
-          { transaction }
-        )
-      )
-    );
-
-    const additionalDeductions = await Promise.all(
-      additionalDeductionDefinitions.map((deduction) =>
-        AdditionalDeductionDefinition.create(
-          {
-            name: deduction.name,
-            CompanyId: company.id,
-          },
-          { transaction }
-        )
-      )
-    );
-
-    const pension = await Pension.create(
-      {
-        employeeContribution: 0,
-        employerContribution: 0,
-        CompanyId: Number(company?.id),
+        accountNumber: accountNumber, // Generate random account number
         isActive: true,
-        UserId: null,
+        isVerified: false,
+        CompanyId: company.id,
       },
       { transaction }
     );
 
-    const PF = await ProvidentFund.create(
+    // Create company ID format (Example: companyCode, department, year)
+    const companyIdFormat = await IdFormat.create(
       {
-        employeeContribution: 0,
-        employerContribution: 0,
-        CompanyId: Number(company?.id),
-        isActive: true,
-        UserId: null,
+        companyCode: company.companyCode,
+        year: "true",
+        department: "true",
+        separator: "/",
+        order: "companyCode,department,year",
+        digitLength: 4,
       },
       { transaction }
     );
 
-    // ASSIGN CUSTOM Permission TO ADMIN
-    // const allRoles= await CustomRole.findAll();
-
-    const permissions = await Permissions.findAll();
-
-    // Assign roles to the company
-
-    // Assign permissions to the company using the junction table
-    await company.setPermissions(permissions, { transaction });
+    await companyIdFormat.setCompany(company.id, { transaction });
 
     await transaction.commit();
 
-    const companyIdFormat = await IdFormat.create({
-      companyCode: company.companyCode,
-      year: "true",
-      department: "true",
-      separator: "/",
-      order: "companyCode,department,year",
-      digitLength: 4,
-    });
-    await companyIdFormat.setCompany(company.id);
-
     return res.status(201).json({
       success: true,
-      message: "Created successfully.  ",
+      message: "Company created successfully.",
     });
-
-    // const text =  `Click the following link to set your password: http://localhost:4400/company/set-password/${token}`
-    // const subject= `Thank you for your going with us`
-    // console.log("email",companyData.email)
-    // const emailSent = await sendActivationEmail(companyData.email , subject,text,next);
-    // await company.set({resetPasswordToken:token})
-    // company.resetPasswordToken=token;
-
-    // if (emailSent) {
-
-    //   return res.status(201).json({
-    //     success: true,
-    //     message: 'Created successfully.   Email sent.'
-
-    //   });
-    //   // return res.status(200).json({
-    //   //   status: "success",
-    //   //   message: "Company status activated successfully. Email sent.",
-    //   // });
-    // } else {
-    //  return next(createError.createError(503, "Error sending activation email. Company status not updated"));
-
-    // }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     await transaction.rollback();
-
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
@@ -523,51 +406,26 @@ exports.getAllCompany = async (req, res, next) => {
         ],
       },
       include: [
-        Subscription,
-        Taxslab,
-        Department,
-        // {
-        //   model: Permissions,
-        //   attributes: ["id", "module", "isAccessible"],
-        //   through: {
-        //     attributes: [], // Ensure no attributes from the junction table are included
-        //   },
-        //   // attributes: []
-        // },
+        {
+          model: Region,
+          as: "region", // 'region' should match the alias set in the relationship (Company.belongsTo(Region, { as: 'region' }))
+          attributes: ["id", "name"], // Select specific fields from Region
+        },
+        {
+          model: Zone,
+          as: "zone", // 'region' should match the alias set in the relationship (Company.belongsTo(Region, { as: 'region' }))
+          attributes: ["id", "name"],
+          // Select specific fields from Region
+        },
       ],
     });
 
-    const baseUrl = "/";
-
-    // return res.json(baseUrl);
-    const companies = companys.map((company) => {
-      if (company.companyLogo) {
-        const imageUrl = `${baseUrl}${company.companyLogo.replace(/\\/g, "/")}`;
-        company.companyLogo = imageUrl;
-      }
-      if (company.companyBanner) {
-        const imageUrl = `${baseUrl}${company.companyBanner.replace(
-          /\\/g,
-          "/"
-        )}`;
-        company.companyBanner = imageUrl;
-      }
-      if (company.footer) {
-        const imageUrl = `${baseUrl}${company.footer.replace(/\\/g, "/")}`;
-        company.footer = imageUrl;
-      }
-      if (company.header) {
-        const imageUrl = `${baseUrl}${company.header.replace(/\\/g, "/")}`;
-        company.header = imageUrl;
-      }
-      return company;
-    });
     return res.json({
-      // count: companies.length,
       message: "Fetched successfully",
-      data: companies,
+      data: companys,
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

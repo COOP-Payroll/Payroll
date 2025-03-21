@@ -184,6 +184,7 @@ exports.validateUserAgent = (req, res, next) => {
 exports.protectAll = async (req, res, next) => {
   try {
     let token;
+    console.log(token);
 
     if (
       req.headers.authorization &&
@@ -193,7 +194,6 @@ exports.protectAll = async (req, res, next) => {
     } else if (req.cookies.jwt) {
       token = req.cookies.jwt;
     }
-
     if (!token || token === "expiredtoken") {
       return next(
         createError.createError(
@@ -202,11 +202,8 @@ exports.protectAll = async (req, res, next) => {
         )
       );
     }
-
     const decoded = await promisify(jwt.verify)(token, accessTokenSecret);
-
     let currentUser;
-
     if (decoded.role === "superAdmin") {
       currentUser = await User.findByPk(Number(decoded.id));
     } else if (decoded.role === "companyAdmin") {
@@ -222,12 +219,10 @@ exports.protectAll = async (req, res, next) => {
       );
     } else {
       req.user = currentUser;
-
       next();
     }
   } catch (err) {
     console.log(err);
-
     return next(createError.createError(401, "unauthorized access"));
   }
 };

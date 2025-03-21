@@ -10,6 +10,7 @@ const swaggerSpec = require("./swagger"); // Path to your Swagger configuration 
 const session = require("express-session");
 // const csrf = require("csrf");
 require("dotenv").config();
+
 const sequelize = require("./database/db");
 const cron = require("node-cron");
 const bodyParser = require("body-parser");
@@ -63,6 +64,9 @@ const checkAccountNumber = require("./routes/accountChecker.js");
 const serviceRoutes = require("./routes/serviceRoutes.js");
 const per = require("./models/companyPermission.js");
 
+const regionRoutes = require("./routes/regionRoutes.js");
+const zoneRoutes = require("./routes/zoneRoutes.js");
+const woredaRoutes = require("./routes/woredaRoutes.js");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -76,23 +80,6 @@ app.use(
       "http://10.101.200.91",
       "http://localhost:3000",
       "http://10.12.51.85",
-      // "http://localhost:5173",
-      // "http://localhost:5172",
-      // "http://localhost:5171",
-      // "http://localhost:5170",
-      // "http://localhost:****",
-      // "http://localhost:3001",
-      // "http://localhost:3002",
-      // "http://localhost:****",
-      // "http://10.2.125.124:4000",
-      // "http://10.2.125.127:80",
-      // "http://10.2.125.127",
-      // "http://10.2.125.127:*",
-      // "http://10.2.125.124:80",
-      // "http://10.2.125.124",
-      // "https://payroll-ms.onrender.com",
-
-      // "https://payroll-ms.onrender.com:6000",
     ],
     credentials: true,
   })
@@ -188,6 +175,9 @@ app.use("/api/additionalpayment", additionalPay);
 app.use("/api/payment", ebirrPayment);
 app.use("/api/accountNumber/verify", checkAccountNumber);
 app.use("/api/services", serviceRoutes);
+app.use("/api/regions", regionRoutes);
+app.use("/api/zones", zoneRoutes);
+app.use("/api/woredas", woredaRoutes);
 
 const swaggerOptions = {
   swaggerOptions: {

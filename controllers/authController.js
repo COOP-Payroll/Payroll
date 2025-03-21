@@ -18,8 +18,9 @@ const signToken = (
   phoneNumber,
   permissions,
   organizationName,
-  isSetted,
-  isProjectBased,
+  regionId,
+  zoneId,
+  woredaId,
   company
 ) => {
   try {
@@ -33,8 +34,9 @@ const signToken = (
         phoneNumber,
         permissions,
         organizationName,
-        isSetted,
-        isProjectBased,
+        regionId,
+        zoneId,
+        woredaId,
         company,
       },
       accessTokenSecret,
@@ -53,8 +55,9 @@ const signToken = (
         phoneNumber,
         permissions,
         organizationName,
-        isSetted,
-        isProjectBased,
+        regionId,
+        zoneId,
+        woredaId,
         company,
       },
       refreshTokenSecret,
@@ -577,8 +580,11 @@ const createSendToken = async (company, req, statusCode, res) => {
         "id",
         "organizationName",
         "companyCode",
-        "isSetted",
-        "isProjectBased",
+        "zoneId",
+        "woredaId",
+        "regionId",
+        // "isSetted",
+        // "isProjectBased",
         "isLoanGranted",
       ],
     });
@@ -639,9 +645,11 @@ const createSendToken = async (company, req, statusCode, res) => {
       company1.companyCode,
       company.phoneNumber,
       permissionsList,
-      company1.organizationName,
-      company1.isSetted,
-      company1.isProjectBased,
+      company1?.organizationName,
+      company1?.regionId,
+      company1?.zoneId,
+      company1?.woredaId,
+
       company1
     ));
 
@@ -789,6 +797,11 @@ exports.superAdminLogin = async (req, res, next) => {
       );
     }
     const user = await User.findOne({ where: { email } });
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid credentials" });

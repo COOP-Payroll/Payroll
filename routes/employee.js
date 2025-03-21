@@ -6,6 +6,194 @@ const upload = require("../middleware/multer");
 // const { accountInfoMulter, upload } = require("../middleware/multer.js");
 const newEmployeeController = require("../controllers/newEmployeeControllers.js");
 
+// /**
+//  * @swagger
+//  * components:
+//  *   securitySchemes:
+//  *     bearerAuth:
+//  *       type: http
+//  *       scheme: bearer
+//  *       bearerFormat: JWT
+//  *
+//  * /api/employee:
+//  *   post:
+//  *     summary: Create a new employee
+//  *     description: Add a new employee to the system with their personal, emergency, and account information.
+//  *     tags:
+//  *       - Employee
+//  *     security:
+//  *       - bearerAuth: []
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             type: object
+//  *             properties:
+//  *               address:
+//  *                 type: object
+//  *                 properties:
+//  *                   country:
+//  *                     type: string
+//  *                     example: "ETHIOPIA"
+//  *                   state:
+//  *                     type: string
+//  *                     example: "Addis"
+//  *                   zone_or_city:
+//  *                     type: string
+//  *                     example: "Bole"
+//  *                   woreda:
+//  *                     type: string
+//  *                     example: "Bole"
+//  *                   kebele:
+//  *                     type: string
+//  *                     example: "Bole"
+//  *                   houseNumber:
+//  *                     type: string
+//  *                     example: "67747"
+//  *               employeeInfo:
+//  *                 type: object
+//  *                 properties:
+//  *                   employeeTIN:
+//  *                     type: string
+//  *                     example: "7129"
+//  *                   hireDate:
+//  *                     type: string
+//  *                     format: date-time
+//  *                     example: "2023-05-19T12:06:56.341Z"
+//  *                   employee_Code:
+//  *                     type: string
+//  *                     example: "CG34"
+//  *                   basicSalary:
+//  *                     type: number
+//  *                     format: float
+//  *                     example: 16240
+//  *                   position:
+//  *                     type: integer
+//  *                     example: 1
+//  *                   siteLocation:
+//  *                     type: string
+//  *                     example: "Addis Ababa"
+//  *               emergencyInfo:
+//  *                 type: array
+//  *                 items:
+//  *                   type: object
+//  *                   properties:
+//  *                     relation:
+//  *                       type: string
+//  *                       example: "Aymeku A."
+//  *                     phoneNumber:
+//  *                       type: string
+//  *                       example: "0918151551"
+//  *                     fullname:
+//  *                       type: string
+//  *                       example: "Teshomee"
+//  *               basicInfo:
+//  *                 type: object
+//  *                 properties:
+//  *                   fullname:
+//  *                     type: string
+//  *                     example: "Yosef Abdiisaa"
+//  *                   images:
+//  *                     type: string
+//  *                     example: ""
+//  *                   sex:
+//  *                     type: string
+//  *                     example: "male"
+//  *                   date_of_birth:
+//  *                     type: string
+//  *                     format: date
+//  *                     example: "1998-02-09"
+//  *                   DepartmentId:
+//  *                     type: integer
+//  *                     example: 1
+//  *                   GradeId:
+//  *                     type: integer
+//  *                     example: 2
+//  *                   marriageStatus:
+//  *                     type: string
+//  *                     example: "Married"
+//  *                   isActive:
+//  *                     type: boolean
+//  *                     example: true
+//  *                   nationality:
+//  *                     type: string
+//  *                     example: "ethiopian"
+//  *                   password:
+//  *                     type: string
+//  *                     example: "jk"
+//  *                   email:
+//  *                     type: string
+//  *                     format: email
+//  *                     example: "yha211@gmail.com"
+//  *                   phoneNumber:
+//  *                     type: string
+//  *                     example: "09196564382"
+//  *                   optionalPhoneNumber:
+//  *                     type: string
+//  *                     example: "091754302"
+//  *                   id_type:
+//  *                     type: string
+//  *                     example: "kebele"
+//  *                   id_Number:
+//  *                     type: string
+//  *                     example: "3451446"
+//  *               accountInformation:
+//  *                 type: array
+//  *                 items:
+//  *                   type: object
+//  *                   properties:
+//  *                     accountNumber:
+//  *                       type: string
+//  *                       example: "1312848769"
+//  *                     isVerified:
+//  *                       type: boolean
+//  *                       example: true
+//  *     responses:
+//  *       '201':
+//  *         description: Successfully created the employee.
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 success:
+//  *                   type: boolean
+//  *                   example: true
+//  *                 message:
+//  *                   type: string
+//  *                   example: "Employee created successfully"
+//  *       '400':
+//  *         description: Bad request - Missing required fields (e.g., fullname, email, employeeTIN).
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 message:
+//  *                   type: string
+//  *                   example: "Please provide all required fields"
+//  *       '401':
+//  *         description: Unauthorized - Token is missing or invalid.
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 message:
+//  *                   type: string
+//  *                   example: "Unauthorized access"
+//  *       '500':
+//  *         description: Internal server error - Error occurred while creating employee.
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               type: object
+//  *               properties:
+//  *                 message:
+//  *                   type: string
+//  *                   example: "An error occurred, please try again later"
+//  */
 /**
  * @swagger
  * components:
@@ -35,65 +223,74 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
  *                 properties:
  *                   country:
  *                     type: string
- *                     example: "ETHIOPIA"
+ *                     example: "Ethiopia"
  *                   state:
  *                     type: string
- *                     example: "Addis"
+ *                     example: "Oromia"
  *                   zone_or_city:
  *                     type: string
  *                     example: "Bole"
  *                   woreda:
  *                     type: string
- *                     example: "Bole"
+ *                     example: "13"
  *                   kebele:
  *                     type: string
- *                     example: "Bole"
+ *                     example: "05"
  *                   houseNumber:
  *                     type: string
- *                     example: "67747"
+ *                     example: "09345"
  *               employeeInfo:
  *                 type: object
  *                 properties:
  *                   employeeTIN:
  *                     type: string
- *                     example: "7129"
+ *                     example: "4324324"
+ *                   title:
+ *                     type: string
+ *                     example: "Mr"
+ *                   employeeType:
+ *                     type: string
+ *                     example: "permanent"
  *                   hireDate:
  *                     type: string
  *                     format: date-time
- *                     example: "2023-05-19T12:06:56.341Z"
+ *                     example: "2025-02-25"
  *                   employee_Code:
  *                     type: string
  *                     example: "CG34"
  *                   basicSalary:
  *                     type: number
  *                     format: float
- *                     example: 16240
+ *                     example: 15000
  *                   position:
  *                     type: integer
- *                     example: 1
+ *                     example: 2
  *                   siteLocation:
  *                     type: string
- *                     example: "Addis Ababa"
+ *                     example: "AA"
  *               emergencyInfo:
  *                 type: array
  *                 items:
  *                   type: object
  *                   properties:
- *                     relation:
- *                       type: string
- *                       example: "Aymeku A."
- *                     phoneNumber:
- *                       type: string
- *                       example: "0918151551"
  *                     fullname:
  *                       type: string
- *                       example: "Teshomee"
+ *                       example: "Bulti F"
+ *                     relation:
+ *                       type: string
+ *                       example: "Father"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "094324324324"
+ *                     address:
+ *                       type: string
+ *                       example: "Addis Ababa"
  *               basicInfo:
  *                 type: object
  *                 properties:
  *                   fullname:
  *                     type: string
- *                     example: "Yosef Abdiisaa"
+ *                     example: "Gemechu Bulti"
  *                   images:
  *                     type: string
  *                     example: ""
@@ -103,41 +300,44 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
  *                   date_of_birth:
  *                     type: string
  *                     format: date
- *                     example: "1998-02-09"
+ *                     example: "2025-02-25"
  *                   DepartmentId:
  *                     type: integer
- *                     example: 1
+ *                     example: 2
  *                   GradeId:
  *                     type: integer
  *                     example: 2
+ *                   zoneId:
+ *                     type: integer
+ *                     example: 5
+ *                   woredaId:
+ *                     type: integer
+ *                     example: 10
  *                   marriageStatus:
  *                     type: string
- *                     example: "Married"
+ *                     example: "Single"
  *                   isActive:
  *                     type: boolean
  *                     example: true
  *                   nationality:
  *                     type: string
- *                     example: "ethiopian"
- *                   password:
- *                     type: string
- *                     example: "jk"
+ *                     example: "ET"
  *                   email:
  *                     type: string
  *                     format: email
- *                     example: "yha211@gmail.com"
+ *                     example: "gemee12eeeede@gmail.com"
  *                   phoneNumber:
  *                     type: string
- *                     example: "09196564382"
+ *                     example: "09324324324"
  *                   optionalPhoneNumber:
  *                     type: string
- *                     example: "091754302"
+ *                     example: ""
  *                   id_type:
  *                     type: string
- *                     example: "kebele"
+ *                     example: "passport"
  *                   id_Number:
  *                     type: string
- *                     example: "3451446"
+ *                     example: "kb432432"
  *               accountInformation:
  *                 type: array
  *                 items:
@@ -145,10 +345,13 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
  *                   properties:
  *                     accountNumber:
  *                       type: string
- *                       example: "1312848769"
- *                     isVerified:
- *                       type: boolean
- *                       example: true
+ *                       example: ""
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "0949098765"
+ *                     paymentMethod:
+ *                       type: string
+ *                       example: "phone"
  *     responses:
  *       '201':
  *         description: Successfully created the employee.
@@ -194,6 +397,7 @@ const newEmployeeController = require("../controllers/newEmployeeControllers.js"
  *                   type: string
  *                   example: "An error occurred, please try again later"
  */
+
 /**
  * @swagger
  * components:
@@ -617,7 +821,7 @@ router.get(
   "/",
   middleware.protectAll,
   middleware.validateUserAgent,
-  middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
+  // middleware.restrictALL({ moduleName: "EmployeeList", isAccessible: true }),
   employeeController.getAllEmployee
 );
 
@@ -749,10 +953,10 @@ router.post(
     { name: "accountInformation[2][image]", maxCount: 1 },
   ]),
   middleware.protectAll,
-  middleware.restrictALL({
-    moduleName: "EmployeeList",
-    isAccessible: true,
-  }),
+  // middleware.restrictALL({
+  //   moduleName: "EmployeeList",
+  //   isAccessible: true,
+  // }),
   // employeeController.createEmployeed
   newEmployeeController.createEmployee
 );

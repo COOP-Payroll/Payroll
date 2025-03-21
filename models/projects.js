@@ -63,8 +63,8 @@ Projects.belongsToMany(Position, { through: PositionProjectAssociation });
 Projects.belongsToMany(Employee, { through: ProjectEmployee });
 Employee.belongsToMany(Projects, { through: ProjectEmployee });
 
-Projects.hasMany(AccountInfo);
-AccountInfo.belongsTo(Projects);
+// Projects.hasMany(AccountInfo);
+// AccountInfo.belongsTo(Projects);
 
 ProjectEmployee.belongsTo(Projects);
 Projects.hasMany(ProjectEmployee);

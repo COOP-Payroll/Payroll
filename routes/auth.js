@@ -149,7 +149,7 @@ const router = express.Router();
 router.post(
   "/login/companyLogin",
   // loginLimiter,
-  middleware.validateUserAgent,
+  // middleware.validateUserAgent,
   // middleware.sanitizeInput,
   authcontroller.login
 );

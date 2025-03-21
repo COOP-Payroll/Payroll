@@ -11,17 +11,16 @@ const AdditionalDeductionDefinition = sequelize.define(
       allowNull: false,
     },
 
-    //   isPercent: {
-    //     type: DataTypes.BOOLEAN,
-    //     allowNull: false,
-    //   },
+    isPercent: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
     //   startingAmount: {
     //     type: DataTypes.FLOAT,
     //     defaultValue: 0,
     //   },
   }
 );
-
 
 // AdditionalDeductionDefinition.belongsTo(Employee);
 // Employee.hasMany(AdditionalDeductionDefinition);

@@ -2,21 +2,28 @@ const AdditionalDeductionDefinition = require("../models/additionlDeductionDefin
 const createError = require("../utils/error");
 
 const Company = require("../models/company");
+const { where } = require("sequelize");
 // GET ALL ADDITIONAL DEDUCTION DEFINITION
 exports.getAllAdditionalDeductionDefinition = async (req, res, next) => {
   try {
-    const Company = req.user.id;
+    // const Company = req.user.id;
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const criteria = {
-      CompanyId: req.user.id,
+      CompanyId: CompanyId,
     };
     const AdditionalDeductionDefinitions =
       await AdditionalDeductionDefinition.findAll({ where: criteria });
     res.status(200).json({
       count: AdditionalDeductionDefinitions.length,
-      AdditionalDeductionDefinitions,
+      message: "Data fetched successfully",
+      data: AdditionalDeductionDefinitions,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -24,17 +31,27 @@ exports.getAllAdditionalDeductionDefinition = async (req, res, next) => {
 exports.getAdditionalDeductionDefinitionById = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const additionalDeductionDefinition =
-      await AdditionalDeductionDefinition.findByPk(id);
+      await AdditionalDeductionDefinition.findOne({
+        where: {
+          id: id,
+          CompanyId: CompanyId,
+        },
+      });
 
     if (!additionalDeductionDefinition) {
-      return next(createError.createError(404, "Resource not found"));
+      return next(createError.createError(404, "Not defined"));
     }
     res.status(200).json({
-      additionalDeductionDefinition,
+      data: additionalDeductionDefinition,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -42,13 +59,15 @@ exports.getAdditionalDeductionDefinitionById = async (req, res, next) => {
 exports.createAdditionalDeductionDefinition = async (req, res, next) => {
   try {
     //insert required field
-    const Company = req.user.id;
+    // const Company = req.user.id;
 
-    const { name } = req.body;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const { name, isPercent } = req.body;
 
     const criteria = {
       name: name,
-      CompanyId: req.user.id,
+      CompanyId: CompanyId,
     };
     const checkAdditionalDeductionDefinition =
       await AdditionalDeductionDefinition.findOne({
@@ -56,20 +75,24 @@ exports.createAdditionalDeductionDefinition = async (req, res, next) => {
       });
 
     if (checkAdditionalDeductionDefinition) {
-      return next(createError.createError(400, "Duplicate resource"));
+      return next(createError.createError(400, "Already defined "));
     } else {
       const AdditionalDeductionDefinitions =
         await AdditionalDeductionDefinition.create({
           name,
+          isPercent,
         });
-      await AdditionalDeductionDefinitions.setCompany(req.user.id);
+      await AdditionalDeductionDefinitions.setCompany(CompanyId);
       res.status(200).json({
         message: "Successfully Registered",
-        AdditionalDeductionDefinitions,
+        data: AdditionalDeductionDefinitions,
       });
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    console.log(error);
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -103,7 +126,9 @@ exports.updateAdditionalDeductionDefinition = async (req, res, next) => {
       //   result,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -125,6 +150,8 @@ exports.deleteAdditionalDeductionDefinition = async (req, res, next) => {
       return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
