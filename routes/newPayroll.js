@@ -844,6 +844,105 @@ const z = require("../controllers/zcontrollers.js");
  *       scheme: bearer
  *       bearerFormat: JWT
  *   schemas:
+ *     PayrollRevertResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: The success message of the payroll revert.
+ *         error:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: List of error messages, if any.
+ *     PayrollRevertRequest:
+ *       type: object
+ *       required:
+ *         - payrollDefinitionId
+ *         - employeeIds
+ *       properties:
+ *         payrollDefinitionId:
+ *           type: integer
+ *           description: The ID of the payroll definition to be reverted.
+ *           example: 123
+ *         employeeIds:
+ *           type: array
+ *           items:
+ *             type: integer
+ *           description: A list of employee IDs for whom the payroll will be reverted.
+ *           example: [1, 2, 3]
+ * /api/newPayroll/revert-employees:
+ *   post:
+ *     summary: Revert payroll for selected employees
+ *     description: Reverts the payroll records for the provided list of employees, only if the status is not 'APPROVED'.
+ *     tags:
+ *       - Payroll
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PayrollRevertRequest'
+ *     responses:
+ *       '200':
+ *         description: Successfully reverted payroll.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PayrollRevertResponse'
+ *       '400':
+ *         description: Bad Request - No payroll records found for the provided employee(s) that can be reverted. The payroll status may be 'APPROVED'.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No payroll records found for the provided employee(s) that can be reverted. Please ensure the payroll status is not 'APPROVED'."
+ *       '404':
+ *         description: Not Found - Payroll definition or employees not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Payroll definition not found or some employees do not exist."
+ *       '503':
+ *         description: Service Unavailable - Error occurred while reverting payroll.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred while processing payroll revert."
+ *       '500':
+ *         description: Internal Server Error - Unexpected error occurred.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Error occurred while reverting payroll."
+ */
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
  *     PayrollPaymentProcessRequest:
  *       type: object
  *       required:
@@ -1010,7 +1109,7 @@ router.post(
   payroll.getPayrollPaymentProcess
 );
 router.post(
-  "/deselect",
+  "/revert-employees",
   middleware.protectAll,
   middleware.validateUserAgent,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),

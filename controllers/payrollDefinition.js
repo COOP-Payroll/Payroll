@@ -3,7 +3,7 @@ const { Sequelize, Op } = require("sequelize");
 const Payroll = require("../models/payrollDefinition");
 const PayrollDefinition = require("../models/payrollDefinition");
 const createError = require("../utils/error.js");
-
+const ethiopianDate = require("ethiopian-date");
 // Define controller methods for handling User requests for deduction definition
 exports.getAllPayroll = async (req, res, next) => {
   try {
@@ -28,21 +28,29 @@ exports.getAllPayroll = async (req, res, next) => {
 //GET ALL PAYROLL DEFINITION FOR THIS YEAR
 exports.getAllPayrollForCurrentYear = async (req, res, next) => {
   try {
-    const CompanyId = req.user.id;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
     // Get the current year
     const currentYear = new Date().getFullYear();
-
+    const currentDate = new Date();
+    const [ethiopianYear, ethiopianMonth, ethiopianDay] =
+      ethiopianDate.toEthiopian(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        currentDate.getDate()
+      );
+    // return res.json(ethiopianYear);
     // Define criteria to get payroll definitions for the current year
     const criteria = {
       where: {
         CompanyId: CompanyId,
         // Filtering by startDate to only include records from the current year
         startDate: {
-          [Sequelize.Op.gte]: new Date(`${currentYear}-01-01T00:00:00.000Z`), // January 1st of the current year
+          [Sequelize.Op.gte]: new Date(`${ethiopianYear}-01-01T00:00:00.000Z`), // January 1st of the current year
         },
         endDate: {
-          [Sequelize.Op.lte]: new Date(`${currentYear}-12-31T23:59:59.999Z`), // December 31st of the current year
+          [Sequelize.Op.lte]: new Date(`${ethiopianYear}-12-31T23:59:59.999Z`), // December 31st of the current year
         },
       },
     };
@@ -55,12 +63,66 @@ exports.getAllPayrollForCurrentYear = async (req, res, next) => {
       data: payrollDefinition,
     });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
   }
 };
+// exports.getAllPayrollForCurrentYear = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
+//     // Get the current Gregorian date
+//     const currentDate = new Date();
+
+//     // Convert current Gregorian date to Ethiopian date
+//     const [ethiopianYear, ethiopianMonth, ethiopianDay] =
+//       ethiopianDate.toEthiopian(
+//         currentDate.getFullYear(),
+//         currentDate.getMonth() + 1,
+//         currentDate.getDate()
+//       );
+
+//     // Determine the start and end date for the Ethiopian year
+//     const meskeremStartDate = new Date(currentDate.getFullYear(), 8, 11); // September 11th, the start of the Ethiopian year
+//     const meskeremEndDate = new Date(currentDate.getFullYear() + 1, 8, 10); // The end of the Ethiopian year, September 10th of the next year
+//     return res.json({ meskeremEndDate, meskeremEndDate });
+
+//     // Adjust start and end dates based on the Ethiopian year
+//     if (ethiopianMonth < 9) {
+//       // If the current month is before Meskerem (Ethiopian New Year), adjust the year for the Ethiopian start date
+//       meskeremStartDate.setFullYear(currentDate.getFullYear() - 1);
+//       meskeremEndDate.setFullYear(currentDate.getFullYear());
+//     }
+
+//     // Define criteria to get payroll definitions for the current Ethiopian year
+//     const criteria = {
+//       where: {
+//         CompanyId: CompanyId,
+//         startDate: {
+//           [Sequelize.Op.gte]: meskeremStartDate, // Start of Ethiopian year
+//         },
+//         endDate: {
+//           [Sequelize.Op.lte]: meskeremEndDate, // End of Ethiopian year
+//         },
+//       },
+//     };
+
+//     const payrollDefinition = await PayrollDefinition.findAll(criteria);
+
+//     return res.status(200).json({
+//       count: payrollDefinition.length,
+//       message: "Data fetched successfully",
+//       data: payrollDefinition,
+//     });
+//   } catch (error) {
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 //get by id
 exports.getPayrollDefinitionById = async (req, res, next) => {
   const { id } = req.params;
@@ -321,16 +383,14 @@ exports.deletePayrolldefinition = async (req, res, next) => {
 exports.getCurrentMonth = async (req, res, next) => {
   try {
     const currentDate = new Date();
-    const startOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-    const endOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0
-    );
+    const [ethiopianYear, ethiopianMonth, ethiopianDay] =
+      ethiopianDate.toEthiopian(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        currentDate.getDate()
+      );
+    const startOfMonth = new Date(ethiopianYear, ethiopianMonth, 1);
+    const endOfMonth = new Date(ethiopianYear, ethiopianMonth + 1, 0);
 
     const currentMonthPayrolls = await PayrollDefinition.findAll({
       where: {

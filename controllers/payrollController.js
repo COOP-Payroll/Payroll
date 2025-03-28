@@ -213,6 +213,7 @@ exports.getAllEmployeePayroll = async (req, res, next) => {
       return res.status(404).json({ error: "Payroll is not found" });
     // Fetch employees with and without payroll information for the specific month
     const employees = await Employee.findAll({
+      attributes: { exclude: ["password"] },
       include: [
         {
           model: Payroll,

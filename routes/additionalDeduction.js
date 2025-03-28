@@ -11,6 +11,14 @@ router.get(
   additionalDeductionControllers.getAllAdditionalDeduction
 );
 
+router.get(
+  "/:id",
+  middleware.protectAll,
+  middleware.validateUserAgent,
+  middleware.restrictTo("companyAdmin"),
+  additionalDeductionControllers.getAdditionalDeductionById
+);
+
 //
 // // router.get("/:id", allowance.getAllowanceById);
 router.post(
@@ -20,17 +28,17 @@ router.post(
   middleware.restrictTo("companyAdmin"),
   additionalDeductionControllers.createAdditionalDeduction
 );
-// router.put(
-//   "/:id",
-//   middleware.protectAll,
-//   middleware.restrictTo("companyAdmin"),
-//   additionalDeductionControllers.updateAdditionalDeduction
-// );
-// router.delete(
-//   "/:id",
-//   middleware.protectAll,
-//   middleware.restrictTo("companyAdmin"),
-//   additionalDeductionControllers.deleteAdditionalDeduction
-// );
+router.put(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  additionalDeductionControllers.copyAndUpdateAdditionalDeduction
+);
+router.delete(
+  "/:id",
+  middleware.protectAll,
+  middleware.restrictTo("companyAdmin"),
+  additionalDeductionControllers.deleteAdditionalDeduction
+);
 
 module.exports = router;

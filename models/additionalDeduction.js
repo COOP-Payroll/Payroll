@@ -3,16 +3,19 @@ const sequelize = require("../database/db.js");
 
 const Employee = require("./employee.js");
 const Company = require("../models/company.js");
-const AdditionalDeductionDefinition=require("./additionlDeductionDefinition.js");
+const AdditionalDeductionDefinition = require("./additionlDeductionDefinition.js");
 const AdditionalDeduction = sequelize.define("AdditionalDeduction", {
   amount: {
     type: DataTypes.DOUBLE,
     allowNull: false,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
   //employee id
   //allowance id
 });
-
 
 module.exports = AdditionalDeduction;
 AdditionalDeduction.belongsTo(AdditionalDeductionDefinition);

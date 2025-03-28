@@ -43,6 +43,7 @@ const OTPayment = require("../models/otPayModel.js");
 const TransactionHistory = require("../models/transactionHistory.js");
 const XLSX = require("xlsx");
 const ExcelJS = require("exceljs");
+const ethiopianDate = require("ethiopian-date");
 exports.createPayroll1 = async (req, res, next) => {
   try {
     const isProjectBased = req.user.isProjectBased;
@@ -50,8 +51,10 @@ exports.createPayroll1 = async (req, res, next) => {
 
     const employeeID = employeeIds.map((id) => parseInt(id));
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
-    const company = req.user.id;
-
+    const company =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     // return res.json(req.user.isProjectBased)
     if (!payrolldef) {
       return res.status(404).json({ message: "payroll is not defined" });
@@ -60,6 +63,7 @@ exports.createPayroll1 = async (req, res, next) => {
     const employees = await Employee.findAll({
       where: {
         id: employeeID,
+        CompanyId: CompanyId,
       },
     });
     const existingEmployeeIds = employees.map((employee) => employee.id);
@@ -74,8 +78,29 @@ exports.createPayroll1 = async (req, res, next) => {
         employees: nonExistingEmployeeIds,
       });
     }
+
+    const existingPayrolls = await Payroll.findAll({
+      where: {
+        EmployeeId: {
+          [Op.in]: employeeIds, // Use Op.in to match any employee in the employeeIds array
+        },
+        PayrollDefinitionId: payrollDefinitionId,
+      },
+    });
+
+    if (existingPayrolls.length > 0) {
+      return next(
+        createError.createError(
+          400,
+          "Payroll has already been run for one or more employees."
+        )
+      );
+    }
+
+    // return res.json("Gemechu")
     const errors = [];
     if (isProjectBased) {
+      return res.json("Project based");
       const isTotalPercentEqual100 = employees.every(
         (employee) => employee?.totalPercent === 100
       );
@@ -121,22 +146,22 @@ exports.createPayroll1 = async (req, res, next) => {
       await payrolldef.update({ status: "ordered" });
       for (const employeeId of employeeID) {
         try {
-          const payroll = await Payroll.findOne({
-            where: {
-              EmployeeId: employeeID,
-              PayrollDefinitionId: payrollDefinitionId,
-            },
-          });
+          // const payroll = await Payroll.findOne({
+          //   where: {
+          //     EmployeeId: employeeID,
+          //     PayrollDefinitionId: payrollDefinitionId,
+          //   },
+          // });
 
-          if (payroll != null) {
-            // return res.json("data")
-            return next(
-              createError.createError(
-                400,
-                "Payroll has already been run for one or more employees."
-              )
-            );
-          }
+          // if (payroll != null) {
+          //   // return res.json("data")
+          //   return next(
+          //     createError.createError(
+          //       400,
+          //       "Payroll has already been run for one or more employees."
+          //     )
+          //   );
+          // }
 
           const resp = await runPayroll(req, res, next, {
             employeeId,
@@ -778,65 +803,143 @@ exports.getNonPayrollEmployee1 = async (req, res, next) => {
 
 exports.deselectRunnedPayroll = async (req, res, next) => {
   try {
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
     const { payrollDefinitionId, employeeIds } = req.body;
+    // Convert employeeIds to numbers
+    const convertedEmployeeIds = employeeIds.map((id) => Number(id));
+
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
-    const company = req.user.id;
+
     if (!payrolldef) {
       return res.status(404).json({ message: "payroll is not defined" });
     }
 
-    const employees = await Employee.findAll({
+    const currentDate = new Date();
+    const [ethiopianYear, ethiopianMonth, ethiopianDay] =
+      ethiopianDate.toEthiopian(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        currentDate.getDate()
+      );
+    const startOfMonth = new Date(ethiopianYear, ethiopianMonth, 1);
+    const endOfMonth = new Date(ethiopianYear, ethiopianMonth + 1, 0);
+
+    const currentMonthPayrolls = await PayrollDefinition.findAll({
       where: {
-        id: employeeIds,
-        CompanyId: req.user.id,
+        CompanyId: CompanyId,
+        startDate: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
       },
     });
+
+    if (currentMonthPayrolls?.[0]?.id != payrollDefinitionId) {
+      return next(
+        createError.createError(
+          400,
+          "Action is only allowed for the current month's payroll."
+        )
+      );
+    }
+
+    const employees = await Employee.findAll({
+      where: {
+        id: convertedEmployeeIds,
+        CompanyId: CompanyId,
+      },
+    });
+
+    // Extract existing employee IDs
     const existingEmployeeIds = employees.map((employee) => employee.id);
-    const nonExistingEmployeeIds = employeeIds.filter(
+
+    // Identify non-existing employee IDs
+    const nonExistingEmployeeIds = convertedEmployeeIds.filter(
       (id) => !existingEmployeeIds.includes(id)
     );
 
     if (nonExistingEmployeeIds.length > 0) {
-      return res.status(404).json({
-        error: "employee not found",
-        employees: nonExistingEmployeeIds,
-      });
+      return next(createError.createError(400, "Some employees not found"));
     }
-    let payrollDestroyed = false;
-    await Promise.all(
-      employeeIds.map(async (employeeId) => {
-        try {
-          const payroll = await Payroll.findOne({
-            where: {
-              EmployeeId: employeeId,
-              PayrollDefinitionId: payrollDefinitionId,
-            },
-          });
 
-          if (payroll) {
-            await payroll.destroy();
-            payrollDestroyed = true;
-          }
+    // let payrollDestroyed = false;
+    // await Promise.all(
+    //   employeeIds.map(async (employeeId) => {
+    //     try {
+    //       const payroll = await Payroll.findOne({
+    //         where: {
+    //           EmployeeId: employeeId,
+    //           PayrollDefinitionId: payrollDefinitionId,
+    //         },
+    //       });
+
+    //       if (payroll) {
+    //         await payroll.destroy();
+    //         payrollDestroyed = true;
+    //       }
+    //     } catch (error) {
+    //       // next(error);
+    //       return next(
+    //         createError.createError(
+    //           503,
+    //           "An error occurred, please try again later"
+    //         )
+    //       );
+    //     }
+    //   })
+    // );
+    // // Respond with a success message after all employees have been processed
+    // if (payrollDestroyed) {
+    //   res
+    //     .status(200)
+    //     .json({ message: "Payroll deselected successfully for rerun" });
+    // } else {
+    //   res.status(404).json({ message: "Their is no such employee" });
+    // }
+
+    // Fetch payroll records for the given employees
+    const payrollRecords = await Payroll.findAll({
+      where: {
+        EmployeeId: convertedEmployeeIds,
+        PayrollDefinitionId: payrollDefinitionId,
+        status: { [Op.ne]: "approved" }, // Only revert if NOT approved
+      },
+    });
+
+    // return res.json(payrollRecords);
+    if (!payrollRecords.length) {
+      return next(
+        createError.createError(
+          400,
+          "No payroll records found for the provided employee(s) that can be reverted. Please ensure the payroll status is not 'APPROVED'."
+        )
+      );
+    }
+
+    // Delete payroll records
+    await Promise.all(
+      payrollRecords.map(async (payroll) => {
+        try {
+          await payroll.destroy();
         } catch (error) {
-          // next(error);
+          console.log(error);
           return next(
-            createError.createError(
+            createError(
               503,
-              "An error occurred, please try again later"
+              "An error occurred while processing payroll revert."
             )
           );
         }
       })
     );
-    // Respond with a success message after all employees have been processed
-    if (payrollDestroyed) {
-      res
-        .status(200)
-        .json({ message: "Payroll deselected successfully for rerun" });
-    } else {
-      res.status(404).json({ message: "Their is no such employee" });
-    }
+
+    return res.status(200).json({
+      message:
+        "The payroll has been successfully reverted and is ready for rerun.",
+    });
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
@@ -2603,10 +2706,11 @@ exports.getApprovedPay = async (req, res, next) => {
       currentDate.getMonth() + 1,
       0
     );
-
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const currentMonthPayrolls = await PayrollDefinition.findAll({
       where: {
-        CompanyId: req.user.id,
+        CompanyId: CompanyId,
         startDate: {
           [Op.between]: [startOfMonth, endOfMonth],
         },

@@ -13,12 +13,13 @@ const AdditionalDeductionDefinition = sequelize.define(
 
     isPercent: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
+      defaultValue: false,
     },
-    //   startingAmount: {
-    //     type: DataTypes.FLOAT,
-    //     defaultValue: 0,
-    //   },
+
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   }
 );
 
