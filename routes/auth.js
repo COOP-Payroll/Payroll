@@ -145,6 +145,71 @@ const router = express.Router();
  *                   type: string
  *                   example: "An error occurred, please try again later"
  */
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   put:
+ *     summary: Request password reset
+ *     description: Allows users to request a password reset by verifying their email and company code. A reset token is generated and stored in the database.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address associated with the user account.
+ *                 example: "user@example.com"
+ *               companyCode:
+ *                 type: string
+ *                 description: The company code associated with the user.
+ *                 example: "COMP123"
+ *     responses:
+ *       '201':
+ *         description: Password reset request successful.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "Your password reset request has been received. You will be contacted with further instructions once your password has been reset."
+ *       '404':
+ *         description: No user found with the provided email and company code.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "fail"
+ *                 message:
+ *                   type: string
+ *                   example: "No user found with this email and company code. Please check your details and try again."
+ *       '503':
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
 
 router.post(
   "/login/companyLogin",
@@ -221,7 +286,90 @@ router.post(
  *                   type: string
  *                   example: "An error occurred, please try again later"
  */
-
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   put:
+ *     summary: Reset user password
+ *     description: Allows users to reset their password by providing a valid email, company code, and new password.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address associated with the user account.
+ *                 example: "user@example.com"
+ *               companyCode:
+ *                 type: string
+ *                 description: The company code associated with the user.
+ *                 example: "COMP123"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: The new password for the user.
+ *                 example: "newPassword123"
+ *     responses:
+ *       '200':
+ *         description: Password successfully reset.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "Password reset successful."
+ *       '404':
+ *         description: No user found with the provided email and company code.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "fail"
+ *                 message:
+ *                   type: string
+ *                   example: "No user found with this email and company code."
+ *       '400':
+ *         description: Invalid password format (e.g., too weak).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "fail"
+ *                 message:
+ *                   type: string
+ *                   example: "Password does not meet the required format."
+ *       '503':
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+router.put("/auth/reset-password", authcontroller.resetPassword);
 router.post(
   "/login/superAdmin",
   loginLimiter,
@@ -236,7 +384,7 @@ router.post(
 );
 router.get("/logout", middleware.validateUserAgent, authcontroller.logout);
 
-// router.post('/forgetPassword', authcontroller.forgotPassword);
+router.put("/auth/forgot-password", authcontroller.forgotPassword);
 // router.route('/resetPassword/:token').patch(authcontroller.resetPassword);
 // router.route('/updateMyPassword').patch(authcontroller.updatePassword);
 module.exports = router;

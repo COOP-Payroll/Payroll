@@ -860,3 +860,161 @@ exports.refreshToken = async (req, res, next) => {
     );
   }
 };
+
+const crypto = require("crypto");
+const PasswordResetRequest = require("../models/password_reset_requests");
+
+// exports.forgotPassword = async (req, res, next) => {
+//   try {
+//     const { email, companyCode } = req.body;
+
+//     // Check if the email and company code exist in the database
+//     const existingCompanyRequest = await Company.findOne({
+//       where: { email, companyCode },
+//     });
+
+//     if (!existingCompanyRequest) {
+//       const existingRequest = await Employee.findOne({
+//         where: { email },
+//       });
+//     }
+
+//     if (!existingRequest && !existingCompanyRequest) {
+//       // return res.status(404).json({ message: "User not found" });
+//       return next(createError.createError(404, "User not found"));
+//     }
+//     // Generate a reset token
+//     const resetToken = crypto.randomBytes(32).toString("hex");
+//     const expirationTime = new Date(Date.now() + 3600000); // Token valid for 1 hour
+
+//     // Update the existing reset request in the database
+//     await PasswordResetRequest.update(
+//       { reset_token: resetToken, expiration_time: expirationTime, used: false },
+//       { where: { email, companyCode } }
+//     );
+
+//     return res
+//       .status(200)
+//       .json({ message: "Reset token generated and stored" });
+//   } catch (error) {
+//     console.log(error);
+//     return next(createError.createError(503, "Internal server error"));
+//   }
+// };
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email, companyCode } = req.body;
+
+    // Check if the email exists in either the Company or Employee table
+    let user = await Company.findOne({ where: { email, companyCode } });
+
+    if (!user) {
+      user = await Employee.findOne({
+        where: { email },
+        include: [
+          {
+            model: Company,
+            where: {
+              companyCode: companyCode,
+            },
+          },
+        ],
+      });
+    }
+
+    if (!user) {
+      return next(
+        createError.createError(
+          404,
+          "No user found with this email and company code. Please check your details and try again."
+        )
+      );
+      // return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate a reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const expirationTime = new Date(Date.now() + 3600000); // Token valid for 1 hour
+
+    // Create a new reset request entry in the database
+    await PasswordResetRequest.create({
+      email,
+      companyCode,
+      reset_token: resetToken,
+      expiration_time: expirationTime,
+      used: false,
+    });
+
+    return res.status(201).json({
+      status: "success",
+      message:
+        "Your password reset request has been received. You will be contacted with further instructions once your password has been reset.",
+    });
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(503, "Internal server error"));
+  }
+};
+
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { email, companyCode, password } = req.body;
+
+    // Check if the email exists in either the Company or Employee table
+    let user = await Company.findOne({ where: { email, companyCode } });
+
+    if (!user) {
+      user = await Employee.findOne({
+        where: { email },
+        include: [
+          {
+            model: Company,
+            where: {
+              companyCode: companyCode,
+            },
+          },
+        ],
+      });
+    }
+
+    if (!user) {
+      return next(
+        createError.createError(
+          404,
+          "No user found with this email and company code. Please check your details and try again."
+        )
+      );
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      return next(
+        createError.createError(
+          400,
+          "Password must be at least 6 characters long."
+        )
+      );
+    }
+
+    // Hash the new password
+    // const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Update the password for the found user
+    if (user instanceof Company) {
+      user.password = password; // Assuming Company model has password field
+      await user.save();
+    } else if (user instanceof Employee) {
+      user.password = password; // Assuming Employee model has password field
+      await user.save();
+    }
+
+    return res.status(200).json({
+      status: "success",
+      message: "Password reset successful.",
+    });
+  } catch (error) {
+    console.log(error);
+    return next(createError.createError(503, "Internal server error"));
+  }
+};
