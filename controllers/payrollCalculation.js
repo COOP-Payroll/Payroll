@@ -1,11 +1,31 @@
-const Allowance = require("../models/allowance");
+const Grade = require("../models/grade.js");
+const DeductionDefinition = require("../models/deductionDefinition.js");
+const { Op } = require("sequelize");
+const sequelize = require("../database/db");
+const { Sequelize } = require("sequelize");
+const Pension = require("../models/pension");
+const ProvidentFund = require("../models/providentFund.js");
+const Taxslab = require("../models/taxslab");
 const Employee = require("../models/employee");
 const Loan = require("../models/loan");
+const Allowance = require("../models/allowance");
+const Deduction = require("../models/deduction");
+const AllowanceDefinition = require("../models/allowanceDefinition");
+const AdditionalAllowances = require("../models/additionalAllowance");
+const Payroll = require("../models/Payroll");
+const EmployeeInfo = require("../models/employeInfo");
+const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition");
+const AdditionalDeduction = require("../models/additionalDeduction");
+const AdditionalDeductionDefinition = require("../models/additionlDeductionDefinition");
+const AdditionalPayDefinition = require("../models/additionalPayDefinition.js");
+const AdditionalPay = require("../models/additionalPay.js");
 const PayrollDefinition = require("../models/payrollDefinition");
-const Pension = require("../models/pension");
+const EmployeeGrade = require("../models/EmployeeGrade");
+const createError = require("../utils/error");
 
 exports.createPayroll1 = async (req, res, next) => {
   try {
+    // return res.json("ddkddjd");
     const isProjectBased = req.user.isProjectBased;
     const { payrollDefinitionId, employeeIds } = req.body;
 

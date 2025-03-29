@@ -3,6 +3,8 @@ const payroll = require("../controllers/newPayrollController");
 const payroll1 = require("../controllers/payrollController.js");
 const middleware = require("../middleware/auth");
 const router = express.Router();
+
+const payrollCalcultation = require("../controllers/payrollCalculation.js");
 const z = require("../controllers/zcontrollers.js");
 /**
  * @swagger
@@ -1091,7 +1093,8 @@ router.post(
   "/",
   middleware.protectAll,
   middleware.restrictALL({ moduleName: "payrollpublish", isAccessible: true }),
-  payroll.createPayroll1
+  // payroll.createPayroll1
+  payrollCalcultation.createPayroll1
 );
 
 router.post(
