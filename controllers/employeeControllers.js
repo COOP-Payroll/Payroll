@@ -49,6 +49,7 @@ const storage4 = multer.memoryStorage();
 const upload4 = multer({ storage: storage4 }).single("file");
 exports.getAllEmployee = async (req, res, next) => {
   try {
+    // return res.json("dkdjjdjdj");
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 

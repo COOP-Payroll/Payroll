@@ -3,6 +3,7 @@ const AdditionalDeduction = require("../models/additionalDeduction.js");
 const Employee = require("../models/employee.js");
 const createError = require("../utils/error");
 const { all } = require("axios");
+const Allowance = require("../models/allowance.js");
 //GET ALL
 exports.getAllAdditionalDeduction = async (req, res, next) => {
   try {
@@ -18,7 +19,9 @@ exports.getAllAdditionalDeduction = async (req, res, next) => {
       AdditionalDeductions,
     });
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -34,7 +37,9 @@ exports.getAdditionalDeductionById = async (req, res, next) => {
     }
     res.status(200).json(allowance);
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -60,9 +65,7 @@ exports.createAdditionalDeduction = async (req, res, next) => {
       return next(createError.createError(404, "No Employee with this id"));
     } else if (!AdditionalDeductionDefinitions) {
       return next(createError.createError(404, "Resource not found"));
-    }
-  
-    else {
+    } else {
       const AdditionalDeductions = await AdditionalDeduction.create({ amount });
       await AdditionalDeductions.setEmployee(employee);
       await AdditionalDeductions.setAdditionalDeductionDefinition(
@@ -77,7 +80,9 @@ exports.createAdditionalDeduction = async (req, res, next) => {
       // Handle the case where the company with the given ID is not found
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 exports.updateAdditionalDeduction = async (req, res, next) => {
@@ -89,9 +94,9 @@ exports.updateAdditionalDeduction = async (req, res, next) => {
     if (amount) {
       updates.amount = amount;
     }
-
+    CompanyId;
     const checkAdditionalDeduction = await AdditionalDeduction.findOne({
-      where: { id: id, CompanyId: req.user.id },
+      where: { id: id, CompanyId: CompanyId },
     });
     if (checkAdditionalDeduction) {
       const result = await AdditionalDeduction.update(
@@ -107,7 +112,9 @@ exports.updateAdditionalDeduction = async (req, res, next) => {
       return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };
 
@@ -124,6 +131,8 @@ exports.deleteAdditionalDeduction = async (req, res, next) => {
       return next(createError.createError(404, "Resource not found"));
     }
   } catch (error) {
-    return next(createError.createError(503, "An error occurred, please try again later"));
+    return next(
+      createError.createError(503, "An error occurred, please try again later")
+    );
   }
 };

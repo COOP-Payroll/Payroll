@@ -8,6 +8,8 @@ const { Op, where } = require("sequelize");
 // GET ALL SERVICES
 exports.getAllServices = async (req, res, next) => {
   try {
+
+    
     const services = await Services.findAll({});
     res.status(200).json({
       services,

@@ -7,8 +7,10 @@ exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
   const Company = req.user.id;
 
   try {
+    const CompanyId =
+    req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const criteria = {
-      CompanyId: req.user.id,
+      CompanyId: CompanyId,
     };
     const AdditionalAllowanceDefinitions =
       await AdditionalAllowanceDefinition.findAll({ where: criteria });

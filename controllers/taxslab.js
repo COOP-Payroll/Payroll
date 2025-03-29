@@ -32,6 +32,7 @@ exports.getAllTaxslabs = async (req, res, next) => {
       });
     } else {
       const taxslabs = await Taxslab.findAll({
+        order: [["from_Salary", "ASC"]],
         where: { CompanyId: req.user.id, isActive: true },
       });
 
@@ -358,41 +359,89 @@ exports.updateMany = async (req, res, next) => {
   }
 };
 
+// exports.restoreToDefault = async (req, res, next) => {
+//   try {
+//     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+//     const taxslabs = await Taxslab.findAll({
+//       where: { UserId: Number(superAdmin.id), isActive: true },
+//     });
+
+//     const deletedData = await Taxslab.destroy({
+//       where: {
+//         CompanyId: req.user.id,
+//         isActive: true,
+//       },
+//     });
+//     // return res.json(deletedData);
+//     const tax = await Promise.all(
+//       taxslabs.map((taxslab) => {
+//         return Taxslab.create({
+//           from_Salary: Number(taxslab.from_Salary),
+//           to_Salary: Number(taxslab.to_Salary),
+//           income_tax_payable: Number(taxslab.income_tax_payable),
+//           deductible_Fee: Number(taxslab.deductible_Fee),
+//           CompanyId: Number(req.user.id),
+//           UserId: null,
+//         });
+//       })
+//     );
+//     res.status(200).json({
+//       message: "Restored to default",
+//       deletedData: tax,
+//       data: tax,
+//     });
+//   } catch (error) {
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
+
 exports.restoreToDefault = async (req, res, next) => {
   try {
+    // Find the superAdmin user
     const superAdmin = await User.findOne({ where: { role: "superAdmin" } });
+    if (!superAdmin) {
+      return next(createError(404, "SuperAdmin not found"));
+    }
+
+    // Get the default tax slabs from the superAdmin
     const taxslabs = await Taxslab.findAll({
       where: { UserId: Number(superAdmin.id), isActive: true },
     });
 
-    const deletedData = await Taxslab.destroy({
-      where: {
-        CompanyId: req.user.id,
-        isActive: true,
-      },
-    });
+    if (!taxslabs.length) {
+      return next(createError(404, "No default tax slabs found"));
+    }
 
-    const tax = await Promise.all(
-      taxslabs.map((taxslab) => {
-        return Taxslab.create({
+    // Mark previous tax slabs of the company as inactive
+    await Taxslab.update(
+      { isActive: false },
+      { where: { CompanyId: req.user.id, isActive: true } }
+    );
+
+    // Restore default tax slabs for the company
+    const restoredTaxSlabs = await Promise.all(
+      taxslabs.map((taxslab) =>
+        Taxslab.create({
           from_Salary: Number(taxslab.from_Salary),
           to_Salary: Number(taxslab.to_Salary),
           income_tax_payable: Number(taxslab.income_tax_payable),
           deductible_Fee: Number(taxslab.deductible_Fee),
           CompanyId: Number(req.user.id),
           UserId: null,
-        });
-      })
+          isActive: true,
+        })
+      )
     );
+
     res.status(200).json({
       message: "Restored to default",
-      deletedData: tax,
-      data: tax,
+      previousTaxSlabsUpdated: true,
+      data: restoredTaxSlabs,
     });
   } catch (error) {
-    return next(
-      createError.createError(503, "An error occurred, please try again later")
-    );
+    return next(createError(503, "An error occurred, please try again later"));
   }
 };
 
