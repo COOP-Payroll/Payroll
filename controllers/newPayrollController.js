@@ -75,6 +75,24 @@ exports.createPayroll1 = async (req, res, next) => {
       });
     }
     const errors = [];
+
+    const existingPayrolls = await Payroll.findAll({
+      where: {
+        EmployeeId: {
+          [Op.in]: employeeIds, // Use Op.in to match any employee in the employeeIds array
+        },
+        PayrollDefinitionId: payrollDefinitionId,
+      },
+    });
+
+    if (existingPayrolls.length > 0) {
+      return next(
+        createError.createError(
+          400,
+          "Payroll has already been run for one or more employees."
+        )
+      );
+    }
     if (isProjectBased) {
       const isTotalPercentEqual100 = employees.every(
         (employee) => employee?.totalPercent === 100
@@ -121,22 +139,22 @@ exports.createPayroll1 = async (req, res, next) => {
       await payrolldef.update({ status: "ordered" });
       for (const employeeId of employeeID) {
         try {
-          const payroll = await Payroll.findOne({
-            where: {
-              EmployeeId: employeeID,
-              PayrollDefinitionId: payrollDefinitionId,
-            },
-          });
+          // const payroll = await Payroll.findOne({
+          //   where: {
+          //     EmployeeId: employeeID,
+          //     PayrollDefinitionId: payrollDefinitionId,
+          //   },
+          // });
 
-          if (payroll != null) {
-            // return res.json("data")
-            return next(
-              createError.createError(
-                400,
-                "Payroll has already been run for one or more employees."
-              )
-            );
-          }
+          // if (payroll != null) {
+          //   // return res.json("data")
+          //   return next(
+          //     createError.createError(
+          //       400,
+          //       "Payroll has already been run for one or more employees."
+          //     )
+          //   );
+          // }
 
           const resp = await runPayroll(req, res, next, {
             employeeId,
