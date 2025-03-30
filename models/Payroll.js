@@ -40,9 +40,25 @@ const Payroll = sequelize.define("Payroll", {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
   },
+
+  employee_providentFund: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+  },
+  employer_providentFund: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+  },
   status: {
     type: DataTypes.ENUM,
-    values: ["ordered", "processed", "pending","failed", "approved","rejected"],
+    values: [
+      "ordered",
+      "processed",
+      "pending",
+      "failed",
+      "approved",
+      "rejected",
+    ],
     defaultValue: "ordered",
   },
   isPaid: {
@@ -51,11 +67,9 @@ const Payroll = sequelize.define("Payroll", {
   },
 });
 
-
-
 module.exports = Payroll;
 Payroll.belongsTo(Employee);
 Employee.hasOne(Payroll);
 
 Company.hasMany(Payroll);
-Payroll.belongsTo(Company)
+Payroll.belongsTo(Company);

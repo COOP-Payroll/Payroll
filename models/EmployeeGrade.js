@@ -11,7 +11,7 @@ const EmployeeGrade = sequelize.define("EmployeeGrade", {
   },
   active: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false,
+    defaultValue: true,
   },
   letter: {
     type: DataTypes.STRING,

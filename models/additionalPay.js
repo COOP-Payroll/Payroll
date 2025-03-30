@@ -17,11 +17,14 @@ const AdditionalPay = sequelize.define("AdditionalPay", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
 
   //grade id
   //AdditionalAllowance id
 });
-
 
 module.exports = AdditionalPay;
 AdditionalPay.belongsTo(AdditionalpayDefinition);

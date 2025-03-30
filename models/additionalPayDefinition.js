@@ -13,6 +13,10 @@ const AdditionalPayDefinition = sequelize.define(
       type: DataTypes.ENUM("hourly", "amount"), // Replace with your actual ENUM values
       defaultValue: "amount", // Set a default value from your ENUM values
     },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
     validate: {

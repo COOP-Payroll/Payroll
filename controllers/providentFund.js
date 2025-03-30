@@ -48,10 +48,11 @@ exports.getProvidentFundById = async (req, res, next) => {
 exports.createProvidentFund = async (req, res, next) => {
   try {
     const { employerContribution, employeeContribution } = req.body;
+    // return res.json(req.user.role);
 
     if (req.user.role === "superAdmin") {
       const getAllProvidentFund = await ProvidentFund.findAll({
-        where: { userId: req.user.id },
+        where: { UserId: req.user.id },
       });
 
       if (!getAllProvidentFund || getAllProvidentFund.length == 0) {
@@ -101,6 +102,7 @@ exports.createProvidentFund = async (req, res, next) => {
       }
     }
   } catch (error) {
+    console.log("dddddd", error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

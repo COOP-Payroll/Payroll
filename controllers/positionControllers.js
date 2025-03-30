@@ -16,11 +16,13 @@ exports.getAllpositions = async (req, res, next) => {
   try {
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    // return res.json(CompanyId);
     const criteria = {
-      CompanyId,
+      CompanyId: CompanyId,
     };
     const positions = await Positions.findAll({
-      where: criteria,
+      where: { CompanyId: CompanyId },
     });
 
     if (!positions) {
@@ -33,6 +35,7 @@ exports.getAllpositions = async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

@@ -2,7 +2,7 @@
   "development": {
     "username": "payroll",
     "password": "payroll@123",
-    "database": "payrolldb",
+    "database": "moh",
     "host": "10.1.152.35",
     "port": 5432,
     "dialect": "postgres",
