@@ -63,6 +63,8 @@ const checkAccountNumber = require("./routes/accountChecker.js");
 const serviceRoutes = require("./routes/serviceRoutes.js");
 const per = require("./models/companyPermission.js");
 
+const contactusRoutes = require("./routes/contactusRoutes.js");
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -188,6 +190,7 @@ app.use("/api/additionalpayment", additionalPay);
 app.use("/api/payment", ebirrPayment);
 app.use("/api/accountNumber/verify", checkAccountNumber);
 app.use("/api/services", serviceRoutes);
+app.use("/api/contactus", contactusRoutes);
 
 const swaggerOptions = {
   swaggerOptions: {

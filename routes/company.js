@@ -193,6 +193,8 @@ const middleware = require("../middleware/auth.js");
  *       '401':
  *         description: Unauthorized - Token is missing or invalid.
  */
+
+
 /**
  * @swagger
  * /api/company/update-loan-status:
