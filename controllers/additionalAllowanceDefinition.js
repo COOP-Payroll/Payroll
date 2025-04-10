@@ -1,14 +1,15 @@
 const AdditionalAllowanceDefinition = require("../models/additionalAllowanceDefinition.js");
 const Company = require("../models/company");
-const createError = require('../utils/error')
+const createError = require("../utils/error");
 
 // GET ALL ADDITIONAL ALLOWANCE DEFINITION
-exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
-  const Company = req.user.id;
+exports.getAllAdditionalAllowanceDefinition = async (req, res, next) => {
+  const CompanyId =
+    req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
   try {
     const criteria = {
-      CompanyId: req.user.id,
+      CompanyId: CompanyId,
     };
     const AdditionalAllowanceDefinitions =
       await AdditionalAllowanceDefinition.findAll({ where: criteria });
@@ -17,29 +18,27 @@ exports.getAllAdditionalAllowanceDefinition = async (req, res,next) => {
       AdditionalAllowanceDefinitions,
     });
   } catch (error) {
-    return next(createError.createError(503, 'Internal Server Error'))
+    return next(createError.createError(503, "Internal Server Error"));
   }
 };
 
-
 // GET BY ID
-exports.getAdditionalAllowanceDefinitionById = async (req, res,next) => {
+exports.getAdditionalAllowanceDefinitionById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const AdditionalAllowanceDefinition =
       await AdditionalAllowanceDefinition.findByPk(id);
     res.status(200).json(AdditionalAllowanceDefinition);
   } catch (error) {
-   
-    return next(createError.createError(503, 'Internal Server Error'))}
+    return next(createError.createError(503, "Internal Server Error"));
+  }
 };
-
 
 //CREATE ADDITIONAL ALLOWANCE DEFINITION
 exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
   try {
- 
-    const Company = req.user.id;
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
     const { name, isTaxable, isExempted, exemptedAmount, startingAmount } =
       req.body;
 
@@ -51,8 +50,9 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
     });
 
     if (checkAllowance) {
-
-      return next(createError.createError(400,"Allowance definition is already defined"))
+      return next(
+        createError.createError(400, "Allowance definition is already defined")
+      );
       // res.status(400).json("Allowance Definition is already defined");
     } else {
       const AdditionalAllowanceDefinitions =
@@ -70,8 +70,7 @@ exports.createAdditionalAllowanceDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
- 
-    return next(createError.createError(503, 'Internal Server Error'))
+    return next(createError.createError(503, "Internal Server Error"));
   }
 };
 
@@ -87,8 +86,9 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
       where: { id },
     });
     if (!allowanceDefinition) {
-
-      return next(createError.createError(404, "Allowance definition not exist"))
+      return next(
+        createError.createError(404, "Allowance definition not exist")
+      );
     } else {
       const updatedInfo = await allowanceDefinition.update(req.body, {
         returning: true,
@@ -100,12 +100,11 @@ exports.updateAdditionalAllowanceDefinition = async (req, res, next) => {
       });
     }
   } catch (error) {
- 
-    return next(createError.createError(503, 'Internal Server Error'))
+    return next(createError.createError(503, "Internal Server Error"));
   }
 };
 
-//DELETE 
+//DELETE
 exports.deleteAdditionalAllowanceDefinition = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -118,12 +117,14 @@ exports.deleteAdditionalAllowanceDefinition = async (req, res, next) => {
       await AdditionalAllowanceDefinition.destroy({ where: { id } });
       res.status(200).json({ message: "Deleted successfully" });
     } else {
-
-      return next(createError.createError(404,"There is no AdditionalAllowanceDefinition with this ID"))
-    
+      return next(
+        createError.createError(
+          404,
+          "There is no AdditionalAllowanceDefinition with this ID"
+        )
+      );
     }
   } catch (error) {
-    return next(createError.createError(503, 'Internal Server Error'))
+    return next(createError.createError(503, "Internal Server Error"));
   }
 };
-

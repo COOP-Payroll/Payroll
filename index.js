@@ -67,6 +67,9 @@ const per = require("./models/companyPermission.js");
 const regionRoutes = require("./routes/regionRoutes.js");
 const zoneRoutes = require("./routes/zoneRoutes.js");
 const woredaRoutes = require("./routes/woredaRoutes.js");
+const dailyPerdiemRate = require("./routes/perDiemRate.js");
+const perdiemRoutes = require("./routes/perdiemRoutes.js");
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -80,6 +83,7 @@ app.use(
       "http://10.101.200.91",
       "http://localhost:3000",
       "http://10.12.51.85",
+      "https://payroll-121.onrender.com"
     ],
     credentials: true,
   })
@@ -178,6 +182,8 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/regions", regionRoutes);
 app.use("/api/zones", zoneRoutes);
 app.use("/api/woredas", woredaRoutes);
+app.use("/api/dailyrate", dailyPerdiemRate);
+app.use("/api/perdiem", perdiemRoutes);
 
 const swaggerOptions = {
   swaggerOptions: {
