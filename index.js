@@ -192,7 +192,7 @@ const swaggerOptions = {
 };
 
 app.use(
-  "/api/api-docs",
+  "/api/apidocs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, swaggerOptions)
 );
