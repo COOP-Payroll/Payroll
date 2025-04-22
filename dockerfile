@@ -1,0 +1,18 @@
+# FROM node:18-alpine
+FROM node:18-alpine3.16
+#CREATE APP DIRECTORY
+WORKDIR /app
+# INSTALL APP DEPENDENCY
+
+COPY package*.json ./
+# RUN NPM INSTALL
+RUN npm install
+
+#BUNDLE APP SOURCE 
+COPY . .
+# COPY . .
+#EXPOSE PORT
+
+EXPOSE  4400
+#EXCUTABLE COMMAND
+CMD [ "npm","start" ]

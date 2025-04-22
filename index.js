@@ -192,7 +192,7 @@ const swaggerOptions = {
 };
 
 app.use(
-  "/api/apidocs",
+  "/api/swagger",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, swaggerOptions)
 );
