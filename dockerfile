@@ -1,5 +1,5 @@
 # FROM node:18-alpine
-FROM node:18-alpine3.16
+FROM node:22-alpine
 #CREATE APP DIRECTORY
 WORKDIR /app
 # INSTALL APP DEPENDENCY
@@ -7,6 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 # RUN NPM INSTALL
 RUN npm install
+
+# COPY .env .env
 
 #BUNDLE APP SOURCE 
 COPY . .
