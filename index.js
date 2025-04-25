@@ -82,6 +82,8 @@ app.use(
       "*",
       "http://10.101.200.91",
       "http://localhost:3000",
+      "http://localhost:3002",
+      "http://10.12.53.67:3002",
       "http://10.12.51.85",
       "https://payroll-121.onrender.com",
     ],
