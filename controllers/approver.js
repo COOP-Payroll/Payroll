@@ -209,6 +209,8 @@ exports.createApprover = async (req, res, next) => {
       where: { CompanyId: CompanyId, isActive: true },
     });
 
+
+    // return res.json(approvalMethod)
     if (!approvalMethod) {
       return next(createError.createError(404, "Define approval method first"));
     }

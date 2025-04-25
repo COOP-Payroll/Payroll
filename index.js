@@ -76,6 +76,7 @@ app.use(
     origin: [
       "*",
       "http://10.101.200.91",
+      "http://10.12.53.67:3002",
       "http://localhost:3000",
       "http://10.12.51.85",
       // "http://localhost:5173",

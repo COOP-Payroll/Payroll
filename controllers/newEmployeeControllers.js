@@ -1645,8 +1645,10 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
 
 exports.downloadEmployeeTemplate = async (req, res, next) => {
   try {
-    const CompanyId =
-      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    // const CompanyId =
+    //   req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    const CompanyId= 1;
 
     const departments = await Department.findAll({
       where: {

@@ -912,13 +912,48 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
     }
 
     if (approver?.ApprovalMethod?.approvalMethod === "horizontal") {
+      //
+
       const minimumApprovers = Number(approver.ApprovalMethod.minimumApprover);
       if (approver.isMaster) {
+        // return res.json(approver);
+        // return res.json("dkdddkdk");
+        // const payrolls = await Payroll.findAll({
+        //   where: {
+        //     CompanyId: CompanyId,
+        //     status: {
+        //       [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+        //     },
+        //     PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+        //   },
+        //   include: [
+        //     {
+        //       model: Employee,
+        //       attributes: [
+        //         "id",
+        //         "fullname",
+        //         "phoneNumber",
+        //         "nationality",
+        //         "marriageStatus",
+        //         "date_of_birth",
+        //         "sex",
+        //         "employee_id_number",
+        //         "email",
+        //       ],
+        //     },
+        //   ],
+        // });
+
+        // return res.status(200).json({
+        //   success: true,
+        //   data: payrolls,
+        // });
+
         const payrolls = await Payroll.findAll({
           where: {
             CompanyId: CompanyId,
             status: {
-              [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+              [Op.not]: ["approved", "rejected"],
             },
             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
           },
@@ -936,13 +971,34 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
                 "employee_id_number",
                 "email",
               ],
+              include: [
+                {
+                  model: Position, // Include Position through Employee
+                  as: "Positions", // Ensure this alias matches the association in your models
+                  attributes: ["positionName"], // Only retrieve the positionName
+                  through: { attributes: [] }, // Exclude junction table fields
+                  raw: true, // Return plain objects instead of Sequelize instances
+                },
+              ],
             },
           ],
         });
 
+        // Flatten employee and position fields into each payroll object
+        const formattedPayrolls = payrolls.map((payroll) => {
+          const employee = payroll.Employee?.toJSON() || {};
+          const positions = employee.Positions || []; // No need to call .toJSON() here since raw is true
+          const { Employee, ...rest } = payroll.toJSON(); // remove nested Employee
+          return {
+            ...rest,
+            ...employee, // merge employee fields into top level
+            positionName: positions[0]?.positionName || null, // add positionName from Positions
+          };
+        });
+
         return res.status(200).json({
           success: true,
-          data: payrolls,
+          data: formattedPayrolls,
         });
       }
 
@@ -2732,6 +2788,7 @@ exports.getApprovedPay = async (req, res, next) => {
 
 exports.downloadEmployeeTemplate = async (req, res, next) => {
   try {
+    return res.json("ddkdkd")
     // Create a new workbook and add a worksheet
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("EmployeeTemplate");

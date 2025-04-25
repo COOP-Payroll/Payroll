@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "payroll",
-    "password": "payroll@123",
-    "database": "payrolldb",
-    "host": "10.1.152.35",
+    "username": "moh_production_app",
+    "password": "MoH!App#2025$Secure",
+    "database": "moh_payroll",
+    "host": "10.12.53.67",
     "port": 5432,
     "dialect": "postgres",
     "dialectOptions": {
@@ -15,10 +15,10 @@
   },
 
   "development1": {
-    "username": "superpayroll_user",
-    "password": "mJLzh30FgR3hJBPcaDQRFwX1oCRi6QeP",
-    "database": "superpayroll",
-    "host": "dpg-cv2l2f2n91rc73bucevg-a.oregon-postgres.render.com",
+    "username": "moh_production_app",
+    "password": "MoH!App#2025$Secure",
+    "database": "moh_payroll",
+    "host": "10.12.53.67",
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": {
@@ -28,10 +28,10 @@
     }
   },
   "test": {
-    "username": "payroll",
-    "password": "payroll@123",
-    "database": "payrolldb",
-    "host": "10.1.152.35",
+    "username": "moh_production_app",
+    "password": "MoH!App#2025$Secure",
+    "database": "moh_payroll",
+    "host": "10.12.53.67",
     "port": 5432,
     "dialect": "postgres",
     "dialectOptions": {
@@ -42,10 +42,10 @@
     }
   },
   "production": {
-    "username": "payroll",
-    "password": "payroll@123",
-    "database": "payrolldb",
-    "host": "10.1.152.35",
+    "username": "moh_production_app",
+    "password": "MoH!App#2025$Secure",
+    "database": "moh_payroll",
+    "host": "10.12.53.67",
     "port": 5432,
     "dialect": "postgres",
     "dialectOptions": {

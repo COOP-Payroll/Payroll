@@ -639,11 +639,11 @@ router.get(
 
 router.get(
   "/download-excel",
-  middleware.protectAll,
-  middleware.restrictALL({
-    moduleName: "employeeinfo",
-    isAccessible: true,
-  }),
+  // middleware.protectAll,
+  // middleware.restrictALL({
+  //   moduleName: "employeeinfo",
+  //   isAccessible: true,
+  // }),
   newEmployeeController.downloadEmployeeTemplate
 );
 
