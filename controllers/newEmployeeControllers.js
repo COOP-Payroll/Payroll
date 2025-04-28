@@ -1386,7 +1386,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 //         <h3>Employee Registration API Documentation</h3>
 //         <h5>Endpoint: POST /api/employee/register</h5>
 //         <p>Use this endpoint to register a new employee in the system.</p>
-        
+
 //         <h4>Request Body</h4>
 //         <pre>
 // {
@@ -1444,7 +1444,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 
 //         <h4>Response</h4>
 //         <p>A successful registration will return a response with status 200 and a message confirming the registration.</p>
-        
+
 //         <h4>Response Example</h4>
 //         <pre>
 // {
@@ -1455,7 +1455,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 
 //         <h4>Errors</h4>
 //         <p>If there are any errors during the registration, the API will return an appropriate status code and error message.</p>
-        
+
 //         <h5>Error Response Example</h5>
 //         <pre>
 // {
@@ -1463,7 +1463,7 @@ exports.bulkEmployeeRegistration = async (req, res, next) => {
 //     "message": "Invalid request data"
 // }
 //         </pre>
-        
+
 //         <h4>Security</h4>
 //         <p>This API requires a valid token in the Authorization header to access. Use Bearer Token for authentication.</p>
 //       </body>
@@ -1628,12 +1628,17 @@ exports.downloadEmployeeRegistrationDoc = (req, res, next) => {
     const options = { format: "A4" };
     pdf.create(apiDocumentationHtml, options).toBuffer((err, buffer) => {
       if (err) {
-        return next(createError.createError(400, "An error occurred while downloading"));
+        return next(
+          createError.createError(400, "An error occurred while downloading")
+        );
       }
 
       // Set the response headers for PDF download
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", "attachment; filename=employee_registration_api_documentation.pdf");
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=employee_registration_api_documentation.pdf"
+      );
 
       // Send the PDF buffer as a response
       res.end(buffer);
@@ -1648,7 +1653,7 @@ exports.downloadEmployeeTemplate = async (req, res, next) => {
     // const CompanyId =
     //   req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
-    const CompanyId= 1;
+    const CompanyId = 1;
 
     const departments = await Department.findAll({
       where: {
