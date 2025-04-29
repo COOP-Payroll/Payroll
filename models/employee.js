@@ -70,7 +70,7 @@ const Employee = sequelize.define("Employee", {
   },
   id_Number: {
     type: DataTypes.STRING,
-    allowNull: false,
+    // allowNull: false,
   },
   isDeactivated: {
     type: DataTypes.BOOLEAN,
