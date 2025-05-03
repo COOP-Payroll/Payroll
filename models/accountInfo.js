@@ -48,7 +48,7 @@ const AccountInfo = sequelize.define("AccountInfo", {
   },
   phoneNumber: {
     type: DataTypes.STRING,
-    allowNull: true, // Phone number can be optional
+    allowNull: true, 
   },
   image: {
     type: DataTypes.STRING,
@@ -61,7 +61,7 @@ const AccountInfo = sequelize.define("AccountInfo", {
   },
   isActive: {
     type: DataTypes.BOOLEAN,
-    defaultValue: true, // Default to inactive
+    defaultValue: true,
   },
   isVerified:{
     type: DataTypes.BOOLEAN,

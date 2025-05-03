@@ -129,7 +129,11 @@ app.use((req, res, next) => {
   }
   next();
 });
+const campaignRoutes = require("./routes/campaignRoutes.js");
+const campaignParticipantRoutes = require("./routes/campaignParticipantRoutes.js");
 
+app.use("/api/campaigns", campaignRoutes);
+app.use("/api/participants", campaignParticipantRoutes);
 // app.use(csrf({ cookie: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
