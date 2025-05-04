@@ -9,11 +9,11 @@ router.get(
   middleware.protectAll,
   campaignParticipantController.downloadExcel
 );
-router.get(
-  "/:id",
-  middleware.protectAll,
-  campaignParticipantController.getParticipantById
-);
+// router.get(
+//   "/:id",
+//   middleware.protectAll,
+//   campaignParticipantController.getParticipantById
+// );
 router.post(
   "/upload-excel",
   middleware.protectAll,
@@ -21,7 +21,7 @@ router.post(
   campaignParticipantController.bulkRegisterFromExcel
 );
 router.get(
-  "/",
+  "/campaign/:campaignId",
   middleware.protectAll,
   campaignParticipantController.getAllParticipants
 );

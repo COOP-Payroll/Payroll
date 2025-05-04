@@ -113,4 +113,35 @@
  *         description: Participant not found
  *       500:
  *         description: Server error
+ * /api/participants/campaign/{campaignId}:
+ *   get:
+ *     summary: Get all participants for a specific campaign
+ *     tags:
+ *       - CampaignParticipants
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: campaignId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the campaign to filter participants
+ *     responses:
+ *       200:
+ *         description: List of participants for the given campaign
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/CampaignParticipant'
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Failed to fetch participants
  */
+

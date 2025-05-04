@@ -315,35 +315,70 @@ exports.bulkRegisterFromExcel = async (req, res, next) => {
   }
 };
 
+// exports.getAllParticipants = async (req, res) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+//     // Fetch the company to get region/zone/woreda
+//     const company = await Company.findByPk(CompanyId);
+
+//     const companyRegionId = company?.regionId;
+//     const companyZoneId = company?.zoneId;
+//     const companyWoredaId = company?.woredaId;
+
+//     const participants = await CampaignParticipant.findAll({
+//       include: [Campaign],
+
+//       where: {
+//         regionId: companyRegionId,
+//         zoneId: companyZoneId,
+//         woredaId: companyWoredaId,
+//       },
+//     });
+
+//     res.status(200).json({ data: participants });
+//   } catch (error) {
+//     console.error("Error fetching participants:", error);
+//     res.status(500).json({ message: "Failed to fetch participants" });
+//   }
+// };
+
+
+
 exports.getAllParticipants = async (req, res) => {
-  try {
-    const CompanyId =
-      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
-
-    // Fetch the company to get region/zone/woreda
-    const company = await Company.findByPk(CompanyId);
-
-    const companyRegionId = company?.regionId;
-    const companyZoneId = company?.zoneId;
-    const companyWoredaId = company?.woredaId;
-
-    const participants = await CampaignParticipant.findAll({
-      include: [Campaign],
-
-      where: {
-        regionId: companyRegionId,
-        zoneId: companyZoneId,
-        woredaId: companyWoredaId,
-      },
-    });
-
-    res.status(200).json({ data: participants });
-  } catch (error) {
-    console.error("Error fetching participants:", error);
-    res.status(500).json({ message: "Failed to fetch participants" });
-  }
-};
-
+    try {
+      const { campaignId } = req.params;
+  
+      const CompanyId =
+        req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+  
+      // Validate the company exists
+      const company = await Company.findByPk(CompanyId);
+  
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+  
+      const { regionId, zoneId, woredaId } = company;
+  
+      const participants = await CampaignParticipant.findAll({
+        include: [Campaign],
+        where: {
+          regionId,
+          zoneId,
+          woredaId,
+          CampaignId: campaignId,
+        },
+      });
+  
+      res.status(200).json({ data: participants });
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+      res.status(500).json({ message: "Failed to fetch participants" });
+    }
+  };
+  
 exports.getParticipantById = async (req, res) => {
   try {
     const { id } = req.params;
