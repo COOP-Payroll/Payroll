@@ -91,28 +91,6 @@
  *       500:
  *         description: Server error
  *
- * /api/participants/{id}:
- *   get:
- *     summary: Get participant by ID
- *     tags:
- *       - CampaignParticipants
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Participant details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CampaignParticipant'
- *       404:
- *         description: Participant not found
- *       500:
- *         description: Server error
  * /api/participants/campaign/{campaignId}:
  *   get:
  *     summary: Get all participants for a specific campaign
