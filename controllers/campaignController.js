@@ -28,8 +28,9 @@ exports.createCampaign = async (req, res) => {
   }
 };
 
-exports.getAllCampaigns = async (req, res) => {
+exports.getAllCampaigns = async (req, res, next) => {
   try {
+    // return res.json(req?.user?.regionId);
     const campaigns = await Campaign.findAll({
       include: [
         {
@@ -39,6 +40,9 @@ exports.getAllCampaigns = async (req, res) => {
           required: false, // optional: returns all campaigns even if Region is null
         },
       ],
+      where: {
+        regionId: req?.user?.regionId,
+      },
     });
 
     res.status(200).json({ data: campaigns });
@@ -64,8 +68,8 @@ exports.getCampaignById = async (req, res) => {
       ],
     });
 
-    if (!campaign)
-      return res.status(404).json({ message: "Campaign not found" });
+    // if (!campaign)
+    //   return res.status(404).json({ message: "Campaign not found" });
 
     res.status(200).json({ data: campaign });
   } catch (error) {

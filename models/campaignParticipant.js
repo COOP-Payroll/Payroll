@@ -109,7 +109,7 @@ const CampaignParticipant = sequelize.define("CampaignParticipant", {
   address: DataTypes.STRING,
   email: {
     type: DataTypes.STRING,
-    validate: { isEmail: true },
+    // validate: { isEmail: true },
   },
   phoneNumber: DataTypes.STRING,
   accountNumber: DataTypes.STRING,
@@ -152,5 +152,6 @@ const CampaignParticipant = sequelize.define("CampaignParticipant", {
     },
   },
 });
+
 
 module.exports = CampaignParticipant;
