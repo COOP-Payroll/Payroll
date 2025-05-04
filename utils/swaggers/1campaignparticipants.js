@@ -234,3 +234,162 @@
  *       500:
  *         description: Failed to update participant
  */
+/**
+ * @swagger
+ * /getAllParticipantsPublished:
+ *   get:
+ *     summary: Get all published participants for a campaign
+ *     description: Retrieves all participants who have been published for a specific campaign.
+ *     tags: [CampaignParticipants]
+ *     parameters:
+ *       - in: query
+ *         name: campaignId
+ *         required: true
+ *         description: The ID of the campaign.
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: regionId
+ *         required: false
+ *         description: The region ID for filtering.
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: zoneId
+ *         required: false
+ *         description: The zone ID for filtering.
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: woredaId
+ *         required: false
+ *         description: The woreda ID for filtering.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of participants who have been published
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: Missing or invalid campaignId
+ *       500:
+ *         description: Internal server error
+ *//**
+ * @swagger
+ * /getAllParticipantsApproved:
+ *   get:
+ *     summary: Get all participants with 'APPROVED' status for a campaign
+ *     description: Retrieves all participants who have an 'APPROVED' status for a specific campaign.
+ *     tags: [CampaignParticipants]
+ *     parameters:
+ *       - in: query
+ *         name: campaignId
+ *         required: true
+ *         description: The ID of the campaign.
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: zoneId
+ *         required: false
+ *         description: The zone ID for filtering.
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: woredaId
+ *         required: false
+ *         description: The woreda ID for filtering.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of participants with 'APPROVED' status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: Missing or invalid campaignId
+ *       403:
+ *         description: Unauthorized to view participants outside assigned zone or woreda
+ *       500:
+ *         description: Internal server error
+ */
+/**
+ * @swagger
+ * /updateApprovalStatus:
+ *   post:
+ *     summary: Update approval status of participants in a campaign
+ *     description: Allows the update of approval status (PENDING, APPROVED, REJECTED) for participants in a specific campaign.
+ *     tags: [CampaignParticipants]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               campaignId:
+ *                 type: integer
+ *               participantIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *               newStatus:
+ *                 type: string
+ *                 enum: [PENDING, APPROVED, REJECTED]
+ *     responses:
+ *       200:
+ *         description: Approval status updated successfully
+ *       400:
+ *         description: Missing or invalid input
+ *       403:
+ *         description: Forbidden, insufficient permissions
+ *       404:
+ *         description: Campaign or participant not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /publishParticipants:
+ *   post:
+ *     summary: Publish participants for a specific campaign
+ *     description: Publishes participants for a campaign by marking them as published.
+ *     tags: [CampaignParticipants]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               campaignId:
+ *                 type: integer
+ *               participantIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *     responses:
+ *       200:
+ *         description: Published successfully
+ *       400:
+ *         description: Missing or invalid campaignId or participantIds
+ *       404:
+ *         description: Campaign or participant not found
+ *       500:
+ *         description: Internal server error
+ */

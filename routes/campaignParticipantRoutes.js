@@ -36,6 +36,31 @@ router.put(
   middleware.protectAll,
   campaignParticipantController.verifyParticipant
 );
+
+
+router.put(
+  "/publish",
+  middleware.protectAll,
+  campaignParticipantController.publishParticipants
+);
+
+router.put(
+  "/approval-status",
+  middleware.protectAll,
+  campaignParticipantController.updateApprovalStatus
+);
+
+router.get(
+  "/published",
+  middleware.protectAll,
+  campaignParticipantController.getAllParticipantsPublished
+);
+
+router.get(
+  "/approved",
+  middleware.protectAll,
+  campaignParticipantController.getAllParticipantsApproved
+);
 router.delete("", campaignParticipantController.deleteParticipant);
 
 module.exports = router;

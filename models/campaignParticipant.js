@@ -1,89 +1,3 @@
-// const { Sequelize, DataTypes } = require("sequelize");
-// const sequelize = require("../database/db.js");
-
-// const Campaign = require("./campaigns.js");
-// const Company = require("./company.js");
-// const Region = require("./region.js");
-// const Zone = require("./zone.js");
-// const Woreda = require("./woreda.js");
-
-// const CampaignParticipant = sequelize.define("CampaignParticipant", {
-//   fullName: {
-//     type: DataTypes.STRING,
-//     allowNull: false,
-//   },
-//   sex: {
-//     type: DataTypes.ENUM("MALE", "FEMALE", "OTHER"),
-//     allowNull: false,
-//   },
-//   age: {
-//     type: DataTypes.INTEGER,
-//   },
-//   nationalId: {
-//     type: DataTypes.STRING,
-//   },
-//   address: {
-//     type: DataTypes.STRING,
-//   },
-//   email: {
-//     type: DataTypes.STRING,
-//     validate: { isEmail: true },
-//   },
-//   phoneNumber: {
-//     type: DataTypes.STRING,
-//     allowNull: true,
-//   },
-//   accountNumber: {
-//     type: DataTypes.STRING,
-//     allowNull: true,
-//   },
-//   paymentMethod: {
-//     type: DataTypes.ENUM("PHONENUMBER", "ACCOUNTNUMBER"),
-//     allowNull: false,
-//   },
-//   detail: {
-//     type: DataTypes.TEXT,
-//   },
-//   isVerified: {
-//     type: DataTypes.BOOLEAN,
-//     defaultValue: false,
-//   },
-//   status: {
-//     type: DataTypes.ENUM("INVITED", "CONFIRMED", "CANCELLED"),
-//     defaultValue: "INVITED",
-//   },
-//   isActive: {
-//     type: DataTypes.BOOLEAN,
-//     defaultValue: true,
-//   },
-//   regionId: {
-//     type: DataTypes.INTEGER,
-//     references: {
-//       model: Region,
-//       key: "id",
-//     },
-//   },
-//   zoneId: {
-//     type: DataTypes.INTEGER,
-//     references: {
-//       model: Zone,
-//       key: "id",
-//     },
-//   },
-//   woredaId: {
-//     type: DataTypes.INTEGER,
-//     references: {
-//       model: Woreda,
-//       key: "id",
-//     },
-//   },
-// });
-
-// // Relationships
-// CampaignParticipant.belongsTo(Campaign);
-// Campaign.hasMany(CampaignParticipant);
-
-// module.exports = CampaignParticipant;
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 
@@ -97,7 +11,7 @@ const CampaignParticipant = sequelize.define("CampaignParticipant", {
     allowNull: false,
   },
   sex: {
-    type: DataTypes.ENUM("MALE", "FEMALE", "OTHER"),
+    type: DataTypes.ENUM("MALE", "FEMALE"),
     allowNull: false,
   },
   amount: {
@@ -126,6 +40,18 @@ const CampaignParticipant = sequelize.define("CampaignParticipant", {
     type: DataTypes.ENUM("INVITED", "CONFIRMED", "CANCELLED"),
     defaultValue: "INVITED",
   },
+  paymentStatus: {
+    type: DataTypes.ENUM("PENDING", "COMPLETED", "FAILED", "REJECTED"),
+    defaultValue: "PENDING",
+  },
+  approvalStatus: {
+    type: DataTypes.ENUM("PENDING", "APPROVED", "REJECTED"),
+    defaultValue: "PENDING",
+  },
+  isPublished: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
@@ -152,6 +78,8 @@ const CampaignParticipant = sequelize.define("CampaignParticipant", {
     },
   },
 });
-
+CampaignParticipant.belongsTo(Region, { foreignKey: "regionId" });
+CampaignParticipant.belongsTo(Zone, { foreignKey: "zoneId" });
+CampaignParticipant.belongsTo(Woreda, { foreignKey: "woredaId" });
 
 module.exports = CampaignParticipant;
