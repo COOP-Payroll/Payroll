@@ -261,7 +261,7 @@ exports.bulkRegisterFromExcel = async (req, res, next) => {
             )
           );
         }
-      } else if (paymentMethod.toUpperCase() === "ACCCOUNTNUMBER") {
+      } else if (paymentMethod.toUpperCase() === "ACCOUNTNUMBER") {
         if (!accountNumber) {
           return next(
             createError.createError(
