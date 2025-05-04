@@ -239,4 +239,124 @@
  *         description: Company not found
  *       500:
  *         description: Failed to fetch participants
+ *   /api/participants/update:
+ *   put:
+ *     summary: Update a campaign participant
+ *     tags:
+ *       - CampaignParticipants
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: campaignId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the campaign
+ *       - in: query
+ *         name: participantId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the participant to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               sex:
+ *                 type: string
+ *                 enum: [MALE, FEMALE]
+ *                 example: MALE
+ *               amount:
+ *                 type: number
+ *               age:
+ *                 type: integer
+ *               nationalId:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phoneNumber:
+ *                 type: string
+ *               accountNumber:
+ *                 type: string
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [PHONENUMBER, ACCOUNTNUMBER]
+ *                 example: ACCOUNTNUMBER
+ *               detail:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Participant updated successfully
+ *       400:
+ *         description: Missing campaignId or participantId
+ *       404:
+ *         description: Campaign or participant not found
+ *       500:
+ *         description: Failed to update participant
+ * /api/participants:
+ *   delete:
+ *     summary: Soft delete a campaign participant
+ *     tags:
+ *       - CampaignParticipants
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: campaignId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the campaign
+ *       - in: query
+ *         name: participantId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the participant to delete
+ *     responses:
+ *       200:
+ *         description: Participant deleted successfully
+ *       400:
+ *         description: Missing campaignId or participantId
+ *       404:
+ *         description: Participant not found
+ *       500:
+ *         description: Failed to delete participant
+ * /api/participants/verify:
+ *   put:
+ *     summary: Verify a campaign participant
+ *     tags:
+ *       - CampaignParticipants
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: campaignId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the campaign
+ *       - in: query
+ *         name: participantId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID of the participant to verify
+ *     responses:
+ *       200:
+ *         description: Participant verified successfully
+ *       400:
+ *         description: Bad request (Missing campaignId, participantId, or phone number invalid)
+ *       404:
+ *         description: Campaign or participant not found
+ *       500:
+ *         description: Failed to verify participant
  */

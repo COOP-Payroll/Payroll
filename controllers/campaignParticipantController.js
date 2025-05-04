@@ -189,6 +189,12 @@ exports.bulkRegisterFromExcel = async (req, res, next) => {
       return next(createError.createError(404, "Please upload the file"));
     }
 
+    const compaignData = await Campaign.findOne({ where: { id: CampaignId } });
+    // return res.json(compaignData);
+
+    if (!compaignData) {
+      return next(createError.createError(404, "Campaign not found"));
+    }
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(excelFile);
 
@@ -344,41 +350,40 @@ exports.bulkRegisterFromExcel = async (req, res, next) => {
 //   }
 // };
 
-
-
 exports.getAllParticipants = async (req, res) => {
-    try {
-      const { campaignId } = req.params;
-  
-      const CompanyId =
-        req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
-  
-      // Validate the company exists
-      const company = await Company.findByPk(CompanyId);
-  
-      if (!company) {
-        return res.status(404).json({ message: "Company not found" });
-      }
-  
-      const { regionId, zoneId, woredaId } = company;
-  
-      const participants = await CampaignParticipant.findAll({
-        include: [Campaign],
-        where: {
-          regionId,
-          zoneId,
-          woredaId,
-          CampaignId: campaignId,
-        },
-      });
-  
-      res.status(200).json({ data: participants });
-    } catch (error) {
-      console.error("Error fetching participants:", error);
-      res.status(500).json({ message: "Failed to fetch participants" });
+  try {
+    const { campaignId } = req.params;
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+    // Validate the company exists
+    const company = await Company.findByPk(CompanyId);
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
     }
-  };
-  
+
+    const { regionId, zoneId, woredaId } = company;
+
+    const participants = await CampaignParticipant.findAll({
+      include: [Campaign],
+      where: {
+        regionId,
+        zoneId,
+        woredaId,
+        CampaignId: campaignId,
+        isActive: true,
+      },
+    });
+
+    res.status(200).json({ data: participants });
+  } catch (error) {
+    console.error("Error fetching participants:", error);
+    res.status(500).json({ message: "Failed to fetch participants" });
+  }
+};
+
 exports.getParticipantById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -399,13 +404,55 @@ exports.getParticipantById = async (req, res) => {
 
 exports.updateParticipant = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updated = await CampaignParticipant.update(req.body, {
-      where: { id },
+    const { campaignId, participantId } = req.query;
+
+    if (!campaignId || !participantId) {
+      return res
+        .status(400)
+        .json({ message: "Missing campaignId or participantId" });
+    }
+
+    // 1. Check if campaign exists
+    const campaign = await Campaign.findByPk(campaignId);
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    // 2. Prepare fields to update
+    const allowedFields = [
+      "fullName",
+      "sex",
+      "amount",
+      "age",
+      "nationalId",
+      "address",
+      "email",
+      "phoneNumber",
+      "accountNumber",
+      "paymentMethod",
+      "detail",
+    ];
+
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body.hasOwnProperty(key)) {
+        updateData[key] = req.body[key];
+      }
+    }
+
+    // 3. Update the specific participant within the campaign
+    const [updatedCount] = await CampaignParticipant.update(updateData, {
+      where: {
+        id: participantId,
+        CampaignId: campaignId,
+      },
     });
 
-    if (updated[0] === 0)
-      return res.status(404).json({ message: "Participant not found" });
+    if (updatedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "Participant not found for this campaign" });
+    }
 
     res.status(200).json({ message: "Participant updated successfully" });
   } catch (error) {
@@ -414,14 +461,98 @@ exports.updateParticipant = async (req, res) => {
   }
 };
 
+exports.verifyParticipant = async (req, res) => {
+  try {
+    const { campaignId, participantId } = req.query;
+
+    if (!campaignId || !participantId) {
+      return res
+        .status(400)
+        .json({ message: "Missing campaignId or participantId" });
+    }
+
+    // 1. Check if campaign exists
+    const campaign = await Campaign.findByPk(campaignId);
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
+
+    // 2. Fetch the participant first to access phoneNumber and paymentMethod
+    const participant = await CampaignParticipant.findOne({
+      where: {
+        id: participantId,
+        CampaignId: campaignId,
+      },
+    });
+
+    if (!participant) {
+      return res
+        .status(404)
+        .json({ message: "Participant not found for this campaign" });
+    }
+
+    if (participant?.isVerified) {
+        return res
+        .status(400)
+        .json({ message: "Already verified" });
+    }
+    // return res.json(participant);
+    // 3. Validate phoneNumber if paymentMethod is PHONENUMBER
+    if (
+      participant.paymentMethod === "PHONENUMBER" &&
+      (!participant.phoneNumber || participant.phoneNumber.length !== 10)
+    ) {
+      return res.status(400).json({
+        message:
+          "Phone number must be exactly 10 digits when using PHONENUMBER as payment method",
+      });
+    }
+
+    // 4. Update isVerified to true
+    const [updatedCount] = await CampaignParticipant.update(
+      { isVerified: true },
+      {
+        where: {
+          id: participantId,
+          CampaignId: campaignId,
+        },
+      }
+    );
+
+    if (updatedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "Participant not found for this campaign" });
+    }
+
+    res.status(200).json({ message: "Participant verified successfully" });
+  } catch (error) {
+    console.error("Error verifying participant:", error);
+    res.status(500).json({ message: "Failed to verify participant" });
+  }
+};
+
 exports.deleteParticipant = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { participantId, campaignId } = req.query;
 
-    const deleted = await CampaignParticipant.destroy({ where: { id } });
+    if (!participantId || !campaignId) {
+      return res
+        .status(400)
+        .json({ message: "Missing campaignId or participantId" });
+    }
 
-    if (!deleted)
+    const participant = await CampaignParticipant.findOne({
+      where: { id: participantId, CampaignId: campaignId },
+    });
+
+    if (!participant) {
       return res.status(404).json({ message: "Participant not found" });
+    }
+
+    // Soft delete by setting isActive to false
+    participant.isActive = false;
+    await participant.save();
 
     res.status(200).json({ message: "Participant deleted successfully" });
   } catch (error) {

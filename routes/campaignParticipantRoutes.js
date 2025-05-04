@@ -26,7 +26,16 @@ router.get(
   campaignParticipantController.getAllParticipants
 );
 
-router.put("/:id", campaignParticipantController.updateParticipant);
-router.delete("/:id", campaignParticipantController.deleteParticipant); // sets isActive = false
+router.put(
+  "/update",
+  middleware.protectAll,
+  campaignParticipantController.updateParticipant
+);
+router.put(
+  "/verify",
+  middleware.protectAll,
+  campaignParticipantController.verifyParticipant
+);
+router.delete("", campaignParticipantController.deleteParticipant);
 
 module.exports = router;
