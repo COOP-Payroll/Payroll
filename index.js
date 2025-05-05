@@ -81,21 +81,6 @@ app.use(
       "http://10.12.51.85",
       // "http://localhost:5173",
       // "http://localhost:5172",
-      // "http://localhost:5171",
-      // "http://localhost:5170",
-      // "http://localhost:****",
-      // "http://localhost:3001",
-      // "http://localhost:3002",
-      // "http://localhost:****",
-      // "http://10.2.125.124:4000",
-      // "http://10.2.125.127:80",
-      // "http://10.2.125.127",
-      // "http://10.2.125.127:*",
-      // "http://10.2.125.124:80",
-      // "http://10.2.125.124",
-      // "https://payroll-ms.onrender.com",
-
-      // "https://payroll-ms.onrender.com:6000",
     ],
     credentials: true,
   })
@@ -213,24 +198,17 @@ app.use((req, res, next) => {
 
 app.use(
   session({
-    secret: "yourSecretKey",
+    secret: "secret",
     resave: false,
-    saveUninitialized: false, // Don't save the session if it's not initialized
+    saveUninitialized: false,
     cookie: {
-      httpOnly: true, // Make the cookie inaccessible to JavaScript (security measure)
-      secure: false, // Set to true if you're using HTTPS, false for development
-      maxAge: 0, // Expire the cookie immediately, preventing it from being sent
+      httpOnly: true,
+      secure: false,
+      maxAge: 0,
     },
   })
 );
-// app.use(
-//   helmet.contentSecurityPolicy({
-//     directives: {
-//       defaultSrc: ["'self'"],
-//       scriptSrc: ["'self'"],
-//     },
-//   })
-// );
+
 app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;
@@ -244,39 +222,9 @@ app.use((err, req, res, next) => {
     // stack: err.stack,
   });
 });
-// sequelize.sync({ logging: console.log });
-// sequelize.sync({ alter: false }).then(() => console.log("db is ready"));
-
-// const runWorker = (employeeId, payrollDefinitionId, user) => {
-//   const worker = new Worker("./controllers/newWorker.js", {
-//     workerData: { employeeId, user, payrollDefinitionId },
-//   });
-// };
-
-// const runComputation = async (payrolls) => {
-//   payrolls.forEach((payroll) => {
-//     const { EmployeeId, PayrollDefinitionId, PayrollDefinition } = payroll;
-//     runWorker(EmployeeId, PayrollDefinitionId, PayrollDefinition.CompanyId);
-
-//   });
-// };
 
 let isRunning = false;
 console.log(process.env.PORT);
 app.listen(process.env.PORT || 4400, () => {
-  // cron.schedule("*/5 * * * * * * * *", async () => {
-  //   if (!isRunning) {
-  //     isRunning = true;
-  //     const payrolls = await Payroll.findAll({
-  //       where: { status: "ordered" },
-  //       include: [PayrollDefinition],
-  //     });
-  //     // console.log("first", JSON.stringify(payrolls))
-  //     if (payrolls.length > 0) {
-  //       await runComputation(payrolls);
-  //     }
-  //     isRunning = true;
-  //   }
-  // });
   console.log(`Server is running on port: ${process.env.PORT}`);
 });

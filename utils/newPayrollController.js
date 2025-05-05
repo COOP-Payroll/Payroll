@@ -43,8 +43,6 @@ const OTPayment = require("../models/otPayModel.js");
 const TransactionHistory = require("../models/transactionHistory.js");
 const XLSX = require("xlsx");
 const ExcelJS = require("exceljs");
-const { v4: uuidv4 } = require("uuid");
-const axios = require("axios");
 exports.createPayroll1 = async (req, res, next) => {
   try {
     const isProjectBased = req.user.isProjectBased;
@@ -675,6 +673,126 @@ exports.getNonPayrollEmployee1 = async (req, res, next) => {
     );
   }
 };
+// exports.getNonPayrollEmployee1 = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+//     const { id } = req.params;
+
+//     const payrollDef = await PayrollDefinition.findOne({
+//       where: {
+//         id: id,
+//         CompanyId: CompanyId,
+//       },
+//     });
+//     if (!payrollDef) {
+//       return next(createError.createError(404, "Payroll definition not found"));
+//     }
+
+//     const employees = await Employee.findAll({
+//       attributes: [
+//         "id",
+//         "fullname",
+//         "image",
+//         "sex",
+//         "date_of_birth",
+//         "role",
+//         "nationality",
+//         "marriageStatus",
+//         "employee_id_number",
+//         "email",
+//         "phoneNumber",
+//         "optionalNumber",
+//         "id_image",
+//         "id_type",
+//         "id_Number",
+//         "isDeactivated",
+//         "hireDate",
+//         "joiningDate",
+//         "isActive",
+//         "CompanyId",
+//       ],
+//       where: { CompanyId: CompanyId },
+//       include: [
+//         { model: Payroll, required: false, where: { PayrollDefinitionId: id } },
+//         { model: EmployeeInfo, where: { isActive: true }, required: false },
+//         {
+//           model: Grade,
+//           through: { model: EmployeeGrade },
+//           include: [{ model: Allowance }, { model: Deduction }],
+//         },
+//         { model: Loan, required: false },
+//         { model: AdditionalAllowances },
+//         { model: AdditionalDeduction },
+//       ],
+//       where: { "$Payroll.id$": null, CompanyId: req.user.id },
+//     });
+
+//     const pension = await Pension.findOne({
+//       where: { CompanyId: req.user.id, isActive: true },
+//     });
+//     const taxslabs = await Taxslab.findAll({
+//       where: { CompanyId: req.user.id, isActive: true },
+//     });
+
+//     const employee_pension = pension?.employeeContribution ?? 0;
+//     const employer_pension = pension?.employerContribution ?? 0;
+
+//     const enrichedEmployees = employees.map((employee) => {
+//       let totalDeduction = 0;
+//       let totalAllowance = 0;
+//       let additionalAllowance = 0;
+//       let additionalDeduction = 0;
+//       let totalLoan = 0;
+//       let taxableIncome = employee?.EmployeeInfos[0]?.basicSalary || 0;
+//       let grossEarning = 0;
+
+//       employee.Grades?.[0]?.Allowances.forEach((allowance) => {
+//         totalAllowance += parseFloat(allowance.amount || 0);
+//       });
+//       employee.Grades?.[0]?.Deductions.forEach((deduction) => {
+//         totalDeduction += parseFloat(deduction.amount || 0);
+//       });
+//       employee.AdditionalAllowances?.forEach((allowance) => {
+//         additionalAllowance += parseFloat(allowance.amount || 0);
+//       });
+//       employee.AdditionalDeductions?.forEach((deduction) => {
+//         additionalDeduction += parseFloat(deduction.amount || 0);
+//       });
+//       employee.Loan?.forEach((loan) => {
+//         totalLoan += parseFloat(loan.amount || 0);
+//       });
+
+//       const totalAllowancesCombined = totalAllowance + additionalAllowance;
+//       const totalDeductionsCombined = totalDeduction + additionalDeduction;
+
+//       grossEarning =
+//         taxableIncome +
+//         totalAllowancesCombined +
+//         (taxableIncome * employer_pension) / 100 -
+//         totalDeductionsCombined;
+
+//       return {
+//         ...employee.toJSON(),
+//         totalAllowances: totalAllowancesCombined,
+//         totalDeductions: totalDeductionsCombined,
+//         totalLoan,
+//         taxableIncome,
+//         grossEarning,
+//         employerContribution: (taxableIncome * employer_pension) / 100,
+//       };
+//     });
+
+//     return res
+//       .status(200)
+//       .json({ count: enrichedEmployees.length, data: enrichedEmployees });
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 
 exports.deselectRunnedPayroll = async (req, res, next) => {
   try {
@@ -794,48 +912,13 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
     }
 
     if (approver?.ApprovalMethod?.approvalMethod === "horizontal") {
-      //
-
       const minimumApprovers = Number(approver.ApprovalMethod.minimumApprover);
       if (approver.isMaster) {
-        // return res.json(approver);
-        // return res.json("dkdddkdk");
-        // const payrolls = await Payroll.findAll({
-        //   where: {
-        //     CompanyId: CompanyId,
-        //     status: {
-        //       [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
-        //     },
-        //     PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
-        //   },
-        //   include: [
-        //     {
-        //       model: Employee,
-        //       attributes: [
-        //         "id",
-        //         "fullname",
-        //         "phoneNumber",
-        //         "nationality",
-        //         "marriageStatus",
-        //         "date_of_birth",
-        //         "sex",
-        //         "employee_id_number",
-        //         "email",
-        //       ],
-        //     },
-        //   ],
-        // });
-
-        // return res.status(200).json({
-        //   success: true,
-        //   data: payrolls,
-        // });
-
         const payrolls = await Payroll.findAll({
           where: {
             CompanyId: CompanyId,
             status: {
-              [Op.not]: ["approved", "rejected"],
+              [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
             },
             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
           },
@@ -853,47 +936,13 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
                 "employee_id_number",
                 "email",
               ],
-              include: [
-                {
-                  model: Position, // Include Position through Employee
-                  as: "Positions", // Ensure this alias matches the association in your models
-                  attributes: ["positionName"], // Only retrieve the positionName
-                  through: { attributes: [] }, // Exclude junction table fields
-                  raw: true, // Return plain objects instead of Sequelize instances
-                },
-              ],
             },
           ],
         });
 
-        // Flatten employee and position fields into each payroll object
-        // const formattedPayrolls = payrolls.map((payroll) => {
-        //   const employee = payroll.Employee?.toJSON() || {};
-        //   const positions = employee.Positions || []; // No need to call .toJSON() here since raw is true
-        //   const { Employee, ...rest } = payroll.toJSON(); // remove nested Employee
-        //   return {
-
-        //     ...rest,
-        //     ...employee, // merge employee fields into top level
-        //     positionName: positions[0]?.positionName || null, // add positionName from Positions
-        //   };
-        // });
-        const formattedPayrolls = payrolls.map((payroll) => {
-          const { id, ...employeeWithoutId } = payroll.Employee?.toJSON() || {};
-          const positions = employeeWithoutId.Positions || [];
-          const { Employee, ...rest } = payroll.toJSON(); // remove nested Employee
-
-          return {
-            ...rest,
-            ...employeeWithoutId, // merged without employee id
-            positionName: positions[0]?.positionName || null,
-          };
-        });
-
-        // return res.json("dkfds  ")
         return res.status(200).json({
           success: true,
-          data: formattedPayrolls,
+          data: payrolls,
         });
       }
 
@@ -1124,8 +1173,8 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
               attributes: ["id", "fullname"],
             },
           ],
-          raw: false,
-          nest: true,
+          raw: false, // Ensure it returns nested objects
+          nest: true, // Ensures proper nesting instead of flattening
         });
 
         const cleanedPayrolls = payrolls.map((payroll) => {
@@ -1146,6 +1195,279 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
   }
 };
 
+// exports.getNotApprovedPayroll = async (req, res, next) => {
+//   try {
+//     const CompanyId =
+//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+//     // return res.json(CompanyId);
+//     // return res.json("Gemechu")
+//     const approver = await Approver.findOne({
+//       where: { EmployeeId: req.user.id, isActive: true },
+//       include: {
+//         model: ApprovalMethod,
+//         as: "ApprovalMethod",
+//         where: {
+//           CompanyId: CompanyId,
+//           isActive: true,
+//         },
+//       },
+//     });
+
+//     // return res.json(approver)
+
+//     if (approver?.ApprovalMethod === null) {
+//       return next(createError.createError(400, "Define approval method first"));
+//     }
+
+//     const currentDate = new Date();
+//     const startOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth(),
+//       1
+//     );
+//     const endOfMonth = new Date(
+//       currentDate.getFullYear(),
+//       currentDate.getMonth() + 1,
+//       0
+//     );
+//     const currentMonthPayrolls = await PayrollDefinition.findAll({
+//       where: {
+//         CompanyId: CompanyId,
+//         startDate: {
+//           [Op.between]: [startOfMonth, endOfMonth],
+//         },
+//       },
+//     });
+
+//     if (currentMonthPayrolls.length === 0) {
+//       return res.status(204).json({
+//         message: "No payrolls defined for this month",
+//       });
+//     }
+//     // return res.json({data:currentMonthPayrolls?.[0].id})
+//     if (approver?.ApprovalMethod?.approvalMethod === "horizontal") {
+//       const minimumApprovers = Number(approver.ApprovalMethod.minimumApprover);
+//       if (approver.isMaster) {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             CompanyId: CompanyId,
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+//           },
+//           include: [
+//             { model: Employee, attributes: ["id", "fullname"] },
+
+//             {
+//               model: EmployeePayrollApprovement,
+//               attributes: [
+//                 [
+//                   Sequelize.fn("COUNT", Sequelize.literal("*")),
+//                   "approvalCount",
+//                 ],
+//               ],
+//               where: {
+//                 status: "approved",
+//               },
+//               required: false, // Keep this line
+//               duplicating: false,
+//             },
+//           ],
+//           group: ["Payroll.id"], // Add this line
+//           having: Sequelize.literal(
+//             `COUNT("EmployeePayrollApprovements"."id") = ${minimumApprovers}`
+//           ),
+//           raw: true,
+//         });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       }
+//       const payrolls = await Payroll.findAll({
+//         attributes: [
+//           "id",
+//           "grossSalary",
+//           "basicSalary",
+//           "taxableIncome",
+//           "incomeTax",
+//           "totalDeduction",
+//           "totalAllowance",
+//           "NetSalary",
+//           "employee_pension_amount",
+//           "employer_pension_amount",
+//           "status",
+//           "isPaid",
+//           "createdAt",
+//           "updatedAt",
+//           "EmployeeId",
+//           "CompanyId",
+//           "PayrollDefinitionId",
+//         ],
+//         include: [
+//           {
+//             model: Employee,
+//             attributes: ["id", "fullname", "phoneNumber", "nationality"],
+//           },
+//           {
+//             model: EmployeePayrollApprovement, // Ensure this matches the model name
+//             attributes: ["id"],
+//             where: { status: "pending", ApproverId: { [Op.ne]: approver.id } },
+//             required: false, // Ensure LEFT JOIN
+//           },
+//         ],
+//         where: {
+//           status: { [Op.notIn]: ["approved", "rejected"] },
+//           PayrollDefinitionId: currentMonthPayrolls?.[0].id,
+//           id: {
+//             [Op.notIn]: Sequelize.literal(`(
+//               SELECT DISTINCT "PayrollId" FROM "EmployeePayrollApprovements"
+//               WHERE  "ApproverId" = ${approver.id}
+//             )`), // Exclude payrolls already approved by the current approver
+//           },
+//         },
+//         group: [
+//           "Payroll.id",
+//           "Employee.id",
+//           "EmployeePayrollApprovements.id", // Ensure alias matches JOIN
+//         ],
+//         having: Sequelize.literal(
+//           'COALESCE(COUNT("EmployeePayrollApprovements"."id"), 0) < 2'
+//         ),
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         data: payrolls,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         data: payrolls,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         data: payrolls,
+//       });
+//     }
+//     if (approver?.ApprovalMethod?.approvalMethod === "hierarchy") {
+//       // return res.json("Hi")
+//       const approvalLevel = Number(approver?.level);
+
+//       const companyApprovalLevel = approver?.ApprovalMethod?.approvalLevel;
+//       if (approver.isMaster) {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+//           },
+//           include: [
+//             { model: Employee, attributes: ["id", "fullname"] },
+
+//             {
+//               model: EmployeePayrollApprovement,
+//               where: {
+//                 status: "approved",
+//                 level: companyApprovalLevel,
+//               },
+//               required: true, // Keep this line
+//               duplicating: false,
+//             },
+//           ],
+//           raw: true,
+//         });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       }
+//       if (approvalLevel === 1) {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             CompanyId: CompanyId,
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//             PayrollDefinitionId: currentMonthPayrolls?.[0]?.id,
+//             id: {
+//               [Sequelize.Op.notIn]: Sequelize.literal(
+//                 '(SELECT "PayrollId" FROM "EmployeePayrollApprovements")'
+//               ),
+//             },
+//           },
+//           include: [
+//             {
+//               model: Employee,
+//               attributes: ["id", "fullname"],
+//             },
+//           ],
+//         });
+//         // const payrolls = await Payroll.findAll({
+//         //   where:{
+//         //     status: {
+//         //       [Op.not]: ['approved','rejected'],  // Exclude payrolls with status 'approved'
+//         //     },
+//         //   },
+//         //   include: [
+//         //     {
+//         //       model: EmployeePayrollApprovement,
+//         //        where: {
+//         //         status: 'approved',
+//         //         level:1
+//         //       },
+//         //       required: true, // Keep this line
+//         //       duplicating: false,
+//         //     },
+//         //   ],
+//         //   raw: true,
+//         // });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       } else {
+//         const payrolls = await Payroll.findAll({
+//           where: {
+//             CompanyId: CompanyId,
+//             status: {
+//               [Op.not]: ["approved", "rejected"], // Exclude payrolls with status 'approved'
+//             },
+//           },
+//           include: [
+//             {
+//               model: EmployeePayrollApprovement,
+//               where: {
+//                 status: "approved",
+//                 level: approvalLevel - 1,
+//               },
+//               required: true, // Keep this line
+//               duplicating: false,
+//             },
+//           ],
+//           raw: true,
+//         });
+
+//         return res.status(200).json({
+//           success: true,
+//           data: payrolls,
+//         });
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     return next(
+//       createError.createError(503, "An error occurred, please try again later")
+//     );
+//   }
+// };
 exports.getPayrollPaymentProcess = async (req, res, next) => {
   try {
     let { processIds } = req.body;
@@ -1184,12 +1506,6 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
       return next(createError.createError(400, "Some payrolls not found"));
     }
 
-    const alreadyPaid = payrolls.find((p) => p.isPaid === true);
-    if (alreadyPaid) {
-      return res.status(400).json({
-        message: "One or more selected payrolls have already been paid",
-      });
-    }
     let totalAmount = 0;
     const bulkId = uuidv4();
 
@@ -1218,21 +1534,18 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
     });
 
     const requestBody = {
-      // debitAccount: "1045500049787",
-      debitAccount: "1000026595928",
+      // debitAccount: "1022200021557",
+      debitAccount: "10000026595928",
       // debitAccount: "ETB1769500010473",
       bankCode: "coop",
-      totalAmount: processIds.length,
+      totalAmount: 1,
       bulkId,
       creditTransactions,
     };
 
-    // const apiUrl = "http://10.1.151.51:5002/fund-transfer";
-    const apiUrl = process.env.PAYMENTURL;
-    // return res.json(apiurl);
+    const apiUrl = "http://10.1.151.51:5002/fund-transfer";
 
-    // const apiUrl =
-    //   "https://souqpass.coopbankoromiasc.com/payroll/fund-transfer/process";
+    // const apiUrl = "https://souqpass.coopbankoromiasc.com/payroll/fund-transfer/process";
     let resp;
 
     try {
@@ -1251,7 +1564,7 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
         { where: { bulkId } }
       );
 
-      return res.status(400).json({ message: "Payment processing failed" });
+      return res.status(400).json({ error: "Payment processing failed" });
     }
 
     const { transactionStatuses = [] } = resp.data || {};
@@ -1298,6 +1611,7 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
   }
 };
 exports.projectBasedPayroll = async (req, res, next) => {
+  // const transaction = await sequelize.transaction();
   try {
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
@@ -1358,9 +1672,16 @@ exports.projectBasedPayroll = async (req, res, next) => {
           required: false,
           through: {
             model: ProjectEmployee,
+            // where:{isActive:true}
           },
           include: [Sponsor],
         },
+
+        // {
+        //   model: AccountInfo,
+        //   required: false,
+        //   where:{isActive:true}
+        // },
 
         {
           model: Loan,
@@ -1378,16 +1699,20 @@ exports.projectBasedPayroll = async (req, res, next) => {
 
           include: [
             {
-              model: Allowance,
+              model: Allowance, // Use the correct alias defined in the association
               include: [AllowanceDefinition],
             },
             {
-              model: Deduction,
+              model: Deduction, // Use the correct alias defined in the association
               include: [DeductionDefinition],
             },
+            // { model: EmployeeGrade, where: { active: true } },
           ],
         },
-
+        // {
+        //   model: CustomRole,
+        //   include: [Permission],
+        // },
         {
           model: AdditionalAllowances,
           include: [AdditionalAllowanceDefinition],
@@ -1403,7 +1728,9 @@ exports.projectBasedPayroll = async (req, res, next) => {
       ],
     });
 
+    // Check if all requested employees were found
     if (employees.length < employeeIds.length) {
+      // Determine which employee(s) are missing
       const foundEmployeeIds = employees.map((employee) => employee.id);
       const missingEmployeeIds = employeeIds.filter(
         (id) => !foundEmployeeIds.includes(id)
@@ -1427,6 +1754,17 @@ exports.projectBasedPayroll = async (req, res, next) => {
       },
     });
 
+    // let selectedSlab=null
+    // let income_tax_payable=0;
+    //   for (const slab of taxslabs) {
+    //     if (50300 >= slab.from_Salary && 50300 <= slab.to_Salary) {
+    //       selectedSlab=slab
+    //       income_tax_payable = slab.income_tax_payable;
+    //       deductible_Fee = slab.deductible_Fee;
+    //       break;
+    //     }
+    //   }
+    //   return res.json(selectedSlab);
     const employee_pension = pension?.employeeContribution ?? 0;
     const employer_pension = pension?.employerContribution ?? 0;
 
@@ -2394,6 +2732,7 @@ exports.getApprovedPay = async (req, res, next) => {
 
 exports.downloadEmployeeTemplate = async (req, res, next) => {
   try {
+    // Create a new workbook and add a worksheet
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("EmployeeTemplate");
 
