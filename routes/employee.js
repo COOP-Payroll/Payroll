@@ -51,7 +51,7 @@ router.get(
 
 router.get(
   "/download-excel",
-  // middleware.protectAll,
+  middleware.protectAll,
   // middleware.restrictALL({
   //   moduleName: "employeeinfo",
   //   isAccessible: true,

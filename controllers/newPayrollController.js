@@ -96,7 +96,6 @@ exports.createPayroll1 = async (req, res, next) => {
       );
     }
     if (isProjectBased) {
-      
       const isTotalPercentEqual100 = employees.every(
         (employee) => employee?.totalPercent === 100
       );
@@ -1163,6 +1162,21 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
 
+    const companyAccountNumber = await AccountInfo.findOne({
+      where: {
+        CompanyId: CompanyId,
+        isActive: true,
+      },
+    });
+
+    // return res.json(companyAccountNumber.accountNumber);
+
+    if (!companyAccountNumber?.accountNumber) {
+      return next(
+        createError.createError(400, "There is no valid account Number")
+      );
+    }
+
     const payrolls = await Payroll.findAll({
       where: { id: processIds, CompanyId },
       include: [
@@ -1221,7 +1235,7 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
 
     const requestBody = {
       // debitAccount: "1045500049787",
-      debitAccount: "1000026595928",
+      debitAccount: companyAccountNumber.accountNumber,
       // debitAccount: "ETB1769500010473",
       bankCode: "coop",
       totalAmount: processIds.length,

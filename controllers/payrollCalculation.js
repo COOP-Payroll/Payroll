@@ -46,7 +46,7 @@ exports.createPayroll1 = async (req, res, next) => {
         CompanyId: CompanyId,
       },
     });
-    return res.json(employees);
+    // return res.json(employees);
     const existingEmployeeIds = employees.map((employee) => employee.id);
 
     const nonExistingEmployeeIds = employeeID.filter(
