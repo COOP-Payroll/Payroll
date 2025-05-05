@@ -89,6 +89,10 @@ const Company = sequelize.define("Company", {
   resetPasswordTokenCreatedAt: {
     type: DataTypes.DATE,
   },
+  level: {
+    type: DataTypes.ENUM("REGION", "ZONE", "WOREDA"),
+    // allowNull: false,
+  },
 });
 
 Company.beforeCreate((company, options) => {

@@ -40,6 +40,8 @@
 ///RENDER
 
 require("dotenv").config();
+
+// const company = require("../models/company")
 const { Sequelize } = require("sequelize");
 // const CustomError = require("../utils/ErrorHandler");
 const sequelize = new Sequelize(

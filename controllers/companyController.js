@@ -332,6 +332,38 @@ exports.createCompany = async (req, res, next) => {
       }
     }
 
+    // Determine level based on presence of regionId, zoneId, and woredaId
+    let level;
+    if (regionId && !zoneId && !woredaId) {
+      level = "REGION";
+    } else if (regionId && zoneId && !woredaId) {
+      level = "ZONE";
+    } else if (regionId && zoneId && woredaId) {
+      level = "WOREDA";
+    } else {
+      return next(
+        createError.createError(400, "Invalid location hierarchy provided")
+      );
+    }
+
+    const existingLocationScopedCompany = await Company.findOne({
+      where: {
+        regionId: Number(regionId),
+        zoneId: zoneId ? Number(zoneId) : null,
+        woredaId: woredaId ? Number(woredaId) : null,
+      },
+      transaction,
+    });
+
+    if (existingLocationScopedCompany) {
+      return next(
+        createError.createError(
+          400,
+          "A company is already registered in this location"
+        )
+      );
+    }
+
     // Create new company
     const company = await Company.create(
       {
@@ -341,6 +373,7 @@ exports.createCompany = async (req, res, next) => {
         phoneNumber,
         // numberOfEmployees, // Include number of employees
         status: "pending",
+        level,
         regionId, // Include regionId
         zoneId, // Include zoneId
         woredaId, // Include woredaId

@@ -96,6 +96,7 @@ exports.createPayroll1 = async (req, res, next) => {
       );
     }
     if (isProjectBased) {
+      
       const isTotalPercentEqual100 = employees.every(
         (employee) => employee?.totalPercent === 100
       );
@@ -137,6 +138,7 @@ exports.createPayroll1 = async (req, res, next) => {
       }
     }
     if (!isProjectBased) {
+      return res.json("dfankfnjasndjf");
       let payrollCount = 0;
       await payrolldef.update({ status: "ordered" });
       for (const employeeId of employeeID) {

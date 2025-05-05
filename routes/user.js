@@ -21,8 +21,8 @@ router.get(
 router.post(
   "/",
   middleware.validateUserAgent,
-  middleware.protectAll,
-  middleware.restrictTo("superAdmin"),
+  // middleware.protectAll,
+  // middleware.restrictTo("superAdmin"),
   userController.createUser
 );
 

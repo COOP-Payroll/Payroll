@@ -26,9 +26,10 @@ const OTPayment = require("../models/otPayModel.js");
 
 exports.createPayroll1 = async (req, res, next) => {
   try {
+    // return res.json("dfankfnjasndjf");
     const isProjectBased = req.user.isProjectBased;
     const { payrollDefinitionId, employeeIds } = req.body;
-
+    // return res.json("dfankfnjasndjf");
     const employeeID = employeeIds.map((id) => parseInt(id));
     const payrolldef = await PayrollDefinition.findByPk(payrollDefinitionId);
     const company =
@@ -45,7 +46,7 @@ exports.createPayroll1 = async (req, res, next) => {
         CompanyId: CompanyId,
       },
     });
-
+    return res.json(employees);
     const existingEmployeeIds = employees.map((employee) => employee.id);
 
     const nonExistingEmployeeIds = employeeID.filter(
@@ -107,232 +108,6 @@ exports.createPayroll1 = async (req, res, next) => {
     );
   }
 };
-
-// async function runPayroll(
-//   req,
-//   res,
-//   next,
-//   { employeeId, CompanyId, payrollDefinitionId }
-// ) {
-//   try {
-//     const employeeGrade = await EmployeeGrade.findOne({
-//       where: { EmployeeId: employeeId, active: true },
-//     });
-
-//     const pension = await Pension.findOne({
-//       where: {
-//         UserId: { [Op.ne]: null }, // UserId must NOT be null
-//         CompanyId: { [Op.is]: null }, // CompanyId must be null
-//         isActive: true, // Active status condition
-//       },
-//     });
-
-//     if (!pension) {
-//       return res.json({ message: "Please define Pension first" });
-//     }
-
-//     const taxslabs = await Taxslab.findAll({
-//       where: {
-//         UserId: { [Op.ne]: null }, // UserId must NOT be null
-//         CompanyId: { [Op.is]: null }, // CompanyId must be null
-//         isActive: true, // Active status condition
-//       },
-//     });
-
-//     if (!taxslabs) {
-//       return res.json({ message: "Please define Tax Rule first " });
-//     }
-//     // return res.json(pension);
-//     const [
-//       pension1,
-//       providentFund,
-//       payrollDefinition,
-//       oldPayroll,
-//       employee,
-//       loans,
-//       allowances,
-//       deductions,
-//       // additionalAllowances,
-//       additionalDeductions,
-
-//       // additionalPayDefinition,
-//       additionalPay,
-//       otpayment,
-//     ] = await Promise.all([
-//       Pension.findOne({
-//         where: {
-//           // CompanyId: CompanyId,
-//           isActive: true,
-//           UserId: { [Op.ne]: null }, // UserId must NOT be null
-//           CompanyId: { [Op.is]: null },
-//         },
-//       }),
-//       ProvidentFund.findOne({
-//         where: {
-//           CompanyId: CompanyId,
-//           isActive: true,
-//         },
-//       }),
-//       PayrollDefinition.findByPk(Number(payrollDefinitionId)),
-//       Payroll.findOne({
-//         where: {
-//           PayrollDefinitionId: payrollDefinitionId,
-//           EmployeeId: employeeId,
-//         },
-//       }),
-//       Employee.findByPk(Number(employeeId), {
-//         include: [
-//           { model: Loan },
-//           { model: EmployeeInfo, where: { isActive: true } },
-//         ],
-//       }),
-//       Loan.findAll({ where: { EmployeeId: employeeId } }),
-//       Allowance.findAll({
-//         where: { GradeId: employeeGrade?.GradeId },
-//         include: [AllowanceDefinition],
-//       }),
-
-//       Deduction.findAll({ where: { GradeId: employeeGrade?.GradeId } }),
-//       // AdditionalAllowances.findAll({
-//       //   where: { CompanyId: CompanyId, EmployeeId: employeeId, isActive: true },
-//       //   include: [AdditionalAllowanceDefinition],
-//       // }),
-//       AdditionalDeduction.findAll({
-//         where: { CompanyId: CompanyId, EmployeeId: employeeId, isActive: true },
-//         include: [
-//           { model: AdditionalDeductionDefinition, where: { isActive: true } },
-//         ],
-//       }),
-//       AdditionalPay.findAll({
-//         where: { CompanyId: CompanyId, EmployeeId: employeeId, isActive: true },
-//         include: [
-//           { model: AdditionalPayDefinition, where: { isActive: true } },
-//         ],
-//       }),
-//       OTPayment.findAll({
-//         where: { CompanyId: CompanyId, EmployeeId: employeeId },
-//       }),
-//     ]);
-
-//     const employee_pension = pension?.employeeContribution ?? 0;
-//     const employer_pension = pension?.employerContribution ?? 0;
-//     const employee_providentFund = providentFund?.employeeContribution ?? 0;
-//     const employer_providentFund = providentFund?.employerContribution ?? 0;
-
-//     let totalDeduction = 0;
-//     let totalAllowance = 0;
-//     let totalTaxable = 0;
-//     let income_tax_payable = 0;
-//     let deductible_Fee = 0;
-//     let totalExempted = 0;
-//     let totalTaxableIncome = 0;
-//     let overallTotalDeduction = 0;
-//     let totalLoan = 0;
-//     let totalAdditionalPay = 0;
-//     let totalOTPayment = 0;
-//     // Calculate total allowances
-//     allowances?.forEach((allowance) => {
-//       totalAllowance += Number(allowance.amount);
-
-//       if (allowance?.AllowanceDefinition?.isExempted) {
-//         totalExempted += Number(allowance.AllowanceDefinition.exemptedAmount);
-//         if (
-//           Number(allowance?.amount) >
-//           Number(allowance?.AllowanceDefinition?.startingAmount)
-//         ) {
-//           totalTaxable +=
-//             Number(allowance?.amount) -
-//             Number(allowance?.AllowanceDefinition?.exemptedAmount);
-//         } else {
-//           totalTaxable += Number(allowance.amount);
-//         }
-//       } else {
-//         totalTaxable += Number(allowance?.amount);
-//       }
-//     });
-//     additionalPay.forEach((additionalPay) => {
-//       totalAdditionalPay += Number(additionalPay?.amount);
-//     });
-//     otpayment.forEach((otpay) => {
-//       totalOTPayment +=
-//         (employee.EmployeeInfos[0]?.basicSalary / 192) * otpay?.hour;
-//     });
-
-//     deductions?.forEach((deduction) => {
-//       totalDeduction += Number(deduction?.amount);
-//     });
-//     additionalDeductions.forEach((deduction) => {
-//       totalDeduction += Number(deduction?.amount);
-//     });
-//     totalTaxable += Number(employee?.EmployeeInfos[0]?.basicSalary);
-//     const taxslab = taxslabs.find(
-//       (tax) => totalTaxable > tax?.from_Salary && totalTaxable < tax?.to_Salary
-//     );
-//     if (taxslab) {
-//       deductible_Fee = taxslab?.deductible_Fee;
-//       income_tax_payable = taxslab?.income_tax_payable;
-//       totalTaxableIncome =
-//         totalTaxable *
-//           (income_tax_payable === 0 ? 1 : income_tax_payable / 100) -
-//         deductible_Fee;
-//     } else {
-//       totalTaxableIncome = 0;
-//     }
-
-//     loans.forEach((loan) => (totalLoan += loan?.amount));
-//     overallTotalDeduction =
-//       totalLoan +
-//       totalTaxableIncome +
-//       totalDeduction +
-//       employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100);
-//     const payrollData = {
-//       grossSalary: (
-//         totalAllowance +
-//         employee.EmployeeInfos[0]?.basicSalary +
-//         employee.EmployeeInfos[0]?.basicSalary * ((employer_pension * 1) / 100)
-//       ).toFixed(2),
-
-//       basicSalary: employee.EmployeeInfos[0]?.basicSalary,
-//       taxableIncome: totalTaxable.toFixed(2),
-//       incomeTax: totalTaxableIncome.toFixed(2),
-//       totalDeduction: overallTotalDeduction.toFixed(2),
-//       totalAllowance: totalAllowance + totalOTPayment,
-//       employee_pension_amount: Number(
-//         employee.EmployeeInfos[0]?.basicSalary * ((employee_pension * 1) / 100)
-//       ).toFixed(2),
-//       employer_pension_amount: (
-//         employee.EmployeeInfos[0]?.basicSalary *
-//         ((employer_pension * 1) / 100)
-//       ).toFixed(2),
-//       NetSalary: (
-//         totalTaxable -
-//         overallTotalDeduction +
-//         totalExempted +
-//         totalAdditionalPay +
-//         totalOTPayment
-//       ).toFixed(2),
-
-//       status: "processed",
-//       overtime: totalOTPayment,
-//     };
-
-//     // return res.json(payrollData)
-//     const data = await Payroll.create({
-//       ...payrollData,
-//       PayrollDefinitionId: payrollDefinitionId,
-//       EmployeeId: employeeId,
-//       CompanyId: CompanyId,
-//     });
-
-//     return 1;
-//   } catch (error) {
-//     console.log("kdjddjdjjd", error);
-
-//     return next(
-//       createError.createError(503, "Error occur on Some employee please check ")
-//     );
-//   }
-// }
 
 async function runPayroll(
   req,

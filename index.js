@@ -1,18 +1,21 @@
 const express = require("express");
-const { Worker } = require("worker_threads");
 const cors = require("cors");
-const run = require("./utils/checkSubscriptionPlan");
 const app = express();
-const middleware = require("./middleware/auth.js");
 const helmet = require("helmet");
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./swagger"); // Path to your Swagger configuration file
+const swaggerSpec = require("./swagger");
 const session = require("express-session");
-// const csrf = require("csrf");
+const { Worker } = require("worker_threads");
+const swaggerUi = require("swagger-ui-express");
+const middleware = require("./middleware/auth.js");
+const run = require("./utils/checkSubscriptionPlan");
 require("dotenv").config();
-
 const sequelize = require("./database/db");
 const cron = require("node-cron");
+
+// Models
+const PayrollDefinition = require("./models/payrollDefinition");
+const moduleRoute = require("./routes/moduleRoutes.js");
+// Routes
 const bodyParser = require("body-parser");
 const userRouter = require("./routes/user.js");
 const companyRouter = require("./routes/company.js");
@@ -20,62 +23,59 @@ const packageRouter = require("./routes/package.js");
 const taxslabRouter = require("./routes/taxslab.js");
 const pensionRouter = require("./routes/pension.js");
 const deptRouter = require("./routes/department.js");
-const subscriptionRouter = require("./routes/subscription.js");
 const authRouter = require("./routes/auth.js");
 const companyIdRouter = require("./routes/companyId");
 const allowance = require("./routes/allowance");
-const allowanceDefinition = require("./routes/allowanceDefinition");
-const loanDefinition = require("./routes/loanDefinition");
 const deduction = require("./routes/deduction");
 const grade = require("./routes/grade");
-const deductionDefinition = require("./routes/deductionDefinition");
+const approver = require("./routes/approver");
 const payrollRouter = require("./routes/payroll");
 const employeeRouter = require("./routes/employee.js");
-const approver = require("./routes/approver");
-const payrollDefinition = require("./routes/payrollDefinition");
 const approvalMethod = require("./routes/approvalMethod");
+const loanDefinition = require("./routes/loanDefinition");
+const subscriptionRouter = require("./routes/subscription.js");
+const payrollDefinition = require("./routes/payrollDefinition");
 const payrollApprovement = require("./routes/payrollApprovement");
+const deductionDefinition = require("./routes/deductionDefinition");
+const allowanceDefinition = require("./routes/allowanceDefinition");
 const customRoleRouter = require("./routes/customRole.js");
 const loanRoute = require("./routes/loan.js");
-const companyAccountInfoRouter = require("./routes/companyAccountInfo");
-const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
-const additionalDeductionDefinition = require("./routes/AdditionalDeductionDefinition.js");
-const additionalDeduction = require("./routes/additionalDeduction.js");
-const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefinition.js");
-const additionalAllowance = require("./routes/additionalAllowance.js");
+const additionalPay = require("./routes/AdditionalPay");
 const providentFund = require("./routes/providentFund.js");
 const newPayroll = require("./routes/newPayroll.js");
-
-const PayrollDefinition = require("./models/payrollDefinition");
-const moduleRoute = require("./routes/moduleRoutes.js");
 const addressRoute = require("./routes/address");
-const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
-const ebirrPayment = require("./routes/eBirrPayment.js");
 const position = require("./routes/postionRoutes.js");
 const Sponsors = require("./routes/sponsors.js");
 const Projects = require("./routes/projectRoutes.js");
-const packageRoutes = require("./routes/packageRoutes.js");
-const ReportRoutes = require("./routes/reportingRoutes.js");
-// const stripePayment = require("./routes/stripePayment.js");
-
-const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
-const additionalPay = require("./routes/AdditionalPay");
-const checkAccountNumber = require("./routes/accountChecker.js");
 const serviceRoutes = require("./routes/serviceRoutes.js");
-const per = require("./models/companyPermission.js");
-
 const regionRoutes = require("./routes/regionRoutes.js");
 const zoneRoutes = require("./routes/zoneRoutes.js");
 const woredaRoutes = require("./routes/woredaRoutes.js");
 const dailyPerdiemRate = require("./routes/perDiemRate.js");
 const perdiemRoutes = require("./routes/perdiemRoutes.js");
+const packageRoutes = require("./routes/packageRoutes.js");
+const ReportRoutes = require("./routes/reportingRoutes.js");
+const ebirrPayment = require("./routes/eBirrPayment.js");
+const additionalPayDefinition = require("./routes/AdditionalPayDefinition.js");
+const employeePayrollApprovement = require("./routes/employeePayrollApprovement");
+const additionalAllowanceDefinition = require("./routes/additionalAllowanceDefinition.js");
+const additionalDeductionDefinition = require("./routes/AdditionalDeductionDefinition.js");
+const companyAccountInfoRouter = require("./routes/companyAccountInfo");
+const employeeAccountInfoRouter = require("./routes/employeeAccountInfo");
+const additionalDeduction = require("./routes/additionalDeduction.js");
+const additionalAllowance = require("./routes/additionalAllowance.js");
+const checkAccountNumber = require("./routes/accountChecker.js");
+const campaignRoutes = require("./routes/campaignRoutes.js");
+const campaignParticipantRoutes = require("./routes/campaignParticipantRoutes.js");
 
+// Static Files
+app.use("/uploads", express.static("./uploads/"));
+// Middleware Configuration
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json());
 const cookieParser = require("cookie-parser");
 app.use(bodyParser.json());
-app.use("/uploads", express.static("./uploads/"));
 app.use(
   cors({
     origin: [
@@ -90,14 +90,14 @@ app.use(
     credentials: true,
   })
 );
-
+// Input Sanitization Middleware
 app.use((req, res, next) => {
   if (["POST", "PUT", "PATCH"].includes(req.method)) {
     return middleware.sanitizeInput(req, res, next);
   }
   next();
 });
-
+// Security Headers
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -109,7 +109,6 @@ app.use(
     },
   })
 );
-
 app.use(helmet.frameguard({ action: "deny" }));
 app.use(helmet.noSniff());
 app.use(helmet.xssFilter());
@@ -121,7 +120,7 @@ app.use(
   })
 );
 app.use(helmet.referrerPolicy({ policy: "strict-origin" }));
-
+// Method Restriction
 app.use((req, res, next) => {
   const allowedMethods = ["GET", "POST", "PUT", "DELETE"];
   if (!allowedMethods.includes(req.method)) {
@@ -129,9 +128,8 @@ app.use((req, res, next) => {
   }
   next();
 });
-const campaignRoutes = require("./routes/campaignRoutes.js");
-const campaignParticipantRoutes = require("./routes/campaignParticipantRoutes.js");
 
+// API Routes
 app.use("/api/campaigns", campaignRoutes);
 app.use("/api/participants", campaignParticipantRoutes);
 // app.use(csrf({ cookie: true }));
@@ -209,26 +207,6 @@ app.use((req, res, next) => {
   next(error);
 });
 
-app.use(
-  session({
-    secret: "yourSecretKey",
-    resave: false,
-    saveUninitialized: false, // Don't save the session if it's not initialized
-    cookie: {
-      httpOnly: true, // Make the cookie inaccessible to JavaScript (security measure)
-      secure: false, // Set to true if you're using HTTPS, false for development
-      maxAge: 0, // Expire the cookie immediately, preventing it from being sent
-    },
-  })
-);
-// app.use(
-//   helmet.contentSecurityPolicy({
-//     directives: {
-//       defaultSrc: ["'self'"],
-//       scriptSrc: ["'self'"],
-//     },
-//   })
-// );
 app.use((err, req, res, next) => {
   res.removeHeader("Cross-Origin-Embedder-Policy");
   const errorStatus = err.status || 500;
@@ -242,6 +220,16 @@ app.use((err, req, res, next) => {
     // stack: err.stack,
   });
 });
+
+// const company= require("./models/company.js");
+// company.sync({ alter: true })
+//   .then(() => {
+//     console.log('Company model synced.');
+//   })
+//   .catch((err) => {
+//     console.error('Error syncing Company model:', err);
+//   });
+
 // sequelize.sync({ logging: console.log });
 // sequelize.sync({ alter: false }).then(() => console.log("db is ready"));
 

@@ -1,5 +1,5 @@
 {
-  "development": {
+  "development1": {
     "username": "payroll",
     "password": "payroll@123",
     "database": "moh",
@@ -14,11 +14,11 @@
     }
   },
 
-  "development1": {
-    "username": "superpayroll_user",
-    "password": "mJLzh30FgR3hJBPcaDQRFwX1oCRi6QeP",
-    "database": "superpayroll",
-    "host": "dpg-cv2l2f2n91rc73bucevg-a.oregon-postgres.render.com",
+  "development": {
+    "username": "payroll12_user",
+    "password": "E2b5wPXC05W1rqBRDqTSVz9GVRaqfGrN",
+    "database": "payroll12",
+    "host": "dpg-cvr5uvh5pdvs73ecc8og-a.oregon-postgres.render.com",
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": {

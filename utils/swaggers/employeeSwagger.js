@@ -603,3 +603,47 @@
  *       '500':
  *         description: Internal server error
  */
+/**
+ * @swagger
+ * /api/employee/register/bulk:
+ *   post:
+ *     summary: Bulk register employees from Excel file
+ *     description: Allows company admins to upload an Excel file and register multiple employees in bulk.
+ *     tags:
+ *       - Employee
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Excel file containing employee data
+ *     responses:
+ *       '200':
+ *         description: Employees registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Employees registered successfully
+ *       '400':
+ *         description: Bad request - Missing required fields or validation errors
+ *       '401':
+ *         description: Unauthorized - Invalid or missing token
+ *       '404':
+ *         description: File not uploaded
+ *       '500':
+ *         description: Internal server error
+ */
