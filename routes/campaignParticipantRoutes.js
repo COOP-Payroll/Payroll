@@ -46,7 +46,17 @@ router.delete(
   campaignParticipantController.deleteParticipant
 );
 
+router.post(
+  "/:campaignId/assignParticipants",
+  middleware.protectAll,
+  campaignParticipantController.assignParticipants
+)
 
+router.get(
+  "/:campaignId/assignParticipants",
+  middleware.protectAll,
+  campaignParticipantController.getAssignedParticipants
+)
 
 
 router.put(

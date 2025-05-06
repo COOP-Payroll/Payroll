@@ -82,6 +82,12 @@
  *       500:
  *         description: Server error
  *
+ * /api/participants/{campaignId}/assignParticipants:
+ * post:
+ *    summary: add all participants to a campaign
+ *    tags:
+ *      - CampaignParticipants
+ * 
  * /api/participants/campaign/{campaignId}:
  *   get:
  *     summary: Get all participants for a specific campaign

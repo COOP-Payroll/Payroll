@@ -335,6 +335,105 @@ exports.getAllParticipants = async (req, res) => {
   }
 };
 
+
+exports.assignParticipants = async (req, res) => {
+  const { campaignId } = req.params;
+  console.log("campaignID", campaignId)
+  const {assignmentsData} = req.body;
+  console.log("req", assignmentsData)
+
+  if (!Array.isArray(assignmentsData) || assignmentsData.length === 0) {
+    return res.status(400).json({ message: "Request body must be a non-empty array." });
+  }
+
+  try { 
+    const campaign = Campaign.findByPk(campaignId)
+    if(!campaign) return res.status(400).json({message: "Campaign not found"})
+    
+      const assignments = assignmentsData.map((assignment) => ({
+        CampaignId: campaignId,
+        ParticipantId: assignment.participantId,
+        amount: assignment.amount
+      }))
+  
+      await CampaignParticipant.bulkCreate(assignments, {
+        updateOnDuplicate: ["amount", "status", "paymentStatus", "approvalStatus", "isPublished", "isActive"], // for Postgres
+      });
+  
+      res.status(200).json({ message: "Participants assigned successfully" });
+    
+    // const assignments = assignmentsData.map(
+    //   ({
+    //     participantId,
+    //     amount,
+    //     // status,
+    //     // paymentStatus,
+    //     // approvalStatus,
+    //     // isPublished,
+    //     // isActive,
+    //   }) => ({
+    //     CampaignId: campaignId,
+    //     ParticipantId: participantId,
+    //     amount: amount ?? null,
+    //     // status: "INVITED",
+    //     // paymentStatus: "PENDING",
+    //     // approvalStatus: "PENDING",
+    //     // isPublished: false,
+    //     // isActive: true,
+    //   })
+    // );
+
+    // const chunks = chunkArray(assignments, BATCH_SIZE);
+
+    // const results = await Promise.allSettled(
+    //   chunks.map((chunk) => bulkInsertWithRetry(chunk))
+    // );
+
+    // const failedBatches = results
+    // .map((r, i) => (r.status === "fulfilled" && r.value.success ? null : { batch: i + 1, error: r.value?.error?.message || r.reason }))
+    // .filter(Boolean);
+
+    // if (failedBatches.length > 0) {
+    //   return res.status(207).json({
+    //     message: `Partial success. ${chunks.length - failedBatches.length}/${chunks.length} batches succeeded.`,
+    //     failedBatches,
+    //   });
+    // }
+
+    // res.status(200).json({
+    //   message: `Successfully assigned ${assignments.length} participants in ${chunks.length} batches.`,
+    // });
+    
+  } catch (error) {
+    console.error("Error assigning participants:", error);
+    res.status(503).json({ message: "Failed to assign participants" });
+  }
+}
+
+
+exports.getAssignedParticipants = async (req, res) => {
+  const {campaignId} = req.params;
+  
+  try {
+    if(!campaignId) return res.status(400).json({message: "provide compaign id"})
+    // const campaigns = await CampaignParticipant.findAll({where: {CampaignId: campaignId
+  
+    // },include:{model:Participant,
+    //   through
+    // }})
+
+    const compaiggns= await Participant.findAll({include:{
+      model:CampaignParticipant,where:{
+        CampaignId:campaignId
+      }
+    }})
+    return res.status(200).json({data: campaigns})
+  } catch (error) {
+    console.error("Error fetching assigned Participants:", error);
+    res.status(503).json({ message: "Failed to fetch assigned Participants" });
+  }
+}
+
 exports.getParticipantById = async (req, res) => {
   try {
     const { id } = req.params;
