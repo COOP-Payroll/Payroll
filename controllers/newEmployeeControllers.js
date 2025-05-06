@@ -1875,10 +1875,11 @@ exports.bulkRegister = async (req, res, next) => {
       Grade.findAll({ where: { CompanyId } }),
       Position.findAll({ where: { CompanyId } }),
     ]);
-
+    const positionNames = new Map(positions.map((p) => [p.positionName, p.id]));
     const departmentNames = new Map(departments.map((d) => [d.deptName, d.id]));
     const gradeNames = new Map(grades.map((g) => [g.name, g.id]));
-    const positionNames = new Map(positions.map((p) => [p.positionName, p.id]));
+
+    return res.json({positionNames,departmentNames,positions });
     // For shorthand representation
     const departmentShorthand = new Map(
       departments.map((d) => [d.id, d.shorthandRepresentation])
@@ -1936,6 +1937,7 @@ exports.bulkRegister = async (req, res, next) => {
       const positionId = positionNames.get(positionName);
       const gradeId = gradeNames.get(gradeName);
 
+      return res.json({ departmentId, positionId, gradeId, positionName });
       // Check if the necessary data exists
       if (!departmentId || !positionId || !gradeId) {
         return next(
