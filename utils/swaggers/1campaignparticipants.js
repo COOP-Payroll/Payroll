@@ -418,16 +418,14 @@
  *         description: Missing or invalid campaignId
  *       500:
  *         description: Internal server error
- 
+ */
 
-
-
- 
+/**
  * @swagger
  * /getAllParticipantsApproved:
  *   get:
  *     summary: Get all participants with 'APPROVED' status for a campaign
- *     description: Retrieves all participants who have an 'APPROVED' status for a specific campaign.
+ *     description: Retrieves all participants who have an 'APPROVED' status for a specific campaign. Optionally filters by zone or woreda. Authorization is required.
  *     tags: [CampaignParticipants]
  *     parameters:
  *       - in: query
@@ -439,13 +437,13 @@
  *       - in: query
  *         name: zoneId
  *         required: false
- *         description: The zone ID for filtering.
+ *         description: Optional zone ID for filtering.
  *         schema:
  *           type: integer
  *       - in: query
  *         name: woredaId
  *         required: false
- *         description: The woreda ID for filtering.
+ *         description: Optional woreda ID for filtering.
  *         schema:
  *           type: integer
  *     responses:
@@ -460,6 +458,133 @@
  *                   type: array
  *                   items:
  *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       amount:
+ *                         type: number
+ *                       status:
+ *                         type: string
+ *                       paymentStatus:
+ *                         type: string
+ *                       approvalStatus:
+ *                         type: string
+ *                       isPublished:
+ *                         type: boolean
+ *                       isActive:
+ *                         type: boolean
+ *                       regionId:
+ *                         type: integer
+ *                       zoneId:
+ *                         type: integer
+ *                       woredaId:
+ *                         type: integer
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       ParticipantId:
+ *                         type: integer
+ *                       CampaignId:
+ *                         type: integer
+ *                       Participant:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           fullName:
+ *                             type: string
+ *                           sex:
+ *                             type: string
+ *                           amount:
+ *                             type: number
+ *                           age:
+ *                             type: integer
+ *                           nationalId:
+ *                             type: string
+ *                           address:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           phoneNumber:
+ *                             type: string
+ *                           accountNumber:
+ *                             type: string
+ *                           paymentMethod:
+ *                             type: string
+ *                           detail:
+ *                             type: string
+ *                           isVerified:
+ *                             type: boolean
+ *                           status:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           regionId:
+ *                             type: integer
+ *                           zoneId:
+ *                             type: integer
+ *                           woredaId:
+ *                             type: integer
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Region:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           code:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Zone:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                           RegionId:
+ *                             type: integer
+ *                       Woreda:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                           ZoneId:
+ *                             type: integer
  *       400:
  *         description: Missing or invalid campaignId
  *       403:
@@ -467,6 +592,271 @@
  *       500:
  *         description: Internal server error
  */
+
+
+/**
+ * @swagger
+ * /assignParticipants:
+ *   post:
+ *     summary: Assign participants to a campaign
+ *     tags: [CampaignParticipants]
+ *     description: Assigns participants with amounts to a specific campaign using the logged-in user's company region/zone/woreda.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: campaignId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the campaign to assign participants to
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               assignmentsData:
+ *                 type: array
+ *                 description: List of participant assignments
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - participantId
+ *                     - amount
+ *                   properties:
+ *                     participantId:
+ *                       type: integer
+ *                       example: 1
+ *                     amount:
+ *                       type: number
+ *                       example: 150.5
+ *     responses:
+ *       200:
+ *         description: Participants assigned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Participants assigned successfully
+ *       400:
+ *         description: Invalid request (e.g., empty array or campaign not found)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Request body must be a non-empty array.
+ *       404:
+ *         description: Company not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Company not found
+ *       503:
+ *         description: Server error while assigning participants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to assign participants
+ */
+
+
+/**
+ * @swagger
+ * /getAssignedParticipants:
+ *   get:
+ *     summary: Get assigned participants for a campaign
+ *     tags: [CampaignParticipants]
+ *     description: Retrieves participants assigned to the specified campaign, including their details and assigned Region, Zone, and Woreda.
+ *     parameters:
+ *       - in: path
+ *         name: campaignId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the campaign
+ *     responses:
+ *       200:
+ *         description: A list of assigned participants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       amount:
+ *                         type: number
+ *                       status:
+ *                         type: string
+ *                       paymentStatus:
+ *                         type: string
+ *                       approvalStatus:
+ *                         type: string
+ *                       isPublished:
+ *                         type: boolean
+ *                       isActive:
+ *                         type: boolean
+ *                       regionId:
+ *                         type: integer
+ *                       zoneId:
+ *                         type: integer
+ *                         nullable: true
+ *                       woredaId:
+ *                         type: integer
+ *                         nullable: true
+ *                       ParticipantId:
+ *                         type: integer
+ *                       CampaignId:
+ *                         type: integer
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       Participant:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           fullName:
+ *                             type: string
+ *                           sex:
+ *                             type: string
+ *                           amount:
+ *                             type: number
+ *                           age:
+ *                             type: integer
+ *                           nationalId:
+ *                             type: string
+ *                           address:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           phoneNumber:
+ *                             type: string
+ *                           accountNumber:
+ *                             type: string
+ *                           paymentMethod:
+ *                             type: string
+ *                           detail:
+ *                             type: string
+ *                           isVerified:
+ *                             type: boolean
+ *                           status:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           regionId:
+ *                             type: integer
+ *                           zoneId:
+ *                             type: integer
+ *                             nullable: true
+ *                           woredaId:
+ *                             type: integer
+ *                             nullable: true
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Region:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           code:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Zone:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           RegionId:
+ *                             type: integer
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Woreda:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           ZoneId:
+ *                             type: integer
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *       400:
+ *         description: Campaign ID is missing
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Provide campaign ID
+ *       503:
+ *         description: Failed to fetch assigned participants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to fetch assigned participants
+ */
+
+ 
+
 /**
  * @swagger
  * /updateApprovalStatus:
