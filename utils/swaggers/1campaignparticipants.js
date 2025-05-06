@@ -243,13 +243,12 @@
 
 
 
-
 /**
  * @swagger
  * /getAllParticipantsPublished:
  *   get:
  *     summary: Get all published participants for a campaign
- *     description: Retrieves all participants who have been published for a specific campaign.
+ *     description: Retrieves all participants who have been published for a specific campaign, including participant and location details.
  *     tags: [CampaignParticipants]
  *     parameters:
  *       - in: query
@@ -288,11 +287,142 @@
  *                   type: array
  *                   items:
  *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       amount:
+ *                         type: number
+ *                       status:
+ *                         type: string
+ *                       paymentStatus:
+ *                         type: string
+ *                       approvalStatus:
+ *                         type: string
+ *                       isPublished:
+ *                         type: boolean
+ *                       isActive:
+ *                         type: boolean
+ *                       regionId:
+ *                         type: integer
+ *                       zoneId:
+ *                         type: integer
+ *                       woredaId:
+ *                         type: integer
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       ParticipantId:
+ *                         type: integer
+ *                       CampaignId:
+ *                         type: integer
+ *                       Participant:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           fullName:
+ *                             type: string
+ *                           sex:
+ *                             type: string
+ *                           amount:
+ *                             type: number
+ *                           age:
+ *                             type: integer
+ *                           nationalId:
+ *                             type: string
+ *                           address:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           phoneNumber:
+ *                             type: string
+ *                           accountNumber:
+ *                             type: string
+ *                           paymentMethod:
+ *                             type: string
+ *                           detail:
+ *                             type: string
+ *                           isVerified:
+ *                             type: boolean
+ *                           status:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           regionId:
+ *                             type: integer
+ *                           zoneId:
+ *                             type: integer
+ *                           woredaId:
+ *                             type: integer
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Region:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           code:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Zone:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           RegionId:
+ *                             type: integer
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                       Woreda:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           isActive:
+ *                             type: boolean
+ *                           ZoneId:
+ *                             type: integer
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
  *       400:
  *         description: Missing or invalid campaignId
  *       500:
  *         description: Internal server error
- *//**
+ 
+
+
+
+ 
  * @swagger
  * /getAllParticipantsApproved:
  *   get:

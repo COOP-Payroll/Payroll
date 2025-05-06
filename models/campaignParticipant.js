@@ -8,6 +8,11 @@ const Participant = require("./participants.js");
 const Campaign = require("./campaigns.js");
 
 const CampaignParticipant = sequelize.define("CampaignParticipant", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   amount: {
     type: DataTypes.DOUBLE,
     allowNull: true,
@@ -33,6 +38,27 @@ const CampaignParticipant = sequelize.define("CampaignParticipant", {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  regionId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: Region,
+      key: "id",
+    },
+  },
+  zoneId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: Zone,
+      key: "id",
+    },
+  },
+  woredaId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: Woreda,
+      key: "id",
+    },
+  },
 });
 
 Participant.belongsToMany(Campaign, {
@@ -44,4 +70,10 @@ Campaign.belongsToMany(Participant, {
   through: CampaignParticipant,
   // foreignKey: "campaignId",
 });
+CampaignParticipant.belongsTo(Participant, {
+  foreignKey: "ParticipantId",
+});
 module.exports = CampaignParticipant;
+CampaignParticipant.belongsTo(Region, { foreignKey: "regionId" });
+CampaignParticipant.belongsTo(Zone, { foreignKey: "zoneId" });
+CampaignParticipant.belongsTo(Woreda, { foreignKey: "woredaId" });

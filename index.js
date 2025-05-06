@@ -226,7 +226,7 @@ app.use((err, req, res, next) => {
 //   .sync({ alter: true })
 //   .then(() => {
 //     console.log("Company model synced.");
-//   })  
+//   })
 //   .catch((err) => {
 //     console.error("Error syncing Company model:", err);
 //   });

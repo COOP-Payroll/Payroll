@@ -1219,7 +1219,6 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
 
       totalAmount += parseFloat(payroll.NetSalary);
       const orderId = uuidv4();
-
       // Save transaction with processId
       TransactionHistory.create({
         bulkId,
@@ -1233,7 +1232,7 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
       return {
         orderId,
         creditAccount: accountNumber,
-        amount: 1,
+        amount: payroll.NetSalary,
       };
     });
 
@@ -1242,13 +1241,15 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
       debitAccount: companyAccountNumber.accountNumber,
       // debitAccount: "ETB1769500010473",
       bankCode: "coop",
-      totalAmount: processIds.length,
+      totalAmount: totalAmount,
       bulkId,
       creditTransactions,
     };
-
+    console.log("dkdfksk", requestBody);
     // const apiUrl = "http://10.1.151.51:5002/fund-transfer";
-    const apiUrl = process.env.PAYMENTURL;
+    // const apiUrl = process.env.PAYMENTURL;
+    const apiUrl =
+      "https://souqpass.coopbankoromiasc.com/bulk-payroll/fund-transfer/bulk-transfer";
     // return res.json(apiurl);
 
     // const apiUrl =
@@ -1273,8 +1274,9 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
 
       return res.status(400).json({ message: "Payment processing failed" });
     }
-
-    const { transactionStatuses = [] } = resp.data || {};
+    console.log("dkdkdd", resp.data);
+    // const { transactionStatuses = [] } = resp.data || {};
+    const transactionStatuses = resp.data || {};
 
     let successfulProcessIds = [];
 
