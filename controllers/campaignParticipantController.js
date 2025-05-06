@@ -506,9 +506,6 @@ exports.deleteParticipant = async (req, res) => {
   }
 };
 
-
-
-
 exports.publishParticipants = async (req, res) => {
   try {
     const { campaignId, participantIds } = req.body;

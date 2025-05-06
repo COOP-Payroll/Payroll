@@ -1840,6 +1840,7 @@ exports.genrea = async (req, res, next) => {
 
 exports.bulkRegister = async (req, res, next) => {
   try {
+    // return res.json("dakfkdaks");
     // Prepare CompanyId
     const CompanyId =
       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
@@ -1870,20 +1871,50 @@ exports.bulkRegister = async (req, res, next) => {
     });
 
     // Fetch departments, grades, and positions once to avoid repeated database queries
+    // const [departments, grades, positions] = await Promise.all([
+    //   Department.findAll({ where: { CompanyId } }),
+    //   Grade.findAll({ where: { CompanyId } }),
+    //   Position.findAll({ where: { CompanyId } }),
+    // ]);
+
+    // const departmentNames = new Map(departments.map((d) => [d.deptName, d.id]));
+    // const gradeNames = new Map(grades.map((g) => [g.name, g.id]));
+    // const positionNames = new Map(positions.map((p) => [p.positionName, p.id]));
+    // // return res.json({positionNames,departmentNames,positions });
+    // // For shorthand representation
+    // const departmentShorthand = new Map(
+    //   departments.map((d) => [d.id, d.shorthandRepresentation])
+    // );
     const [departments, grades, positions] = await Promise.all([
       Department.findAll({ where: { CompanyId } }),
       Grade.findAll({ where: { CompanyId } }),
       Position.findAll({ where: { CompanyId } }),
     ]);
-    const positionNames = new Map(positions.map((p) => [p.positionName, p.id]));
-    const departmentNames = new Map(departments.map((d) => [d.deptName, d.id]));
-    const gradeNames = new Map(grades.map((g) => [g.name, g.id]));
 
-    return res.json({positionNames,departmentNames,positions });
-    // For shorthand representation
+    // Maps using positionName -> id (watch for leading/trailing spaces)
+    const positionNames = new Map(
+      positions.map((p) => [p.positionName.trim(), p.id])
+    );
+
+    // Map of departmentName -> id
+    const departmentNames = new Map(
+      departments.map((d) => [d.deptName.trim(), d.id])
+    );
+
+    // Map of grade name -> id
+    const gradeNames = new Map(grades.map((g) => [g.name.trim(), g.id]));
+
+    // Optional shorthand mapping
     const departmentShorthand = new Map(
       departments.map((d) => [d.id, d.shorthandRepresentation])
     );
+
+    // return res.json({
+    //   positionNames: Object.fromEntries(positionNames),
+    //   departmentNames: Object.fromEntries(departmentNames),
+    //   gradeNames: Object.fromEntries(gradeNames),
+    //   departmentShorthand: Object.fromEntries(departmentShorthand),
+    // });
 
     const employees = [];
     const accountInfos = [];
@@ -1937,7 +1968,13 @@ exports.bulkRegister = async (req, res, next) => {
       const positionId = positionNames.get(positionName);
       const gradeId = gradeNames.get(gradeName);
 
-      return res.json({ departmentId, positionId, gradeId, positionName });
+      // return res.json({
+      //   departmentNames,
+      //   departmentName,
+      //   gradeId,
+      //   positionName,
+      //   positionId,
+      // });
       // Check if the necessary data exists
       if (!departmentId || !positionId || !gradeId) {
         return next(
@@ -2125,6 +2162,6 @@ exports.bulkRegister = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error);
-    return next(createError.createError(500, "Internal server error", error));
+    return next(createError.createError(503, "Internal server error", error));
   }
 };

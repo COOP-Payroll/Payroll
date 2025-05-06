@@ -6,16 +6,16 @@ const middleware = require("../middleware/auth.js");
 router.post(
   "/",
   middleware.validateUserAgent,
-  middleware.protectAll,
-  middleware.restrictTo("superAdmin"),
+  // middleware.protectAll,
+  // middleware.restrictTo("superAdmin"),
   woredaController.createWoreda
 );
 
 // Get all regions
 router.get(
   "/",
-  middleware.validateUserAgent,
-  middleware.protectAll,
+  // middleware.validateUserAgent,
+  // middleware.protectAll,
   woredaController.getAllWoredas
 );
 

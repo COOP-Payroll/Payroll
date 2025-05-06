@@ -1193,6 +1193,7 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
       ],
     });
 
+    // return res.json(payrolls);
     const foundIds = payrolls.map((p) => p.id);
     const missingIds = processIds.filter((id) => !foundIds.includes(id));
 
@@ -1212,6 +1213,9 @@ exports.getPayrollPaymentProcess = async (req, res, next) => {
     let creditTransactions = payrolls.map((payroll) => {
       const accountNumber =
         payroll.Employee.AccountInfos?.[0]?.accountNumber || null;
+
+      console.log("dahdjfdajhfjsdhfdj");
+      console.log(payroll.Employee.AccountInfos);
 
       totalAmount += parseFloat(payroll.NetSalary);
       const orderId = uuidv4();

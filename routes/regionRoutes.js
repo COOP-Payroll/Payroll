@@ -6,36 +6,36 @@ const middleware = require("../middleware/auth.js");
 router.post(
   "/",
   middleware.validateUserAgent,
-  middleware.protectAll,
-  middleware.restrictToAll("superAdmin"),
+  // middleware.protectAll,
+  // middleware.restrictToAll("superAdmin"),
   regionController.createRegion
 );
 
 // Get all regions
 router.get(
   "/",
-  middleware.validateUserAgent,
-  middleware.protectAll,
+  // middleware.validateUserAgent,
+  // middleware.protectAll,
   regionController.getAllRegions
 );
 
 // Get region by ID
 router.get(
   "/:id",
-  middleware.validateUserAgent,
-  middleware.protectAll,
+  // middleware.validateUserAgent,
+  // middleware.protectAll,
   regionController.getRegionById
 );
 router.get(
   "/get-zones/:regionId",
-  middleware.validateUserAgent,
-  middleware.protectAll,
+  // middleware.validateUserAgent,
+  // middleware.protectAll,
   regionController.getZonesUnderRegions
 );
 router.get(
   "/get-Woredas/:regionId/:zoneId",
-  middleware.validateUserAgent,
-  middleware.protectAll,
+  // middleware.validateUserAgent,
+  // middleware.protectAll,
   regionController.getWoredasUnderZones
 );
 

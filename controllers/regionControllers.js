@@ -13,15 +13,15 @@ exports.createRegion = async (req, res, next) => {
     }
 
     // Ensure only one active region exists
-    const existingRegion = await Region.findOne({ where: { isActive: true } });
-    if (existingRegion) {
-      return next(
-        createError.createError(
-          400,
-          "Cannot create more than one active region"
-        )
-      );
-    }
+    // const existingRegion = await Region.findOne({ where: { isActive: true } });  
+    // if (existingRegion) {
+    //   return next(
+    //     createError.createError(
+    //       400,
+    //       "Cannot create more than one active region"
+    //     )
+    //   );
+    // }
 
     // Create new region (name is no longer unique)
     const region = await Region.create({ name, code });
