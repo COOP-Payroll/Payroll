@@ -3,8 +3,31 @@ const Region = require("../models/region.js");
 
 exports.createCampaign = async (req, res) => {
   try {
-    const { name, description, startDate, endDate, budget, status, regionId } =
-      req.body;
+    const {
+      name,
+      description,
+      startDate,
+      endDate,
+      budget,
+      status,
+      regionId,
+      campaignType,
+      targetPopulation,
+      healthOutcome,
+      successMetrics,
+      requiredResources,
+      complianceRequirements,
+      riskAssessment,
+      reportingFrequency,
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !startDate || !endDate || !campaignType) {
+      return res.status(400).json({
+        message:
+          "Missing required fields: name, startDate, endDate, and campaignType are required",
+      });
+    }
 
     const campaign = await Campaign.create({
       name,
@@ -14,41 +37,53 @@ exports.createCampaign = async (req, res) => {
       budget,
       status,
       regionId,
-
-      //   CompanyId: companyId,
+      campaignType,
+      targetPopulation,
+      healthOutcome,
+      successMetrics,
+      requiredResources,
+      complianceRequirements,
+      riskAssessment,
+      reportingFrequency,
     });
 
     res.status(201).json({
-      message: "Create successfully",
+      message: "Campaign created successfully",
       data: campaign,
     });
   } catch (error) {
     console.error("Error creating campaign:", error);
-    res.status(500).json({ message: "Failed to create campaign" });
+    res.status(500).json({
+      message: "Failed to create campaign",
+      error: error.message,
+    });
   }
 };
 
 exports.getAllCampaigns = async (req, res, next) => {
   try {
-    // return res.json(req?.user?.regionId);
     const campaigns = await Campaign.findAll({
       include: [
         {
           model: Region,
           as: "Region",
           foreignKey: "regionId",
-          required: false, // optional: returns all campaigns even if Region is null
+          required: false,
         },
       ],
       where: {
         regionId: req?.user?.regionId,
+        isActive: true,
       },
     });
 
     res.status(200).json({ data: campaigns });
   } catch (error) {
     console.error("Error fetching campaigns:", error);
-    res.status(500).json({ message: "Failed to fetch campaigns" });
+    res.status(500).json({
+      message: "Failed to fetch campaigns",
+      error: error.message,
+    });
   }
 };
 
@@ -57,24 +92,27 @@ exports.getCampaignById = async (req, res) => {
     const { id } = req.params;
 
     const campaign = await Campaign.findByPk(id, {
-      //   include: [Company],
       include: [
         {
           model: Region,
           as: "Region",
           foreignKey: "regionId",
-          required: false, // optional: returns all campaigns even if Region is null
+          required: false,
         },
       ],
     });
 
-    // if (!campaign)
-    //   return res.status(404).json({ message: "Campaign not found" });
+    if (!campaign) {
+      return res.status(404).json({ message: "Campaign not found" });
+    }
 
     res.status(200).json({ data: campaign });
   } catch (error) {
     console.error("Error fetching campaign:", error);
-    res.status(500).json({ message: "Failed to fetch campaign" });
+    res.status(500).json({
+      message: "Failed to fetch campaign",
+      error: error.message,
+    });
   }
 };
 
@@ -82,10 +120,18 @@ exports.updateCampaign = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Prevent updating regionId
-    if ("regionId" in req.body) {
-      delete req.body.regionId;
-    }
+    // Prevent updating regionId and approval related fields
+    const restrictedFields = [
+      "regionId",
+      "approvalStatus",
+      "approvalDate",
+      "approvedBy",
+    ];
+    restrictedFields.forEach((field) => {
+      if (field in req.body) {
+        delete req.body[field];
+      }
+    });
 
     const campaign = await Campaign.findByPk(id);
     if (!campaign) {
@@ -96,11 +142,14 @@ exports.updateCampaign = async (req, res) => {
 
     res.status(200).json({
       message: "Campaign updated successfully",
-      campaign,
+      data: campaign,
     });
   } catch (error) {
     console.error("Error updating campaign:", error);
-    res.status(500).json({ message: "Failed to update campaign" });
+    res.status(500).json({
+      message: "Failed to update campaign",
+      error: error.message,
+    });
   }
 };
 
@@ -113,14 +162,18 @@ exports.deleteCampaign = async (req, res) => {
       { where: { id } }
     );
 
-    if (updated === 0)
+    if (updated === 0) {
       return res.status(404).json({ message: "Campaign not found" });
+    }
 
-    res
-      .status(200)
-      .json({ message: "Campaign marked as inactive successfully" });
+    res.status(200).json({
+      message: "Campaign marked as inactive successfully",
+    });
   } catch (error) {
     console.error("Error updating campaign to inactive:", error);
-    res.status(500).json({ message: "Failed to mark campaign as inactive" });
+    res.status(500).json({
+      message: "Failed to mark campaign as inactive",
+      error: error.message,
+    });
   }
 };

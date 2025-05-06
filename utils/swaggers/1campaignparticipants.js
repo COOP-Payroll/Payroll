@@ -234,6 +234,10 @@
  *       500:
  *         description: Failed to update participant
  */
+
+
+
+
 /**
  * @swagger
  * /getAllParticipantsPublished:

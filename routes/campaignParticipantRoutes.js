@@ -3,10 +3,14 @@ const router = express.Router();
 const campaignParticipantController = require("../controllers/campaignParticipantController");
 const upload = require("../middleware/multer");
 const middleware = require("../middleware/auth.js");
-router.post("/", campaignParticipantController.createParticipant);
+router.post(
+  "/",
+  middleware.protectAll,
+  campaignParticipantController.createParticipant
+);
 router.get(
   "/download-excel",
-  middleware.protectAll,
+
   campaignParticipantController.downloadExcel
 );
 // router.get(
@@ -21,7 +25,7 @@ router.post(
   campaignParticipantController.bulkRegisterFromExcel
 );
 router.get(
-  "/campaign/:campaignId",
+  "/",
   middleware.protectAll,
   campaignParticipantController.getAllParticipants
 );
@@ -36,6 +40,13 @@ router.put(
   middleware.protectAll,
   campaignParticipantController.verifyParticipant
 );
+router.delete(
+  "",
+  middleware.protectAll,
+  campaignParticipantController.deleteParticipant
+);
+
+
 
 
 router.put(
@@ -61,6 +72,5 @@ router.get(
   middleware.protectAll,
   campaignParticipantController.getAllParticipantsApproved
 );
-router.delete("", campaignParticipantController.deleteParticipant);
 
 module.exports = router;

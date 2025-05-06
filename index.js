@@ -221,14 +221,33 @@ app.use((err, req, res, next) => {
   });
 });
 
-// const company= require("./models/company.js");
-// company.sync({ alter: true })
+// const participant = require("./models/participants.js");
+// participant
+//   .sync({ alter: true })
+//   .then(() => {
+//     console.log("Company model synced.");
+//   })  
+//   .catch((err) => {
+//     console.error("Error syncing Company model:", err);
+//   });
+
+// const participant1= require("./models/campaignParticipant.js");
+// participant1.sync({ alter: true })
 //   .then(() => {
 //     console.log('Company model synced.');
 //   })
 //   .catch((err) => {
 //     console.error('Error syncing Company model:', err);
 //   });
+
+//   const participant2= require("./models/campaigns.js");
+//   participant2.sync({ alter: true })
+//     .then(() => {
+//       console.log('Company model synced.');
+//     })
+//     .catch((err) => {
+//       console.error('Error syncing Company model:', err);
+//     });
 
 // sequelize.sync({ logging: console.log });
 // sequelize.sync({ alter: false }).then(() => console.log("db is ready"));
