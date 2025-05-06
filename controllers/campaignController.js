@@ -19,16 +19,24 @@ exports.createCampaign = async (req, res) => {
       complianceRequirements,
       riskAssessment,
       reportingFrequency,
+      documents, // optional
+
     } = req.body;
 
-    // Validate required fields
-    if (!name || !startDate || !endDate || !campaignType) {
+    // ✅ Basic validation
+    const missingFields = [];
+    if (!name) missingFields.push("name");
+    if (!startDate) missingFields.push("startDate");
+    if (!endDate) missingFields.push("endDate");
+    if (!campaignType) missingFields.push("campaignType");
+
+    if (missingFields.length > 0) {
       return res.status(400).json({
-        message:
-          "Missing required fields: name, startDate, endDate, and campaignType are required",
+        message: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
 
+    // ✅ Create campaign
     const campaign = await Campaign.create({
       name,
       description,
@@ -45,6 +53,8 @@ exports.createCampaign = async (req, res) => {
       complianceRequirements,
       riskAssessment,
       reportingFrequency,
+      documents,
+
     });
 
     res.status(201).json({
