@@ -9,6 +9,11 @@ const Region = require("../models/region");
 const Participant = require("../models/participants");
 const Zone = require("../models/zone");
 const Woreda = require("../models/woreda");
+const CampaignTransactionHistory = require("../models/campaignTransactionHIstory");
+const { v4: uuidv4 } = require("uuid");
+const AccountInfo = require("../models/accountInfo");
+const axios = require("axios");
+const { Op, where } = require("sequelize");
 
 exports.createParticipant = async (req, res) => {
   try {
@@ -441,12 +446,11 @@ exports.getAssignedParticipants = async (req, res) => {
     if (!campaignId)
       return res.status(400).json({ message: "Provide campaign ID" });
 
-
     const participants = await CampaignParticipant.findAll({
       where: { CampaignId: campaignId },
       include: [
         {
-          model: Participant,    
+          model: Participant,
         },
         {
           model: Region,
@@ -839,97 +843,6 @@ exports.updateApprovalStatus = async (req, res) => {
   }
 };
 
-// exports.getAllParticipantsPublished = async (req, res) => {
-//   try {
-//     const { campaignId } = req.query;
-//     // return res.json(campaignId);
-
-//     const CompanyId =
-//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
-
-//     const company = await Company.findByPk(CompanyId);
-
-//     if (!company) {
-//       return res.status(404).json({ message: "Company not found" });
-//     }
-
-//     const { regionId, zoneId, woredaId } = company;
-
-//     // Start building dynamic where clause
-//     const whereClause = {
-//       regionId,
-//       CampaignId: campaignId,
-//       isActive: true,
-//       isPublished: true,
-//     };
-
-//     // Only add zoneId if it's not null
-//     if (zoneId !== null) {
-//       whereClause.zoneId = zoneId;
-//     }
-
-//     // Only add woredaId if it's not null
-//     if (woredaId !== null) {
-//       whereClause.woredaId = woredaId;
-//     }
-
-//     const participants = await CampaignParticipant.findAll({
-//       include: [Campaign, Region],
-//       where: whereClause,
-//     });
-
-//     res.status(200).json({ data: participants });
-//   } catch (error) {
-//     console.error("Error fetching participants:", error);
-//     res.status(500).json({ message: "Failed to fetch participants" });
-//   }
-// };
-
-// exports.getAllParticipantsApproved = async (req, res) => {
-//   try {
-//     const { campaignId } = req.query;
-
-//     const CompanyId =
-//       req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
-
-//     const company = await Company.findByPk(CompanyId);
-
-//     if (!company) {
-//       return res.status(404).json({ message: "Company not found" });
-//     }
-
-//     const { regionId, zoneId, woredaId } = company;
-
-//     // Start building dynamic where clause
-//     const whereClause = {
-//       regionId,
-//       CampaignId: campaignId,
-//       isActive: true,
-//       approvalStatus: "APPROVED",
-//     };
-
-//     // Only add zoneId if it's not null
-//     if (zoneId !== null) {
-//       whereClause.zoneId = zoneId;
-//     }
-
-//     // Only add woredaId if it's not null
-//     if (woredaId !== null) {
-//       whereClause.woredaId = woredaId;
-//     }
-
-//     const participants = await CampaignParticipant.findAll({
-//       include: [Campaign, Region],
-//       where: whereClause,
-//     });
-
-//     res.status(200).json({ data: participants });
-//   } catch (error) {
-//     console.error("Error fetching participants:", error);
-//     res.status(500).json({ message: "Failed to fetch participants" });
-//   }
-// };
-
 exports.getAllParticipantsApproved = async (req, res) => {
   try {
     const {
@@ -1084,5 +997,239 @@ exports.getAllParticipantsPublished = async (req, res) => {
   } catch (error) {
     console.error("Error fetching participants:", error);
     res.status(500).json({ message: "Failed to fetch participants" });
+  }
+};
+
+exports.updatePaymentStatus = async (req, res) => {
+  try {
+    const { campaignId, participantIds, newStatus } = req.body;
+
+    // Validate input
+    if (
+      !campaignId ||
+      !Array.isArray(participantIds) ||
+      participantIds.length === 0
+    ) {
+      return res.status(400).json({
+        message: "Missing or invalid campaignId or participantIds",
+      });
+    }
+
+    // Only process if status is COMPLETED
+    if (newStatus !== "COMPLETED") {
+      return res.status(200).json({
+        message: `No action taken. Only COMPLETED status triggers transaction.`,
+      });
+    }
+
+    const CompanyId =
+      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+    const bulkId = uuidv4();
+    const updatedParticipants = [];
+    const creditTransactions = [];
+
+    // Fetch participants with their details
+    const participants = await CampaignParticipant.findAll({
+      where: {
+        id: participantIds,
+        CampaignId: campaignId,
+        paymentStatus: { [Op.ne]: "COMPLETED" }, // Only process non-completed payments
+      },
+      include: [
+        {
+          model: Participant,
+          required: true,
+          where: { isActive: true },
+        },
+      ],
+    });
+
+    if (participants.length === 0) {
+      return res.status(404).json({
+        message: "No eligible participants found for payment processing",
+      });
+    }
+
+    // Get company account details
+    const companyAccount = await AccountInfo.findOne({
+      where: {
+        CompanyId: CompanyId,
+        isActive: true,
+      },
+    });
+
+    if (!companyAccount?.accountNumber) {
+      return res.status(400).json({
+        message: "Company account not found or inactive",
+      });
+    }
+
+    // Prepare transactions
+    for (const cp of participants) {
+      const accountNumber = cp.Participant.accountNumber;
+      const amount = cp.amount || 0;
+
+      if (!accountNumber || amount <= 0) {
+        cp.paymentStatus = "FAILED";
+        await cp.save();
+        continue;
+      }
+
+      const orderId = uuidv4();
+
+      // Create transaction record
+      await CampaignTransactionHistory.create({
+        bulkId,
+        orderId,
+        participantId: cp.id,
+        processId: cp.id,
+        creditAccount: accountNumber,
+        amount,
+        status: "PENDING",
+      });
+
+      creditTransactions.push({
+        orderId,
+        creditAccount: accountNumber,
+        amount,
+        participantIds: cp.id,
+      });
+
+      cp.paymentStatus = "PENDING";
+      await cp.save();
+      updatedParticipants.push(cp.id);
+    }
+
+    if (creditTransactions.length === 0) {
+      return res.status(400).json({
+        message: "No valid transactions to process",
+      });
+    }
+
+    // Calculate total amount
+    const totalAmount = creditTransactions.reduce(
+      (sum, txn) => sum + parseFloat(txn.amount),
+      0
+    );
+
+    // Prepare payment request
+    const requestBody = {
+      debitAccount: companyAccount.accountNumber,
+      bankCode: "coop",
+      totalAmount,
+      bulkId,
+      creditTransactions,
+    };
+
+    const apiUrl =
+      "https://souqpass.coopbankoromiasc.com/bulk-payroll/fund-transfer/bulk-transfer";
+
+    try {
+      // Make payment API call
+      const resp = await axios.post(apiUrl, requestBody, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY":
+            process.env.PAYMENT_API_KEY ||
+            "ade8fd2435c92a3b3f48e7897f38964ba332256d3518fed35b5d04b80cfadfc6",
+        },
+      });
+
+      const transactionStatuses = resp.data || [];
+
+      // Update transaction and participant statuses
+      for (const txn of transactionStatuses) {
+        const { orderId, status, message, transactionId } = txn;
+
+        console.log("-----", txn);
+
+        // Update transaction history
+        const res = await CampaignTransactionHistory.update(
+          {
+            status,
+            message,
+            transactionId,
+            updatedAt: new Date(),
+          },
+          { where: { orderId } }
+        );
+
+        console.log("res---", res);
+
+        // Find corresponding participant
+        const participant = creditTransactions.find(
+          (p) => p.orderId === txn.orderId
+        );
+
+        console.log("update----", participant);
+
+        if (participant) {
+          // participant.paymentStatus =
+          //   status === "SUCCESS" ? "COMPLETED" : "FAILED";
+          await CampaignParticipant.update(
+            {
+              paymentStatus: status === "SUCCESS" ? "COMPLETED" : "FAILED",
+            },
+            {
+              where: { id: participant.participantIds },
+            }
+          );
+
+          // await participant.save();
+        }
+
+        // participants.paymentStatus =
+        //   status === "SUCCESS" ? "COMPLETED" : "FAILED";
+        //   await participant.save();
+        // const participant = orderIdToParticipantMap.get(orderId);
+        // if (participant) {
+        //   participant.paymentStatus = status === "SUCCESS" ? "COMPLETED" : "FAILED";
+        //   await participant.save();
+        // }
+      }
+
+      return res.status(200).json({
+        message: "Payment processing completed",
+        bulkId,
+        totalTransactions: creditTransactions.length,
+        updatedParticipants,
+      });
+    } catch (paymentErr) {
+      console.error(
+        "Payment API Error:",
+        paymentErr?.response?.data || paymentErr
+      );
+
+      // Update all transactions as failed
+      await CampaignTransactionHistory.update(
+        {
+          status: "FAILED",
+          message: paymentErr?.response?.data?.message || "Payment API error",
+          updatedAt: new Date(),
+        },
+        { where: { bulkId } }
+      );
+
+      // Update all participants as failed
+      await CampaignParticipant.update(
+        {
+          paymentStatus: "FAILED",
+          updatedAt: new Date(),
+        },
+        { where: { id: participantIds } }
+      );
+
+      return res.status(503).json({
+        message: "Payment processing failed",
+        error:
+          paymentErr?.response?.data?.message || "Payment service unavailable",
+      });
+    }
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };

@@ -221,15 +221,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// const participant = require("./models/participants.js");
-// participant
-//   .sync({ alter: true })
-//   .then(() => {
-//     console.log("Company model synced.");
-//   })
-//   .catch((err) => {
-//     console.error("Error syncing Company model:", err);
-//   });
+const participant = require("./models/campaignTransactionHIstory.js");
+participant
+  .sync({ alter: true })
+  .then(() => {
+    console.log("Company model synced.");
+  })
+  .catch((err) => {
+    console.error("Error syncing Company model:", err);
+  });
 
 // const participant1= require("./models/campaignParticipant.js");
 // participant1.sync({ alter: true })

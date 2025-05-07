@@ -1147,178 +1147,178 @@ exports.getNotApprovedPayroll = async (req, res, next) => {
   }
 };
 
-exports.getPayrollPaymentProcess = async (req, res, next) => {
-  try {
-    let { processIds } = req.body;
-
-    processIds = Array.isArray(processIds)
-      ? processIds.map(Number).filter((id) => !isNaN(id))
-      : [];
-
-    if (!processIds.length) {
-      return res.status(400).json({ message: "Invalid or empty process IDs" });
-    }
-
-    const CompanyId =
-      req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
-
-    const companyAccountNumber = await AccountInfo.findOne({
-      where: {
-        CompanyId: CompanyId,
-        isActive: true,
-      },
-    });
-
-    // return res.json(companyAccountNumber.accountNumber);
-
-    if (!companyAccountNumber?.accountNumber) {
-      return next(
-        createError.createError(400, "There is no valid account Number")
-      );
-    }
-
-    const payrolls = await Payroll.findAll({
-      where: { id: processIds, CompanyId },
-      include: [
-        {
-          model: Employee,
-          include: [
-            {
-              model: AccountInfo,
-              where: { isActive: true },
-              limit: 1,
-            },
-          ],
-        },
-      ],
-    });
-
-    // return res.json(payrolls);
-    const foundIds = payrolls.map((p) => p.id);
-    const missingIds = processIds.filter((id) => !foundIds.includes(id));
-
-    if (missingIds.length > 0) {
-      return next(createError.createError(400, "Some payrolls not found"));
-    }
-
-    const alreadyPaid = payrolls.find((p) => p.isPaid === true);
-    if (alreadyPaid) {
-      return res.status(400).json({
-        message: "One or more selected payrolls have already been paid",
-      });
-    }
-    let totalAmount = 0;
-    const bulkId = uuidv4();
-
-    let creditTransactions = payrolls.map((payroll) => {
-      const accountNumber =
-        payroll.Employee.AccountInfos?.[0]?.accountNumber || null;
-
-      console.log("dahdjfdajhfjsdhfdj");
-      console.log(payroll.Employee.AccountInfos);
-
-      totalAmount += parseFloat(payroll.NetSalary);
-      const orderId = uuidv4();
-      // Save transaction with processId
-      TransactionHistory.create({
-        bulkId,
-        orderId,
-        processId: payroll.id, // Save processId
-        creditAccount: accountNumber,
-        amount: payroll.NetSalary,
-        status: "PENDING",
-      });
-
-      return {
-        orderId,
-        creditAccount: accountNumber,
-        amount: payroll.NetSalary,
-      };
-    });
-
-    const requestBody = {
-      // debitAccount: "1045500049787",
-      debitAccount: companyAccountNumber.accountNumber,
-      // debitAccount: "ETB1769500010473",
-      bankCode: "coop",
-      totalAmount: totalAmount,
-      bulkId,
-      creditTransactions,
-    };
-    console.log("dkdfksk", requestBody);
-    // const apiUrl = "http://10.1.151.51:5002/fund-transfer";
-    // const apiUrl = process.env.PAYMENTURL;
-    const apiUrl =
-      "https://souqpass.coopbankoromiasc.com/bulk-payroll/fund-transfer/bulk-transfer";
-    // return res.json(apiurl);
-
-    // const apiUrl =
-    //   "https://souqpass.coopbankoromiasc.com/payroll/fund-transfer/process";
-    let resp;
-
+  exports.getPayrollPaymentProcess = async (req, res, next) => {
     try {
-      resp = await axios.post(apiUrl, requestBody, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-KEY":
-            "ade8fd2435c92a3b3f48e7897f38964ba332256d3518fed35b5d04b80cfadfc6",
+      let { processIds } = req.body;
+
+      processIds = Array.isArray(processIds)
+        ? processIds.map(Number).filter((id) => !isNaN(id))
+        : [];
+
+      if (!processIds.length) {
+        return res.status(400).json({ message: "Invalid or empty process IDs" });
+      }
+
+      const CompanyId =
+        req.user.role === "companyAdmin" ? req.user.id : req.user.CompanyId;
+
+      const companyAccountNumber = await AccountInfo.findOne({
+        where: {
+          CompanyId: CompanyId,
+          isActive: true,
         },
       });
-    } catch (apiError) {
-      console.error("Payment API Error:", apiError?.response?.data || apiError);
 
-      await TransactionHistory.update(
-        { status: "FAILED", message: "API request failed" },
-        { where: { bulkId } }
-      );
+      // return res.json(companyAccountNumber.accountNumber);
 
-      return res.status(400).json({ message: "Payment processing failed" });
-    }
-    console.log("dkdkdd", resp.data);
-    // const { transactionStatuses = [] } = resp.data || {};
-    const transactionStatuses = resp.data || {};
+      if (!companyAccountNumber?.accountNumber) {
+        return next(
+          createError.createError(400, "There is no valid account Number")
+        );
+      }
 
-    let successfulProcessIds = [];
+      const payrolls = await Payroll.findAll({
+        where: { id: processIds, CompanyId },
+        include: [
+          {
+            model: Employee,
+            include: [
+              {
+                model: AccountInfo,
+                where: { isActive: true },
+                limit: 1,
+              },
+            ],
+          },
+        ],
+      });
 
-    for (const txn of transactionStatuses) {
-      const { orderId, status, message, transactionId } = txn;
+      // return res.json(payrolls);
+      const foundIds = payrolls.map((p) => p.id);
+      const missingIds = processIds.filter((id) => !foundIds.includes(id));
 
-      await TransactionHistory.update(
-        { status, message, transactionId },
-        { where: { orderId } }
-      );
+      if (missingIds.length > 0) {
+        return next(createError.createError(400, "Some payrolls not found"));
+      }
 
-      if (status === "SUCCESS") {
-        // Find the processId for the successful transaction
-        const transaction = await TransactionHistory.findOne({
-          where: { orderId },
+      const alreadyPaid = payrolls.find((p) => p.isPaid === true);
+      if (alreadyPaid) {
+        return res.status(400).json({
+          message: "One or more selected payrolls have already been paid",
+        });
+      }
+      let totalAmount = 0;
+      const bulkId = uuidv4();
+
+      let creditTransactions = payrolls.map((payroll) => {
+        const accountNumber =
+          payroll.Employee.AccountInfos?.[0]?.accountNumber || null;
+
+        console.log("dahdjfdajhfjsdhfdj");
+        console.log(payroll.Employee.AccountInfos);
+
+        totalAmount += parseFloat(payroll.NetSalary);
+        const orderId = uuidv4();
+        // Save transaction with processId
+        TransactionHistory.create({
+          bulkId,
+          orderId,
+          processId: payroll.id, // Save processId
+          creditAccount: accountNumber,
+          amount: payroll.NetSalary,
+          status: "PENDING",
         });
 
-        if (transaction) {
-          successfulProcessIds.push(transaction.processId);
+        return {
+          orderId,
+          creditAccount: accountNumber,
+          amount: payroll.NetSalary,
+        };
+      });
+
+      const requestBody = {
+        // debitAccount: "1045500049787",
+        debitAccount: companyAccountNumber.accountNumber,
+        // debitAccount: "ETB1769500010473",
+        bankCode: "coop",
+        totalAmount: totalAmount,
+        bulkId,
+        creditTransactions,
+      };
+      console.log("dkdfksk", requestBody);
+      // const apiUrl = "http://10.1.151.51:5002/fund-transfer";
+      // const apiUrl = process.env.PAYMENTURL;
+      const apiUrl =
+        "https://souqpass.coopbankoromiasc.com/bulk-payroll/fund-transfer/bulk-transfer";
+      // return res.json(apiurl);
+
+      // const apiUrl =
+      //   "https://souqpass.coopbankoromiasc.com/payroll/fund-transfer/process";
+      let resp;
+
+      try {
+        resp = await axios.post(apiUrl, requestBody, {
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-KEY":
+              "ade8fd2435c92a3b3f48e7897f38964ba332256d3518fed35b5d04b80cfadfc6",
+          },
+        });
+      } catch (apiError) {
+        console.error("Payment API Error:", apiError?.response?.data || apiError);
+
+        await TransactionHistory.update(
+          { status: "FAILED", message: "API request failed" },
+          { where: { bulkId } }
+        );
+
+        return res.status(400).json({ message: "Payment processing failed" });
+      }
+      console.log("dkdkdd", resp.data);
+      // const { transactionStatuses = [] } = resp.data || {};
+      const transactionStatuses = resp.data || {};
+
+      let successfulProcessIds = [];
+
+      for (const txn of transactionStatuses) {
+        const { orderId, status, message, transactionId } = txn;
+
+        await TransactionHistory.update(
+          { status, message, transactionId },
+          { where: { orderId } }
+        );
+
+        if (status === "SUCCESS") {
+          // Find the processId for the successful transaction
+          const transaction = await TransactionHistory.findOne({
+            where: { orderId },
+          });
+
+          if (transaction) {
+            successfulProcessIds.push(transaction.processId);
+          }
         }
       }
-    }
 
-    if (successfulProcessIds.length > 0) {
-      // Update payrolls to isPaid = true where transactions were successful
-      await Payroll.update(
-        { isPaid: true },
-        { where: { id: successfulProcessIds } }
+      if (successfulProcessIds.length > 0) {
+        // Update payrolls to isPaid = true where transactions were successful
+        await Payroll.update(
+          { isPaid: true },
+          { where: { id: successfulProcessIds } }
+        );
+      }
+
+      return res.status(200).json({
+        message: "Payroll processed successfully",
+        data: transactionStatuses,
+      });
+    } catch (error) {
+      console.error(error);
+      return next(
+        createError.createError(503, "An error occurred, please try again later")
       );
     }
-
-    return res.status(200).json({
-      message: "Payroll processed successfully",
-      data: transactionStatuses,
-    });
-  } catch (error) {
-    console.error(error);
-    return next(
-      createError.createError(503, "An error occurred, please try again later")
-    );
-  }
-};
+  };
 exports.projectBasedPayroll = async (req, res, next) => {
   try {
     const CompanyId =

@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../database/db.js");
 
-const CampaignTransactionHistory = sequelize.define("TransactionHistory", {
+const CampaignTransactionHistory = sequelize.define("CampaignTransactionHistory", {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,

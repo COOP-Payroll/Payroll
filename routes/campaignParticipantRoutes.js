@@ -50,14 +50,13 @@ router.post(
   "/:campaignId/assignParticipants",
   middleware.protectAll,
   campaignParticipantController.assignParticipants
-)
+);
 
 router.get(
   "/:campaignId/assignParticipants",
   middleware.protectAll,
   campaignParticipantController.getAssignedParticipants
-)
-
+);
 
 router.put(
   "/publish",
@@ -81,6 +80,12 @@ router.get(
   "/approved",
   middleware.protectAll,
   campaignParticipantController.getAllParticipantsApproved
+);
+
+router.put(
+  "/updatePaymentStatus",
+  middleware.protectAll,
+  campaignParticipantController.updatePaymentStatus
 );
 
 module.exports = router;
