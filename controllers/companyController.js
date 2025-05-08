@@ -417,7 +417,7 @@ exports.createCompany = async (req, res, next) => {
       message: "Company created successfully.",
     });
   } catch (error) {
-    console.error(error);
+    console.error(error.message);
     await transaction.rollback();
     return next(
       createError.createError(503, "An error occurred, please try again later")

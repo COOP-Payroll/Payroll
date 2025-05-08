@@ -6,7 +6,7 @@ exports.getAllProvidentFund = async (req, res, next) => {
   try {
     if (req.user.role === "superAdmin") {
       const ProvidentFunds = await ProvidentFund.findAll({
-        where: { userId: req.user.id, isActive: true },
+        where: { UserId: req.user.id, isActive: true },
       });
       res.status(200).json({
         count: ProvidentFunds.length,
@@ -24,6 +24,7 @@ exports.getAllProvidentFund = async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );
