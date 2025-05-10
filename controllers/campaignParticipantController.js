@@ -316,19 +316,21 @@ exports.getAllParticipants = async (req, res) => {
     // Start building dynamic where clause
     const whereClause = {
       regionId,
+      zoneId,
+      woredaId,
       // CampaignId: campaignId,
       isActive: true,
     };
 
-    // Only add zoneId if it's not null
-    if (zoneId !== null) {
-      whereClause.zoneId = zoneId;
-    }
+    // // Only add zoneId if it's not null
+    // if (zoneId !== null) {
+    //   whereClause.zoneId = zoneId;
+    // }
 
-    // Only add woredaId if it's not null
-    if (woredaId !== null) {
-      whereClause.woredaId = woredaId;
-    }
+    // // Only add woredaId if it's not null
+    // if (woredaId !== null) {
+    //   whereClause.woredaId = woredaId;
+    // }
 
     const participants = await Participant.findAll({
       // include: [Campaign, Region],
@@ -447,7 +449,10 @@ exports.getAssignedParticipants = async (req, res) => {
       return res.status(400).json({ message: "Provide campaign ID" });
 
     const participants = await CampaignParticipant.findAll({
-      where: { CampaignId: campaignId },
+      where: {
+        CampaignId: campaignId,
+        isPublished: false,
+      },
       include: [
         {
           model: Participant,

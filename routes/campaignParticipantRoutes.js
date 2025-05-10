@@ -30,12 +30,12 @@ router.get(
   campaignParticipantController.getAllParticipants
 );
 
-router.put(
+router.post(
   "/update",
   middleware.protectAll,
   campaignParticipantController.updateParticipant
 );
-router.put(
+router.post(
   "/verify",
   middleware.protectAll,
   campaignParticipantController.verifyParticipant
@@ -58,13 +58,13 @@ router.get(
   campaignParticipantController.getAssignedParticipants
 );
 
-router.put(
+router.post(
   "/publish",
   middleware.protectAll,
   campaignParticipantController.publishParticipants
 );
 
-router.put(
+router.post(
   "/approval-status",
   middleware.protectAll,
   campaignParticipantController.updateApprovalStatus
@@ -81,8 +81,7 @@ router.get(
   middleware.protectAll,
   campaignParticipantController.getAllParticipantsApproved
 );
-
-router.put(
+router.post(
   "/updatePaymentStatus",
   middleware.protectAll,
   campaignParticipantController.updatePaymentStatus

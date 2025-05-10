@@ -149,7 +149,7 @@
  *       500:
  *         description: Failed to delete participant
  * /api/participants/verify:
- *   put:
+ *   post:
  *     summary: Verify a campaign participant
  *     tags:
  *       - CampaignParticipants
@@ -178,7 +178,7 @@
  *       500:
  *         description: Failed to verify participant
  * /api/participants/update:
- *   put:
+ *   post:
  *     summary: Update a campaign participant
  *     tags:
  *       - CampaignParticipants
@@ -241,11 +241,9 @@
  *         description: Failed to update participant
  */
 
-
-
 /**
  * @swagger
- * /getAllParticipantsPublished:
+ * /api/getAllParticipantsPublished:
  *   get:
  *     summary: Get all published participants for a campaign
  *     description: Retrieves all participants who have been published for a specific campaign, including participant and location details.
@@ -422,7 +420,7 @@
 
 /**
  * @swagger
- * /getAllParticipantsApproved:
+ * /api/getAllParticipantsApproved:
  *   get:
  *     summary: Get all participants with 'APPROVED' status for a campaign
  *     description: Retrieves all participants who have an 'APPROVED' status for a specific campaign. Optionally filters by zone or woreda. Authorization is required.
@@ -593,10 +591,9 @@
  *         description: Internal server error
  */
 
-
 /**
  * @swagger
- * /assignParticipants:
+ * /api/assignParticipants:
  *   post:
  *     summary: Assign participants to a campaign
  *     tags: [CampaignParticipants]
@@ -675,10 +672,9 @@
  *                   example: Failed to assign participants
  */
 
-
 /**
  * @swagger
- * /getAssignedParticipants:
+ * /api/getAssignedParticipants:
  *   get:
  *     summary: Get assigned participants for a campaign
  *     tags: [CampaignParticipants]
@@ -855,11 +851,9 @@
  *                   example: Failed to fetch assigned participants
  */
 
- 
-
 /**
  * @swagger
- * /updateApprovalStatus:
+ * /api/approval-status:
  *   post:
  *     summary: Update approval status of participants in a campaign
  *     description: Allows the update of approval status (PENDING, APPROVED, REJECTED) for participants in a specific campaign.
@@ -895,7 +889,7 @@
 
 /**
  * @swagger
- * /publishParticipants:
+ * /api/publishParticipants:
  *   post:
  *     summary: Publish participants for a specific campaign
  *     description: Publishes participants for a campaign by marking them as published.
@@ -922,4 +916,128 @@
  *         description: Campaign or participant not found
  *       500:
  *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/updatePaymentStatus:
+ *   post:
+ *     summary: Update approval status of participants in a campaign
+ *     description: Allows the update of approval status (PENDING, COMPLETED, FAILED,REJECTED) for participants in a specific campaign.
+ *     tags: [CampaignParticipants]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               campaignId:
+ *                 type: integer
+ *               participantIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *               newStatus:
+ *                 type: string
+ *                 enum: [PENDING, COMPLETED, FAILED,REJECTED]
+ *     responses:
+ *       200:
+ *         description: Approval status updated successfully
+ *       400:
+ *         description: Missing or invalid input
+ *       403:
+ *         description: Forbidden, insufficient permissions
+ *       404:
+ *         description: Campaign or participant not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/participants:
+ *   get:
+ *     summary: Get all participants
+ *     tags: [CampaignParticipants]
+ *     description: Retrieves all active participants  of the company making the request.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of participants matching the company location
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       fullName:
+ *                         type: string
+ *                       sex:
+ *                         type: string
+ *                       amount:
+ *                         type: number
+ *                       age:
+ *                         type: integer
+ *                       nationalId:
+ *                         type: string
+ *                       address:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       phoneNumber:
+ *                         type: string
+ *                       accountNumber:
+ *                         type: string
+ *                       paymentMethod:
+ *                         type: string
+ *                       detail:
+ *                         type: string
+ *                       isVerified:
+ *                         type: boolean
+ *                       status:
+ *                         type: string
+ *                       isActive:
+ *                         type: boolean
+ *                       regionId:
+ *                         type: integer
+ *                       zoneId:
+ *                         type: integer
+ *                         nullable: true
+ *                       woredaId:
+ *                         type: integer
+ *                         nullable: true
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *       404:
+ *         description: Company not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Company not found
+ *       500:
+ *         description: Failed to fetch participants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to fetch participants
  */

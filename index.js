@@ -67,6 +67,7 @@ const additionalAllowance = require("./routes/additionalAllowance.js");
 const checkAccountNumber = require("./routes/accountChecker.js");
 const campaignRoutes = require("./routes/campaignRoutes.js");
 const campaignParticipantRoutes = require("./routes/campaignParticipantRoutes.js");
+const supportRoutes = require("./routes/supportRoutes.js");
 
 // Static Files
 app.use("/uploads", express.static("./uploads/"));
@@ -188,7 +189,7 @@ app.use("/api/zones", zoneRoutes);
 app.use("/api/woredas", woredaRoutes);
 app.use("/api/dailyrate", dailyPerdiemRate);
 app.use("/api/perdiem", perdiemRoutes);
-
+app.use("/api/supports", supportRoutes);
 const swaggerOptions = {
   swaggerOptions: {
     url: "http://localhost:6000/api-docs/swagger.json", // Update the URL to match your setup

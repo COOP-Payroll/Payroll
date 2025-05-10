@@ -4,6 +4,7 @@ const userController = require("../controllers/userController.js");
 const middleware = require("../middleware/auth.js");
 const taxslabController = require("../controllers/taxslab.js");
 const providentController = require("../controllers/providentFund.js");
+const pensionController = require("../controllers/pension.js");
 
 router.post(
   "/CompanyStatus/update",
@@ -14,7 +15,6 @@ router.post(
   userController.updateCompanyStatus1
 );
 
-
 router.post(
   "/restoreTodefault/tax",
   middleware.validateUserAgent,
@@ -22,7 +22,6 @@ router.post(
   middleware.restrictToAll("superAdmin", "companyAdmin"),
   taxslabController.restoreToDefault
 );
-
 
 router.post(
   "/:restore-to-default",
@@ -39,3 +38,5 @@ router.post(
 
   pensionController.restoreToDefault
 );
+
+module.exports = router;

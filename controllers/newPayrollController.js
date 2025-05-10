@@ -2388,7 +2388,7 @@ exports.getApprovedPay = async (req, res, next) => {
         : {};
 
       return {
-        id,
+        id: payrollInfo?.processId,
         fullname,
         ...positions,
         image,

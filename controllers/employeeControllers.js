@@ -60,6 +60,7 @@ exports.getAllEmployee = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
     const offset = (page - 1) * limit; // Calculate the offset based on the current page
 
+    // return res.json(CompanyId);
     // Fetch employees with necessary relations and pagination
     const { count, rows } = await Employee.findAndCountAll({
       where: { CompanyId },
@@ -134,7 +135,7 @@ exports.getAllEmployee = async (req, res, next) => {
         gradeName: grade,
         employeeId: employee.employee_id_number,
         region,
-        zone ,
+        zone,
         woreda,
       };
     });

@@ -146,10 +146,32 @@ const signTokenCompany = (company, res) => {
 
     if (level === "REGION") {
       permissions.push(
+        // { module: "campaignprocess", isAccessible: true },
+        // { module: "campaignapprove", isAccessible: true },
+        // { module: "campaignpayment", isAccessible: true },
+        // { module: "campaignunprocessed", isAccessible: true }
+
+        { module: "campaigndashboard", isAccessible: true },
+        { module: "campaignsetups", isAccessible: true },
+        { module: "participants", isAccessible: true },
         { module: "campaignprocess", isAccessible: true },
-        { module: "campaignapprove", isAccessible: true },
+        { module: "campaignpublished", isAccessible: true },
+        { module: "campaignapproval", isAccessible: true },
         { module: "campaignpayment", isAccessible: true },
-        { module: "campaignunprocessed", isAccessible: true }
+        { module: "unprocessedcampaign", isAccessible: true },
+        { module: "campaignreports", isAccessible: true }
+      );
+    } else {
+      permissions.push(
+          // { module: "campaigndashboard", isAccessible: true },
+        // { module: "campaignsetups", isAccessible: true },
+        { module: "participants", isAccessible: true },
+        { module: "campaignprocess", isAccessible: true },
+        { module: "campaignpublished", isAccessible: true },
+        // { module: "campaignapproval", isAccessible: true },
+        // { module: "campaignpayment", isAccessible: true },
+        { module: "unprocessedcampaign", isAccessible: true },
+        // { module: "campaignreports", isAccessible: true }
       );
     }
 
