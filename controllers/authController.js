@@ -146,32 +146,21 @@ const signTokenCompany = (company, res) => {
 
     if (level === "REGION") {
       permissions.push(
-        // { module: "campaignprocess", isAccessible: true },
-        // { module: "campaignapprove", isAccessible: true },
-        // { module: "campaignpayment", isAccessible: true },
-        // { module: "campaignunprocessed", isAccessible: true }
-
-        { module: "campaigndashboard", isAccessible: true },
-        { module: "campaignsetups", isAccessible: true },
-        { module: "participants", isAccessible: true },
         { module: "campaignprocess", isAccessible: true },
-        { module: "campaignpublished", isAccessible: true },
-        { module: "campaignapproval", isAccessible: true },
+        { module: "campaignapprove", isAccessible: true },
         { module: "campaignpayment", isAccessible: true },
-        { module: "unprocessedcampaign", isAccessible: true },
-        { module: "campaignreports", isAccessible: true }
+        { module: "campaignunprocessed", isAccessible: true },
+        { module: "participantlist", isAccessible: true },
+        { module: "newparticipant", isAccessible: true }
       );
     } else {
       permissions.push(
-          // { module: "campaigndashboard", isAccessible: true },
-        // { module: "campaignsetups", isAccessible: true },
         { module: "participants", isAccessible: true },
+        { module: "participantlist", isAccessible: true },
+        { module: "newparticipant", isAccessible: true },
         { module: "campaignprocess", isAccessible: true },
         { module: "campaignpublished", isAccessible: true },
-        // { module: "campaignapproval", isAccessible: true },
-        // { module: "campaignpayment", isAccessible: true },
-        { module: "unprocessedcampaign", isAccessible: true },
-        // { module: "campaignreports", isAccessible: true }
+        { module: "unprocessedcampaign", isAccessible: true }
       );
     }
 
@@ -194,6 +183,7 @@ const signTokenCompany = (company, res) => {
         secondary_Font_Color,
         secondary_Gradient_Color,
         isProjectBased,
+        level,
         isSetted,
         permissions, // Updated permissions array
       },
