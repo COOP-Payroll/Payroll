@@ -63,7 +63,7 @@ exports.createParticipant = async (req, res) => {
     res.status(201).json({ message: "Registered Successfully" });
   } catch (error) {
     console.error("Error creating participant:", error);
-    res.status(500).json({ message: "Failed to create participant" });
+    res.status(503).json({ message: "Failed to create participant" });
   }
 };
 
@@ -142,7 +142,7 @@ exports.downloadExcel = async (req, res, next) => {
     res.end();
   } catch (error) {
     console.error(error);
-    res.status(500).json({
+    res.status(503).json({
       message: "Something went wrong while generating the Excel file.",
     });
   }
@@ -294,7 +294,7 @@ exports.bulkRegisterFromExcel = async (req, res, next) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error processing the Excel file." });
+    res.status(503).json({ message: "Error processing the Excel file." });
   }
 };
 
@@ -340,7 +340,7 @@ exports.getAllParticipants = async (req, res) => {
     res.status(200).json({ data: participants });
   } catch (error) {
     console.error("Error fetching participants:", error);
-    res.status(500).json({ message: "Failed to fetch participants" });
+    res.status(503).json({ message: "Failed to fetch participants" });
   }
 };
 
@@ -496,7 +496,7 @@ exports.getParticipantById = async (req, res) => {
     res.status(200).json({ data: participant });
   } catch (error) {
     console.error("Error fetching participant:", error);
-    res.status(500).json({ message: "Failed to fetch participant" });
+    res.status(503).json({ message: "Failed to fetch participant" });
   }
 };
 
@@ -555,7 +555,7 @@ exports.updateParticipant = async (req, res) => {
     res.status(200).json({ message: "Participant updated successfully" });
   } catch (error) {
     console.error("Error updating participant:", error);
-    res.status(500).json({ message: "Failed to update participant" });
+    res.status(503).json({ message: "Failed to update participant" });
   }
 };
 
@@ -620,7 +620,7 @@ exports.verifyParticipant = async (req, res) => {
     res.status(200).json({ message: "Participant verified successfully" });
   } catch (error) {
     console.error("Error verifying participant:", error);
-    res.status(500).json({ message: "Failed to verify participant" });
+    res.status(503).json({ message: "Failed to verify participant" });
   }
 };
 
@@ -649,7 +649,7 @@ exports.deleteParticipant = async (req, res) => {
     res.status(200).json({ message: "Participant deleted successfully" });
   } catch (error) {
     console.error("Error deleting participant:", error);
-    res.status(500).json({ message: "Failed to delete participant" });
+    res.status(503).json({ message: "Failed to delete participant" });
   }
 };
 
@@ -727,7 +727,7 @@ exports.publishParticipants = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in bulk publish:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(503).json({ message: "Internal server error" });
   }
 };
 
@@ -823,7 +823,7 @@ exports.updateApprovalStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating approval status:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(503).json({ message: "Internal server error" });
   }
 };
 
@@ -913,7 +913,7 @@ exports.getAllParticipantsApproved = async (req, res) => {
     res.status(200).json({ data: participants });
   } catch (error) {
     console.error("Error fetching participants:", error);
-    res.status(500).json({ message: "Failed to fetch participants" });
+    res.status(503).json({ message: "Failed to fetch participants" });
   }
 };
 
@@ -982,7 +982,7 @@ exports.getAllParticipantsPublished = async (req, res) => {
     res.status(200).json({ data: participants });
   } catch (error) {
     console.error("Error fetching participants:", error);
-    res.status(500).json({ message: "Failed to fetch participants" });
+    res.status(503).json({ message: "Failed to fetch participants" });
   }
 };
 
@@ -1233,9 +1233,87 @@ exports.updatePaymentStatus = async (req, res) => {
     }
   } catch (error) {
     console.error("Error processing payment:", error);
-    return res.status(500).json({
+    return res.status(503).json({
       message: "Internal server error",
       error: error.message,
     });
+  }
+};
+
+exports.getUnassignedParticipants = async (req, res) => {
+  const { campaignId } = req.params;
+
+  try {
+    if (!campaignId)
+      return res.status(400).json({ message: "Provide campaign ID" });
+
+    // Find all participant IDs already assigned to the campaign
+    const assignedParticipantIds = await CampaignParticipant.findAll({
+      where: { CampaignId: campaignId },
+      attributes: ["ParticipantId"],
+      raw: true,
+    });
+
+    const assignedIds = assignedParticipantIds.map(
+      (item) => item.ParticipantId
+    );
+    // return res.json(assignedParticipantIds);
+    // Fetch participants NOT in the assigned list
+    const unassignedParticipants = await Participant.findAll({
+      where: {
+        id: {
+          [Op.notIn]: assignedIds.length ? assignedIds : [0], // fallback to [0] to avoid matching all
+        },
+      },
+      include: [{ model: Region }, { model: Zone }, { model: Woreda }],
+    });
+
+    return res.status(200).json({ data: unassignedParticipants });
+  } catch (error) {
+    console.error("Error fetching unassigned participants:", error);
+    res
+      .status(503)
+      .json({ message: "Failed to fetch unassigned participants" });
+  }
+};
+
+
+
+
+exports.detachParticipants = async (req, res) => {
+  try {
+    const { campaignId, participantIds } = req.body;
+
+    if (!campaignId || !Array.isArray(participantIds) || participantIds.length === 0) {
+      return res.status(400).json({ message: "Provide campaignId and a list of participantIds" });
+    }
+
+    const campaignParticipants = await CampaignParticipant.findAll({
+      where: {
+        CampaignId: campaignId,
+        ParticipantId: participantIds,
+      },
+    });
+
+    const notPublished = campaignParticipants.filter(cp => !cp.isPublished);
+
+    if (notPublished.length === 0) {
+      return res.status(403).json({ message: "No participants can be detached (all are published)" });
+    }
+
+    const detachedIds = [];
+
+    for (const cp of notPublished) {
+      await cp.destroy();
+      detachedIds.push(cp.ParticipantId);
+    }
+
+    return res.status(200).json({
+      message: "Participants detached successfully",
+      // detachedParticipantIds: detachedIds,
+    });
+  } catch (error) {
+    console.error("Error detaching participants:", error);
+    res.status(503).json({ message: "Failed to detach participants" });
   }
 };

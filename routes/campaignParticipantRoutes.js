@@ -58,12 +58,23 @@ router.get(
   campaignParticipantController.getAssignedParticipants
 );
 
+router.get(
+  "/:campaignId/unassignedParticipants",
+  middleware.protectAll,
+  campaignParticipantController.getUnassignedParticipants
+);
 router.post(
   "/publish",
   middleware.protectAll,
   campaignParticipantController.publishParticipants
 );
 
+router.post(
+  "/detach-participants",
+
+  middleware.protectAll,
+  campaignParticipantController.detachParticipants
+);
 router.post(
   "/approval-status",
   middleware.protectAll,
