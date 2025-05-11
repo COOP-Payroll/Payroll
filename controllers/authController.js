@@ -145,23 +145,9 @@ const signTokenCompany = (company, res) => {
     }
 
     if (level === "REGION") {
-      permissions.push(
-        { module: "campaignprocess", isAccessible: true },
-        { module: "campaignapprove", isAccessible: true },
-        { module: "campaignpayment", isAccessible: true },
-        { module: "campaignunprocessed", isAccessible: true },
-        { module: "participantlist", isAccessible: true },
-        { module: "newparticipant", isAccessible: true }
-      );
+      permissions.push({ module: "region", isAccessible: true });
     } else {
-      permissions.push(
-        { module: "participants", isAccessible: true },
-        { module: "participantlist", isAccessible: true },
-        { module: "newparticipant", isAccessible: true },
-        { module: "campaignprocess", isAccessible: true },
-        { module: "campaignpublished", isAccessible: true },
-        { module: "unprocessedcampaign", isAccessible: true }
-      );
+      permissions.push({ module: "notregion", isAccessible: true });
     }
 
     const token = jwt.sign(
