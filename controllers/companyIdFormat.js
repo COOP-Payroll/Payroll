@@ -23,6 +23,7 @@ exports.createCompanyIdFormat = async (req, res, next) => {
     await companyIdFormat.setCompany(Number(req.user.id));
     return res.status(201).json(companyIdFormat);
   } catch (error) {
+    console.log(error);
     return next(
       createError.createError(503, "An error occurred, please try again later")
     );

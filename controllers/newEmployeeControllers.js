@@ -1855,6 +1855,8 @@ exports.bulkRegister = async (req, res, next) => {
     // Fetch idformat for employee_id_number generation
     const idformat = await IdFormat.findOne({ where: { CompanyId } });
 
+    // return res.json(idformat);
+
     const excelFile = req?.files?.["file"]?.[0]?.path;
 
     if (!excelFile) {
@@ -1918,6 +1920,9 @@ exports.bulkRegister = async (req, res, next) => {
 
     const employees = [];
     const accountInfos = [];
+    const positionInfos = [];
+    const departmentInfos = [];
+    const gradeInfos = [];
     const saltRounds = 10;
 
     // --- Find the highest employee code in the DB for this company ---
@@ -1969,10 +1974,9 @@ exports.bulkRegister = async (req, res, next) => {
       const gradeId = gradeNames.get(gradeName);
 
       // return res.json({
-      //   departmentNames,
-      //   departmentName,
+      //   departmentId,
+      //   // departmentName,
       //   gradeId,
-      //   positionName,
       //   positionId,
       // });
       // Check if the necessary data exists
@@ -2065,9 +2069,13 @@ exports.bulkRegister = async (req, res, next) => {
         .toString()
         .padStart(idformat?.digitLength, "0");
 
+
+
       const formatElements = idformat?.order?.split(",");
+
+      // return res.json(formatElements);
       let employeeId = "";
-      for (let i = 0; i < formatElements.length; i++) {
+      for (let i = 0; i < formatElements?.length; i++) {
         const element = formatElements[i];
         switch (element) {
           case "companyCode":
@@ -2077,7 +2085,7 @@ exports.bulkRegister = async (req, res, next) => {
             employeeId += hireDate ? hireDate.split("-")[0] : "";
             break;
           case "department":
-            employeeId += departmentShorthand.get(departmentId) || "";
+            employeeId += departmentShorthand?.get(departmentId) || "";
             break;
         }
         if (i !== formatElements.length - 1) {
@@ -2121,10 +2129,26 @@ exports.bulkRegister = async (req, res, next) => {
         paymentMethod,
         isActive: true,
         isVerified: false,
-        CompanyId,
+        // CompanyId,
         // We'll set EmployeeId after creating the employee
       };
 
+      const gradeInfo = {
+        isActive: true,
+        GradeId: gradeId,
+        CompanyId,
+      };
+      const departmentInfo = {
+        isActive: true,
+        DepartmentId: departmentId,
+        CompanyId,
+      };
+
+      const positionInfo = {
+        isActive: true,
+        PositionId: positionId,
+        CompanyId,
+      };
       // Set account number or phone number based on payment method
       if (paymentMethod === "phone") {
         accountInfo.phoneNumber = paymentPhoneNumber;
@@ -2134,6 +2158,10 @@ exports.bulkRegister = async (req, res, next) => {
       }
 
       accountInfos.push(accountInfo);
+
+      positionInfos.push(positionInfo);
+      departmentInfos.push(departmentInfo);
+      gradeInfos.push(gradeInfo);
     }
 
     await sequelize.transaction(async (t) => {
@@ -2155,6 +2183,41 @@ exports.bulkRegister = async (req, res, next) => {
       await AccountInfo.bulkCreate(accountInfoWithEmployeeIds, {
         transaction: t,
       });
+
+      //////////*****************************************************************/////////////////
+
+      const positionInfoWithEmployeeIds = positionInfos.map(
+        (positionInfo, index) => ({
+          ...positionInfo,
+          EmployeeId: createdEmployees[index].id,
+        })
+      );
+
+      await EmployeePosition.bulkCreate(positionInfoWithEmployeeIds, {
+        transaction: t,
+      });
+
+      const departmentWithEmployeeIds = departmentInfos.map(
+        (departmentInfo, index) => ({
+          ...departmentInfo,
+          EmployeeId: createdEmployees[index].id,
+        })
+      );
+
+      await EmployeeDepartment.bulkCreate(departmentWithEmployeeIds, {
+        transaction: t,
+      });
+
+      const gradeWithEmployeeIds = gradeInfos.map((gradeInfo, index) => ({
+        ...gradeInfo,
+        EmployeeId: createdEmployees[index].id,
+      }));
+
+      await EmployeeGrade.bulkCreate(gradeWithEmployeeIds, {
+        transaction: t,
+      });
+
+      //////////*****************************************************************/////////////////
 
       return res.status(201).json({
         message: "Bulk employee registration completed successfully.",
