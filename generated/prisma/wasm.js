@@ -114,12 +114,48 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
+exports.Prisma.CompanyScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  organizationName: 'organizationName',
+  phoneNumber: 'phoneNumber',
+  password: 'password',
+  role: 'role',
+  companyCode: 'companyCode',
+  username: 'username',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+exports.CompanyStatus = exports.$Enums.CompanyStatus = {
+  pending: 'pending',
+  active: 'active',
+  reject: 'reject',
+  denied: 'denied'
+};
 
 exports.Prisma.ModelName = {
-
+  Company: 'Company'
 };
 
 /**

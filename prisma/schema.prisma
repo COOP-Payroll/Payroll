@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -23,7 +22,6 @@ model Company {
   role                        String    @default("companyAdmin")
   companyCode                 String
   username                    String
-  level                       Level?
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
 }
@@ -33,10 +31,4 @@ enum CompanyStatus {
   active
   reject
   denied
-}
-
-enum Level {
-  MOH-HEAD
-  REGION
-
 }

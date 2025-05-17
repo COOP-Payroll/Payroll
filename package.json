@@ -1,9 +1,11 @@
 {
   "name": "payroll",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
+    "postinstall": "prisma generate"
   },
   "repository": {
     "type": "git",
@@ -18,9 +20,23 @@
   "homepage": "https://github.com/COOP-Payroll/Payroll#readme",
   "description": "",
   "devDependencies": {
+    "@types/morgan": "^1.9.9",
     "@types/node": "^22.15.18",
     "prisma": "^6.8.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.8.2",
+    "@types/express": "^5.0.2",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "http-status": "^2.1.0",
+    "joi": "^17.13.3",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "winston": "^3.17.0"
   }
 }
