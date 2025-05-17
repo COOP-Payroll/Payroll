@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "axios": "^1.4.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
@@ -53,9 +54,12 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/node": "^22.15.18",
     "nodemon": "^2.0.22",
+    "prisma": "^6.8.2",
     "shelljs": "^0.8.5",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }
