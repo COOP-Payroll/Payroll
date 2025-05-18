@@ -22,6 +22,65 @@ model Company {
   email                       String?   
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
+
+  level       Level?   
+  departments Department[]
+  positions   Position[]
+  users       User[]
+}
+
+model Department {
+  id                      Int      @id @default(autoincrement())
+  deptName                String
+  location                String?
+  shorthandRepresentation String
+  companyId               Int
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  company                 Company  @relation(fields: [companyId], references: [id])
+  departmentUsers         User[]
+}
+
+
+model Position {
+  id                      Int      @id @default(autoincrement())
+  positionName            String
+  description             String?
+  companyId               Int
+  company                 Company  @relation(fields: [companyId], references: [id])
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  userPositions           User[]
+}
+
+
+model User {
+  id                      Int      @id @default(autoincrement())
+  name                    String
+  username                String   @unique
+  phoneNumber             String
+  password                String
+  role                    UserRole @default(STAFF)
+
+  companyId               Int
+  departmentId            Int
+  positionId              Int
+
+  company    Company      @relation(fields: [companyId], references: [id])
+  department Department   @relation(fields: [departmentId], references: [id])
+  position   Position     @relation(fields: [positionId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  MANAGER
+  STAFF
 }
 
 enum CompanyStatus {
@@ -29,4 +88,9 @@ enum CompanyStatus {
   active
   reject
   denied
+}
+
+enum Level {
+  MOHHEAD
+  REGION
 }
