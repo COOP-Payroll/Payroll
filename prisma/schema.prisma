@@ -18,10 +18,8 @@ model Company {
   status                      CompanyStatus @default(pending)
   organizationName            String
   phoneNumber                 String
-  password                    String?
-  role                        String    @default("companyAdmin")
   companyCode                 String
-  username                    String
+  email                       String?   
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
 }

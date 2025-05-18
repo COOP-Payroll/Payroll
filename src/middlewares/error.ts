@@ -3,12 +3,13 @@ import httpStatus from 'http-status';
 import config from '../config/config';
 import logger from '../config/logger';
 import ApiError from '../utils/api-error';
+import { Prisma } from '@prisma/client';
 
 export const errorConverter: ErrorRequestHandler = (err, req, res, next) => {
   let error = err;
   if (!(error instanceof ApiError)) {
     const statusCode =
-      error.statusCode
+      error.statusCode || error instanceof Prisma.PrismaClientValidationError
         ? httpStatus.BAD_REQUEST
         : httpStatus.INTERNAL_SERVER_ERROR;
     const message = error.message || httpStatus[statusCode];
@@ -21,8 +22,8 @@ export const errorConverter: ErrorRequestHandler = (err, req, res, next) => {
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   let { statusCode, message } = err;
   if (config.env === 'production' && !err.isOperational) {
-    statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    message = httpStatus[httpStatus.INTERNAL_SERVER_ERROR];
+    statusCode = httpStatus.BAD_REQUEST;
+    message = httpStatus[httpStatus.BAD_REQUEST];
   }
 
   res.locals.errorMessage = err.message;
