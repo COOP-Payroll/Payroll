@@ -2,6 +2,7 @@ import express from 'express';
 import healthRoute from './health.route'
 import config from '../../config/config';
 import companyRoute from './company.route';
+import userRoute from './user.route'
 
 
 const router = express.Router();
@@ -11,6 +12,10 @@ const defaultRoutes = [
   {
     path: '/company',
     route: companyRoute
+  },
+  {
+    path: '/users',
+    route: userRoute
   }
 ];
 

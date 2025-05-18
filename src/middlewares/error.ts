@@ -20,7 +20,7 @@ export const errorConverter: ErrorRequestHandler = (err, req, res, next) => {
 
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  let { statusCode, message } = err;
+  let { statusCode, message, details } = err;
   if (config.env === 'production' && !err.isOperational) {
     statusCode = httpStatus.BAD_REQUEST;
     message = httpStatus[httpStatus.BAD_REQUEST];
@@ -31,7 +31,8 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   const response = {
     code: statusCode,
     message,
-    ...(config.env === 'development' && { stack: err.stack })
+    details,
+    ...(config.env === 'development' && { stack: err.stack }),
   };
 
   if (config.env === 'development') {

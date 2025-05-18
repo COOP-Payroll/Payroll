@@ -4,17 +4,29 @@ import { NextFunction, Request, Response } from 'express';
 import pick from '../utils/pick';
 import Joi from 'joi';
 
-const validate = (schema: object) => (req: Request, res: Response, next: NextFunction) => {
+const validate = (schema: Record<string, Joi.Schema>) => (req: Request, res: Response, next: NextFunction) => {
   const validSchema = pick(schema, ['params', 'query', 'body']);
-  const obj = pick(req, Object.keys(validSchema));
+  const requestData = pick(req, Object.keys(validSchema));
+
+  if (Object.keys(validSchema).length === 0) {
+    return next();
+  }
+
   const { value, error } = Joi.compile(validSchema)
     .prefs({ errors: { label: 'key' }, abortEarly: false })
-    .validate(obj);
+    .validate(requestData);
+
   if (error) {
-    console.log("error s", error)
-    const errorMessage = error.details.map((details) => details.message).join(', ');
-    return next(new ApiError(httpStatus.BAD_REQUEST, errorMessage));
+    const details = error.details.map((detail) => ({
+      message: detail.message,
+      path: detail.path,
+    }));
+    console.log("validatio", details)
+    return next(
+      new ApiError(httpStatus.BAD_REQUEST, 'Validation Error', false, details)
+    );
   }
+
   Object.assign(req, value);
   return next();
 };

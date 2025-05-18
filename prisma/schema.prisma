@@ -14,7 +14,7 @@ datasource db {
 }
 
 model Company {
-  id                          Int       @id @default(autoincrement())
+  id                          Int           @id @default(autoincrement())
   status                      CompanyStatus @default(pending)
   organizationName            String
   phoneNumber                 String
@@ -60,15 +60,16 @@ model User {
   username                String   @unique
   phoneNumber             String
   password                String
+  isSuperAdmin            Boolean  @default(false)
   role                    UserRole @default(STAFF)
 
   companyId               Int
-  departmentId            Int
-  positionId              Int
+  departmentId            Int?
+  positionId              Int?
 
   company    Company      @relation(fields: [companyId], references: [id])
-  department Department   @relation(fields: [departmentId], references: [id])
-  position   Position     @relation(fields: [positionId], references: [id])
+  department Department?   @relation(fields: [departmentId], references: [id])
+  position   Position?     @relation(fields: [positionId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
