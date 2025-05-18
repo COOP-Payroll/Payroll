@@ -2,7 +2,6 @@ import httpStatus from "http-status";
 import catchAsync from "../utils/catch-async";
 import userService from "../services/user.service";
 import exclude from '../utils/exclude';
-import pick from "../utils/pick";
 import tokenService from "../services/token.service";
 
 const createUser = catchAsync(async (req, res) => {
@@ -21,19 +20,10 @@ const login = catchAsync(async (req, res) => {
 });
 
 
-const getUsers = catchAsync(async (req, res) => {
-//   const filter = pick(req.query, ['name', 'role']);
-const filter = {companyId: 1}
-const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await userService.queryUsers(filter, options);
-  res.send(result);
-});
-
 
 
 
 export default {
     createUser,
-    getUsers,
     login
 }

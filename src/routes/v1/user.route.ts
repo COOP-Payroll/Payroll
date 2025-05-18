@@ -6,10 +6,8 @@ import userValidation from '../../validations/user.validation';
 
 const router = express.Router();
 
-
-router.post('/', validate(userValidation.createUser), userController.createUser)
-
-
-
+router.route('/')
+      .post(validate(userValidation.createUser), userController.createUser)
+      .get(validate(userValidation.getUsers), userController.getUsers);
 
 export default router;

@@ -9,7 +9,7 @@ export const errorConverter: ErrorRequestHandler = (err, req, res, next) => {
   let error = err;
   if (!(error instanceof ApiError)) {
     const statusCode =
-      error.statusCode || error instanceof Prisma.PrismaClientValidationError
+      error.statusCode || error instanceof Prisma.PrismaClientKnownRequestError
         ? httpStatus.BAD_REQUEST
         : httpStatus.INTERNAL_SERVER_ERROR;
     const message = error.message || httpStatus[statusCode];

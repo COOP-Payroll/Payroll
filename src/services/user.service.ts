@@ -2,7 +2,8 @@ import httpStatus from 'http-status';
 import { User, UserRole, Prisma } from '@prisma/client';
 import prisma from '../client';
 import ApiError from '../utils/api-error';
-import { encryptPassword } from '../utils/encryption';
+import { encryptPassword, isPasswordMatch } from '../utils/encryption';
+import exclude from '../utils/exclude';
 
 /**
  * Create a user
@@ -65,6 +66,86 @@ const getUserByUsername = async <Key extends keyof User>(
 };
 
 
+/**
+ * Login with username and password
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<Omit<User, 'password'>>}
+ */
+const loginUserWithUsernameAndPassword = async (
+  username: string,
+  password: string
+): Promise<Omit<User, 'password'>> => {
+  const user = await getUserByUsername(username, [
+    'id',
+    'username',
+    'name',
+    'password',
+    'role',
+    'phoneNumber',
+    'isSuperAdmin',
+    'companyId',
+    'positionId',
+    'departmentId',
+    'createdAt',
+    'updatedAt'
+  ]);
+  if (!user || !(await isPasswordMatch(password, user.password as string))) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect username or password');
+  }
+  return exclude(user, ['password']);
+};
+
+
+/**
+ * Query for users
+ * @param {Object} filter - Prisma filter
+ * @param {Object} options - Query options
+ * @param {string} [options.sortBy] - Sort option in the format: sortField:(desc|asc)
+ * @param {number} [options.limit] - Maximum number of results per page (default = 10)
+ * @param {number} [options.page] - Current page (default = 1)
+ * @returns {Promise<QueryResult>}
+ */
+const queryUsers = async <Key extends keyof User>(
+  filter: object,
+  options: {
+    limit?: string;
+    page?: string;
+    sortBy?: string;
+    sortType?: 'asc' | 'desc';
+  },
+  keys: Key[] = [
+    'id',
+    'phoneNumber',
+    'name',
+    'isSuperAdmin',
+    'role',
+    'companyId',
+    'departmentId',
+    'positionId',
+    'createdAt',
+    'updatedAt'
+  ] as Key[]
+): Promise<Pick<User, Key>[]> => {
+  const page = options.page ? parseInt(options.page) : 1;
+  const limit = options.limit ? parseInt(options.limit) : 10;
+  const sortBy = options.sortBy;
+  const sortType = options.sortType ?? 'desc';
+  console.log("---------------", filter)
+  const users = await prisma.user.findMany({
+    where: filter,
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+    skip: page * limit,
+    take: limit,
+    orderBy: sortBy ? { [sortBy]: sortType } : undefined
+  });
+  return users as Pick<User, Key>[];
+};
+
+
 export default {
-    createUser
+    createUser,
+    queryUsers,
+    loginUserWithUsernameAndPassword,
+    getUserByUsername
 }

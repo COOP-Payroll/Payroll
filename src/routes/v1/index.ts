@@ -3,12 +3,17 @@ import healthRoute from './health.route'
 import config from '../../config/config';
 import companyRoute from './company.route';
 import userRoute from './user.route'
+import authRoute from './auth.routes'
 
 
 const router = express.Router();
 
 
 const defaultRoutes = [
+   {
+    path: '/auth',
+    route: authRoute
+  },
   {
     path: '/company',
     route: companyRoute
