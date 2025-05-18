@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,19 +8,18 @@ datasource db {
 }
 
 model Company {
-  id                          Int       @id @default(autoincrement())
-  status                      CompanyStatus @default(pending)
-  organizationName            String
-  phoneNumber                 String
-  companyCode                 String
-  email                       String?   
-  createdAt                   DateTime  @default(now())
-  updatedAt                   DateTime  @updatedAt
-
-  level       Level?   
-  departments Department[]
-  positions   Position[]
-  users       User[]
+  id               Int           @id @default(autoincrement())
+  status           CompanyStatus @default(pending)
+  organizationName String
+  phoneNumber      String
+  companyCode      String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  email            String?
+  level            Level?
+  departments      Department[]
+  positions        Position[]
+  users            User[]
 }
 
 model Department {
@@ -35,46 +28,42 @@ model Department {
   location                String?
   shorthandRepresentation String
   companyId               Int
+  isActive                Boolean  @default(true)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   company                 Company  @relation(fields: [companyId], references: [id])
   departmentUsers         User[]
 }
 
-
 model Position {
-  id                      Int      @id @default(autoincrement())
-  positionName            String
-  description             String?
-  companyId               Int
-  company                 Company  @relation(fields: [companyId], references: [id])
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  userPositions           User[]
+  id            Int      @id @default(autoincrement())
+  positionName  String
+  description   String?
+  companyId     Int
+  createdAt     DateTime @default(now())
+  isActive      Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+  company       Company  @relation(fields: [companyId], references: [id])
+  userPositions User[]
 }
-
 
 model User {
-  id                      Int      @id @default(autoincrement())
-  name                    String
-  username                String   @unique
-  phoneNumber             String
-  password                String
-  role                    UserRole @default(STAFF)
-
-  companyId               Int
-  departmentId            Int
-  positionId              Int
-
-  company    Company      @relation(fields: [companyId], references: [id])
-  department Department   @relation(fields: [departmentId], references: [id])
-  position   Position     @relation(fields: [positionId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int         @id @default(autoincrement())
+  name         String
+  username     String      @unique
+  phoneNumber  String
+  password     String
+  role         UserRole    @default(STAFF)
+  companyId    Int
+  departmentId Int?
+  positionId   Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  isSuperAdmin Boolean     @default(false)
+  company      Company     @relation(fields: [companyId], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
+  position     Position?   @relation(fields: [positionId], references: [id])
 }
-
-
 
 enum UserRole {
   SUPERADMIN
@@ -92,5 +81,5 @@ enum CompanyStatus {
 
 enum Level {
   MOHHEAD
-  REGION
+  REGION
 }
