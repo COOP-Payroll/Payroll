@@ -2,10 +2,25 @@
 CREATE TYPE "UserRole" AS ENUM ('SUPERADMIN', 'ADMIN', 'MANAGER', 'STAFF');
 
 -- CreateEnum
+CREATE TYPE "CompanyStatus" AS ENUM ('pending', 'active', 'reject', 'denied');
+
+-- CreateEnum
 CREATE TYPE "Level" AS ENUM ('MOHHEAD', 'REGION');
 
--- AlterTable
-ALTER TABLE "Company" ADD COLUMN     "level" "Level";
+-- CreateTable
+CREATE TABLE "Company" (
+    "id" SERIAL NOT NULL,
+    "status" "CompanyStatus" NOT NULL DEFAULT 'pending',
+    "organizationName" TEXT NOT NULL,
+    "phoneNumber" TEXT NOT NULL,
+    "companyCode" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "email" TEXT,
+    "level" "Level",
+
+    CONSTRAINT "Company_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Department" (
@@ -14,6 +29,7 @@ CREATE TABLE "Department" (
     "location" TEXT,
     "shorthandRepresentation" TEXT NOT NULL,
     "companyId" INTEGER NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -27,6 +43,7 @@ CREATE TABLE "Position" (
     "description" TEXT,
     "companyId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Position_pkey" PRIMARY KEY ("id")
@@ -41,10 +58,11 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'STAFF',
     "companyId" INTEGER NOT NULL,
-    "departmentId" INTEGER NOT NULL,
-    "positionId" INTEGER NOT NULL,
+    "departmentId" INTEGER,
+    "positionId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isSuperAdmin" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -62,7 +80,7 @@ ALTER TABLE "Position" ADD CONSTRAINT "Position_companyId_fkey" FOREIGN KEY ("co
 ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "User_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_positionId_fkey" FOREIGN KEY ("positionId") REFERENCES "Position"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "User_positionId_fkey" FOREIGN KEY ("positionId") REFERENCES "Position"("id") ON DELETE SET NULL ON UPDATE CASCADE;
