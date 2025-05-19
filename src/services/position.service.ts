@@ -6,7 +6,7 @@ import ApiError from "../utils/api-error";
 const createPosition = async (data: {
   positionName: string;
   description?: string;
-  companyId: number;
+  companyId: string;
 }) => {
   const { positionName, description, companyId } = data;
 
@@ -47,7 +47,7 @@ const getAllPositions = async () => {
   });
 };
 
-const getPositionById = async (id: number) => {
+const getPositionById = async (id: string) => {
   return prisma.position.findUnique({
     where: { id },
     include: {
@@ -58,11 +58,11 @@ const getPositionById = async (id: number) => {
 };
 
 const updatePosition = async (
-  id: number,
+  id: string,
   data: Partial<{
     positionName: string;
     description?: string;
-    companyId?: number;
+    companyId?: string;
     isActive?: boolean;
   }>
 ) => {
@@ -95,7 +95,7 @@ const updatePosition = async (
 
 
 
-const deletePosition = async (id: number) => {
+const deletePosition = async (id: string) => {
   const existing = await prisma.position.findUnique({ where: { id } });
   if (!existing) {
     throw new ApiError(httpStatus.NOT_FOUND, "Department not found");

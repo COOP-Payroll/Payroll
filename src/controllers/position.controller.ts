@@ -16,7 +16,7 @@ const getAllPositions = catchAsync(async (_req: Request, res: Response) => {
 });
 
 const getPositionById = catchAsync(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const position = await positionService.getPositionById(id);
 
   if (!position) {
@@ -28,13 +28,13 @@ const getPositionById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updatePosition = catchAsync(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const position = await positionService.updatePosition(id, req.body);
   res.send({ message: "Position updated", position });
 });
 
 const deletePosition = catchAsync(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const updated = await positionService.deletePosition(id);
   res
     .status(httpStatus.OK)

@@ -6,7 +6,7 @@ const createDepartment = async (data: {
   deptName: string;
   location?: string;
   shorthandRepresentation: string;
-  companyId: number;
+  companyId: string;
 }) => {
   const { deptName, location, shorthandRepresentation, companyId } = data;
   // Manual checks for required fields
@@ -54,7 +54,7 @@ const getAllDepartments = async () => {
   });
 };
 
-const getDepartmentById = async (id: number) => {
+const getDepartmentById = async (id: string) => {
   return prisma.department.findUnique({
     where: { id },
     include: {
@@ -65,12 +65,12 @@ const getDepartmentById = async (id: number) => {
 };
 
 const updateDepartment = async (
-  id: number,
+  id: string,
   data: Partial<{
     deptName: string;
     location: string;
     shorthandRepresentation: string;
-    companyId: number;
+    companyId: string;
   }>
 ) => {
 //   if (data.deptName) {
@@ -95,7 +95,7 @@ const updateDepartment = async (
   });
 };
 
-const deleteDepartment = async (id: number) => {
+const deleteDepartment = async (id: string) => {
   const existing = await prisma.department.findUnique({ where: { id } });
   if (!existing) {
     throw new ApiError(httpStatus.NOT_FOUND, "Department not found");

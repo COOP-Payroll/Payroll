@@ -10,5 +10,15 @@ const createRole = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send({data: role, message: "Role Created Successfully"});
 });
 
+const getRoles = catchAsync(async (req, res) => {
+    const roles = await roleService.getRoles();
+    res.status(httpStatus.OK).send({data: roles, message: "Roles retrieved successfully"})
+})
 
-export default {createRole}
+const getAllPermissions = catchAsync(async (req, res) => {
+    const permissions = await roleService.getAllPermissions();
+    res.status(httpStatus.OK).send({data: permissions, message: "Permissions retrieved successfully"})
+})
+
+
+export default {createRole, getRoles, getAllPermissions}

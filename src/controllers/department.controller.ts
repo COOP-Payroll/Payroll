@@ -16,7 +16,7 @@ const getAllDepartments = catchAsync(async (_req: Request, res: Response) => {
 });
 
 const getDepartmentById = catchAsync(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const department = await departmentService.getDepartmentById(id);
 
   if (!department) {
@@ -36,7 +36,7 @@ const getDepartmentById = catchAsync(async (req: Request, res: Response) => {
 // });
 
 const updateDepartment = catchAsync(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const department = await departmentService.updateDepartment(id, req.body);
   res.send({ message: "Department updated", department });
 });
@@ -49,7 +49,7 @@ const updateDepartment = catchAsync(async (req: Request, res: Response) => {
 
 
 const deleteDepartment = catchAsync(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = req.params.id;
   const updated = await departmentService.deleteDepartment(id);
   res.status(httpStatus.OK).send({ message: "Department deactivated", department: updated });
 });

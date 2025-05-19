@@ -6,6 +6,7 @@ import departmentRoute from "./department.route";
 import positionRoute from "./position.route";
 import authRoute from "./auth.routes"
 import userRoute from "./user.route"
+import adminRoute from "./admin.route"
 
 const router = express.Router();
 
@@ -32,6 +33,10 @@ const defaultRoutes = [
     path: "/positions",
     route: positionRoute,
   },
+  {
+    path: "/admin",
+    route: adminRoute
+  }
 ];
 
 const devRoutes = [

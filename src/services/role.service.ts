@@ -1,7 +1,7 @@
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/api-error';
-import { Company, Level, Role } from '@prisma/client';
+import { Company, Level, Permission, Role } from '@prisma/client';
 
 
 /**
@@ -23,6 +23,32 @@ const createRole = async (
         }
     })
 }
+
+/**
+ * Get all roles
+ * @returns {Promise<Role[] | null>}
+ */
+const getRoles = async(): Promise<Role[] | null> => {
+  const roles = await prisma.role.findMany({
+    include: {
+      permissions: {
+        include: { permission: true },
+      },
+    },
+  });
+
+  return roles
+};
+
+
+/**
+ * Get all permissions
+ * @returns {Promise<Permission[] | null>}
+ */
+const getAllPermissions = async(): Promise<Permission[] | null> => {
+  const permissions = await prisma.permission.findMany();
+  return permissions
+};
 
 
 /**
@@ -47,4 +73,4 @@ const getRoleByName = async <Key extends keyof Role>(
 };
 
 
-export default {getRoleByName, createRole}
+export default {getRoleByName, createRole, getRoles, getAllPermissions}

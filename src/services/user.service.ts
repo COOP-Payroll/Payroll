@@ -15,10 +15,9 @@ const createUser = async (
   password: string,
   name: string,
   phoneNumber: string,
-  role: UserRole = UserRole.STAFF,
-  companyId: number,
-  positionId: number,
-  departmentId: number
+  companyId: string,
+  positionId: string,
+  departmentId: string
 ): Promise<User> => {
   if (await getUserByUsername(username)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'username already taken');
@@ -29,7 +28,6 @@ const createUser = async (
       name,
       phoneNumber,
       password: await encryptPassword(password),
-      role,
       companyId,
       positionId,
       departmentId
@@ -81,7 +79,6 @@ const loginUserWithUsernameAndPassword = async (
     'username',
     'name',
     'password',
-    'role',
     'phoneNumber',
     'isSuperAdmin',
     'companyId',
