@@ -14,7 +14,7 @@ const createPosition = async (data: {
     throw new ApiError(httpStatus.BAD_REQUEST, "Position name is required");
   }
 
-  if (!companyId || typeof companyId !== "number") {
+  if (!companyId || typeof companyId  !== "string"){
     throw new ApiError(httpStatus.BAD_REQUEST, "Valid companyId is required");
   }
 

@@ -30,7 +30,7 @@ const getPositionById = catchAsync(async (req: Request, res: Response) => {
 const updatePosition = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
   const position = await positionService.updatePosition(id, req.body);
-  res.send({ message: "Position updated", position });
+  res.send({ message: "Position updated", data: position });
 });
 
 const deletePosition = catchAsync(async (req: Request, res: Response) => {

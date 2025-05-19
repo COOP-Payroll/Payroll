@@ -7,7 +7,7 @@ const createDepartment = catchAsync(async (req: Request, res: Response) => {
   const department = await departmentService.createDepartment(req.body);
   res
     .status(httpStatus.CREATED)
-    .send({ message: "Department created", department });
+    .send({ message: "Department created", data: department });
 });
 
 const getAllDepartments = catchAsync(async (_req: Request, res: Response) => {
@@ -28,30 +28,18 @@ const getDepartmentById = catchAsync(async (req: Request, res: Response) => {
   return; // also return void here
 });
 
-// const getDepartmentById = catchAsync(async (req: Request, res: Response) => {
-//   const id = parseInt(req.params.id);
-//   const department = await departmentService.getDepartmentById(id);
-//   if (!department) return res.status(httpStatus.NOT_FOUND).send({ message: 'Department not found' });
-//   res.send(department);
-// });
-
 const updateDepartment = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
   const department = await departmentService.updateDepartment(id, req.body);
-  res.send({ message: "Department updated", department });
+  res.send({ message: "Department updated", data: department });
 });
-
-// const deleteDepartment = catchAsync(async (req: Request, res: Response) => {
-//   const id = parseInt(req.params.id);
-//   await departmentService.deleteDepartment(id);
-//   res.status(httpStatus.NO_CONTENT).send();
-// });
-
 
 const deleteDepartment = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
   const updated = await departmentService.deleteDepartment(id);
-  res.status(httpStatus.OK).send({ message: "Department deactivated", department: updated });
+  res
+    .status(httpStatus.OK)
+    .send({ message: "Department deactivated", data: updated });
 });
 
 export default {

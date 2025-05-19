@@ -2,36 +2,45 @@ import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
 
+
 const createDepartment = async (data: {
   deptName: string;
   location?: string;
   shorthandRepresentation: string;
-  companyId: string;
+  companyId: string; // assuming UUID based on your Position model
 }) => {
   const { deptName, location, shorthandRepresentation, companyId } = data;
-  // Manual checks for required fields
-  if (!deptName || typeof deptName !== "string") {
+
+  // Validate deptName
+  if (!deptName || typeof deptName !== "string" || !deptName.trim()) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Department name is required");
   }
 
-  if (!shorthandRepresentation || typeof shorthandRepresentation !== "string") {
+  // Validate shorthandRepresentation
+  if (
+    !shorthandRepresentation ||
+    typeof shorthandRepresentation !== "string" ||
+    !shorthandRepresentation.trim()
+  ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Shorthand representation is required"
     );
   }
 
-  if (!companyId || typeof companyId !== "number") {
+  // Validate companyId
+  if (!companyId || typeof companyId !== "string") {
     throw new ApiError(httpStatus.BAD_REQUEST, "Valid companyId is required");
   }
 
+  // Check for duplicate department in the same company
   const existing = await prisma.department.findFirst({
     where: {
-      deptName: data.deptName,
-      companyId: data.companyId,
+      deptName: deptName.trim(),
+      companyId,
     },
   });
-  console.log(data);
+
   if (existing) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -39,7 +48,15 @@ const createDepartment = async (data: {
     );
   }
 
-  return prisma.department.create({ data });
+  // Create the department
+  return prisma.department.create({
+    data: {
+      deptName: deptName.trim(),
+      shorthandRepresentation: shorthandRepresentation.trim(),
+      location: location?.trim() || undefined,
+      companyId,
+    },
+  });
 };
 
 const getAllDepartments = async () => {

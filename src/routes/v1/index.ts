@@ -4,20 +4,21 @@ import config from "../../config/config";
 import companyRoute from "./company.route";
 import departmentRoute from "./department.route";
 import positionRoute from "./position.route";
-import authRoute from "./auth.routes"
-import userRoute from "./user.route"
-import adminRoute from "./admin.route"
+import authRoute from "./auth.routes";
+import userRoute from "./user.route";
+import adminRoute from "./admin.route";
+import participantRoute from "./participant.route";
 
 const router = express.Router();
 
 const defaultRoutes = [
   {
     path: "/users",
-    route: userRoute
+    route: userRoute,
   },
-   {
-    path: '/auth',
-    route: authRoute
+  {
+    path: "/auth",
+    route: authRoute,
   },
   {
     path: "/company",
@@ -35,8 +36,12 @@ const defaultRoutes = [
   },
   {
     path: "/admin",
-    route: adminRoute
-  }
+    route: adminRoute,
+  },
+  {
+    path: "/participants",
+    route: participantRoute,
+  },
 ];
 
 const devRoutes = [
