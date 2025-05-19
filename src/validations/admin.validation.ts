@@ -14,5 +14,14 @@ const assignPermissionsToRoleSchema = {
   })
 };
 
+const createPermissionsToRoleSchema = {
+  body: Joi.object().keys({
+    name: Joi.string().required(),
+    permissions: Joi.array()
+    .items(Joi.string().uuid().required())
+    .min(1)
+    .required(),
+  })
+};
 
-export default {assignPermissionsToRoleSchema}
+export default {assignPermissionsToRoleSchema, createPermissionsToRoleSchema}

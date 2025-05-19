@@ -123,4 +123,59 @@ const assignPermissionToRoles = async (
 };
 
 
-export default {getRoleByName, createRole, getRoles, getAllPermissions, assignPermissionToRoles}
+/**
+ * revoke permissions from role
+ * @param {string} roleId
+ * @param {Array<String>} permissions
+ * @returns {Promise<string | null>}
+ */
+const revokePermissionFromRole = async (
+  roleId: string,
+  permissions: [string],
+): Promise<string> => {
+
+    if(!(await getRoleById(roleId))) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Role not found")
+    }
+
+
+    await prisma.rolePermission.deleteMany({
+      where: {
+        roleId,
+        permissionId: { in: permissions },
+      },
+    });
+
+    return 'Permissions revoked from role successfully'
+};
+
+
+/**
+ * Assign permissions to
+ * @param {string} name
+ * @param {Array<String>} permissions
+ * @returns {Promise<string | null>}
+ */
+const createAssignPermissionToRoles = async (
+  name: string,
+  permissions: [string],
+): Promise<string> => {
+    // if(!(await getRoleById(roleId))) {
+    //     throw new ApiError(httpStatus.BAD_REQUEST, "Role not found")
+    // }
+    const role = await createRole(name)
+    // Create new permission assignments
+    const rolePermissions = permissions.map((permissionId: string) => ({
+      roleId: role.id,
+      permissionId,
+    }));
+    
+    await prisma.rolePermission.createMany({
+      data: rolePermissions,
+      skipDuplicates: true, // just in case
+    });
+    return 'Permissions assigned to role successfully'
+};
+
+
+export default {getRoleByName, createRole, getRoles, getAllPermissions, assignPermissionToRoles, createAssignPermissionToRoles, revokePermissionFromRole}
