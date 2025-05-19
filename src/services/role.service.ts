@@ -1,7 +1,7 @@
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/api-error';
-import { Company, Level, Permission, Role } from '@prisma/client';
+import { Company, Level, Permission, Role, RolePermission } from '@prisma/client';
 
 
 /**
@@ -73,4 +73,54 @@ const getRoleByName = async <Key extends keyof Role>(
 };
 
 
-export default {getRoleByName, createRole, getRoles, getAllPermissions}
+/**
+ * Get role by id
+ * @param {string} id
+ * @param {Array<Key>} keys
+ * @returns {Promise<Pick<Role, Key> | null>}
+ */
+const getRoleById = async <Key extends keyof Role>(
+  id: string,
+  keys: Key[] = [
+    'id',
+    'name',
+    'createdAt',
+    'updatedAt'
+  ] as Key[]
+): Promise<Pick<Role, Key> | null> => {
+  return prisma.role.findUnique({
+    where: { id },
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+  }) as Promise<Pick<Role, Key> | null>;
+};
+
+
+/**
+ * Assign permissions to
+ * @param {string} roleId
+ * @param {Array<String>} permissions
+ * @returns {Promise<Pick<RolePermission, Key> | null>}
+ */
+const assignPermissionToRoles = async (
+  roleId: string,
+  permissions: [string],
+): Promise<string> => {
+    if(!(await getRoleById(roleId))) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Role not found")
+    }
+
+    // Create new permission assignments
+    const rolePermissions = permissions.map((permissionId: string) => ({
+      roleId,
+      permissionId,
+    }));
+    
+    await prisma.rolePermission.createMany({
+      data: rolePermissions,
+      skipDuplicates: true, // just in case
+    });
+    return 'Permissions assigned to role successfully'
+};
+
+
+export default {getRoleByName, createRole, getRoles, getAllPermissions, assignPermissionToRoles}

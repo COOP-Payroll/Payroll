@@ -20,5 +20,12 @@ const getAllPermissions = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({data: permissions, message: "Permissions retrieved successfully"})
 })
 
+const assignPermissionToRoles = catchAsync(async (req, res) => {
+    const { roleId } = req.params;
+    const { permissions } = req.body;
+    const assignedPermission = await roleService.assignPermissionToRoles(roleId, permissions);
+    res.status(httpStatus.OK).send({data: [], message: assignedPermission})
+})
 
-export default {createRole, getRoles, getAllPermissions}
+
+export default {createRole, getRoles, getAllPermissions, assignPermissionToRoles}

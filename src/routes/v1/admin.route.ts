@@ -1,6 +1,6 @@
 import express from 'express';
 import validate from '../../middlewares/validate';
-import authValidation from '../../validations/auth.validation';
+import adminValidate from '../../validations/admin.validation';
 import { adminController } from '../../controllers';
 
 
@@ -12,6 +12,8 @@ router.route('/roles')
 
 router.route('/permissions')
       .get(adminController.getAllPermissions)
+
+router.post('/roles/:roleId/permissions', validate(adminValidate.assignPermissionsToRoleSchema), adminController.assignPermissionToRoles)
 
 
 export default router
