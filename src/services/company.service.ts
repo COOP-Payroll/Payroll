@@ -40,7 +40,7 @@ const createCompany = async (
  * @returns {Promise<Pick<User, Key> | null>}
  */
 const getCompanyById = async <Key extends keyof Company>(
-  id: number,
+  id: string,
   keys: Key[] = [
     'id',
     'organizationName',

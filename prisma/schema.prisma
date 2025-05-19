@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Company {
-  id                          Int           @id @default(autoincrement())
+  id                          String        @id @default(uuid())
   status                      CompanyStatus @default(pending)
   organizationName            String
   phoneNumber                 String
@@ -24,11 +24,11 @@ model Company {
 }
 
 model Department {
-  id                      Int      @id @default(autoincrement())
+  id                      String        @id @default(uuid())
   deptName                String
   location                String?
   shorthandRepresentation String
-  companyId               Int
+  companyId               String
   isActive                Boolean  @default(true)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
@@ -37,10 +37,10 @@ model Department {
 }
 
 model Position {
-  id            Int      @id @default(autoincrement())
+  id            String        @id @default(uuid())
   positionName  String
   description   String?
-  companyId     Int
+  companyId     String
   createdAt     DateTime @default(now())
   isActive      Boolean  @default(true)
   updatedAt     DateTime @updatedAt
@@ -49,17 +49,17 @@ model Position {
 }
 
 model User {
-  id                      Int      @id @default(autoincrement())
+  id                      String        @id @default(uuid())
   name                    String
-  username                String   @unique
+  username                String        @unique
   phoneNumber             String
   password                String
-  isSuperAdmin            Boolean  @default(false)
-  role                    UserRole @default(STAFF)
+  isSuperAdmin            Boolean       @default(false)
+  roles                   UserRole[]
 
-  companyId               Int
-  departmentId            Int?
-  positionId              Int?
+  companyId               String
+  departmentId            String?
+  positionId              String?
 
   company    Company      @relation(fields: [companyId], references: [id])
   department Department?   @relation(fields: [departmentId], references: [id])
@@ -72,15 +72,52 @@ model User {
 }
 
 
+model Role {
+  id          String        @id @default(uuid())
+  name        String        @unique
+  permissions RolePermission[]
+  users       UserRole[]
+}
+
+model Permission {
+  id              String   @id @default(uuid())
+  action          String   // e.g., "create", "view", "update", "delete"
+  subject         String   // e.g., "campaign", "department"
+  action_subject  String   @unique // enforce uniqueness
+  roles           RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id])
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+
 model Token {
-  id          Int       @id @default(autoincrement())
+  id          String        @id @default(uuid())
   token       String
   type        TokenType
   expires     DateTime
   blacklisted Boolean
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])
-  userId      Int
+  userId      String
 }
 
 
@@ -89,14 +126,6 @@ enum TokenType {
   REFRESH
   RESET_PASSWORD
   VERIFY_EMAIL
-}
-
-
-enum UserRole {
-  SUPERADMIN
-  ADMIN
-  MANAGER
-  STAFF
 }
 
 enum CompanyStatus {

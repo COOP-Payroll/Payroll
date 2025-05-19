@@ -10,24 +10,24 @@ import { AuthTokensResponse } from '../types/response';
 
 /**
  * Generate token
- * @param {number} userId
- * @param {number} companyId
+ * @param {string} userId
+ * @param {string} companyId
  * @param {Moment} expires
  * @param {string} type
  * @param {string} [secret]
  * @returns {string}
  */
 const generateToken = (
-  userId: number,
-  companyId: number,
-  role: UserRole, 
+  userId: string,
+  companyId: string,
+  // role: UserRole, 
   isSuperAdmin: boolean,
   expires: Moment,
   type: TokenType,
   secret = config.jwt.secret
 ): string => {
   const payload = {
-    sub: {userId, companyId, role, isSuperAdmin},
+    sub: {userId, companyId, isSuperAdmin},
     iat: moment().unix(),
     exp: expires.unix(),
     type
@@ -38,7 +38,7 @@ const generateToken = (
 /**
  * Save a token
  * @param {string} token
- * @param {number} userId
+ * @param {string} userId
  * @param {Moment} expires
  * @param {string} type
  * @param {boolean} [blacklisted]
@@ -46,7 +46,7 @@ const generateToken = (
  */
 const saveToken = async (
   token: string,
-  userId: number,
+  userId: string,
   expires: Moment,
   type: TokenType,
   blacklisted = false
@@ -71,7 +71,7 @@ const saveToken = async (
  */
 const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
   const payload = jwt.verify(token, config.jwt.secret);
-  const userId = Number(payload.sub);
+  const userId = payload.sub as string;
   const tokenData = await prisma.token.findFirst({
     where: { token, type, userId, blacklisted: false }
   });
@@ -86,12 +86,12 @@ const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
  * @param {User} user
  * @returns {Promise<AuthTokensResponse>}
  */
-const generateAuthTokens = async (user: { id: number, companyId: number, role: UserRole, isSuperAdmin: boolean }): Promise<AuthTokensResponse> => {
+const generateAuthTokens = async (user: { id: string, companyId: string, isSuperAdmin: boolean }): Promise<AuthTokensResponse> => {
   const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
-  const accessToken = generateToken(user.id, user.companyId, user.role, user.isSuperAdmin, accessTokenExpires, TokenType.ACCESS);
+  const accessToken = generateToken(user.id, user.companyId, user.isSuperAdmin, accessTokenExpires, TokenType.ACCESS);
 
   const refreshTokenExpires = moment().add(config.jwt.refreshExpirationDays, 'days');
-  const refreshToken = generateToken(user.id, user.companyId, user.role, user.isSuperAdmin, refreshTokenExpires, TokenType.REFRESH);
+  const refreshToken = generateToken(user.id, user.companyId, user.isSuperAdmin, refreshTokenExpires, TokenType.REFRESH);
   await saveToken(refreshToken, user.id, refreshTokenExpires, TokenType.REFRESH);
 
   return {
@@ -117,8 +117,8 @@ const generateResetPasswordToken = async (username: string): Promise<string> => 
     throw new ApiError(httpStatus.NOT_FOUND, 'No users found with this email');
   }
   const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
-  const resetPasswordToken = generateToken(user.id as number, user.companyId, user.role, user.isSuperAdmin, expires, TokenType.RESET_PASSWORD);
-  await saveToken(resetPasswordToken, user.id as number, expires, TokenType.RESET_PASSWORD);
+  const resetPasswordToken = generateToken(user.id, user.companyId, user.isSuperAdmin, expires, TokenType.RESET_PASSWORD);
+  await saveToken(resetPasswordToken, user.id, expires, TokenType.RESET_PASSWORD);
   return resetPasswordToken;
 };
 
