@@ -212,4 +212,32 @@ const assignRoleToUser = async (
 };
 
 
-export default {getRoleByName, createRole, getRoles, getAllPermissions, assignPermissionToRoles, createAssignPermissionToRoles, revokePermissionFromRole, assignRoleToUser}
+/**
+ * revoke roles from user
+ * @param {string} userId
+ * @param {string} roleId
+ * @returns {Promise<string | null>}
+ */
+const revokeRoleFromUser = async (
+  userId: string,
+  roleId: string,
+): Promise<string> => {
+    const user = await userService.getUserById(userId)
+    const role = await getRoleById(roleId)
+
+    if(!user || !role) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Role or User not found")
+    }
+    
+
+    await prisma.userRole.delete({
+      where: {
+        userId_roleId: { userId, roleId },
+      },
+    });
+
+    return 'Role removed from user'
+};
+
+
+export default {getRoleByName, createRole, getRoles, getAllPermissions, assignPermissionToRoles, createAssignPermissionToRoles, revokePermissionFromRole, assignRoleToUser, revokeRoleFromUser}
