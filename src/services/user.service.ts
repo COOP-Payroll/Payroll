@@ -50,7 +50,6 @@ const getUserByUsername = async <Key extends keyof User>(
     'phoneNumber',
     'name',
     'password',
-    'role',
     'username',
     'companyId',
     'createdAt',
@@ -59,6 +58,32 @@ const getUserByUsername = async <Key extends keyof User>(
 ): Promise<Pick<User, Key> | null> => {
   return prisma.user.findUnique({
     where: { username },
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+  }) as Promise<Pick<User, Key> | null>;
+};
+
+
+/**
+ * Get user by id
+ * @param {string} id
+ * @param {Array<Key>} keys
+ * @returns {Promise<Pick<User, Key> | null>}
+ */
+const getUserById = async <Key extends keyof User>(
+  id: string,
+  keys: Key[] = [
+    'id',
+    'phoneNumber',
+    'name',
+    'password',
+    'username',
+    'companyId',
+    'createdAt',
+    'updatedAt'
+  ] as Key[]
+): Promise<Pick<User, Key> | null> => {
+  return prisma.user.findUnique({
+    where: { id },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
   }) as Promise<Pick<User, Key> | null>;
 };
@@ -136,7 +161,6 @@ const queryUsers = async <Key extends keyof User>(
     'phoneNumber',
     'name',
     'isSuperAdmin',
-    'role',
     'companyId',
     'departmentId',
     'positionId',
@@ -165,5 +189,6 @@ export default {
     queryUsers,
     loginUserWithUsernameAndPassword,
     getUserByUsername,
-    logout
+    logout,
+    getUserById
 }

@@ -15,6 +15,6 @@ router.route('/permissions')
 
 router.post('/roles/:roleId/permissions', validate(adminValidate.assignPermissionsToRoleSchema), adminController.assignPermissionToRoles)
 router.post('/roles/:roleId/permissions/revoke', validate(adminValidate.assignPermissionsToRoleSchema), adminController.revokePermissionFromRole)
-
+router.post('/roles/assignToUsers', validate(adminValidate.assignRoleToUserSchema), adminController.assignRoleToUser)
 
 export default router

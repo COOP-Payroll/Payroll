@@ -24,4 +24,11 @@ const createPermissionsToRoleSchema = {
   })
 };
 
-export default {assignPermissionsToRoleSchema, createPermissionsToRoleSchema}
+const assignRoleToUserSchema = {
+    body: Joi.object().keys({
+        userId: Joi.string().required(),
+        roleId: Joi.string().required()
+    })
+}
+
+export default {assignPermissionsToRoleSchema, createPermissionsToRoleSchema, assignRoleToUserSchema}

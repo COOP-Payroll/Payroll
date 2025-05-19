@@ -40,5 +40,11 @@ const revokePermissionFromRole = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({data: [], message: assignedPermission})
 })
 
+const assignRoleToUser = catchAsync(async (req, res) => {
+    const { userId, roleId } = req.body;
+    const assignedRoleToUser = await roleService.assignRoleToUser(userId, roleId);
+    res.status(httpStatus.OK).send({data: [], message: assignedRoleToUser})
+})
 
-export default {createRole, getRoles, getAllPermissions, assignPermissionToRoles, createAssignPermissionToRoles, revokePermissionFromRole}
+
+export default {createRole, getRoles, getAllPermissions, assignPermissionToRoles, createAssignPermissionToRoles, revokePermissionFromRole, assignRoleToUser}

@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/api-error';
 import { Company, Level, Permission, Role, RolePermission } from '@prisma/client';
-
+import userService from '../services/user.service'
 
 /**
  * Create role
@@ -178,4 +178,38 @@ const createAssignPermissionToRoles = async (
 };
 
 
-export default {getRoleByName, createRole, getRoles, getAllPermissions, assignPermissionToRoles, createAssignPermissionToRoles, revokePermissionFromRole}
+/**
+ * Assign permissions to
+ * @param {string} userId
+ * @param {string} roleId
+ * @returns {Promise<string | null>}
+ */
+const assignRoleToUser = async (
+  userId: string,
+  roleId: string,
+): Promise<string> => {
+    const user = await userService.getUserById(userId)
+    const role = await getRoleById(roleId)
+
+    if(!user || !role) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Role or User not found")
+    }
+    const existing = await prisma.userRole.findUnique({
+      where: {
+        userId_roleId: { userId, roleId },
+      },
+    });
+
+    if (existing) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "User already has this role.")
+    }
+
+    await prisma.userRole.create({
+      data: { userId, roleId },
+    });
+
+    return 'Role assigned to user successfully'
+};
+
+
+export default {getRoleByName, createRole, getRoles, getAllPermissions, assignPermissionToRoles, createAssignPermissionToRoles, revokePermissionFromRole, assignRoleToUser}
