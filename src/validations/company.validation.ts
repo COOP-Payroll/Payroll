@@ -1,3 +1,4 @@
+import { Level } from '@prisma/client';
 import Joi from 'joi';
 
 const createCompany = {
@@ -9,6 +10,7 @@ const createCompany = {
                 'string.pattern.base': 'Phone number must be 10 digits.'
             }).required(),
         companyCode: Joi.string().required(),
+        level: Joi.string().valid(Level.MOHHEAD, Level.REGION)
     })
 }
 

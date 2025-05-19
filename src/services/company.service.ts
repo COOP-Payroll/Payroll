@@ -1,7 +1,7 @@
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/api-error';
-import { Company } from '@prisma/client';
+import { Company, Level } from '@prisma/client';
 
 
 /**
@@ -13,10 +13,10 @@ const createCompany = async (
     organizationName: string,
     phoneNumber: string,
     companyCode: string,
-    email?: string
+    email?: string,
+    level: Level=Level.REGION
 ): Promise<Company> => {
 
-    //TODO: check if company registered 
     if(email && await getCompanyByEmail(email)) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
     }
@@ -26,10 +26,36 @@ const createCompany = async (
             organizationName,
             phoneNumber,
             companyCode,
-            email
+            email,
+            level
         }
     })
 }
+
+
+/**
+ * Get user by id
+ * @param {ObjectId} id
+ * @param {Array<Key>} keys
+ * @returns {Promise<Pick<User, Key> | null>}
+ */
+const getCompanyById = async <Key extends keyof Company>(
+  id: number,
+  keys: Key[] = [
+    'id',
+    'organizationName',
+    'phoneNumber',
+    'companyCode',
+    'email',
+    'createdAt',
+    'updatedAt'
+  ] as Key[]
+): Promise<Pick<Company, Key> | null> => {
+  return prisma.user.findUnique({
+    where: { id },
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+  }) as Promise<Pick<Company, Key> | null>;
+};
 
 
 /**
@@ -57,4 +83,4 @@ const getCompanyByEmail = async <Key extends keyof Company>(
 };
 
 
-export default {createCompany}
+export default {createCompany, getCompanyById}

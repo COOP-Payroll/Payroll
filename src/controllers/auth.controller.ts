@@ -19,11 +19,17 @@ const login = catchAsync(async (req, res) => {
   res.send({ user, tokens });
 });
 
+const logout = catchAsync(async (req, res) => {
+  await userService.logout(req.body.refreshToken);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
 
 
 
 
 export default {
     createUser,
-    login
+    login,
+    logout
 }

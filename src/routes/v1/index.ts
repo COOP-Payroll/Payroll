@@ -5,10 +5,15 @@ import companyRoute from "./company.route";
 import departmentRoute from "./department.route";
 import positionRoute from "./position.route";
 import authRoute from "./auth.routes"
+import userRoute from "./user.route"
 
 const router = express.Router();
 
 const defaultRoutes = [
+  {
+    path: "/users",
+    route: userRoute
+  },
    {
     path: '/auth',
     route: authRoute

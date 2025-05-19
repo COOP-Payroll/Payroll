@@ -1,5 +1,5 @@
 import httpStatus from 'http-status';
-import { User, UserRole, Prisma } from '@prisma/client';
+import { User, UserRole, Prisma, TokenType } from '@prisma/client';
 import prisma from '../client';
 import ApiError from '../utils/api-error';
 import { encryptPassword, isPasswordMatch } from '../utils/encryption';
@@ -98,6 +98,26 @@ const loginUserWithUsernameAndPassword = async (
 
 
 /**
+ * Logout
+ * @param {string} refreshToken
+ * @returns {Promise<void>}
+ */
+const logout = async (refreshToken: string): Promise<void> => {
+  const refreshTokenData = await prisma.token.findFirst({
+    where: {
+      token: refreshToken,
+      type: TokenType.REFRESH,
+      blacklisted: false
+    }
+  });
+  if (!refreshTokenData) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Not found');
+  }
+  await prisma.token.delete({ where: { id: refreshTokenData.id } });
+};
+
+
+/**
  * Query for users
  * @param {Object} filter - Prisma filter
  * @param {Object} options - Query options
@@ -147,5 +167,6 @@ export default {
     createUser,
     queryUsers,
     loginUserWithUsernameAndPassword,
-    getUserByUsername
+    getUserByUsername,
+    logout
 }
