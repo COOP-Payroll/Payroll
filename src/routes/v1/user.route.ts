@@ -10,6 +10,8 @@ router.route('/')
       .post(validate(userValidation.createUser), userController.createUser)
       .get(validate(userValidation.getUsers), userController.getUsers);
 
+
+
 // router
 //   .route('/:userId')
 //   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)

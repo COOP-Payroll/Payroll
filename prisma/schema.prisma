@@ -55,7 +55,7 @@ model User {
   phoneNumber             String
   password                String
   isSuperAdmin            Boolean       @default(false)
-  roles                   UserRole[]
+  userRoles                   UserRole[]
 
   companyId               String
   departmentId            String?
@@ -80,7 +80,7 @@ model Role {
   updatedAt DateTime @updatedAt
 
   permissions RolePermission[]
-  users       UserRole[]
+  userRoles       UserRole[]
 }
 
 model Permission {

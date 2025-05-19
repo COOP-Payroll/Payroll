@@ -1,12 +1,12 @@
-import express from 'express';
-import validate from '../../middlewares/validate';
-import authValidation from '../../validations/auth.validation';
-import { authController } from '../../controllers';
+import express from "express";
+import validate from "../../middlewares/validate";
+import authValidation from "../../validations/auth.validation";
+import { authController } from "../../controllers";
 
 const router = express.Router();
 
-router.post('/login', validate(authValidation.login), authController.login);
-router.post('/logout', validate(authValidation.logout), authController.logout);
+router.post("/login", validate(authValidation.login), authController.login);
+router.post("/logout", validate(authValidation.logout), authController.logout);
 
 export default router;
 

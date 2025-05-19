@@ -1,8 +1,7 @@
-import httpStatus from 'http-status';
-import prisma from '../client';
-import ApiError from '../utils/api-error';
-import { Company, Level } from '@prisma/client';
-
+import httpStatus from "http-status";
+import prisma from "../client";
+import ApiError from "../utils/api-error";
+import { Company, Level } from "@prisma/client";
 
 /**
  * Create a company
@@ -10,28 +9,26 @@ import { Company, Level } from '@prisma/client';
  * @returns {Promise<User>}
  */
 const createCompany = async (
-    organizationName: string,
-    phoneNumber: string,
-    companyCode: string,
-    email?: string,
-    level: Level=Level.REGION
+  organizationName: string,
+  phoneNumber: string,
+  companyCode: string,
+  email?: string,
+  level: Level = Level.REGION
 ): Promise<Company> => {
+  if (email && (await getCompanyByEmail(email))) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");
+  }
 
-    if(email && await getCompanyByEmail(email)) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
-    }
-
-    return prisma.company.create({
-        data: {
-            organizationName,
-            phoneNumber,
-            companyCode,
-            email,
-            level
-        }
-    })
-}
-
+  return prisma.company.create({
+    data: {
+      organizationName,
+      phoneNumber,
+      companyCode,
+      email,
+      level,
+    },
+  });
+};
 
 /**
  * Get user by id
@@ -42,21 +39,20 @@ const createCompany = async (
 const getCompanyById = async <Key extends keyof Company>(
   id: string,
   keys: Key[] = [
-    'id',
-    'organizationName',
-    'phoneNumber',
-    'companyCode',
-    'email',
-    'createdAt',
-    'updatedAt'
+    "id",
+    "organizationName",
+    "phoneNumber",
+    "companyCode",
+    "email",
+    "createdAt",
+    "updatedAt",
   ] as Key[]
 ): Promise<Pick<Company, Key> | null> => {
   return prisma.user.findUnique({
     where: { id },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
   }) as Promise<Pick<Company, Key> | null>;
 };
-
 
 /**
  * Get company by email
@@ -67,20 +63,19 @@ const getCompanyById = async <Key extends keyof Company>(
 const getCompanyByEmail = async <Key extends keyof Company>(
   email: string,
   keys: Key[] = [
-    'id',
-    'email',
-    'organizationName',
-    'phoneNumber',
-    'companyCode',
-    'createdAt',
-    'updatedAt'
+    "id",
+    "email",
+    "organizationName",
+    "phoneNumber",
+    "companyCode",
+    "createdAt",
+    "updatedAt",
   ] as Key[]
 ): Promise<Pick<Company, Key> | null> => {
   return prisma.company.findFirst({
     where: { email },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
   }) as Promise<Pick<Company, Key> | null>;
 };
 
-
-export default {createCompany, getCompanyById}
+export default { createCompany, getCompanyById };

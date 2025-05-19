@@ -2,12 +2,17 @@ import express from "express";
 import validate from "../../middlewares/validate";
 import adminValidate from "../../validations/admin.validation";
 import { adminController } from "../../controllers";
+import auth from "../../middlewares/auth";
+import { checkPermission } from "../../middlewares/checkPermissions";
 
 const router = express.Router();
+
+router.use(auth());
 
 router
   .route("/roles")
   .post(
+    // checkPermission("")
     validate(adminValidate.createPermissionsToRoleSchema),
     adminController.createAssignPermissionToRoles
   )
