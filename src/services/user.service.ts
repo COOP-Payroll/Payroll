@@ -1,5 +1,5 @@
 import httpStatus from "http-status";
-import { User, UserRole, Prisma, TokenType } from "@prisma/client";
+import { User, TokenType } from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/api-error";
 import { encryptPassword, isPasswordMatch } from "../utils/encryption";
@@ -7,8 +7,8 @@ import exclude from "../utils/exclude";
 import { AuthUser } from "../types/express";
 
 /**
- * Create a user
- * @param {Object} userBody
+ * Create a user with optimized database queries
+ * @param {Object} userParams
  * @returns {Promise<User>}
  */
 const createUser = async (
@@ -20,15 +20,30 @@ const createUser = async (
   positionId: string,
   departmentId: string
 ): Promise<User> => {
-  if (await getUserByUsername(username)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "username already taken");
+  const [existingUser, company, department, position] = await Promise.all([
+    getUserByUsername(username),
+    prisma.company.findUnique({ where: { id: companyId } }),
+    prisma.department.findUnique({ where: { id: departmentId } }),
+    prisma.position.findUnique({ where: { id: positionId } }),
+  ]);
+
+  if (existingUser) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Username already taken");
   }
+  if (!company) throw new ApiError(httpStatus.BAD_REQUEST, "Company not found");
+  if (!department)
+    throw new ApiError(httpStatus.BAD_REQUEST, "Department not found");
+  if (!position)
+    throw new ApiError(httpStatus.BAD_REQUEST, "Position not found");
+
+  const hashedPassword = await encryptPassword(password);
+
   return prisma.user.create({
     data: {
       username,
       name,
       phoneNumber,
-      password: await encryptPassword(password),
+      password: hashedPassword,
       companyId,
       positionId,
       departmentId,
@@ -55,7 +70,7 @@ const getUserByUsername = async <Key extends keyof User>(
     "updatedAt",
   ] as Key[]
 ): Promise<Pick<User, Key> | null> => {
-  return prisma.user.findFirst({
+  return prisma.user.findUnique({
     where: { username },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
   }) as Promise<Pick<User, Key> | null>;

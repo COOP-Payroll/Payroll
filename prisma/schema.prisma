@@ -58,7 +58,7 @@ model User {
   phoneNumber  String
   password     String
   isSuperAdmin Boolean    @default(false)
-  roles        UserRole[]
+  userRoles        UserRole[]
   companyId    String
   departmentId String?
   positionId   String?
