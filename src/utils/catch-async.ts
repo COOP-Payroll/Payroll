@@ -17,7 +17,7 @@
 
 // export default catchAsync;
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 const catchAsync = (
   fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
