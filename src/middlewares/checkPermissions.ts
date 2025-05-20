@@ -7,15 +7,19 @@ const permissionCache = new Map<string, Set<string>>();
 export const checkPermission = (required: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as AuthUser;
-
+    console.log("-----------", user);
     if (!user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
+      return; // Just return after sending response
     }
 
     const userId = user.id;
 
     const cachedPermissions = permissionCache.get(userId);
-    if (cachedPermissions?.has(required)) return next();
+    if (cachedPermissions?.has(required)) {
+      next();
+      return;
+    }
 
     try {
       const userWithRoles = await prisma.user.findUnique({
@@ -36,9 +40,8 @@ export const checkPermission = (required: string) => {
       });
 
       if (!userWithRoles) {
-        return res
-          .status(403)
-          .json({ message: "Access Denied: User not found" });
+        res.status(403).json({ message: "Access Denied: User not found" });
+        return;
       }
 
       const allPermissions = userWithRoles.userRoles.flatMap((userRole) =>
@@ -46,19 +49,17 @@ export const checkPermission = (required: string) => {
       );
 
       const permissionSet = new Set(allPermissions);
-
       permissionCache.set(userId, permissionSet);
 
       if (permissionSet.has(required)) {
-        return next();
+        next();
+        return;
       }
 
-      return res
-        .status(403)
-        .json({ message: "Access Denied: Missing permission" });
+      res.status(403).json({ message: "Access Denied: Missing permission" });
     } catch (err) {
       console.error("Error in permission check:", err);
-      return res.status(500).json({ message: "Internal server error" });
+      res.status(400).json({ message: "Internal server error" });
     }
   };
 };

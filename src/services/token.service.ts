@@ -12,6 +12,8 @@ import { AuthUser } from "../types/express";
 /**
  * Generate token
  * @param {string} userId
+ * @param {string} companyId
+ * @param {boolean} isSuperAdmin
  * @param {Moment} expires
  * @param {string} type
  * @param {string} [secret]
@@ -19,12 +21,14 @@ import { AuthUser } from "../types/express";
  */
 const generateToken = (
   userId: string,
+  companyId: string,
+  isSuperAdmin: boolean,
   expires: Moment,
   type: TokenType,
   secret = config.jwt.secret
 ): string => {
   const payload = {
-    sub: userId,
+    sub: { userId, companyId, isSuperAdmin },
     iat: moment().unix(),
     exp: expires.unix(),
     type,
@@ -85,6 +89,8 @@ const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
  */
 const generateAuthTokens = async (user: {
   id: string;
+  companyId: string;
+  isSuperAdmin: boolean;
 }): Promise<AuthTokensResponse> => {
   const accessTokenExpires = moment().add(
     config.jwt.accessExpirationMinutes,
@@ -92,6 +98,8 @@ const generateAuthTokens = async (user: {
   );
   const accessToken = generateToken(
     user.id,
+    user.companyId,
+    user.isSuperAdmin,
     accessTokenExpires,
     TokenType.ACCESS
   );
@@ -102,6 +110,8 @@ const generateAuthTokens = async (user: {
   );
   const refreshToken = generateToken(
     user.id,
+    user.companyId,
+    user.isSuperAdmin,
     refreshTokenExpires,
     TokenType.REFRESH
   );

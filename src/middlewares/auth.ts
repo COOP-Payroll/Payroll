@@ -2,7 +2,6 @@ import passport from "passport";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
 import { NextFunction, Request, Response } from "express";
-import { User } from "@prisma/client";
 import { AuthUser } from "../types/express";
 
 const verifyCallback =
@@ -12,9 +11,9 @@ const verifyCallback =
     reject: (reason?: unknown) => void
   ) =>
   async (err: unknown, user: AuthUser | false, info: unknown) => {
-    console.log("err--", err);
-    console.log("user--", user);
-    console.log("info--", info);
+    // console.log("err--", err);
+    // console.log("user--", user);
+    // console.log("info--", info);
     if (err || info || !user) {
       return reject(
         new ApiError(httpStatus.UNAUTHORIZED, "Please authenticate")
