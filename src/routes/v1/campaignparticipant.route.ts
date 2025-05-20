@@ -19,10 +19,10 @@ router.put(
 );
 //   .get(campaignController.getAllCampaigns);
 
-router.get(
-  "/participants",
-  campaignParticipantController.getParticipantsByCampaignId
-);
+// router.get(
+//   "/participants",
+//   campaignParticipantController.getParticipantsByCampaignId
+// );
 
 router.get(
   "/published",
