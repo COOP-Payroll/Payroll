@@ -11,5 +11,5 @@ export interface CampaignParticipantInput {
   companyId: string;
 
   detail?: string;
-  files?: File 
+  files?: Express.Multer.File[]; 
 }

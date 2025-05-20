@@ -1,4 +1,3 @@
-
 import prisma from "../client";
 import ApiError from "../utils/api-error";
 import httpStatus from "http-status";
@@ -6,10 +5,7 @@ import mime from "mime-types";
 import path from "path";
 import { CampaignParticipantInput } from "../types/participant.types";
 
-const registerCampaignParticipant = async (
-  data: CampaignParticipantInput,
-  files?: Express.Multer.File[]
-) => {
+const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
   const {
     campaignId,
     numberOfDaysInUrban,
@@ -22,6 +18,7 @@ const registerCampaignParticipant = async (
     paymentMethod,
     companyId,
     detail,
+    files, // ✅ Access files from data
   } = data;
 
   return await prisma.$transaction(async (tx) => {
@@ -87,8 +84,9 @@ const registerCampaignParticipant = async (
         totalAmount,
       },
     });
-
-    // Upload documents
+    console.log("filesddd");
+    console.log(files);
+    console.log(files?.length); // Upload documents
     if (files?.length) {
       await Promise.all(
         files.map((file) =>
@@ -99,8 +97,8 @@ const registerCampaignParticipant = async (
               mimeType:
                 file.mimetype || mime.lookup(file.originalname) || undefined,
               size: file.size,
-              campaignId: "",
               campaignParticipantId: campaignParticipant.id,
+              campaignId: campaignParticipant.campaignId,
             },
           })
         )
@@ -141,9 +139,6 @@ const getAllApprovedCampaigns = async () => {
     include: { documents: true },
   });
 };
-
-
-
 
 export default {
   registerCampaignParticipant,

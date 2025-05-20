@@ -1,11 +1,7 @@
-
 import { Request, Response } from "express";
 import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 import campaignParticipantService from "../services/campaignparticipant.service";
-import prisma from "../client";
-import path from "path";
-import mime from "mime-types";
 
 const registerCampaignParticipant = catchAsync(
   async (req: Request, res: Response) => {
@@ -26,7 +22,6 @@ const registerCampaignParticipant = catchAsync(
     } = req.body;
 
     const data = await campaignParticipantService.registerCampaignParticipant({
-    //   files,
       campaignId,
       numberOfDaysInUrban: Number(numberOfDaysInUrban),
       numberOfDaysInRural: Number(numberOfDaysInRural),
@@ -38,7 +33,7 @@ const registerCampaignParticipant = catchAsync(
       paymentMethod,
       companyId,
       detail,
-      
+      files, // ✅ Include files inside the object
     });
 
     res.status(httpStatus.CREATED).json({

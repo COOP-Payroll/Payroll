@@ -165,7 +165,6 @@ model Campaign {
   campaignParticipants CampaignParticipant[]
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
-  isAvalible           Boolean               @default(true)
   createdById          String
   createdBy            User                  @relation("UserCampaignsCreated", fields: [createdById], references: [id])
   companyId            String
@@ -186,8 +185,8 @@ model Document {
   size       Int?     // File size in bytes
   uploadedAt DateTime @default(now())  
   // Relations
-  campaignId String
-  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  campaignId String?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
   campaignParticipantId String?
   campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
   // Indexes for faster lookups
