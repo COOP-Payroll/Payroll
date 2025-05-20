@@ -8,6 +8,10 @@ import authRoute from "./auth.routes";
 import userRoute from "./user.route";
 import adminRoute from "./admin.route";
 import participantRoute from "./participant.route";
+import campaignRoute from "./campaign.route";
+import uploadRoute from "./upload.route";
+import rateSettingRoute from "./rateSetting.route";
+import campaignParticipantRoute from "./campaignparticipant.route";
 
 const router = express.Router();
 
@@ -41,6 +45,23 @@ const defaultRoutes = [
   {
     path: "/participants",
     route: participantRoute,
+  },
+  {
+    path: "/campaign",
+    route: campaignRoute,
+  },
+  {
+    path: "/uploads",
+    route: uploadRoute,
+  },
+  {
+    path: "/ratesetting",
+    route: rateSettingRoute,
+  },
+
+  {
+    path: "/campaignparticipant",
+    route: campaignParticipantRoute,
   },
 ];
 

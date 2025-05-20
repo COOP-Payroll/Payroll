@@ -22,6 +22,8 @@ model Company {
   users            User[]
   participants     Participant[]  
   campaigns        Campaign[] 
+  rateSetting      RateSetting?  
+
 }
 
 model Department {
@@ -57,7 +59,6 @@ model User {
   password     String
   isSuperAdmin Boolean    @default(false)
   roles        UserRole[]
-
   companyId    String
   departmentId String?
   positionId   String?
@@ -164,20 +165,36 @@ model Campaign {
   campaignParticipants CampaignParticipant[]
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
+  isAvalible           Boolean               @default(true)
   createdById          String
   createdBy            User                  @relation("UserCampaignsCreated", fields: [createdById], references: [id])
   companyId            String
   company              Company     @relation(fields: [companyId], references: [id])
+
+
+  
 }
 
 //*****************DOCUMENTS******************
+
+
 model Document {
   id         String   @id @default(uuid())
-  fileName   String
-  filePath   String
-  uploadedAt DateTime @default(now())
+  fileName   String   // Original filename (e.g., "report.xlsx")
+  filePath   String   // Path to stored file (e.g., "uploads/documents/abc123")
+  mimeType   String?  // MIME type (e.g., "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  size       Int?     // File size in bytes
+  uploadedAt DateTime @default(now())  
+  // Relations
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id])
+  campaignParticipantId String?
+  campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
+  // Indexes for faster lookups
+  @@index([fileName])
+  @@index([campaignId])
+  @@index([campaignParticipantId])
+
 }
 
 //*****************PARTICIPANT******************
@@ -191,6 +208,7 @@ model Participant {
   paymentMethod PaymentMethod
   detail        String?
   isVerified    Boolean       @default(false)
+  isActive              Boolean                     @default(true)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -212,21 +230,40 @@ enum PaymentMethod {
 
 /////COMPAIGNPARTICIPANTS
 model CampaignParticipant {
-  id             String                      @id @default(uuid())
-  amount         Float
-  paymentStatus  PaymentStatus               @default(PENDING)
-  approvalStatus ApprovalStatus              @default(PENDING)
-  isPublished    Boolean                     @default(false)
-  isActive       Boolean                     @default(true)
-  campaignId     String
-  campaign       Campaign                    @relation(fields: [campaignId], references: [id])
-  participantId  String
-  participant    Participant                 @relation(fields: [participantId], references: [id])
-  createdAt      DateTime                    @default(now())
-  updatedAt      DateTime                    @updatedAt
-  metrics        CampaignParticipantMetric[]
-}
+  id                    String                      @id @default(uuid())
+  numberOfDaysInUrban   Int                         @default(0)
+  numberOfDaysInRural   Int                         @default(0)
+  urbanRate             Float                       @default(0)   // <-- Added
+  ruralRate             Float                       @default(0)   // <-- Added
+  totalAmount           Float                       @default(0)
+  paymentStatus         PaymentStatus               @default(PENDING)
+  approvalStatus        ApprovalStatus              @default(PENDING)
+  isPublished           Boolean                     @default(false)
+  isActive              Boolean                     @default(true)
+  campaignId            String
+  campaign              Campaign                    @relation(fields: [campaignId], references: [id])
+  participantId         String
+  participant           Participant                 @relation(fields: [participantId], references: [id])
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
 
+
+  documents             Document[]
+
+ }
+
+
+
+model RateSetting {
+  id            String   @id @default(uuid())
+  urbanRate     Float
+  ruralRate     Float
+  companyId     String   @unique
+  isActive              Boolean                     @default(true)
+  company       Company  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
 
 
 enum CampaignStatus {
@@ -248,20 +285,3 @@ enum ApprovalStatus {
   REJECTED
 }
 
-////************  MetricRate ****************************
-
-model MetricRate {
-  id                 String                      @id @default(uuid())
-  name               String
-  value              Float
-  participantMetrics CampaignParticipantMetric[]
-}
-
-model CampaignParticipantMetric {
-  id                    String              @id @default(uuid())
-  campaignParticipant   CampaignParticipant @relation(fields: [campaignParticipantId], references: [id])
-  campaignParticipantId String
-  metricRate            MetricRate          @relation(fields: [metricRateId], references: [id])
-  metricRateId          String
-  days                  Int
-}
