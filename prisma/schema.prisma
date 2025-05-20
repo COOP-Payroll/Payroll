@@ -58,7 +58,7 @@ model User {
   phoneNumber  String
   password     String
   isSuperAdmin Boolean    @default(false)
-  roles        UserRole[]
+  userRoles        UserRole[]
   companyId    String
   departmentId String?
   positionId   String?
@@ -202,11 +202,7 @@ model Participant {
   fullName      String
   gender        GENDER
   address       String?
-  phoneNumber   String?
-  accountNumber String?
-  paymentMethod PaymentMethod
   detail        String?
-  isVerified    Boolean       @default(false)
   isActive              Boolean                     @default(true)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -238,6 +234,10 @@ model CampaignParticipant {
   paymentStatus         PaymentStatus               @default(PENDING)
   approvalStatus        ApprovalStatus              @default(PENDING)
   isPublished           Boolean                     @default(false)
+  phoneNumber           String?
+  accountNumber         String?
+  paymentMethod         PaymentMethod
+  isVerified            Boolean       @default(false)
   isActive              Boolean                     @default(true)
   campaignId            String
   campaign              Campaign                    @relation(fields: [campaignId], references: [id])

@@ -3,6 +3,7 @@ import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 import campaignParticipantService from "../services/campaignparticipant.service";
 
+
 const registerCampaignParticipant = catchAsync(
   async (req: Request, res: Response) => {
     const files = req.files as Express.Multer.File[];
@@ -42,12 +43,46 @@ const registerCampaignParticipant = catchAsync(
     });
   }
 );
+const updateCampaignParticipant = catchAsync(
+   
+  async (req: Request, res: Response) => {
+    const files = req.files as Express.Multer.File[];
+ const id = req.params.id;
+    const {
 
-// const getParticipantsByCampaignId = catchAsync(async (req: Request, res: Response) => {
-//   const { campaignId } = req.params;
-//   const participants = await campaignParticipantService.getParticipantsByCampaignId(campaignId);
-//   res.status(httpStatus.OK).json({ data: participants });
-// });
+      fullName,
+      gender,
+      phoneNumber,
+      accountNumber,
+      paymentMethod,
+      companyId,
+      numberOfDaysInUrban,
+      numberOfDaysInRural,
+      detail,
+      campaignId,
+    } = req.body;
+
+    const data = await campaignParticipantService.updateCampaignParticipant({
+      id,
+      fullName,
+      gender,
+      phoneNumber,
+      accountNumber,
+      paymentMethod,
+      companyId,
+      numberOfDaysInUrban: Number(numberOfDaysInUrban),
+      numberOfDaysInRural: Number(numberOfDaysInRural),
+      detail,
+      campaignId,
+      files, // ✅ Include files here
+    });
+
+    res.status(httpStatus.OK).json({
+      message: "Campaign participant updated successfully",
+      data,
+    });
+  }
+);
 
 const getParticipantsByCampaignId = catchAsync(
   async (req: Request, res: Response) => {
@@ -86,4 +121,5 @@ export default {
   getParticipantsByCampaignId,
   getAllPublishedCampaigns,
   getAllApprovedCampaigns,
+  updateCampaignParticipant
 };

@@ -4,6 +4,129 @@ import httpStatus from "http-status";
 import mime from "mime-types";
 import path from "path";
 import { CampaignParticipantInput } from "../types/participant.types";
+import { CampaignParticipantUpdateInput } from "../types/participant.types";
+
+const updateCampaignParticipant = async (
+  data: CampaignParticipantUpdateInput
+) => {
+  const {
+    id,
+    fullName,
+    gender,
+    phoneNumber,
+    accountNumber,
+    paymentMethod,
+    companyId,
+    numberOfDaysInUrban,
+    numberOfDaysInRural,
+    detail,
+    campaignId,
+    files,
+  } = data;
+
+  if (!id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Participant ID is required for update."
+    );
+  }
+
+  if (!["PHONENUMBER", "ACCOUNTNUMBER"].includes(paymentMethod)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Payment method must be PHONENUMBER or ACCOUNTNUMBER"
+    );
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    const campaignParticipant = await tx.campaignParticipant.findUnique({
+      where: { id },
+      include: { participant: true },
+    });
+
+    if (!campaignParticipant) {
+      throw new ApiError(
+        httpStatus.NOT_FOUND,
+        "Campaign participant not found"
+      );
+    }
+
+    // Get rate settings
+    const rateSetting = await tx.rateSetting.findUnique({
+      where: { companyId },
+    });
+
+    if (!rateSetting) {
+      throw new ApiError(
+        httpStatus.NOT_FOUND,
+        "Rate setting not found for the provided company"
+      );
+    }
+
+    const urbanRate = rateSetting.urbanRate;
+    const ruralRate = rateSetting.ruralRate;
+
+    const totalAmount =
+      urbanRate * Number(numberOfDaysInUrban) +
+      ruralRate * Number(numberOfDaysInRural);
+
+    // Update participant
+    await tx.participant.update({
+      where: { id: campaignParticipant.participantId },
+      data: {
+        fullName,
+        gender,
+        address: data.address,
+        detail,
+        companyId,
+      },
+    });
+
+    // Update campaign participant
+    const updated = await tx.campaignParticipant.update({
+      where: { id },
+      data: {
+        phoneNumber,
+        accountNumber,
+        paymentMethod,
+        numberOfDaysInUrban: Number(numberOfDaysInUrban),
+        numberOfDaysInRural: Number(numberOfDaysInRural),
+        urbanRate,
+        ruralRate,
+        totalAmount,
+        campaignId,
+      },
+    });
+
+    // Upload new documents (optional, don't delete old ones here)
+    if (files?.length) {
+      await Promise.all(
+        files.map((file) =>
+          tx.document.create({
+            data: {
+              fileName: file.originalname,
+              filePath: path.basename(file.path),
+              mimeType:
+                file.mimetype || mime.lookup(file.originalname) || undefined,
+              size: file.size,
+              campaignParticipantId: updated.id,
+              campaignId: updated.campaignId,
+            },
+          })
+        )
+      );
+    }
+
+    return await tx.campaignParticipant.findUnique({
+      where: { id: updated.id },
+      include: {
+        participant: true,
+        documents: true,
+        campaign: true,
+      },
+    });
+  });
+};
 
 const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
   const {
@@ -21,6 +144,12 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
     files, // ✅ Access files from data
   } = data;
 
+  if (!["PHONENUMBER", "ACCOUNTNUMBER"].includes(paymentMethod)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Payment method must be PHONENUMBER or ACCOUNTNUMBER"
+    );
+  }
   return await prisma.$transaction(async (tx) => {
     // Check for existing participant with same full name under same campaign
     const existing = await tx.participant.findFirst({
@@ -64,9 +193,9 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
         fullName,
         gender,
         address,
-        phoneNumber,
-        accountNumber,
-        paymentMethod,
+        // phoneNumber,
+        // accountNumber,
+        // paymentMethod,
         companyId,
         detail,
       },
@@ -79,6 +208,9 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
         participantId: participant.id,
         numberOfDaysInUrban: Number(numberOfDaysInUrban),
         numberOfDaysInRural: Number(numberOfDaysInRural),
+        phoneNumber,
+        accountNumber,
+        paymentMethod,
         urbanRate,
         ruralRate,
         totalAmount,
@@ -145,4 +277,5 @@ export default {
   getParticipantsByCampaignId,
   getAllPublishedCampaigns,
   getAllApprovedCampaigns,
+  updateCampaignParticipant,
 };

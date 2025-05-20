@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post(
   "/",
-  validate(participantValidation.createParticipant),
+  // validate(participantValidation.createParticipant),
   participantController.createParticipant
 );
 
