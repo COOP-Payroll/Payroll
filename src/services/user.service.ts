@@ -1,5 +1,5 @@
 import httpStatus from "http-status";
-import { User, TokenType } from "@prisma/client";
+import { User, TokenType, Permission } from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/api-error";
 import { encryptPassword, isPasswordMatch } from "../utils/encryption";
@@ -49,6 +49,50 @@ const createUser = async (
       departmentId,
     },
   });
+};
+
+/**
+ * Get user's permissions (action_subject strings)
+ * @param userId
+ * @returns Promise<string[]> - array of permission strings in "action_subject" format
+ */
+export const getUserPermissions = async (userId: string): Promise<string[]> => {
+  const userWithRoles = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      userRoles: {
+        include: {
+          role: {
+            include: {
+              permissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!userWithRoles) return [];
+
+  // Collect all unique permissions from all roles
+  const permissions = new Set<string>();
+
+  for (const userRole of userWithRoles.userRoles) {
+    for (const rolePermission of userRole.role.permissions) {
+      permissions.add(rolePermission.permission.action_subject);
+    }
+  }
+
+  // If user is super admin, add all permissions wildcard
+  if (userWithRoles.isSuperAdmin) {
+    permissions.add("*:*");
+  }
+
+  return Array.from(permissions);
 };
 
 /**
@@ -174,6 +218,8 @@ const getUserWithRoles = async (id: string): Promise<AuthUser> => {
   const authUser = {
     id: user.id,
     name: user.name,
+    isSuperAdmin: user.isSuperAdmin,
+    companyId: user.companyId,
     roles: user.userRoles.map((ur) => ur.role.name),
     permissions: Array.from(permissions),
   };
@@ -248,6 +294,7 @@ export default {
   queryUsers,
   loginUserWithUsernameAndPassword,
   getUserByUsername,
+  getUserPermissions,
   logout,
   getUserById,
   getUserWithRoles,

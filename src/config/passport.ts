@@ -17,6 +17,37 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
     if (payload.type !== TokenType.ACCESS) {
       throw new Error("Invalid token type");
     }
+    // const user = await prisma.user.findUnique({
+    //   where: { id: payload.sub.userId },
+    //   include: {
+    //     userRoles: {
+    //       include: {
+    //         role: {
+    //           include: {
+    //             permissions: {
+    //               include: {
+    //                 permission: true,
+    //               },
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    // });
+
+    // if (!user) {
+    //   return done(null, false);
+    // }
+
+    // // Flatten permissions from all roles
+    // const permissions = new Set<string>();
+    // user.userRoles.forEach((userRole) => {
+    //   userRole.role.permissions.forEach((rp) => {
+    //     const p = rp.permission;
+    //     permissions.add(p.action_subject); // e.g. view_campaign
+    //   });
+    // });
     const user = await prisma.user.findUnique({
       where: { id: payload.sub.userId },
       include: {
@@ -40,15 +71,22 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
       return done(null, false);
     }
 
-    // Flatten permissions from all roles
     const permissions = new Set<string>();
     user.userRoles.forEach((userRole) => {
       userRole.role.permissions.forEach((rp) => {
-        const p = rp.permission;
-        permissions.add(p.action_subject); // e.g. view_campaign
+        permissions.add(`${rp.permission.action}_${rp.permission.subject}`);
       });
     });
-    done(null, user);
+
+    const authUser = {
+      id: user.id,
+      name: user.name,
+      isSuperAdmin: user.isSuperAdmin,
+      companyId: user.companyId,
+      roles: user.userRoles.map((ur) => ur.role.name),
+      permissions: Array.from(permissions),
+    };
+    done(null, authUser);
   } catch (error) {
     done(error, false);
   }
