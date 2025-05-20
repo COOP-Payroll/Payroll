@@ -52,7 +52,6 @@ model Position {
 }
 
 model User {
-<<<<<<< HEAD
   id           String     @id @default(uuid())
   name         String
   username     String     @unique
@@ -63,15 +62,6 @@ model User {
   companyId    String
   departmentId String?
   positionId   String?
-=======
-  id                      String        @id @default(uuid())
-  name                    String
-  username                String        @unique
-  phoneNumber             String
-  password                String
-  isSuperAdmin            Boolean       @default(false)
-  userRoles                   UserRole[]
->>>>>>> moh-permission
 
   company          Company     @relation(fields: [companyId], references: [id])
   department       Department? @relation(fields: [departmentId], references: [id])
