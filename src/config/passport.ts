@@ -1,32 +1,57 @@
-// import prisma from '../client';
-// import { Strategy as JwtStrategy, ExtractJwt, VerifyCallback } from 'passport-jwt';
-// import config from './config';
-// import {TokenT} from "@prisma/client"
-// const jwtOptions = {
-//   secretOrKey: config.jwt.secret,
-//   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
-// };
+import prisma from "../client";
+import {
+  Strategy as JwtStrategy,
+  ExtractJwt,
+  VerifyCallback,
+} from "passport-jwt";
+import config from "./config";
+import { TokenType } from "@prisma/client";
 
-// const jwtVerify: VerifyCallback = async (payload, done) => {
-//   try {
-//     if (payload.type !== TokenType.ACCESS) {
-//       throw new Error('Invalid token type');
-//     }
-//     const user = await prisma.user.findUnique({
-//       select: {
-//         id: true,
-//         email: true,
-//         name: true
-//       },
-//       where: { id: payload.sub }
-//     });
-//     if (!user) {
-//       return done(null, false);
-//     }
-//     done(null, user);
-//   } catch (error) {
-//     done(error, false);
-//   }
-// };
+const jwtOptions = {
+  secretOrKey: config.jwt.secret,
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+};
 
-// export const jwtStrategy = new JwtStrategy(jwtOptions, jwtVerify);
+const jwtVerify: VerifyCallback = async (payload, done) => {
+  try {
+    if (payload.type !== TokenType.ACCESS) {
+      throw new Error("Invalid token type");
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub.userId },
+      include: {
+        userRoles: {
+          include: {
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return done(null, false);
+    }
+
+    // Flatten permissions from all roles
+    const permissions = new Set<string>();
+    user.userRoles.forEach((userRole) => {
+      userRole.role.permissions.forEach((rp) => {
+        const p = rp.permission;
+        permissions.add(p.action_subject); // e.g. view_campaign
+      });
+    });
+    done(null, user);
+  } catch (error) {
+    done(error, false);
+  }
+};
+
+export const jwtStrategy = new JwtStrategy(jwtOptions, jwtVerify);

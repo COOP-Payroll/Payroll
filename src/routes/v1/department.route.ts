@@ -1,21 +1,45 @@
 import express from "express";
 import departmentController from "../../controllers/department.controller";
-import departmentValidation from "../../validations/department.validation";
 import validate from "../../middlewares/validate";
+import auth from "../../middlewares/auth";
+import { checkPermission } from "../../middlewares/checkPermissions";
+import adminValidation from "../../validations/admin.validation";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  validate(departmentValidation.createDepartment),
-  departmentController.createDepartment
-);
-router.route("/").get(departmentController.getAllDepartments);
+router
+  .route("/")
+  .post(
+    auth(),
+    checkPermission("create_system_setting"),
+    validate(adminValidation.createDepartmentSchema),
+    departmentController.createDepartment
+  )
+  .get(
+    auth(),
+    checkPermission("view_system_setting"),
+    departmentController.getAllDepartments
+  );
 
 router
   .route("/:id")
-  .get(departmentController.getDepartmentById)
-  .post(departmentController.updateDepartment)
-  .delete(departmentController.deleteDepartment);
+  .get(
+    auth(),
+    checkPermission("view_system_setting"),
+    validate(adminValidation.getDepartmentSchema),
+    departmentController.getDepartmentById
+  )
+  .post(
+    auth(),
+    checkPermission("update_system_setting"),
+    validate(adminValidation.updateDepartmentSchema),
+    departmentController.updateDepartment
+  )
+  .delete(
+    auth(),
+    checkPermission("delete_system_setting"),
+    validate(adminValidation.getDepartmentSchema),
+    departmentController.deleteDepartment
+  );
 
 export default router;

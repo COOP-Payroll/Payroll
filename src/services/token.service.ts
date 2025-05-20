@@ -1,17 +1,19 @@
-import jwt from 'jsonwebtoken';
-import moment, { Moment } from 'moment';
-import httpStatus from 'http-status';
-import {TokenType, Token, UserRole} from '@prisma/client';
-import config from '../config/config';
-import userService from './user.service';
-import ApiError from '../utils/api-error';
-import prisma from '../client';
-import { AuthTokensResponse } from '../types/response';
+import jwt from "jsonwebtoken";
+import moment, { Moment } from "moment";
+import httpStatus from "http-status";
+import { TokenType, Token } from "@prisma/client";
+import config from "../config/config";
+import userService from "./user.service";
+import ApiError from "../utils/api-error";
+import prisma from "../client";
+import { AuthTokensResponse } from "../types/response";
+import { AuthUser } from "../types/express";
 
 /**
  * Generate token
  * @param {string} userId
  * @param {string} companyId
+ * @param {boolean} isSuperAdmin
  * @param {Moment} expires
  * @param {string} type
  * @param {string} [secret]
@@ -20,17 +22,16 @@ import { AuthTokensResponse } from '../types/response';
 const generateToken = (
   userId: string,
   companyId: string,
-  // role: UserRole, 
   isSuperAdmin: boolean,
   expires: Moment,
   type: TokenType,
   secret = config.jwt.secret
 ): string => {
   const payload = {
-    sub: {userId, companyId, isSuperAdmin},
+    sub: { userId, companyId, isSuperAdmin },
     iat: moment().unix(),
     exp: expires.unix(),
-    type
+    type,
   };
   return jwt.sign(payload, secret);
 };
@@ -57,8 +58,8 @@ const saveToken = async (
       userId: userId,
       expires: expires.toDate(),
       type,
-      blacklisted
-    }
+      blacklisted,
+    },
   });
   return createdToken;
 };
@@ -73,10 +74,10 @@ const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
   const payload = jwt.verify(token, config.jwt.secret);
   const userId = payload.sub as string;
   const tokenData = await prisma.token.findFirst({
-    where: { token, type, userId, blacklisted: false }
+    where: { token, type, userId, blacklisted: false },
   });
   if (!tokenData) {
-    throw new Error('Token not found');
+    throw new Error("Token not found");
   }
   return tokenData;
 };
@@ -86,48 +87,73 @@ const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
  * @param {User} user
  * @returns {Promise<AuthTokensResponse>}
  */
-const generateAuthTokens = async (user: { id: string, companyId: string, isSuperAdmin: boolean }): Promise<AuthTokensResponse> => {
-  const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
-  const accessToken = generateToken(user.id, user.companyId, user.isSuperAdmin, accessTokenExpires, TokenType.ACCESS);
+const generateAuthTokens = async (user: {
+  id: string;
+  companyId: string;
+  isSuperAdmin: boolean;
+}): Promise<AuthTokensResponse> => {
+  const accessTokenExpires = moment().add(
+    config.jwt.accessExpirationMinutes,
+    "minutes"
+  );
+  const accessToken = generateToken(
+    user.id,
+    user.companyId,
+    user.isSuperAdmin,
+    accessTokenExpires,
+    TokenType.ACCESS
+  );
 
-  const refreshTokenExpires = moment().add(config.jwt.refreshExpirationDays, 'days');
-  const refreshToken = generateToken(user.id, user.companyId, user.isSuperAdmin, refreshTokenExpires, TokenType.REFRESH);
-  await saveToken(refreshToken, user.id, refreshTokenExpires, TokenType.REFRESH);
+  const refreshTokenExpires = moment().add(
+    config.jwt.refreshExpirationDays,
+    "days"
+  );
+  const refreshToken = generateToken(
+    user.id,
+    user.companyId,
+    user.isSuperAdmin,
+    refreshTokenExpires,
+    TokenType.REFRESH
+  );
+  await saveToken(
+    refreshToken,
+    user.id,
+    refreshTokenExpires,
+    TokenType.REFRESH
+  );
 
   return {
     access: {
       token: accessToken,
-      expires: accessTokenExpires.toDate()
+      expires: accessTokenExpires.toDate(),
     },
     refresh: {
       token: refreshToken,
-      expires: refreshTokenExpires.toDate()
-    }
+      expires: refreshTokenExpires.toDate(),
+    },
   };
 };
 
 /**
  * Generate reset password token
- * @param {string} username
+ * @param {string} email
  * @returns {Promise<string>}
  */
-const generateResetPasswordToken = async (username: string): Promise<string> => {
-  const user = await userService.getUserByUsername(username);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'No users found with this email');
-  }
-  const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
-  const resetPasswordToken = generateToken(user.id, user.companyId, user.isSuperAdmin, expires, TokenType.RESET_PASSWORD);
-  await saveToken(resetPasswordToken, user.id, expires, TokenType.RESET_PASSWORD);
-  return resetPasswordToken;
-};
-
-
+// const generateResetPasswordToken = async (email: string): Promise<string> => {
+//   const user = await userService.getUserByEmail(email);
+//   if (!user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'No users found with this email');
+//   }
+//   const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
+//   const resetPasswordToken = generateToken(user.id as number, expires, TokenType.RESET_PASSWORD);
+//   await saveToken(resetPasswordToken, user.id as number, expires, TokenType.RESET_PASSWORD);
+//   return resetPasswordToken;
+// };
 
 export default {
   generateToken,
   saveToken,
   verifyToken,
   generateAuthTokens,
-  generateResetPasswordToken,
+  // generateResetPasswordToken,
 };

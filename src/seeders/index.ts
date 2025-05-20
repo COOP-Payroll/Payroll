@@ -1,7 +1,16 @@
-import prisma from '../client';
+import prisma from "../client";
 
-const subjects = ['campaign', 'department', 'position', 'user'];
-const actions = ['create', 'view', 'update', 'delete'];
+const subjects = [
+  "dashboard",
+  "system_setting",
+  "campaign_setup",
+  "participants",
+  "campaign_process",
+  "campaign_approval",
+  "campaign_payment",
+  "unprocessed_campaign",
+];
+const actions = ["create", "view", "update", "delete"];
 
 async function seedPermissions() {
   for (const subject of subjects) {
@@ -23,10 +32,10 @@ async function seedPermissions() {
 
 seedPermissions()
   .then(() => {
-    console.log('Permissions seeded!');
+    console.log("Permissions seeded!");
     process.exit(0);
   })
   .catch((err) => {
-    console.error('Seeding failed:', err);
+    console.error("Seeding failed:", err);
     process.exit(1);
   });
