@@ -1,7 +1,9 @@
 import express from "express";
 import validate from "../../middlewares/validate";
 import adminValidate from "../../validations/admin.validation";
+import workflowValidation from "../../validations/workflow.validation";
 import { adminController } from "../../controllers";
+import { workflowController } from "../../controllers";
 import auth from "../../middlewares/auth";
 import { checkPermission } from "../../middlewares/checkPermissions";
 
@@ -22,6 +24,14 @@ router
     checkPermission("view_system_setting"),
     adminController.getRoles
   );
+
+router.post(
+  "/roles/approval",
+  auth(),
+  checkPermission("create_system_setting"),
+  validate(adminValidate.createRoleSchema),
+  adminController.createRole
+);
 
 router
   .route("/permissions")
@@ -58,6 +68,14 @@ router.post(
   checkPermission("delete_system_setting"),
   validate(adminValidate.assignRoleToUserSchema),
   adminController.revokeRoleFromUser
+);
+
+router.post(
+  "/workflow",
+  auth(),
+  checkPermission("create_system_setting"),
+  validate(workflowValidation.createWorkFlowSchema),
+  workflowController.createWorkflow
 );
 
 export default router;

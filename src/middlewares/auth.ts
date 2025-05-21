@@ -21,8 +21,6 @@ const verifyCallback =
     }
     req.user = user;
 
-    console.log("hey-----", user);
-
     resolve();
   };
 

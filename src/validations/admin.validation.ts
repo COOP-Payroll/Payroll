@@ -58,6 +58,12 @@ const updateDepartmentSchema = {
     .min(1),
 };
 
+const createRoleSchema = {
+  body: Joi.object().keys({
+    name: Joi.string(),
+  }),
+};
+
 export default {
   assignPermissionsToRoleSchema,
   createPermissionsToRoleSchema,
@@ -65,4 +71,5 @@ export default {
   createDepartmentSchema,
   getDepartmentSchema,
   updateDepartmentSchema,
+  createRoleSchema,
 };
