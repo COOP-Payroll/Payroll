@@ -175,6 +175,7 @@ const getUserWithRoles = async (id: string): Promise<AuthUser> => {
     id: user.id,
     name: user.name,
     roles: user.userRoles.map((ur) => ur.role.name),
+    companyId: user.companyId,
     permissions: Array.from(permissions),
   };
 

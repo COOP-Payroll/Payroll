@@ -2,7 +2,6 @@ import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
 
-
 const createDepartment = async (data: {
   deptName: string;
   location?: string;
@@ -59,9 +58,12 @@ const createDepartment = async (data: {
   });
 };
 
-const getAllDepartments = async () => {
+const getAllDepartments = async (companyId?: string) => {
   return await prisma.department.findMany({
-    where: { isActive: true }, // or true, depending on your needs
+    where: {
+      companyId: companyId,
+      isActive: true,
+    }, // or true, depending on your needs
     include: {
       company: true,
     },
@@ -90,17 +92,17 @@ const updateDepartment = async (
     companyId: string;
   }>
 ) => {
-//   if (data.deptName) {
-//     const duplicate = await prisma.department.findFirst({
-//       where: {
-//         deptName: data.deptName,
-//         NOT: { id }, // exclude current department
-//       },
-//     });
-//     if (duplicate) {
-//       throw new ApiError(httpStatus.CONFLICT, "Department name must be unique");
-//     }
-//   }
+  //   if (data.deptName) {
+  //     const duplicate = await prisma.department.findFirst({
+  //       where: {
+  //         deptName: data.deptName,
+  //         NOT: { id }, // exclude current department
+  //       },
+  //     });
+  //     if (duplicate) {
+  //       throw new ApiError(httpStatus.CONFLICT, "Department name must be unique");
+  //     }
+  //   }
   const existing = await prisma.department.findUnique({ where: { id } });
   if (!existing) {
     throw new ApiError(httpStatus.NOT_FOUND, "Department not found");

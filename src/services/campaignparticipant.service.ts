@@ -7,29 +7,24 @@ import { CampaignParticipantInput } from "../types/participant.types";
 import { CampaignParticipantUpdateInput } from "../types/participant.types";
 
 const updateCampaignParticipant = async (
+  id: string,
+  companyId: string,
   data: CampaignParticipantUpdateInput
 ) => {
+
   const {
-    id,
+    numberOfDaysInUrban,
+    numberOfDaysInRural,
     fullName,
     gender,
+    address,
     phoneNumber,
     accountNumber,
     paymentMethod,
-    companyId,
-    numberOfDaysInUrban,
-    numberOfDaysInRural,
+
     detail,
-    campaignId,
     files,
   } = data;
-
-  if (!id) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Participant ID is required for update."
-    );
-  }
 
   if (!["PHONENUMBER", "ACCOUNTNUMBER"].includes(paymentMethod)) {
     throw new ApiError(
@@ -51,7 +46,19 @@ const updateCampaignParticipant = async (
       );
     }
 
-    // Get rate settings
+    // ✅ Update Participant
+    await tx.participant.update({
+      where: { id: campaignParticipant.participantId },
+      data: {
+        fullName,
+        gender,
+        address,
+        // companyId, // make sure companyId is included here
+        detail,
+      },
+    });
+
+    // ✅ Get updated rate settings
     const rateSetting = await tx.rateSetting.findUnique({
       where: { companyId },
     });
@@ -65,40 +72,26 @@ const updateCampaignParticipant = async (
 
     const urbanRate = rateSetting.urbanRate;
     const ruralRate = rateSetting.ruralRate;
-
     const totalAmount =
       urbanRate * Number(numberOfDaysInUrban) +
       ruralRate * Number(numberOfDaysInRural);
 
-    // Update participant
-    await tx.participant.update({
-      where: { id: campaignParticipant.participantId },
-      data: {
-        fullName,
-        gender,
-        address: data.address,
-        detail,
-        companyId,
-      },
-    });
-
-    // Update campaign participant
-    const updated = await tx.campaignParticipant.update({
+    // ✅ Update CampaignParticipant
+    await tx.campaignParticipant.update({
       where: { id },
       data: {
+        numberOfDaysInUrban: Number(numberOfDaysInUrban),
+        numberOfDaysInRural: Number(numberOfDaysInRural),
         phoneNumber,
         accountNumber,
         paymentMethod,
-        numberOfDaysInUrban: Number(numberOfDaysInUrban),
-        numberOfDaysInRural: Number(numberOfDaysInRural),
         urbanRate,
         ruralRate,
         totalAmount,
-        campaignId,
       },
     });
 
-    // Upload new documents (optional, don't delete old ones here)
+    // ✅ Upload new documents
     if (files?.length) {
       await Promise.all(
         files.map((file) =>
@@ -109,8 +102,7 @@ const updateCampaignParticipant = async (
               mimeType:
                 file.mimetype || mime.lookup(file.originalname) || undefined,
               size: file.size,
-              campaignParticipantId: updated.id,
-              campaignId: updated.campaignId,
+              campaignParticipantId: id,
             },
           })
         )
@@ -118,7 +110,7 @@ const updateCampaignParticipant = async (
     }
 
     return await tx.campaignParticipant.findUnique({
-      where: { id: updated.id },
+      where: { id },
       include: {
         participant: true,
         documents: true,
@@ -127,7 +119,6 @@ const updateCampaignParticipant = async (
     });
   });
 };
-
 const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
   const {
     campaignId,
