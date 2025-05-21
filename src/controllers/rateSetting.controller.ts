@@ -21,34 +21,22 @@ const getAllRateSettings = catchAsync(async (req: Request, res: Response) => {
   res.send({ data: settings });
 });
 
-const getRateSettingByCompanyId = catchAsync(
-  async (req: Request, res: Response) => {
-    const { companyId } = req.params;
-    const setting = await rateSettingService.getRateSettingByCompanyId(
-      companyId
-    );
-    if (!setting) {
-      res
-        .status(httpStatus.NOT_FOUND)
-        .send({ message: "RateSetting not found" });
-      return;
-    }
-    res.send({ data: setting });
-  }
-);
-
 const updateRateSetting = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
+  const { id } = req.params;
+
   const updated = await rateSettingService.updateRateSetting(
     user.companyId,
+    id,
     req.body
   );
+
   res.send({ message: "RateSetting updated", data: updated });
 });
 
 export default {
   createRateSetting,
   getAllRateSettings,
-  getRateSettingByCompanyId,
   updateRateSetting,
+  // deleteRateSetting,
 };

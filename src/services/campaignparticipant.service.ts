@@ -11,7 +11,6 @@ const updateCampaignParticipant = async (
   companyId: string,
   data: CampaignParticipantUpdateInput
 ) => {
-
   const {
     numberOfDaysInUrban,
     numberOfDaysInRural,
@@ -142,6 +141,14 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
     );
   }
   return await prisma.$transaction(async (tx) => {
+    const campaignExists = await tx.campaign.findUnique({
+      where: { id: campaignId },
+    });
+
+    if (!campaignExists) {
+      throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
+    }
+
     // Check for existing participant with same full name under same campaign
     const existing = await tx.participant.findFirst({
       where: {

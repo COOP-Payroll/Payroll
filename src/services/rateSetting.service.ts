@@ -57,28 +57,41 @@ const getRateSettingByCompanyId = async (companyId: string) => {
 
 const updateRateSetting = async (
   companyId: string,
+  id: string,
   data: Partial<{
-    urbanRate: number;
-    ruralRate: number;
+    urbanRate: GLfloat;
+    ruralRate: GLfloat;
   }>
 ) => {
   const existing = await prisma.rateSetting.findUnique({
-    where: { companyId },
+    where: { id, companyId },
   });
 
   if (!existing) {
     throw new ApiError(httpStatus.NOT_FOUND, "RateSetting not found");
   }
 
-  return prisma.rateSetting.update({
-    where: { companyId },
-    data,
+  // Deactivate the current setting
+  await prisma.rateSetting.update({
+    where: { id },
+    data: { isActive: false },
+  });
+
+  // Create a new active setting with the updated data
+  return prisma.rateSetting.create({
+    data: {
+      urbanRate: data.urbanRate ?? existing.urbanRate,
+      ruralRate: data.ruralRate ?? existing.ruralRate,
+      companyId,
+      isActive: true,
+    },
   });
 };
 
 export default {
   createRateSetting,
   getAllRateSettings,
-  getRateSettingByCompanyId,
+  
+
   updateRateSetting,
 };

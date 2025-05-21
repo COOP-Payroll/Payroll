@@ -1,6 +1,8 @@
 export interface AuthUser {
   id: string;
   name: string;
+  companyId: string;
+  isSuperAdmin: boolean;
   roles: string[];
   permissions: string[];
   companyId:string

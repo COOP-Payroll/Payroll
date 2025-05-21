@@ -14,9 +14,6 @@ router.post(
 );
 router.get("/", auth(), rateSettingController.getAllRateSettings);
 
-router
-  .route("/:id")
-  .get(rateSettingController.getRateSettingByCompanyId)
-  .post(auth(), rateSettingController.updateRateSetting);
+router.route("/:id").post(auth(), rateSettingController.updateRateSetting);
 
 export default router;
