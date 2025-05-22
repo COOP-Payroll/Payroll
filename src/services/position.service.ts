@@ -1,4 +1,3 @@
-
 import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
@@ -10,11 +9,10 @@ const createPosition = async (data: {
 }) => {
   const { positionName, description, companyId } = data;
 
-  if (!positionName || typeof positionName !== "string") {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Position name is required");
-  }
+  console.log(companyId);
+  console.log("ddkdfkdkdk");
 
-  if (!companyId || typeof companyId  !== "string"){
+  if (!companyId || typeof companyId !== "string") {
     throw new ApiError(httpStatus.BAD_REQUEST, "Valid companyId is required");
   }
 
@@ -35,9 +33,9 @@ const createPosition = async (data: {
   return prisma.position.create({ data });
 };
 
-const getAllPositions = async () => {
+const getAllPositions = async (companyId?: string) => {
   return prisma.position.findMany({
-    // where: { isActive: true },
+    where: { isActive: true, companyId: companyId },
     include: {
       company: true,
     },
@@ -89,14 +87,10 @@ const updatePosition = async (
   });
 };
 
-// const deletePosition = async (id: number) => {
-//   return prisma.position.delete({ where: { id } });
-// };
-
-
-
-const deletePosition = async (id: string) => {
-  const existing = await prisma.position.findUnique({ where: { id } });
+const deletePosition = async (id: string, companyId: string) => {
+  const existing = await prisma.position.findUnique({
+    where: { id, companyId },
+  });
   if (!existing) {
     throw new ApiError(httpStatus.NOT_FOUND, "Department not found");
   }

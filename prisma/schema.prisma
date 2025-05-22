@@ -201,12 +201,8 @@ model Participant {
   fullName      String
   gender        GENDER
   address       String?
-  phoneNumber   String?
-  accountNumber String?
-  paymentMethod PaymentMethod
   detail        String?
-  isVerified    Boolean       @default(false)
-  isActive      Boolean       @default(true)
+  isActive              Boolean                     @default(true)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -228,25 +224,33 @@ enum PaymentMethod {
 
 /////COMPAIGNPARTICIPANTS
 model CampaignParticipant {
-  id                  String         @id @default(uuid())
-  numberOfDaysInUrban Int            @default(0)
-  numberOfDaysInRural Int            @default(0)
-  urbanRate           Float          @default(0) // <-- Added
-  ruralRate           Float          @default(0) // <-- Added
-  totalAmount         Float          @default(0)
-  paymentStatus       PaymentStatus  @default(PENDING)
-  approvalStatus      ApprovalStatus @default(PENDING)
-  isPublished         Boolean        @default(false)
-  isActive            Boolean        @default(true)
-  campaignId          String
-  campaign            Campaign       @relation(fields: [campaignId], references: [id])
-  participantId       String
-  participant         Participant    @relation(fields: [participantId], references: [id])
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  id                    String                      @id @default(uuid())
+  numberOfDaysInUrban   Int                         @default(0)
+  numberOfDaysInRural   Int                         @default(0)
+  urbanRate             Float                       @default(0)   // <-- Added
+  ruralRate             Float                       @default(0)   // <-- Added
+  totalAmount           Float                       @default(0)
+  paymentStatus         PaymentStatus               @default(PENDING)
+  approvalStatus        ApprovalStatus              @default(PENDING)
+  isPublished           Boolean                     @default(false)
+  phoneNumber           String?
+  accountNumber         String?
+  paymentMethod         PaymentMethod
+  isVerified            Boolean       @default(false)
+  isActive              Boolean                     @default(true)
+  campaignId            String
+  campaign              Campaign                    @relation(fields: [campaignId], references: [id])
+  participantId         String
+  participant           Participant                 @relation(fields: [participantId], references: [id])
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
 
-  documents Document[]
-}
+
+  documents             Document[]
+
+ }
+
+
 
 model RateSetting {
   id        String   @id @default(uuid())

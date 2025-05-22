@@ -2,19 +2,18 @@ import express from "express";
 import rateSettingController from "../../controllers/rateSetting.controller";
 import validate from "../../middlewares/validate";
 import rateSettingValidation from "../../validations/rateSetting.validation";
+import auth from "../../middlewares/auth";
 
 const router = express.Router();
 
 router.post(
   "/",
- // validate(rateSettingValidation.createRateSetting),
+  auth(),
+  // validate(rateSettingValidation.createRateSetting),
   rateSettingController.createRateSetting
 );
-router.get("/", rateSettingController.getAllRateSettings);
+router.get("/", auth(), rateSettingController.getAllRateSettings);
 
-router
-  .route("/:companyId")
-  .get(rateSettingController.getRateSettingByCompanyId)
-  .post(rateSettingController.updateRateSetting);
+router.route("/:id").post(auth(), rateSettingController.updateRateSetting);
 
 export default router;

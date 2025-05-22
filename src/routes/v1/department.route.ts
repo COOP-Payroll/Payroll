@@ -5,19 +5,20 @@ import auth from "../../middlewares/auth";
 import { checkPermission } from "../../middlewares/checkPermissions";
 import adminValidation from "../../validations/admin.validation";
 
+
 const router = express.Router();
 
 router
   .route("/")
   .post(
     auth(),
-    checkPermission("create_system_setting"),
+    // checkPermission("create_system_setting"),
     validate(adminValidation.createDepartmentSchema),
     departmentController.createDepartment
   )
   .get(
     auth(),
-    checkPermission("view_system_setting"),
+    // checkPermission("view_system_setting"),
     departmentController.getAllDepartments
   );
 
@@ -31,7 +32,7 @@ router
   )
   .post(
     auth(),
-    checkPermission("update_system_setting"),
+    // checkPermission("update_system_setting"),
     validate(adminValidation.updateDepartmentSchema),
     departmentController.updateDepartment
   )

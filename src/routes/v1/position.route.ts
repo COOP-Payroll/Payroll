@@ -2,24 +2,29 @@ import express from "express";
 import positionController from "../../controllers/position.controller";
 import validate from "../../middlewares/validate";
 import positionValidation from "../../validations/position.validation";
+import auth from "../../middlewares/auth";
 
 const router = express.Router();
 
 router
   .route("/")
+
   .post(
+    auth(),
     validate(positionValidation.createPosition),
     positionController.createPosition
   )
-  .get(positionController.getAllPositions);
+  .get(auth(), positionController.getAllPositions);
 
 router
   .route("/:id")
-  .get(positionController.getPositionById)
+
+  .get(auth(), positionController.getPositionById)
   .post(
+    auth(),
     validate(positionValidation.updatePosition),
     positionController.updatePosition
   )
-  .delete(positionController.deletePosition);
+  .delete(auth(), positionController.deletePosition);
 
 export default router;

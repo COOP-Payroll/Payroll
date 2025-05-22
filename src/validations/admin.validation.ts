@@ -35,7 +35,6 @@ const createDepartmentSchema = {
     deptName: Joi.string().required(),
     location: Joi.string(),
     shorthandRepresentation: Joi.string().required(),
-    companyId: Joi.string().required(),
   }),
 };
 

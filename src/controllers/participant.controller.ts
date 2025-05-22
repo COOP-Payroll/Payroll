@@ -2,9 +2,14 @@ import { Request, Response } from "express";
 import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 import participantService from "../services/participant.service";
+import { AuthUser } from "../types/express";
 
 const createParticipant = catchAsync(async (req: Request, res: Response) => {
-  const participant = await participantService.createParticipant(req.body);
+  const user = req.user as AuthUser;
+  const participant = await participantService.createParticipant({
+    ...req.body,
+    companyId: !user.companyId,
+  });
   res
     .status(httpStatus.CREATED)
     .send({ message: "Participant created", data: participant });

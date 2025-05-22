@@ -2,17 +2,39 @@ import { Request, Response } from "express";
 import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 import departmentService from "../services/department.service";
+import { AuthUser } from "../types/express";
+import ApiError from "../utils/api-error";
 
 const createDepartment = catchAsync(async (req: Request, res: Response) => {
-  const department = await departmentService.createDepartment(req.body);
+  const user = req.user as AuthUser;
+
+  if (!user.companyId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "User must be associated with a company to create departments"
+    );
+  }
+
+  const department = await departmentService.createDepartment({
+    ...req.body,
+    companyId: user.companyId,
+  });
+
   res
     .status(httpStatus.CREATED)
     .send({ message: "Department created", data: department });
 });
 
-const getAllDepartments = catchAsync(async (_req: Request, res: Response) => {
-  const departments = await departmentService.getAllDepartments();
-  res.send({ data: departments });
+const getAllDepartments = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as AuthUser;
+
+  // Filter departments by user's company if not admin/super-admin
+  const departments = await departmentService.getAllDepartments(user.companyId);
+
+  res.json({
+    data: departments,
+    count: departments.length,
+  });
 });
 
 const getDepartmentById = catchAsync(async (req: Request, res: Response) => {

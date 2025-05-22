@@ -87,6 +87,8 @@ web_modules/
 .env.local
 
 generated/
+src/uploads/
+
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

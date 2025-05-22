@@ -21,10 +21,7 @@ const createParticipant = {
         "any.required": "Payment method is required",
       }),
     detail: Joi.string().allow(null, "").optional(),
-    companyId: Joi.string().guid({ version: "uuidv4" }).required().messages({
-      "any.required": "Company ID is required",
-      "string.guid": "Company ID must be a valid UUID",
-    }),
+  
   }),
 };
 

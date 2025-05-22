@@ -2,16 +2,31 @@ import { Request, Response } from "express";
 import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 import positionService from "../services/position.service";
+import { AuthUser } from "../types/express";
+import ApiError from "../utils/api-error";
 
 const createPosition = catchAsync(async (req: Request, res: Response) => {
-  const position = await positionService.createPosition(req.body);
+  const user = req.user as AuthUser;
+
+  if (!user.companyId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "User must be associated with a company to create departments"
+    );
+  }
+
+  const position = await positionService.createPosition({
+    ...req.body,
+    companyId: user.companyId,
+  });
   res
     .status(httpStatus.CREATED)
     .send({ message: "Position created", data: position });
 });
 
-const getAllPositions = catchAsync(async (_req: Request, res: Response) => {
-  const positions = await positionService.getAllPositions();
+const getAllPositions = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as AuthUser;
+  const positions = await positionService.getAllPositions(user.companyId);
   res.send({ data: positions });
 });
 
@@ -35,7 +50,9 @@ const updatePosition = catchAsync(async (req: Request, res: Response) => {
 
 const deletePosition = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id;
-  const updated = await positionService.deletePosition(id);
+    const user = req.user as AuthUser;
+   const companyId= user.companyId
+  const updated = await positionService.deletePosition(id,companyId);
   res
     .status(httpStatus.OK)
     .send({ message: "Position deactivated", data: updated });
