@@ -16,4 +16,13 @@ router
     campaignApprovalController.createCampaignForApproval
   );
 
+router
+  .route("/campaigns/approve")
+  .post(
+    auth(),
+    checkPermission("create_campaign_approval"),
+    validate(approvalValidation.approveOrRejectCampaignStageSchema),
+    campaignApprovalController.approveOrRejectCampaignStage
+  );
+
 export default router;
