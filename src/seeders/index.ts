@@ -9,6 +9,8 @@ const subjects = [
   "campaign_approval",
   "campaign_payment",
   "unprocessed_campaign",
+  "campaign_published",
+  "campaign_reports",
 ];
 const actions = ["create", "view", "update", "delete"];
 

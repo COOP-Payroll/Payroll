@@ -8,22 +8,22 @@ datasource db {
 }
 
 model Company {
-  id               String        @id @default(uuid())
-  status           CompanyStatus @default(pending)
+  id               String             @id @default(uuid())
+  status           CompanyStatus      @default(pending)
   organizationName String
   phoneNumber      String
   companyCode      String
   email            String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
   level            Level?
   departments      Department[]
   positions        Position[]
   users            User[]
-  participants     Participant[]  
-  campaigns        Campaign[] 
-  rateSetting      RateSetting?  
-
+  participants     Participant[]
+  campaigns        Campaign[]
+  rateSetting      RateSetting?
+  workflows        ApprovalWorkflow[]
 }
 
 model Department {
@@ -58,18 +58,19 @@ model User {
   phoneNumber  String
   password     String
   isSuperAdmin Boolean    @default(false)
-  userRoles        UserRole[]
+  userRoles    UserRole[]
   companyId    String
   departmentId String?
   positionId   String?
 
-  company          Company     @relation(fields: [companyId], references: [id])
-  department       Department? @relation(fields: [departmentId], references: [id])
-  position         Position?   @relation(fields: [positionId], references: [id])
+  company          Company               @relation(fields: [companyId], references: [id])
+  department       Department?           @relation(fields: [departmentId], references: [id])
+  position         Position?             @relation(fields: [positionId], references: [id])
   Token            Token[]
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  campaignsCreated Campaign[]  @relation("UserCampaignsCreated")
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  campaignsCreated Campaign[]            @relation("UserCampaignsCreated")
+  approvals        CampaignStageStatus[] @relation("UserApprovals")
 }
 
 model Role {
@@ -79,7 +80,8 @@ model Role {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   permissions RolePermission[]
-  userRoles       UserRole[]
+  userRoles   UserRole[]
+  stageRoles  StageRole[]
 }
 
 model Permission {
@@ -88,9 +90,9 @@ model Permission {
   subject        String // e.g., "campaign", "department"
   action_subject String @unique // enforce uniqueness
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  roles RolePermission[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  roles     RolePermission[]
 }
 
 model RolePermission {
@@ -153,7 +155,7 @@ enum Level {
 //***************Campaign*************************
 
 model Campaign {
-  id                   String                @id @default(uuid())
+  id                   String                     @id @default(uuid())
   name                 String
   description          String?
   startDate            DateTime
@@ -161,39 +163,36 @@ model Campaign {
   budget               Float
   budgetSource         String
   documents            Document[]
-  isActive             Boolean               @default(true)
+  isActive             Boolean                    @default(true)
   campaignParticipants CampaignParticipant[]
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
   createdById          String
-  createdBy            User                  @relation("UserCampaignsCreated", fields: [createdById], references: [id])
+  createdBy            User                       @relation("UserCampaignsCreated", fields: [createdById], references: [id])
   companyId            String
-  company              Company     @relation(fields: [companyId], references: [id])
-
-
-  
+  company              Company                    @relation(fields: [companyId], references: [id])
+  approvalInstances    CampaignApprovalInstance[]
 }
 
 //*****************DOCUMENTS******************
 
-
 model Document {
-  id         String   @id @default(uuid())
-  fileName   String   // Original filename (e.g., "report.xlsx")
-  filePath   String   // Path to stored file (e.g., "uploads/documents/abc123")
-  mimeType   String?  // MIME type (e.g., "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-  size       Int?     // File size in bytes
-  uploadedAt DateTime @default(now())  
+  id                    String               @id @default(uuid())
+  fileName              String // Original filename (e.g., "report.xlsx")
+  filePath              String // Path to stored file (e.g., "uploads/documents/abc123")
+  mimeType              String? // MIME type (e.g., "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  size                  Int? // File size in bytes
+  uploadedAt            DateTime             @default(now())
   // Relations
-  campaignId String?
-  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  campaignId            String?
+  campaign              Campaign?            @relation(fields: [campaignId], references: [id])
   campaignParticipantId String?
   campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
+
   // Indexes for faster lookups
   @@index([fileName])
   @@index([campaignId])
   @@index([campaignParticipantId])
-
 }
 
 //*****************PARTICIPANT******************
@@ -209,8 +208,8 @@ model Participant {
 
   campaignParticipants CampaignParticipant[]
 
-  companyId    String
-  company          Company     @relation(fields: [companyId], references: [id])
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
 }
 
 enum GENDER {
@@ -254,16 +253,93 @@ model CampaignParticipant {
 
 
 model RateSetting {
-  id            String   @id @default(uuid())
-  urbanRate     Float
-  ruralRate     Float
-  companyId     String   @unique
-  isActive              Boolean                     @default(true)
-  company       Company  @relation(fields: [companyId], references: [id])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        String   @id @default(uuid())
+  urbanRate Float
+  ruralRate Float
+  companyId String   @unique
+  isActive  Boolean  @default(true)
+  company   Company  @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+//*****************PARTICIPANT******************
+
+enum StageStatus {
+  PENDING
+  WAITING
+  APPROVED
+  REJECTED
+  SKIPPED
+}
+
+model ApprovalWorkflow {
+  id                       String                     @id @default(cuid())
+  name                     String
+  companyId                String
+  company                  Company                    @relation(fields: [companyId], references: [id])
+  stages                   ApprovalStage[]
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  CampaignApprovalInstance CampaignApprovalInstance[]
+}
+
+model ApprovalStage {
+  id                       String                     @id @default(cuid())
+  name                     String
+  order                    Int
+  workflowId               String
+  workflow                 ApprovalWorkflow           @relation(fields: [workflowId], references: [id])
+  stageRoles               StageRole[]
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  CampaignApprovalInstance CampaignApprovalInstance[]
+  CampaignStageStatus      CampaignStageStatus[]
+}
+
+model StageRole {
+  id      String @id @default(cuid())
+  stageId String
+  roleId  String
+
+  stage ApprovalStage @relation(fields: [stageId], references: [id])
+  role  Role          @relation(fields: [roleId], references: [id])
+}
+
+model CampaignApprovalInstance {
+  id                 String         @id @default(cuid())
+  campaignId         String
+  workflowId         String
+  currentStageId     String?
+  status             ApprovalStatus @default(PENDING)
+  version            Int            @default(1)
+  parentInstanceId   String?
+  resubmissionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaign       Campaign                   @relation(fields: [campaignId], references: [id])
+  workflow       ApprovalWorkflow           @relation(fields: [workflowId], references: [id])
+  currentStage   ApprovalStage?             @relation(fields: [currentStageId], references: [id])
+  parentInstance CampaignApprovalInstance?  @relation("Resubmissions", fields: [parentInstanceId], references: [id])
+  resubmissions  CampaignApprovalInstance[] @relation("Resubmissions")
+
+  stageStatuses CampaignStageStatus[]
+}
+
+model CampaignStageStatus {
+  id           String      @id @default(cuid())
+  instanceId   String
+  stageId      String
+  status       StageStatus @default(PENDING)
+  approvedById String?
+  approvedAt   DateTime?
+
+  campaignApproval CampaignApprovalInstance @relation(fields: [instanceId], references: [id])
+  stage            ApprovalStage            @relation(fields: [stageId], references: [id])
+  approvedBy       User?                    @relation("UserApprovals", fields: [approvedById], references: [id])
+}
 
 enum CampaignStatus {
   INVITED
@@ -283,4 +359,3 @@ enum ApprovalStatus {
   APPROVED
   REJECTED
 }
-
