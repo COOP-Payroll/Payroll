@@ -1,4 +1,6 @@
 import companyService from "../services/company.service";
+import { AuthUser } from "../types/express";
+import ApiError from "../utils/api-error";
 import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 
@@ -29,7 +31,26 @@ const registerCompany = catchAsync(async (req, res) => {
 //   res.send(user);
 // });
 
+const getCompany = catchAsync(async (req, res) => {
+  const user = req.user as AuthUser;
+
+  if (!user?.companyId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User has no company assigned");
+  }
+
+  const company = await companyService.getCompanyProfile(user.companyId);
+
+  if (!company) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Company not found");
+  }
+
+  res.status(httpStatus.OK).send({
+    data: company,
+    message: "Company retrieved successfully",
+  });
+});
+
 export default {
   registerCompany,
-  // getCompany
+  getCompany,
 };

@@ -37,4 +37,10 @@ router.get(
   campaignParticipantController.getAllApprovedCampaigns
 );
 
+router.get(
+  "/download-template",
+  // auth(),
+  campaignParticipantController.downloadParticipantTemplate
+);
+
 export default router;

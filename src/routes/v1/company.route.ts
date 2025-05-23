@@ -2,10 +2,13 @@ import express from 'express';
 import {companyController} from '../../controllers'
 import validate from '../../middlewares/validate';
 import companyValidation from '../../validations/company.validation';
+import auth from '../../middlewares/auth';
 
 const router = express.Router();
 
-router.post('/register', validate(companyValidation.createCompany), companyController.registerCompany)
+router.post('/register', validate(companyValidation.createCompany), companyController.registerCompany);
+router.get('/profile', auth(), companyController.getCompany);
+
 
 export default router;
 

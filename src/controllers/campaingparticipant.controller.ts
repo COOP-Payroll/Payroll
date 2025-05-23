@@ -3,6 +3,7 @@ import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 import campaignParticipantService from "../services/campaignparticipant.service";
 import { AuthUser } from "../types/express";
+import ExcelJS from "exceljs";
 
 const registerCampaignParticipant = catchAsync(
   async (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ const registerCampaignParticipant = catchAsync(
       paymentMethod,
       companyId: user.companyId,
       detail,
-      files, 
+      files,
     });
 
     res.status(httpStatus.CREATED).json({
@@ -127,9 +128,75 @@ const getAllApprovedCampaigns = catchAsync(
     res.status(httpStatus.OK).json({ data: campaigns });
   }
 );
+export const downloadParticipantTemplate = async (
+  req: Request,
+  res: Response
+) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Campaign Participants");
+
+  // Define column headers
+  worksheet.columns = [
+    { header: "Full Name", key: "fullName", width: 25 },
+    { header: "Gender", key: "gender", width: 20 },
+    { header: "Address", key: "address", width: 30 },
+    { header: "Phone Number", key: "phoneNumber", width: 20 },
+    { header: "Account Number", key: "accountNumber", width: 20 },
+    { header: "Payment Method", key: "paymentMethod", width: 25 },
+    {
+      header: "Number of Days in Urban",
+      key: "numberOfDaysInUrban",
+      width: 20,
+    },
+    {
+      header: "Number of Days in Rural",
+      key: "numberOfDaysInRural",
+      width: 20,
+    },
+    { header: "Detail", key: "detail", width: 30 },
+  ];
+
+  // Create dropdowns for Gender (B column) and PaymentMethod (F column)
+  for (let i = 2; i <= 100; i++) {
+    worksheet.getCell(`B${i}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: ['"MALE,FEMALE"'],
+      showErrorMessage: true,
+      errorStyle: "error",
+      errorTitle: "Invalid Gender",
+      error: "Please select either MALE or FEMALE from the dropdown.",
+    };
+
+    worksheet.getCell(`F${i}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: ['"PHONENUMBER,ACCOUNTNUMBER"'],
+      showErrorMessage: true,
+      errorStyle: "error",
+      errorTitle: "Invalid Payment Method",
+      error:
+        "Please select either PHONENUMBER or ACCOUNTNUMBER from the dropdown.",
+    };
+  }
+
+  // Set headers for download
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="campaign-participants-template.xlsx"'
+  );
+
+  await workbook.xlsx.write(res);
+  res.end();
+};
 
 export default {
   registerCampaignParticipant,
+  downloadParticipantTemplate,
   getParticipantsByCampaignId,
   getAllPublishedCampaigns,
   getAllApprovedCampaigns,

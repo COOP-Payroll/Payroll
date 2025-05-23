@@ -78,4 +78,16 @@ const getCompanyByEmail = async <Key extends keyof Company>(
   }) as Promise<Pick<Company, Key> | null>;
 };
 
-export default { createCompany, getCompanyById };
+const getCompanyProfile = async (companyId: string) => {
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+  });
+
+  if (!company) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Company not found");
+  }
+
+  return company;
+};
+
+export default { createCompany, getCompanyById, getCompanyProfile };
