@@ -87,6 +87,7 @@ const getAllCampaigns = async (companyId: string) => {
       endDate: true,
       budget: true,
       budgetSource: true,
+      status: true,
       company: {
         select: {
           id: true,
