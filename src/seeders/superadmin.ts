@@ -46,7 +46,7 @@ async function main() {
       password: await encryptPassword(superadminPassword),
       phoneNumber: "0931653136",
       username: "superAdmin",
-      companyId: "e670335d-4ad3-4bac-a2dd-2e439bf9b72b",
+      companyId: "c2fb1ed2-e6b5-4c07-8dd2-5b00d629fc24",
       isSuperAdmin: true,
     },
   });

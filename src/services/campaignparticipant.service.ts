@@ -5,6 +5,7 @@ import mime from "mime-types";
 import path from "path";
 import { CampaignParticipantInput } from "../types/participant.types";
 import { CampaignParticipantUpdateInput } from "../types/participant.types";
+import catchAsync from "../utils/catch-async";
 
 const updateCampaignParticipant = async (
   id: string,
@@ -270,10 +271,128 @@ const getAllApprovedCampaigns = async () => {
   });
 };
 
+type BulkCampaignParticipantInput = {
+  participants: {
+    //campaignId: string;
+    numberOfDaysInUrban: number;
+    numberOfDaysInRural: number;
+    fullName: string;
+    gender: "MALE" | "FEMALE";
+    address: string;
+    phoneNumber: string;
+    accountNumber: string;
+    paymentMethod: "PHONENUMBER" | "ACCOUNTNUMBER";
+    detail?: string;
+  }[];
+  companyId: string;
+  campaignId: string;
+};
+
+export const registerBulkCampaignParticipants = async (
+  data: BulkCampaignParticipantInput
+) => {
+  const { participants, companyId, campaignId } = data;
+
+
+  console.log("dlfjlasdfjsdhfjhdn")
+  return await prisma.$transaction(async (tx) => {
+    const rateSetting = await tx.rateSetting.findUnique({
+      where: { companyId },
+    });
+
+    if (!rateSetting) {
+      throw new ApiError(
+        httpStatus.NOT_FOUND,
+        "Rate setting not found for the provided company"
+      );
+    }
+
+    const results = [];
+
+    for (const input of participants) {
+      const {
+        // campaignId,
+        numberOfDaysInUrban,
+        numberOfDaysInRural,
+        fullName,
+        gender,
+        address,
+        phoneNumber,
+        accountNumber,
+        paymentMethod,
+        detail,
+      } = input;
+
+      const campaignExists = await tx.campaign.findUnique({
+        where: { id: campaignId },
+      });
+      if (!campaignExists) {
+        throw new ApiError(
+          httpStatus.NOT_FOUND,
+          `Campaign not found: ${campaignId}`
+        );
+      }
+
+      const existing = await tx.participant.findFirst({
+        where: {
+          fullName,
+          campaignParticipants: {
+            some: { campaignId },
+          },
+        },
+      });
+
+      if (existing) {
+        throw new ApiError(
+          httpStatus.CONFLICT,
+          `Participant '${fullName}' already registered`
+        );
+      }
+
+      const participant = await tx.participant.create({
+        data: {
+          fullName,
+          gender,
+          address,
+          companyId,
+          detail,
+        },
+      });
+
+      const totalAmount =
+        rateSetting.urbanRate * numberOfDaysInUrban +
+        rateSetting.ruralRate * numberOfDaysInRural;
+
+      const campaignParticipant = await tx.campaignParticipant.create({
+        data: {
+          campaignId,
+          participantId: participant.id,
+          numberOfDaysInUrban,
+          numberOfDaysInRural,
+          phoneNumber,
+          accountNumber,
+          paymentMethod,
+          urbanRate: rateSetting.urbanRate,
+          ruralRate: rateSetting.ruralRate,
+          totalAmount,
+        },
+      });
+
+      results.push({
+        participant,
+        campaignParticipant,
+      });
+    }
+
+    return results;
+  });
+};
+
 export default {
   registerCampaignParticipant,
   getParticipantsByCampaignId,
   getAllPublishedCampaigns,
   getAllApprovedCampaigns,
   updateCampaignParticipant,
+  registerBulkCampaignParticipants,
 };

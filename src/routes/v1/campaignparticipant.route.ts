@@ -3,6 +3,9 @@ import express from "express";
 import { upload } from "../../config/multer";
 import campaignParticipantController from "../../controllers/campaingparticipant.controller";
 import auth from "../../middlewares/auth";
+import { validateParticipants } from "../../validations/campaignparticipantvalidation";
+import parseAndValidateExcel  from '../../middlewares/parseAndValidateExcel';
+
 
 const router = express.Router();
 
@@ -41,6 +44,15 @@ router.get(
   "/download-template",
   // auth(),
   campaignParticipantController.downloadParticipantTemplate
+);
+
+router.post(
+  "/bulk/:id",
+
+  upload.single("file"),
+  // parseAndValidateExcel,
+  auth(),
+  campaignParticipantController.registerBulkCampaignParticipants
 );
 
 export default router;

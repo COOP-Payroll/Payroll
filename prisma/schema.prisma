@@ -140,12 +140,12 @@ model Campaign {
   updatedAt            DateTime                   @updatedAt
   createdById          String
   companyId            String
-  status               CampaignStatus             @default(ACTIVE)
   company              Company                    @relation(fields: [companyId], references: [id])
   createdBy            User                       @relation("UserCampaignsCreated", fields: [createdById], references: [id])
   approvalInstances    CampaignApprovalInstance[]
   campaignParticipants CampaignParticipant[]
   documents            Document[]
+  status               CampaignStatus         @default(ACTIVE) 
 }
 
 model Document {
@@ -297,11 +297,6 @@ enum Level {
   REGION
 }
 
-enum CampaignStatus {
-  ACTIVE
-  CLOSED
-}
-
 enum GENDER {
   MALE
   FEMALE
@@ -333,7 +328,7 @@ enum ApprovalStatus {
   REJECTED
 }
 
-enum CampaignStatus1 {
+enum CampaignStatus {
   ACTIVE
   CLOSED
 }
