@@ -5,6 +5,8 @@ import ApiError from "../utils/api-error";
 import { encryptPassword, isPasswordMatch } from "../utils/encryption";
 import exclude from "../utils/exclude";
 import { AuthUser } from "../types/express";
+import { generateRandomPassword, generateUsername } from "../utils/helper";
+import roleService from "./role.service";
 
 /**
  * Create a user with optimized database queries
@@ -12,33 +14,35 @@ import { AuthUser } from "../types/express";
  * @returns {Promise<User>}
  */
 const createUser = async (
-  username: string,
-  password: string,
+  roleId: string,
   name: string,
   phoneNumber: string,
   companyId: string,
   positionId: string,
   departmentId: string
 ): Promise<User> => {
-  const [existingUser, company, department, position] = await Promise.all([
-    getUserByUsername(username),
+  const username = await generateUsername(name);
+  // const rawPassword = generateRandomPassword();
+  const rawPassword = "SuperSecurePassword123";
+  const [role, company, department, position] = await Promise.all([
+    prisma.role.findUnique({ where: { id: roleId } }),
     prisma.company.findUnique({ where: { id: companyId } }),
     prisma.department.findUnique({ where: { id: departmentId } }),
     prisma.position.findUnique({ where: { id: positionId } }),
   ]);
 
-  if (existingUser) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Username already taken");
-  }
+  if (!role) throw new ApiError(httpStatus.BAD_REQUEST, "Role not found");
   if (!company) throw new ApiError(httpStatus.BAD_REQUEST, "Company not found");
   if (!department)
     throw new ApiError(httpStatus.BAD_REQUEST, "Department not found");
   if (!position)
     throw new ApiError(httpStatus.BAD_REQUEST, "Position not found");
 
-  const hashedPassword = await encryptPassword(password);
+  const hashedPassword = await encryptPassword(rawPassword);
 
-  return prisma.user.create({
+  //TODO: implement send OTP
+
+  const user = await prisma.user.create({
     data: {
       username,
       name,
@@ -49,6 +53,10 @@ const createUser = async (
       departmentId,
     },
   });
+
+  await roleService.assignRoleToUser(user.id, roleId);
+
+  return user;
 };
 
 /**

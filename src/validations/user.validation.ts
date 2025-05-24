@@ -3,8 +3,8 @@ import { password } from "./custom.validation";
 
 const createUser = {
   body: Joi.object().keys({
-    username: Joi.string().required(),
-    password: Joi.string().required().custom(password),
+    roleId: Joi.string().required(),
+    // password: Joi.string().required().custom(password),
     name: Joi.string().required(),
     phoneNumber: Joi.string()
       .regex(/^[0-9]{10}$/)
@@ -15,7 +15,7 @@ const createUser = {
     // role: Joi.string().required().valid(UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF, UserRole.SUPERADMIN),
     departmentId: Joi.string().required(),
     positionId: Joi.string().required(),
-    companyId: Joi.string().required(),
+    // companyId: Joi.string().required(),
   }),
 };
 
