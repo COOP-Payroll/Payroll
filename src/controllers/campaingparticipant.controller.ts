@@ -3,6 +3,12 @@ import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
 import campaignParticipantService from "../services/campaignparticipant.service";
 import { AuthUser } from "../types/express";
+import ExcelJS from "exceljs";
+import ApiError from "../utils/api-error";
+
+import * as XLSX from "xlsx";
+import path from "path";
+import fs from "fs";
 
 const registerCampaignParticipant = catchAsync(
   async (req: Request, res: Response) => {
@@ -34,7 +40,7 @@ const registerCampaignParticipant = catchAsync(
       paymentMethod,
       companyId: user.companyId,
       detail,
-      files, 
+      files,
     });
 
     res.status(httpStatus.CREATED).json({
@@ -127,11 +133,268 @@ const getAllApprovedCampaigns = catchAsync(
     res.status(httpStatus.OK).json({ data: campaigns });
   }
 );
+// export const downloadParticipantTemplate = async (
+//   req: Request,
+//   res: Response
+// ) => {
+//   const workbook = new ExcelJS.Workbook();
+//   const worksheet = workbook.addWorksheet("Campaign Participants");
 
+//   // Define column headers
+//   worksheet.columns = [
+//     { header: "Full Name", key: "fullName", width: 40 },
+//     { header: "Gender", key: "gender", width: 20 },
+//     { header: "Address", key: "address", width: 40 },
+//     { header: "Phone Number", key: "phoneNumber", width: 35 },
+//     { header: "Account Number", key: "accountNumber", width: 35 },
+//     { header: "Payment Method", key: "paymentMethod", width: 30 },
+//     {
+//       header: "Number of Days in Urban",
+//       key: "numberOfDaysInUrban",
+//       width: 35,
+//     },
+//     {
+//       header: "Number of Days in Rural",
+//       key: "numberOfDaysInRural",
+//       width: 35,
+//     },
+//     { header: "Detail", key: "detail", width: 40 },
+//   ];
+
+//   // Create dropdowns for Gender (B column) and PaymentMethod (F column)
+//   for (let i = 2; i <= 100; i++) {
+//     worksheet.getCell(`B${i}`).dataValidation = {
+//       type: "list",
+//       allowBlank: false,
+//       formulae: ['"MALE,FEMALE"'],
+//       showErrorMessage: true,
+//       errorStyle: "error",
+//       errorTitle: "Invalid Gender",
+//       error: "Please select either MALE or FEMALE from the dropdown.",
+//     };
+
+//     worksheet.getCell(`F${i}`).dataValidation = {
+//       type: "list",
+//       allowBlank: false,
+//       formulae: ['"PHONENUMBER,ACCOUNTNUMBER"'],
+//       showErrorMessage: true,
+//       errorStyle: "error",
+//       errorTitle: "Invalid Payment Method",
+//       error:
+//         "Please select either PHONENUMBER or ACCOUNTNUMBER from the dropdown.",
+//     };
+//   }
+
+//   // Set headers for download
+//   res.setHeader(
+//     "Content-Type",
+//     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//   );
+//   res.setHeader(
+//     "Content-Disposition",
+//     'attachment; filename="campaign-participants-template.xlsx"'
+//   );
+
+//   await workbook.xlsx.write(res);
+//   res.end();
+// };
+export const downloadParticipantTemplate = async (
+  req: Request,
+  res: Response
+) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Campaign Participants");
+
+  // Define column headers
+  worksheet.columns = [
+    { header: "Full Name", key: "fullName", width: 40 },
+    { header: "Gender", key: "gender", width: 20 },
+    { header: "Address", key: "address", width: 40 },
+    { header: "Phone Number", key: "phoneNumber", width: 35 },
+    { header: "Account Number", key: "accountNumber", width: 35 },
+    { header: "Payment Method", key: "paymentMethod", width: 30 },
+    {
+      header: "Number of Days in Urban",
+      key: "numberOfDaysInUrban",
+      width: 35,
+    },
+    {
+      header: "Number of Days in Rural",
+      key: "numberOfDaysInRural",
+      width: 35,
+    },
+    { header: "Detail", key: "detail", width: 40 },
+  ];
+  // Style header row (row 1)
+
+  // Bold and center header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = {
+    name: "Calibri",
+    size: 12,
+    bold: true,
+    color: { argb: "FFFFFFFF" }, // white text
+  };
+  headerRow.alignment = { horizontal: "center" };
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF305496" }, // light green background
+    };
+    cell.border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+  });
+
+  // Create dropdowns for Gender (B column) and PaymentMethod (F column)
+  for (let i = 2; i <= 100; i++) {
+    worksheet.getCell(`B${i}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: ['"MALE,FEMALE"'],
+      showErrorMessage: true,
+      errorStyle: "error",
+      errorTitle: "Invalid Gender",
+      error: "Please select either MALE or FEMALE from the dropdown.",
+    };
+
+    worksheet.getCell(`F${i}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: ['"PHONENUMBER,ACCOUNTNUMBER"'],
+      showErrorMessage: true,
+      errorStyle: "error",
+      errorTitle: "Invalid Payment Method",
+      error:
+        "Please select either PHONENUMBER or ACCOUNTNUMBER from the dropdown.",
+    };
+  }
+
+  // Set headers for download
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="campaign-participants-template.xlsx"'
+  );
+
+  await workbook.xlsx.write(res);
+  res.end();
+};
+
+export const registerBulkCampaignParticipants = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+
+    if (!user?.companyId) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized access");
+    }
+
+    const campaignId = req.params.id;
+    if (!campaignId) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Campaign ID is required");
+    }
+
+    const file = req.file;
+    if (!file) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "No Excel file uploaded");
+    }
+
+    const filePath = path.resolve(file.path);
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    // const participants: any[] = XLSX.utils.sheet_to_json(sheet);
+    const rawParticipants: any[] = XLSX.utils.sheet_to_json(sheet, {
+      defval: "",
+    });
+    const participants = rawParticipants.map((row, index) => ({
+      fullName: row["Full Name"]?.toString().trim(),
+      gender: row["Gender"]?.toString().trim().toUpperCase(),
+      address: row["Address"]?.toString().trim(),
+      phoneNumber: row["Phone Number"]?.toString().trim(),
+      accountNumber: row["Account Number"]?.toString().trim(),
+      paymentMethod: row["Payment Method"]?.toString().trim().toUpperCase(),
+      numberOfDaysInUrban: row["Number of Days in Urban"],
+      numberOfDaysInRural: row["Number of Days in Rural"],
+      detail: row["Detail"]?.toString().trim() || "",
+    }));
+    if (!participants.length) {
+      fs.unlinkSync(filePath);
+      throw new ApiError(httpStatus.BAD_REQUEST, "Excel file is empty");
+    }
+
+    const requiredFields = [
+      "fullName",
+      "gender",
+      "address",
+      "phoneNumber",
+      "accountNumber",
+      "paymentMethod",
+      "numberOfDaysInUrban",
+      "numberOfDaysInRural",
+    ];
+
+    console.log("First row from Excel:", participants[0]);
+
+    // for (const [index, participant] of participants.entries()) {
+    //   for (const field of requiredFields) {
+    //     if (!participant[field]) {
+    //       fs.unlinkSync(filePath);
+    //       throw new ApiError(
+    //         httpStatus.BAD_REQUEST,
+    //         `Missing '${field}' in row ${index + 2}`
+    //       );
+    //     }
+    //   }
+
+    //   if (!["MALE", "FEMALE"].includes(participant.gender)) {
+    //     fs.unlinkSync(filePath);
+    //     throw new ApiError(
+    //       httpStatus.BAD_REQUEST,
+    //       `Invalid gender in row ${index + 2}. Must be MALE or FEMALE.`
+    //     );
+    //   }
+
+    //   if (
+    //     !["PHONENUMBER", "ACCOUNTNUMBER"].includes(participant.paymentMethod)
+    //   ) {
+    //     fs.unlinkSync(filePath);
+    //     throw new ApiError(
+    //       httpStatus.BAD_REQUEST,
+    //       `Invalid payment method in row ${index + 2}.`
+    //     );
+    //   }
+    // }
+
+    const result =
+      await campaignParticipantService.registerBulkCampaignParticipants({
+        participants: participants.map((p) => ({ ...p })),
+        companyId: user.companyId,
+        campaignId,
+      });
+
+    fs.unlinkSync(filePath); // Cleanup file
+
+    res.status(httpStatus.CREATED).json({
+      message: "Participants registered successfully",
+      count: result.length,
+      data: result,
+    });
+  }
+);
 export default {
   registerCampaignParticipant,
+  downloadParticipantTemplate,
   getParticipantsByCampaignId,
   getAllPublishedCampaigns,
   getAllApprovedCampaigns,
   updateCampaignParticipant,
+  registerBulkCampaignParticipants,
 };

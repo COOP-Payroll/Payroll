@@ -31,8 +31,10 @@ app.use(express.urlencoded({ extended: true }));
 // gzip compression
 app.use(compression());
 
-// enable cors
+// Enable CORS for all routes
 app.use(cors());
+
+// Enable pre-flight for all OPTIONS requests
 app.options("*name", cors());
 
 // parse urlencoded request body
