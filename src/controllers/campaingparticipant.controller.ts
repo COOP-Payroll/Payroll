@@ -133,71 +133,7 @@ const getAllApprovedCampaigns = catchAsync(
     res.status(httpStatus.OK).json({ data: campaigns });
   }
 );
-// export const downloadParticipantTemplate = async (
-//   req: Request,
-//   res: Response
-// ) => {
-//   const workbook = new ExcelJS.Workbook();
-//   const worksheet = workbook.addWorksheet("Campaign Participants");
 
-//   // Define column headers
-//   worksheet.columns = [
-//     { header: "Full Name", key: "fullName", width: 40 },
-//     { header: "Gender", key: "gender", width: 20 },
-//     { header: "Address", key: "address", width: 40 },
-//     { header: "Phone Number", key: "phoneNumber", width: 35 },
-//     { header: "Account Number", key: "accountNumber", width: 35 },
-//     { header: "Payment Method", key: "paymentMethod", width: 30 },
-//     {
-//       header: "Number of Days in Urban",
-//       key: "numberOfDaysInUrban",
-//       width: 35,
-//     },
-//     {
-//       header: "Number of Days in Rural",
-//       key: "numberOfDaysInRural",
-//       width: 35,
-//     },
-//     { header: "Detail", key: "detail", width: 40 },
-//   ];
-
-//   // Create dropdowns for Gender (B column) and PaymentMethod (F column)
-//   for (let i = 2; i <= 100; i++) {
-//     worksheet.getCell(`B${i}`).dataValidation = {
-//       type: "list",
-//       allowBlank: false,
-//       formulae: ['"MALE,FEMALE"'],
-//       showErrorMessage: true,
-//       errorStyle: "error",
-//       errorTitle: "Invalid Gender",
-//       error: "Please select either MALE or FEMALE from the dropdown.",
-//     };
-
-//     worksheet.getCell(`F${i}`).dataValidation = {
-//       type: "list",
-//       allowBlank: false,
-//       formulae: ['"PHONENUMBER,ACCOUNTNUMBER"'],
-//       showErrorMessage: true,
-//       errorStyle: "error",
-//       errorTitle: "Invalid Payment Method",
-//       error:
-//         "Please select either PHONENUMBER or ACCOUNTNUMBER from the dropdown.",
-//     };
-//   }
-
-//   // Set headers for download
-//   res.setHeader(
-//     "Content-Type",
-//     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-//   );
-//   res.setHeader(
-//     "Content-Disposition",
-//     'attachment; filename="campaign-participants-template.xlsx"'
-//   );
-
-//   await workbook.xlsx.write(res);
-//   res.end();
-// };
 export const downloadParticipantTemplate = async (
   req: Request,
   res: Response
@@ -225,7 +161,6 @@ export const downloadParticipantTemplate = async (
     },
     { header: "Detail", key: "detail", width: 40 },
   ];
-  // Style header row (row 1)
 
   // Bold and center header row
   const headerRow = worksheet.getRow(1);
@@ -240,7 +175,7 @@ export const downloadParticipantTemplate = async (
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF305496" }, // light green background
+      fgColor: { argb: "FF305496" },
     };
     cell.border = {
       top: { style: "thin" },
@@ -340,38 +275,6 @@ export const registerBulkCampaignParticipants = catchAsync(
       "numberOfDaysInUrban",
       "numberOfDaysInRural",
     ];
-
-    console.log("First row from Excel:", participants[0]);
-
-    // for (const [index, participant] of participants.entries()) {
-    //   for (const field of requiredFields) {
-    //     if (!participant[field]) {
-    //       fs.unlinkSync(filePath);
-    //       throw new ApiError(
-    //         httpStatus.BAD_REQUEST,
-    //         `Missing '${field}' in row ${index + 2}`
-    //       );
-    //     }
-    //   }
-
-    //   if (!["MALE", "FEMALE"].includes(participant.gender)) {
-    //     fs.unlinkSync(filePath);
-    //     throw new ApiError(
-    //       httpStatus.BAD_REQUEST,
-    //       `Invalid gender in row ${index + 2}. Must be MALE or FEMALE.`
-    //     );
-    //   }
-
-    //   if (
-    //     !["PHONENUMBER", "ACCOUNTNUMBER"].includes(participant.paymentMethod)
-    //   ) {
-    //     fs.unlinkSync(filePath);
-    //     throw new ApiError(
-    //       httpStatus.BAD_REQUEST,
-    //       `Invalid payment method in row ${index + 2}.`
-    //     );
-    //   }
-    // }
 
     const result =
       await campaignParticipantService.registerBulkCampaignParticipants({

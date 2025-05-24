@@ -20,10 +20,10 @@ router
 router.put(
   "/:id",
   auth(),
-  upload.array("documents"), // same field name as frontend
+  upload.array("documents"), 
   campaignParticipantController.updateCampaignParticipant
 );
-//   .get(campaignController.getAllCampaigns);
+
 
 router.get(
   "/participants",
@@ -50,7 +50,6 @@ router.post(
   "/bulk/:id",
 
   upload.single("file"),
-  // parseAndValidateExcel,
   auth(),
   campaignParticipantController.registerBulkCampaignParticipants
 );
