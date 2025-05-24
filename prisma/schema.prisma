@@ -24,6 +24,7 @@ model Company {
   positions        Position[]
   rateSetting      RateSetting?
   users            User[]
+  Role             Role[]
 }
 
 model Department {
@@ -73,10 +74,14 @@ model User {
 }
 
 model Role {
-  id          String           @id @default(uuid())
-  name        String           @unique
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id        String @id @default(uuid())
+  name      String @unique
+  companyId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company     Company          @relation(fields: [companyId], references: [id])
   permissions RolePermission[]
   stageRoles  StageRole[]
   userRoles   UserRole[]
@@ -145,7 +150,7 @@ model Campaign {
   approvalInstances    CampaignApprovalInstance[]
   campaignParticipants CampaignParticipant[]
   documents            Document[]
-  status               CampaignStatus         @default(ACTIVE) 
+  status               CampaignStatus             @default(ACTIVE)
 }
 
 model Document {
@@ -219,8 +224,11 @@ model ApprovalWorkflow {
   id                       String                     @id @default(cuid())
   name                     String
   companyId                String
+  isActive                 Boolean                    @default(true)
+
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
+  
   stages                   ApprovalStage[]
   company                  Company                    @relation(fields: [companyId], references: [id])
   CampaignApprovalInstance CampaignApprovalInstance[]

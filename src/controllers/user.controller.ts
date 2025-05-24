@@ -26,10 +26,14 @@ const createUser = catchAsync(async (req, res) => {
 });
 
 const getUsers = catchAsync(async (req, res) => {
-  const filter = { companyId: 1 };
+  // const filter = { companyId: 1 };
+  const authUser = req.user as AuthUser;
   const options = pick(req.query, ["sortBy", "limit", "page"]);
-  const result = await userService.queryUsers(filter, options);
-  res.send(result);
+  const result = await userService.queryUsers(authUser.companyId, options);
+  // res.send(result);
+  res
+    .status(httpStatus.CREATED)
+    .send({ data: result, message: "User retrieved successfully" });
 });
 
 export default {

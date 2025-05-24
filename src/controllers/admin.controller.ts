@@ -1,10 +1,12 @@
 import httpStatus from "http-status";
 import catchAsync from "../utils/catch-async";
 import roleService from "../services/role.service";
+import { AuthUser } from "../types/express";
 
 const createRole = catchAsync(async (req, res) => {
   const { name } = req.body;
-  const role = await roleService.createRole(name);
+  const authUser = req.user as AuthUser;
+  const role = await roleService.createRole(name, authUser.companyId);
   res
     .status(httpStatus.CREATED)
     .send({ data: role, message: "Role Created Successfully" });
@@ -36,17 +38,22 @@ const assignPermissionToRoles = catchAsync(async (req, res) => {
 
 const createAssignPermissionToRoles = catchAsync(async (req, res) => {
   const { name, permissions } = req.body;
+  const authUser = req.user as AuthUser;
   const assignedPermissionToRole =
-    await roleService.createAssignPermissionToRoles(name, permissions);
+    await roleService.createAssignPermissionToRoles(
+      name,
+      permissions,
+      authUser.companyId
+    );
   res
     .status(httpStatus.OK)
     .send({ data: [], message: assignedPermissionToRole });
 });
 
-const revokePermissionFromRole = catchAsync(async (req, res) => {
+const updatePermissionFromRole = catchAsync(async (req, res) => {
   const { roleId } = req.params;
   const { permissions } = req.body;
-  const assignedPermission = await roleService.revokePermissionFromRole(
+  const assignedPermission = await roleService.updatePermissionFromRole(
     roleId,
     permissions
   );
@@ -68,13 +75,22 @@ const revokeRoleFromUser = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ data: [], message: revokeRoleFromUser });
 });
 
+const getRoleWithOutPermission = catchAsync(async (req, res) => {
+  const authUser = req.user as AuthUser;
+  const result = await roleService.getRoleWithOutPermission(authUser.companyId);
+  res
+    .status(httpStatus.OK)
+    .send({ data: result, message: "Role retrieved successfully" });
+});
+
 export default {
   createRole,
   getRoles,
   getAllPermissions,
   assignPermissionToRoles,
   createAssignPermissionToRoles,
-  revokePermissionFromRole,
+  updatePermissionFromRole,
   assignRoleToUser,
   revokeRoleFromUser,
+  getRoleWithOutPermission,
 };

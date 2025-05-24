@@ -9,9 +9,9 @@ const createWorkFlowSchema = {
       .description("Name of the approval flow")
       .example("Campaign Approval Flow"),
 
-    companyId: Joi.string()
-      .required()
-      .description("Company ID associated with the flow"),
+    // companyId: Joi.string()
+    //   .required()
+    //   .description("Company ID associated with the flow"),
 
     stages: Joi.array()
       .min(1)

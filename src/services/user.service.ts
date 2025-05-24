@@ -263,38 +263,59 @@ const logout = async (refreshToken: string): Promise<void> => {
  * @param {number} [options.page] - Current page (default = 1)
  * @returns {Promise<QueryResult>}
  */
-const queryUsers = async <Key extends keyof User>(
-  filter: object,
+const queryUsers = async (
+  // filter: object,
+  companyId: string,
   options: {
     limit?: string;
     page?: string;
     sortBy?: string;
     sortType?: "asc" | "desc";
-  },
-  keys: Key[] = [
-    "id",
-    "phoneNumber",
-    "name",
-    "isSuperAdmin",
-    "companyId",
-    "departmentId",
-    "positionId",
-    "createdAt",
-    "updatedAt",
-  ] as Key[]
-): Promise<Pick<User, Key>[]> => {
+  }
+  // keys: Key[] = [
+  //   "id",
+  //   "phoneNumber",
+  //   "name",
+  //   "isSuperAdmin",
+  //   "companyId",
+  //   "departmentId",
+  //   "positionId",
+  //   "createdAt",
+  //   "updatedAt",
+  // ] as Key[]
+) => {
   const page = options.page ? parseInt(options.page) : 1;
   const limit = options.limit ? parseInt(options.limit) : 10;
+  const skip = (page - 1) * limit;
   const sortBy = options.sortBy;
   const sortType = options.sortType ?? "desc";
-  const users = await prisma.user.findMany({
-    where: filter,
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
-    skip: page * limit,
-    take: limit,
-    orderBy: sortBy ? { [sortBy]: sortType } : undefined,
-  });
-  return users as Pick<User, Key>[];
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where: { companyId },
+      select: {
+        name: true,
+        username: true,
+        phoneNumber: true,
+        department: { select: { deptName: true } },
+        position: { select: { positionName: true } },
+        userRoles: { select: { role: { select: { name: true } } } },
+      },
+      skip,
+      take: limit,
+      orderBy: sortBy ? { [sortBy]: sortType } : undefined,
+    }),
+    prisma.user.count(),
+  ]);
+  const totalPages = Math.ceil(total / limit);
+  return {
+    users,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages,
+    },
+  };
 };
 
 export default {

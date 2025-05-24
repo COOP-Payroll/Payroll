@@ -1,7 +1,7 @@
 import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
-import fs from 'fs/promises';
+import fs from "fs/promises";
 
 const createCampaign = async (data: {
   name: string;
@@ -87,7 +87,7 @@ const getAllCampaigns = async (companyId: string) => {
       endDate: true,
       budget: true,
       budgetSource: true,
-      status: true,
+      // status: true,
       company: {
         select: {
           id: true,
@@ -254,7 +254,10 @@ const deleteDocumentsByIds = async (docIds: string[], campaignId: string) => {
   });
 
   if (docs.length !== docIds.length) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Some documents not found or do not belong to the campaign');
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Some documents not found or do not belong to the campaign"
+    );
   }
 
   // Optional: Delete files from disk
@@ -276,12 +279,11 @@ const deleteDocumentsByIds = async (docIds: string[], campaignId: string) => {
   return docs;
 };
 
-
 export default {
   createCampaign,
   getAllCampaigns,
   getCampaignById,
   updateCampaign,
   deleteCampaign,
-  deleteDocumentsByIds
+  deleteDocumentsByIds,
 };

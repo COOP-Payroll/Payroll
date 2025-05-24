@@ -25,6 +25,13 @@ router
     adminController.getRoles
   );
 
+router.get(
+  "/roles/name",
+  auth(),
+  checkPermission("view_system_setting"),
+  adminController.getRoleWithOutPermission
+);
+
 router.post(
   "/roles/approval",
   auth(),
@@ -49,11 +56,11 @@ router.post(
   adminController.assignPermissionToRoles
 );
 router.post(
-  "/roles/:roleId/permissions/revoke",
+  "/roles/:roleId/permissions/change",
   auth(),
-  checkPermission("delete_system_setting"),
+  checkPermission("create_system_setting"),
   validate(adminValidate.assignPermissionsToRoleSchema),
-  adminController.revokePermissionFromRole
+  adminController.updatePermissionFromRole
 );
 router.post(
   "/roles/assignToUsers",
@@ -76,6 +83,20 @@ router.post(
   checkPermission("create_system_setting"),
   validate(workflowValidation.createWorkFlowSchema),
   workflowController.createWorkflow
+);
+
+router.get(
+  "/workflow/active",
+  auth(),
+  checkPermission("view_system_setting"),
+  workflowController.getActiveWorkflow
+);
+
+router.get(
+  "/workflow/history",
+  auth(),
+  checkPermission("view_system_setting"),
+  workflowController.getWorkflowHistory
 );
 
 export default router;

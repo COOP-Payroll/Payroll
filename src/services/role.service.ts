@@ -16,7 +16,7 @@ import { invalidateUserPermissionCache } from "../middlewares/checkPermissions";
  * @param {Object} name
  * @returns {Promise<Role>}
  */
-const createRole = async (name: string): Promise<Role> => {
+const createRole = async (name: string, companyId: string): Promise<Role> => {
   if (await getRoleByName(name)) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Role already defined");
   }
@@ -24,6 +24,7 @@ const createRole = async (name: string): Promise<Role> => {
   return prisma.role.create({
     data: {
       name,
+      companyId,
     },
   });
 };
@@ -118,7 +119,7 @@ const assignPermissionToRoles = async (
  * @param {Array<String>} permissions
  * @returns {Promise<string | null>}
  */
-const revokePermissionFromRole = async (
+const updatePermissionFromRole = async (
   roleId: string,
   permissions: [string]
 ): Promise<string> => {
@@ -126,14 +127,41 @@ const revokePermissionFromRole = async (
     throw new ApiError(httpStatus.BAD_REQUEST, "Role not found");
   }
 
+  // 2. Validate all permissionIds exist
+  const existingPermissions = await prisma.permission.findMany({
+    where: { id: { in: permissions } },
+    select: { id: true },
+  });
+
+  const existingIds = new Set(existingPermissions.map((p) => p.id));
+  const invalidIds = permissions.filter((id) => !existingIds.has(id));
+
+  if (invalidIds.length > 0) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Some permissionIds do not exist"
+    );
+  }
+
   await prisma.rolePermission.deleteMany({
     where: {
       roleId,
-      permissionId: { in: permissions },
     },
   });
 
-  return "Permissions revoked from role successfully";
+  const newPermissions = permissions.map((permissionId) => ({
+    roleId,
+    permissionId,
+  }));
+
+  if (newPermissions.length > 0) {
+    await prisma.rolePermission.createMany({
+      data: newPermissions,
+      skipDuplicates: true,
+    });
+  }
+
+  return "Permissions updated from role successfully";
 };
 
 /**
@@ -144,12 +172,13 @@ const revokePermissionFromRole = async (
  */
 const createAssignPermissionToRoles = async (
   name: string,
-  permissions: [string]
+  permissions: [string],
+  companyId: string
 ): Promise<string> => {
   // if(!(await getRoleById(roleId))) {
   //     throw new ApiError(httpStatus.BAD_REQUEST, "Role not found")
   // }
-  const role = await createRole(name);
+  const role = await createRole(name, companyId);
   // Create new permission assignments
   const rolePermissions = permissions.map((permissionId: string) => ({
     roleId: role.id,
@@ -226,6 +255,18 @@ const revokeRoleFromUser = async (
   return "Role removed from user";
 };
 
+const getRoleWithOutPermission = async (companyId: string) => {
+  const result = await prisma.role.findMany({
+    where: { companyId },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return result;
+};
+
 export default {
   getRoleByName,
   createRole,
@@ -233,7 +274,8 @@ export default {
   getAllPermissions,
   assignPermissionToRoles,
   createAssignPermissionToRoles,
-  revokePermissionFromRole,
+  updatePermissionFromRole,
   assignRoleToUser,
   revokeRoleFromUser,
+  getRoleWithOutPermission,
 };

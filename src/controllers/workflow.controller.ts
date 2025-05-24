@@ -2,13 +2,14 @@ import httpStatus from "http-status";
 import { CampaignApprovalFlow } from "../types/workflow.types";
 import catchAsync from "../utils/catch-async";
 import workFlowService from "../services/workFlow.service";
+import { AuthUser } from "../types/express";
 
 const createWorkflow = catchAsync(async (req, res) => {
-  const { name, companyId, stages } = req.body as CampaignApprovalFlow;
-
+  const { name, stages } = req.body as CampaignApprovalFlow;
+  const user = req.user as AuthUser;
   const workflow = await workFlowService.createWorkflow(
     name,
-    companyId,
+    user.companyId,
     stages
   );
 
@@ -17,4 +18,25 @@ const createWorkflow = catchAsync(async (req, res) => {
     .send({ data: workflow, message: "workflow created Successfully" });
 });
 
-export default { createWorkflow };
+const getActiveWorkflow = catchAsync(async (req, res) => {
+  const { companyId } = req.user as AuthUser;
+
+  const activeWorkflow = await workFlowService.getActiveWorkflow(companyId);
+
+  res
+    .status(httpStatus.CREATED)
+    .send({ data: activeWorkflow, message: "workflow retrieved Successfully" });
+});
+
+const getWorkflowHistory = catchAsync(async (req, res) => {
+  const { companyId } = req.user as AuthUser;
+
+  const activeWorkflow = await workFlowService.getWorkflowHistory(companyId);
+
+  res.status(httpStatus.CREATED).send({
+    data: activeWorkflow,
+    message: "workflow history retrieved Successfully",
+  });
+});
+
+export default { createWorkflow, getActiveWorkflow, getWorkflowHistory };

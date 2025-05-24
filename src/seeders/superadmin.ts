@@ -11,6 +11,7 @@ async function main() {
     update: {},
     create: {
       name: "superadmin",
+      companyId: "aab64c86-6796-420d-aa47-e299158e02d2",
       //   description: "Has all permissions",
     },
   });
@@ -46,7 +47,7 @@ async function main() {
       password: await encryptPassword(superadminPassword),
       phoneNumber: "0931653136",
       username: "superAdmin",
-      companyId: "8d31af45-ab28-4dde-8779-c20ae7e4d3dc",
+      companyId: "aab64c86-6796-420d-aa47-e299158e02d2",
       isSuperAdmin: true,
     },
   });
