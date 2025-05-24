@@ -6,32 +6,32 @@ import tokenService from "../services/token.service";
 import { AuthUser } from "../types/express";
 import ApiError from "../utils/api-error";
 
-const createUser = catchAsync(async (req, res) => {
-  const {
-    username,
-    password,
-    name,
-    phoneNumber,
-    departmentId,
-    positionId,
-    companyId,
-  } = req.body;
-  const user = await userService.createUser(
-    username,
-    password,
-    name,
-    phoneNumber,
-    companyId,
-    positionId,
-    departmentId
-  );
-  const userWithoutPassword = exclude(user, [
-    "password",
-    "createdAt",
-    "updatedAt",
-  ]);
-  res.status(httpStatus.CREATED).send({ data: userWithoutPassword });
-});
+// const createUser = catchAsync(async (req, res) => {
+//   const {
+//     username,
+//     password,
+//     name,
+//     phoneNumber,
+//     departmentId,
+//     positionId,
+//     companyId,
+//   } = req.body;
+//   const user = await userService.createUser(
+//     username,
+//     password,
+//     name,
+//     phoneNumber,
+//     companyId,
+//     positionId,
+//     departmentId
+//   );
+//   const userWithoutPassword = exclude(user, [
+//     "password",
+//     "createdAt",
+//     "updatedAt",
+//   ]);
+//   res.status(httpStatus.CREATED).send({ data: userWithoutPassword });
+// });
 
 const login = catchAsync(async (req, res) => {
   const { username, password } = req.body;
@@ -56,7 +56,7 @@ const me = catchAsync(async (req, res) => {
 });
 
 export default {
-  createUser,
+  // createUser,
   login,
   logout,
   me,

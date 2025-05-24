@@ -3,20 +3,14 @@ import catchAsync from "../utils/catch-async";
 import userService from "../services/user.service";
 import exclude from "../utils/exclude";
 import pick from "../utils/pick";
+import { AuthUser } from "../types/express";
 
 const createUser = catchAsync(async (req, res) => {
-  const {
-    username,
-    password,
-    name,
-    phoneNumber,
-    departmentId,
-    positionId,
-    companyId,
-  } = req.body;
+  const Authuser = req.user as AuthUser;
+  const { name, phoneNumber, departmentId, positionId, roleId } = req.body;
+  const companyId = Authuser.companyId;
   const user = await userService.createUser(
-    username,
-    password,
+    roleId,
     name,
     phoneNumber,
     companyId,
