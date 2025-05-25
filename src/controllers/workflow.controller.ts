@@ -39,4 +39,21 @@ const getWorkflowHistory = catchAsync(async (req, res) => {
   });
 });
 
-export default { createWorkflow, getActiveWorkflow, getWorkflowHistory };
+const getStageUserActiveWorkflow = catchAsync(async (req, res) => {
+  // const { companyId } = req.user as AuthUser;
+  const { workFlowId } = req.body;
+  const getStageUserActiveWorkflow =
+    await workFlowService.getStageUserActiveWorkflow(workFlowId);
+
+  res.status(httpStatus.CREATED).send({
+    data: getStageUserActiveWorkflow,
+    message: "stage users retrieved Successfully",
+  });
+});
+
+export default {
+  createWorkflow,
+  getActiveWorkflow,
+  getWorkflowHistory,
+  getStageUserActiveWorkflow,
+};
