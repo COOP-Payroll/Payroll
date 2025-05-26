@@ -221,14 +221,14 @@ model RateSetting {
 }
 
 model ApprovalWorkflow {
-  id                       String                     @id @default(cuid())
-  name                     String
-  companyId                String
-  isActive                 Boolean                    @default(true)
+  id        String  @id @default(cuid())
+  name      String
+  companyId String
+  isActive  Boolean @default(true)
 
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   stages                   ApprovalStage[]
   company                  Company                    @relation(fields: [companyId], references: [id])
   CampaignApprovalInstance CampaignApprovalInstance[]
@@ -286,6 +286,31 @@ model CampaignStageStatus {
   stage            ApprovalStage            @relation(fields: [stageId], references: [id])
 }
 
+model Payment {
+  id     String  @id @default(cuid())
+  bulkId String
+  name   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  campaignTransaction CampaignTransaction[]
+}
+
+model CampaignTransaction {
+  id     String                    @id @default(cuid())
+  amount Float
+  status CampaignTransactionStatus @default(PENDING)
+  reason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paymentId String
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+}
+
 enum TokenType {
   ACCESS
   REFRESH
@@ -339,4 +364,10 @@ enum ApprovalStatus {
 enum CampaignStatus {
   ACTIVE
   CLOSED
+}
+
+enum CampaignTransactionStatus {
+  PENDING
+  PAID
+  FAILED
 }
