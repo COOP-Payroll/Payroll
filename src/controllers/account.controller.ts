@@ -119,19 +119,39 @@ export const assignMasterAccount = catchAsync(
   }
 );
 
-export const verifyAccountById = catchAsync(
+export const verifyAccountController = catchAsync(
   async (req: Request, res: Response) => {
-    const accountId = req.params.id;
-    const customerInfo = await accountService.verifyAccountById(accountId);
-    res.status(httpStatus.OK).json({
+    const { accountNumber } = req.body;
+
+    const customerInfo = await accountService.verifyAccountByNumber(
+      accountNumber
+    );
+
+    res.status(200).json({
       success: true,
-      message: "Account verified successfully",
+      message: "Valid account number",
       data: customerInfo,
     });
   }
 );
 
+const updateAccountVerification = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+    const { isVerified } = req.body;
 
+    const account = await accountService.updateAccountVerification(
+      req.params.id,
+      user.companyId,
+      isVerified
+    );
+
+    res.status(httpStatus.OK).json({
+      message: "Account verification status updated successfully",
+      data: account,
+    });
+  }
+);
 
 export default {
   createAccount,
@@ -140,5 +160,6 @@ export default {
   updateAccount,
   deleteAccount,
   assignMasterAccount,
-  verifyAccountById
+  verifyAccountController,
+  updateAccountVerification,
 };

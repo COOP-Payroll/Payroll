@@ -132,8 +132,25 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
     paymentMethod,
     companyId,
     detail,
+    isVerified,
     files, // ✅ Access files from data
   } = data;
+
+  console.log(isVerified);
+  if (!isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Please add verification ");
+  }
+
+  // const isActuallyVerified =
+  //   isVerified === true ||
+  //   (typeof isVerified === "string" && isVerified === "true");
+
+  // if (!isActuallyVerified) {
+  //   throw new ApiError(
+  //     httpStatus.BAD_REQUEST,
+  //     "Please verify selected payment method"
+  //   );
+  // }
 
   if (!["PHONENUMBER", "ACCOUNTNUMBER"].includes(paymentMethod)) {
     throw new ApiError(
@@ -387,6 +404,30 @@ export const registerBulkCampaignParticipants = async (
   });
 };
 
+const updateAccountVerification = async (
+  id: string,
+  companyId: string,
+  isVerified: boolean
+) => {
+  const existing = await prisma.campaignParticipant.findFirst({
+    where: { id },
+  });
+  if (!existing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
+  }
+
+  if (existing.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account already verified");
+  }
+  const account = await prisma.campaignParticipant.update({
+    where: { id },
+    data: { isVerified },
+    // include: { documents: true },
+  });
+
+  return account;
+};
+
 export default {
   registerCampaignParticipant,
   getParticipantsByCampaignId,
@@ -394,4 +435,5 @@ export default {
   getAllApprovedCampaigns,
   updateCampaignParticipant,
   registerBulkCampaignParticipants,
+  updateAccountVerification,
 };

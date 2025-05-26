@@ -180,27 +180,13 @@ const assignMasterAccount = async (
   return updated;
 };
 
-export const verifyAccountById = async (
-  accountId: string
+export const verifyAccountByNumber = async (
+  accountNumber: string
 ): Promise<CustomerInfo> => {
-  // 1. Fetch account by internal ID
-  const account = await prisma.account.findUnique({
-    where: { id: accountId },
-  });
-
-  if (!account) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
-  }
-
-  const accountNumber = account.accountNumber;
   if (!accountNumber) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Account number is missing in account record"
-    );
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account number is required");
   }
 
-  // 2. External verification
   const url = "http://10.1.245.150:7081/v1/cbo/";
   const payload = {
     AccountDetailsRequest: {
@@ -243,7 +229,29 @@ export const verifyAccountById = async (
   return info as CustomerInfo;
 };
 
+const updateAccountVerification = async (
+  id: string,
+  companyId: string,
+  isVerified: boolean
+) => {
+  const existing = await prisma.account.findFirst({
+    where: { id, companyId },
+  });
+  if (!existing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
+  }
 
+  if (existing.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account already verified");
+  }
+  const account = await prisma.account.update({
+    where: { id },
+    data: { isVerified },
+    include: { documents: true },
+  });
+
+  return account;
+};
 
 export default {
   createAccount,
@@ -252,5 +260,6 @@ export default {
   updateAccount,
   deleteAccount,
   assignMasterAccount,
-  verifyAccountById,
+  verifyAccountByNumber,
+  updateAccountVerification,
 };

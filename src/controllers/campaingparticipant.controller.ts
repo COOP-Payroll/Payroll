@@ -24,6 +24,7 @@ const registerCampaignParticipant = catchAsync(
       phoneNumber,
       accountNumber,
       paymentMethod,
+      isVerified,
 
       detail,
     } = req.body;
@@ -40,6 +41,7 @@ const registerCampaignParticipant = catchAsync(
       paymentMethod,
       companyId: user.companyId,
       detail,
+      isVerified,
       files,
     });
 
@@ -310,6 +312,24 @@ export const registerBulkCampaignParticipants = catchAsync(
     });
   }
 );
+
+const updateAccountVerification = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+    const { isVerified } = req.body;
+
+    const account = await campaignParticipantService.updateAccountVerification(
+      req.params.id,
+      user.companyId,
+      isVerified
+    );
+
+    res.status(httpStatus.OK).json({
+      message: "Account verification status updated successfully",
+      data: account,
+    });
+  }
+);
 export default {
   registerCampaignParticipant,
   downloadParticipantTemplate,
@@ -318,4 +338,5 @@ export default {
   getAllApprovedCampaigns,
   updateCampaignParticipant,
   registerBulkCampaignParticipants,
+  updateAccountVerification,
 };

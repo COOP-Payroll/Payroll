@@ -7,7 +7,7 @@ import accountValidation from "../../validations/account.validation";
 import multer from "multer";
 
 const router = express.Router();
-
+router.get("/verify", auth(), accountController.verifyAccountController);
 router
   .route("/")
   .post(auth(), upload.array("letter"), accountController.createAccount)
@@ -21,15 +21,19 @@ router
 router.post("/delete/:id", auth(), accountController.deleteAccount);
 
 router.post(
-  "/assign-master/:id",
+  "/verify-status/:id",
+  auth(),
+  validate(accountValidation.updateAccountVerificationSchema),
+  accountController.updateAccountVerification
+);
 
+router.post(
+  "/assign-master/:id",
   auth(),
   upload.array("letter"),
   validate(accountValidation.assignMasterAccountSchema),
   accountController.assignMasterAccount
 );
-
-router.post("/verify/:id", auth(), accountController.verifyAccountById);
 
 // router.post(
 //   "/unassign-master/:id",
