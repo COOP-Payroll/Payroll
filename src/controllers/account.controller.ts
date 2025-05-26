@@ -83,30 +83,41 @@ const deleteAccount = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const assignMasterAccount = catchAsync(async (req: Request, res: Response) => {
-  const user = req.user as AuthUser;
-  const files = req.files as Express.Multer.File[];
-  const documents = mapFilesToLetterFiles(files);
+export const assignMasterAccount = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
 
-  // 🚫 Enforce non-empty documents
-  if (!documents.length) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "At least one document (letter) is required to assign a master account"
+    // 1) Ensure multer ran and gave you files
+    // if (!req.files || !(req.files as Express.Multer.File[]).length) {
+    //   throw new ApiError(
+    //     httpStatus.BAD_REQUEST,
+    //     "At least one document file must be uploaded"
+    //   );
+    // }
+
+    const files = req.files as Express.Multer.File[];
+
+    // 2) Map to your DTO
+    const documents: LetterFile[] = files.map((file) => ({
+      fileName: file.originalname,
+      filePath: path.basename(file.path),
+      mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+      size: file.size,
+    }));
+
+    // 3) Call service (no need to guard again—you're guaranteed docs exist)
+    const account = await accountService.assignMasterAccount(
+      req.params.id,
+      user.companyId,
+      documents
     );
+
+    res.status(httpStatus.OK).json({
+      message: "Master account assigned successfully",
+      data: account,
+    });
   }
-
-  const account = await accountService.assignMasterAccount(
-    req.params.id,
-    user.companyId,
-    documents.length ? documents : undefined
-  );
-
-  res.status(httpStatus.OK).json({
-    message: "Master account assigned successfully",
-    data: account,
-  });
-});
+);
 
 export default {
   createAccount,

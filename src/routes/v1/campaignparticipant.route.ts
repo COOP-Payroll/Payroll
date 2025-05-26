@@ -36,7 +36,7 @@ router.get(
 );
 
 router.get(
-  "/campaigns/approved",
+  "/approved",
   campaignParticipantController.getAllApprovedCampaigns
 );
 

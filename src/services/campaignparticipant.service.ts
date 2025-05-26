@@ -257,17 +257,17 @@ const getParticipantsByCampaignId = async (campaignId: string) => {
   });
 };
 
-const getAllPublishedCampaigns = async () => {
+const getAllPublishedCampaigns = async (campaignId: string) => {
   return await prisma.campaignParticipant.findMany({
-    where: { isPublished: true },
-    include: { documents: true },
+    where: { campaignId: campaignId },
+    include: { participant: true, documents: true },
   });
 };
 
-const getAllApprovedCampaigns = async () => {
+const getAllApprovedCampaigns = async (campaignId: string) => {
   return await prisma.campaignParticipant.findMany({
-    where: { approvalStatus: "APPROVED" },
-    include: { documents: true },
+    where: { campaignId: campaignId },
+    include: { participant: true, documents: true },
   });
 };
 
@@ -293,8 +293,7 @@ export const registerBulkCampaignParticipants = async (
 ) => {
   const { participants, companyId, campaignId } = data;
 
-
-  console.log("dlfjlasdfjsdhfjhdn")
+  console.log("dlfjlasdfjsdhfjhdn");
   return await prisma.$transaction(async (tx) => {
     const rateSetting = await tx.rateSetting.findUnique({
       where: { companyId },

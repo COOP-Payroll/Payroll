@@ -52,8 +52,8 @@ const registerCampaignParticipant = catchAsync(
 export const updateCampaignParticipant = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const companyId = "0dad32d2-0633-41d5-8843-c3354645e7d9"; // Replace with actual logic if needed (e.g., from auth)
-
+    const user = req.user as AuthUser;
+    const companyId = user.companyId;
     const files = req.files as Express.Multer.File[];
 
     const {
@@ -119,17 +119,35 @@ const getParticipantsByCampaignId = catchAsync(
 );
 
 const getAllPublishedCampaigns = catchAsync(
-  async (_req: Request, res: Response) => {
-    const campaigns =
-      await campaignParticipantService.getAllPublishedCampaigns();
+  async (req: Request, res: Response) => {
+    const campaignId = req.query.campaignId as string;
+
+    if (!campaignId) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        message: "campaignId query parameter is required",
+      });
+    }
+
+    const campaigns = await campaignParticipantService.getAllPublishedCampaigns(
+      campaignId
+    );
     res.status(httpStatus.OK).json({ data: campaigns });
   }
 );
 
 const getAllApprovedCampaigns = catchAsync(
-  async (_req: Request, res: Response) => {
-    const campaigns =
-      await campaignParticipantService.getAllApprovedCampaigns();
+  async (req: Request, res: Response) => {
+    const campaignId = req.query.campaignId as string;
+
+    if (!campaignId) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        message: "campaignId query parameter is required",
+      });
+    }
+
+    const campaigns = await campaignParticipantService.getAllApprovedCampaigns(
+      campaignId
+    );
     res.status(httpStatus.OK).json({ data: campaigns });
   }
 );

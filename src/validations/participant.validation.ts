@@ -11,15 +11,7 @@ const createParticipant = {
       "any.required": "Gender is required",
     }),
     address: Joi.string().allow(null, "").optional(),
-    phoneNumber: Joi.string().allow(null, "").optional(),
-    accountNumber: Joi.string().allow(null, "").optional(),
-    paymentMethod: Joi.string()
-      .valid("ACCOUNTNUMBER", "PHONENUMBER")
-      .required()
-      .messages({
-        "any.only": "Invalid payment method",
-        "any.required": "Payment method is required",
-      }),
+   
     detail: Joi.string().allow(null, "").optional(),
   
   }),
