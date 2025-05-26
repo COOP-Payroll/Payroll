@@ -41,7 +41,7 @@ const getWorkflowHistory = catchAsync(async (req, res) => {
 
 const getStageUserActiveWorkflow = catchAsync(async (req, res) => {
   // const { companyId } = req.user as AuthUser;
-  const { workFlowId } = req.body;
+  const { workFlowId } = req.params;
   const getStageUserActiveWorkflow =
     await workFlowService.getStageUserActiveWorkflow(workFlowId);
 
