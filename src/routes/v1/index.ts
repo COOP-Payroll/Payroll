@@ -13,6 +13,7 @@ import uploadRoute from "./upload.route";
 import rateSettingRoute from "./rateSetting.route";
 import campaignParticipantRoute from "./campaignparticipant.route";
 import campaignApprovalRoute from "./approval.route";
+import accountManagementRoute from "./account.route";
 
 const router = express.Router();
 
@@ -67,6 +68,10 @@ const defaultRoutes = [
   {
     path: "/approve",
     route: campaignApprovalRoute,
+  },
+  {
+    path: "/account",
+    route: accountManagementRoute,
   },
 ];
 

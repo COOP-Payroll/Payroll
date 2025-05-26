@@ -25,13 +25,29 @@ model Company {
   rateSetting      RateSetting?
   users            User[]
   Role             Role[]
+  accounts         Account[]
 }
+model Account {
+  id         String   @id @default(uuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  accountNumber  String
+  letterId   String?     @unique
+  letter     Document?   @relation("AccountDocument", fields: [letterId], references: [id])
+
+  isMaster   Boolean   @default(false)
+  isVerified Boolean   @default(false)
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
 
 model Department {
   id                      String   @id @default(uuid())
   deptName                String
   location                String?
-  shorthandRepresentation String
+  shorthandRepresentation String?
   companyId               String
   isActive                Boolean  @default(true)
   createdAt               DateTime @default(now())
@@ -164,10 +180,13 @@ model Document {
   campaignParticipantId String?
   campaign              Campaign?            @relation(fields: [campaignId], references: [id])
   campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
+  account               Account?             @relation("AccountDocument")
 
   @@index([fileName])
   @@index([campaignId])
   @@index([campaignParticipantId])
+
+
 }
 
 model Participant {

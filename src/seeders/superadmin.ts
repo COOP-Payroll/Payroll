@@ -11,7 +11,7 @@ async function main() {
     update: {},
     create: {
       name: "superadmin",
-      companyId: "aab64c86-6796-420d-aa47-e299158e02d2",
+      companyId: "8abb28b9-9333-4cb2-9fa8-698dc329d677",
       //   description: "Has all permissions",
     },
   });
