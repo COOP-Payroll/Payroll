@@ -28,6 +28,9 @@ router.post(
   validate(accountValidation.assignMasterAccountSchema),
   accountController.assignMasterAccount
 );
+
+router.post("/verify/:id", auth(), accountController.verifyAccountById);
+
 // router.post(
 //   "/unassign-master/:id",
 //   auth(),

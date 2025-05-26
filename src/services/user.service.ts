@@ -293,6 +293,7 @@ const queryUsers = async (
     prisma.user.findMany({
       where: { companyId },
       select: {
+        id:true,
         name: true,
         username: true,
         phoneNumber: true,

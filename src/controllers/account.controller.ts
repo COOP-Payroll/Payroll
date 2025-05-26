@@ -119,6 +119,20 @@ export const assignMasterAccount = catchAsync(
   }
 );
 
+export const verifyAccountById = catchAsync(
+  async (req: Request, res: Response) => {
+    const accountId = req.params.id;
+    const customerInfo = await accountService.verifyAccountById(accountId);
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: "Account verified successfully",
+      data: customerInfo,
+    });
+  }
+);
+
+
+
 export default {
   createAccount,
   getAllAccounts,
@@ -126,4 +140,5 @@ export default {
   updateAccount,
   deleteAccount,
   assignMasterAccount,
+  verifyAccountById
 };

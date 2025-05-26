@@ -1,6 +1,8 @@
 import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
+import { CustomerInfo } from "../types/account";
+import axios from "axios";
 
 export type LetterFile = {
   fileName: string;
@@ -178,6 +180,71 @@ const assignMasterAccount = async (
   return updated;
 };
 
+export const verifyAccountById = async (
+  accountId: string
+): Promise<CustomerInfo> => {
+  // 1. Fetch account by internal ID
+  const account = await prisma.account.findUnique({
+    where: { id: accountId },
+  });
+
+  if (!account) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
+  }
+
+  const accountNumber = account.accountNumber;
+  if (!accountNumber) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Account number is missing in account record"
+    );
+  }
+
+  // 2. External verification
+  const url = "http://10.1.245.150:7081/v1/cbo/";
+  const payload = {
+    AccountDetailsRequest: {
+      ESBHeader: {
+        serviceCode: "180000",
+        channel: "USSD",
+        Service_name: "accountEnquiryMC",
+        Message_Id: Date.now().toString(),
+      },
+      ACCTCOMPANYVIEWType: [{ criteriaValue: accountNumber }],
+    },
+  };
+
+  let response;
+  try {
+    response = await axios.post(url, payload);
+  } catch (err) {
+    throw new ApiError(
+      httpStatus.SERVICE_UNAVAILABLE,
+      "Failed to connect to account verification service"
+    );
+  }
+
+  const status = response?.data?.AccountDetailsResponse?.ESBStatus?.Status;
+  if (status === "Failure") {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      `External verification failed for account number: ${accountNumber}`
+    );
+  }
+
+  const info = response.data.AccountDetailsResponse.CustomerInfo;
+  if (!info) {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Invalid response from external verification service"
+    );
+  }
+
+  return info as CustomerInfo;
+};
+
+
+
 export default {
   createAccount,
   getAllAccounts,
@@ -185,4 +252,5 @@ export default {
   updateAccount,
   deleteAccount,
   assignMasterAccount,
+  verifyAccountById,
 };
