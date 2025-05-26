@@ -226,6 +226,7 @@ model CampaignParticipant {
   campaign            Campaign       @relation(fields: [campaignId], references: [id])
   participant         Participant    @relation(fields: [participantId], references: [id])
   documents           Document[]
+  payments            Payment[]      @relation("ParticipantPayments")
 }
 
 model RateSetting {
@@ -306,28 +307,32 @@ model CampaignStageStatus {
 }
 
 model Payment {
-  id     String  @id @default(cuid())
-  bulkId String
-  name   String?
+  id                 String               @id @default(cuid())
+  debitAccount       String
+  totalAmount        Decimal              @db.Decimal(10, 2)
+  bulkId             String               @unique
+  participantId      String
+  participant        CampaignParticipant  @relation("ParticipantPayments", fields: [participantId], references: [id])
+  creditTransactions CreditTransaction[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  campaignTransaction CampaignTransaction[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
-model CampaignTransaction {
-  id     String                    @id @default(cuid())
-  amount Float
-  status CampaignTransactionStatus @default(PENDING)
-  reason String?
+model CreditTransaction {
+  id              String               @id @default(cuid())
+  orderId         String               @unique
+  creditAccount   String
+  amount          Decimal              @db.Decimal(10, 2)
+  status          TransactionStatus    @default(PENDING)
+  transactionId   String?
+  failureReason   String?
+  paymentId       String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  payment         Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
-  paymentId String
-
-  payment Payment @relation(fields: [paymentId], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
 enum TokenType {
@@ -386,6 +391,12 @@ enum CampaignStatus {
 }
 
 enum CampaignTransactionStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum TransactionStatus {
   PENDING
   PAID
   FAILED

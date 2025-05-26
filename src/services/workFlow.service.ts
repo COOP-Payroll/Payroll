@@ -36,31 +36,78 @@ const createWorkflow = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Invalid role IDs provided");
   }
 
-  const workflow = await prisma.approvalWorkflow.create({
-    data: {
-      name,
-      companyId,
-      stages: {
-        create: stages.map((stage, index) => ({
-          name: stage.name,
-          order: index + 1,
-          stageRoles: {
-            create: stage.roles.map((roleId) => ({
-              role: { connect: { id: roleId } },
-            })),
-          },
-        })),
+  // const oldWorkflows = await prisma.approvalWorkflow.findMany({
+  //   where: {companyId, isActive: true}
+  // })
+
+  // oldWorkflows.map(oldWorkflow => {
+
+  // })
+
+  const [deactivatedWorkflows, newWorkflow] = await prisma.$transaction([
+    prisma.approvalWorkflow.updateMany({
+      where: {
+        companyId,
+        isActive: true,
       },
-    },
-    include: {
-      stages: {
-        include: {
-          stageRoles: true,
+      data: {
+        isActive: false,
+      },
+    }),
+
+    prisma.approvalWorkflow.create({
+      data: {
+        companyId,
+        isActive: true,
+        name,
+        stages: {
+          create: stages.map((stage, index) => ({
+            name: stage.name,
+            order: index + 1,
+            stageRoles: {
+              create: stage.roles.map((roleId) => ({
+                role: { connect: { id: roleId } },
+              })),
+            },
+          })),
         },
       },
-    },
-  });
-  return workflow;
+      include: {
+        stages: {
+          include: {
+            stageRoles: true,
+          },
+        },
+      },
+    }),
+  ]);
+  return newWorkflow;
+
+  // const workflow = await prisma.approvalWorkflow.create({
+  //   data: {
+  //     name,
+  //     companyId,
+  //     stages: {
+  //       create: stages.map((stage, index) => ({
+  //         name: stage.name,
+  //         order: index + 1,
+  //         stageRoles: {
+  //           create: stage.roles.map((roleId) => ({
+  //             role: { connect: { id: roleId } },
+  //           })),
+  //         },
+  //       })),
+  //     },
+  //   },
+  //   include: {
+  //     stages: {
+  //       include: {
+  //         stageRoles: true,
+  //       },
+  //     },
+  //   },
+  // });
+  // return workflow;
 };
 
 const getActiveWorkflow = async (companyId: string) => {
