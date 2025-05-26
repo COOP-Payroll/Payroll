@@ -1,25 +1,33 @@
 import { Request, Response } from "express";
 import catchAsync from "../utils/catch-async";
 import httpStatus from "http-status";
-import accountService from "../services/account.service";
+import accountService, { LetterFile } from "../services/account.service";
 import { AuthUser } from "../types/express";
 import path from "path";
 import mime from "mime-types";
 import ApiError from "../utils/api-error";
 
+// Helper to map multer files to LetterFile[]
+function mapFilesToLetterFiles(
+  files: Express.Multer.File[] = []
+): LetterFile[] {
+  return files.map((file) => ({
+    fileName: file.originalname,
+    filePath: path.basename(file.path),
+    mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+    size: file.size,
+  }));
+}
+
 const createAccount = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
-  const file = req.file;
+  const files = req.files as Express.Multer.File[]; // upload.array("documents")
+  const documents = mapFilesToLetterFiles(files);
 
   const account = await accountService.createAccount({
-    ...req.body,
+    accountNumber: req.body.accountNumber,
     companyId: user.companyId,
-    letter: file && {
-      fileName: file.originalname,
-      filePath: path.basename(file.path),
-      mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-      size: file.size,
-    },
+    documents,
   });
 
   res.status(httpStatus.CREATED).json({
@@ -45,19 +53,15 @@ const getAccountById = catchAsync(async (req: Request, res: Response) => {
 
 const updateAccount = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
-  const file = req.file;
+  const files = req.files as Express.Multer.File[];
+  const documents = mapFilesToLetterFiles(files);
 
   const account = await accountService.updateAccount(
     req.params.id,
     user.companyId,
     {
-      ...req.body,
-      letter: file && {
-        fileName: file.originalname,
-        filePath: path.basename(file.path),
-        mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-        size: file.size,
-      },
+      accountNumber: req.body.accountNumber,
+      documents: documents.length ? documents : undefined,
     }
   );
 
@@ -74,24 +78,30 @@ const deleteAccount = catchAsync(async (req: Request, res: Response) => {
     user.companyId
   );
   res.status(httpStatus.OK).json({
-    message: "Account deleted successfully",
+    message: "Account deleted (soft)",
     data: deleted,
   });
 });
 
 const assignMasterAccount = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
-  const files = req.files as Express.Multer.File[]; // since upload.array() returns a flat array
-  const file = files?.[0]; // First (and only) file from the "letter" field
+  const files = req.files as Express.Multer.File[];
+  const documents = mapFilesToLetterFiles(files);
 
-  if (!file) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Letter file is required");
+  // 🚫 Enforce non-empty documents
+  if (!documents.length) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "At least one document (letter) is required to assign a master account"
+    );
   }
 
   const account = await accountService.assignMasterAccount(
     req.params.id,
-    user.companyId
+    user.companyId,
+    documents.length ? documents : undefined
   );
+
   res.status(httpStatus.OK).json({
     message: "Master account assigned successfully",
     data: account,

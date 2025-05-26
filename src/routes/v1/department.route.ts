@@ -5,7 +5,6 @@ import auth from "../../middlewares/auth";
 import { checkPermission } from "../../middlewares/checkPermissions";
 import adminValidation from "../../validations/admin.validation";
 
-
 const router = express.Router();
 
 router

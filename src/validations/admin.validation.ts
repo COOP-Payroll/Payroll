@@ -34,7 +34,7 @@ const createDepartmentSchema = {
   body: Joi.object().keys({
     deptName: Joi.string().required(),
     location: Joi.string(),
-    shorthandRepresentation: Joi.string().required(),
+    shorthandRepresentation: Joi.string().optional(),
   }),
 };
 

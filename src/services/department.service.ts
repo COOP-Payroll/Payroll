@@ -5,7 +5,7 @@ import ApiError from "../utils/api-error";
 const createDepartment = async (data: {
   deptName: string;
   location?: string;
-  shorthandRepresentation: string;
+  shorthandRepresentation?: string;
   companyId: string; // assuming UUID based on your Position model
 }) => {
   const { deptName, location, shorthandRepresentation, companyId } = data;
@@ -16,16 +16,6 @@ const createDepartment = async (data: {
   }
 
   // Validate shorthandRepresentation
-  if (
-    !shorthandRepresentation ||
-    typeof shorthandRepresentation !== "string" ||
-    !shorthandRepresentation.trim()
-  ) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Shorthand representation is required"
-    );
-  }
 
   // Validate companyId
   if (!companyId || typeof companyId !== "string") {
@@ -51,7 +41,7 @@ const createDepartment = async (data: {
   return prisma.department.create({
     data: {
       deptName: deptName.trim(),
-      shorthandRepresentation: shorthandRepresentation.trim(),
+      shorthandRepresentation: shorthandRepresentation?.trim(),
       location: location?.trim() || undefined,
       companyId,
     },

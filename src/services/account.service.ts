@@ -26,22 +26,33 @@ const createAccount = async (data: CreateAccountDTO) => {
   if (!accountNumber || !companyId) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Missing required fields");
   }
+  // **Check uniqueness first**
+  const existingAccount = await prisma.account.findFirst({
+    where: { companyId, accountNumber },
+  });
+  if (existingAccount) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Account number ${accountNumber} already exists`
+    );
+  }
 
   // Create account with nested documents
   const account = await prisma.account.create({
     data: {
       accountNumber,
       companyId,
-      documents: documents && documents.length > 0
-        ? {
-            create: documents.map((doc) => ({
-              fileName: doc.fileName,
-              filePath: doc.filePath,
-              mimeType: doc.mimeType,
-              size: doc.size,
-            })),
-          }
-        : undefined,
+      documents:
+        documents && documents.length > 0
+          ? {
+              create: documents.map((doc) => ({
+                fileName: doc.fileName,
+                filePath: doc.filePath,
+                mimeType: doc.mimeType,
+                size: doc.size,
+              })),
+            }
+          : undefined,
     },
     include: {
       documents: true,
@@ -88,16 +99,17 @@ const updateAccount = async (
     where: { id },
     data: {
       ...(accountNumber != null && { accountNumber }),
-      documents: documents && documents.length > 0
-        ? {
-            create: documents.map((doc) => ({
-              fileName: doc.fileName,
-              filePath: doc.filePath,
-              mimeType: doc.mimeType,
-              size: doc.size,
-            })),
-          }
-        : undefined,
+      documents:
+        documents && documents.length > 0
+          ? {
+              create: documents.map((doc) => ({
+                fileName: doc.fileName,
+                filePath: doc.filePath,
+                mimeType: doc.mimeType,
+                size: doc.size,
+              })),
+            }
+          : undefined,
     },
     include: { documents: true },
   });
@@ -130,10 +142,7 @@ const assignMasterAccount = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
   }
   if (account.isMaster) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Account is already the master"
-    );
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account is already the master");
   }
 
   // Ensure no other master exists
