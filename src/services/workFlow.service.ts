@@ -67,6 +67,7 @@ const getActiveWorkflow = async (companyId: string) => {
   const result = await prisma.approvalWorkflow.findMany({
     where: { companyId, isActive: true },
     select: {
+      id: true,
       name: true,
       stages: {
         select: {
@@ -85,6 +86,7 @@ const getWorkflowHistory = async (companyId: string) => {
   const result = await prisma.approvalWorkflow.findMany({
     where: { companyId },
     select: {
+      id: true,
       name: true,
       stages: {
         select: {
