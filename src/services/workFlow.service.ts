@@ -66,6 +66,17 @@ const createWorkflow = async (
 const getActiveWorkflow = async (companyId: string) => {
   const result = await prisma.approvalWorkflow.findMany({
     where: { companyId, isActive: true },
+    select: {
+      name: true,
+      stages: {
+        select: {
+          name: true,
+          stageRoles: {
+            select: { role: { select: { id: true, name: true } } },
+          },
+        },
+      },
+    },
   });
 
   return result;
@@ -89,8 +100,54 @@ const getWorkflowHistory = async (companyId: string) => {
   return result;
 };
 
+const getStageUserActiveWorkflow = async (workFlowId: string) => {
+  const stageUsers = await prisma.approvalWorkflow.findMany({
+    where: { id: workFlowId },
+    select: {
+      stages: {
+        select: {
+          name: true,
+          stageRoles: {
+            select: {
+              role: {
+                select: {
+                  name: true,
+                  userRoles: {
+                    select: {
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          username: true,
+                          department: {
+                            select: {
+                              deptName: true,
+                            },
+                          },
+                          position: {
+                            select: {
+                              positionName: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return stageUsers;
+};
+
 export default {
   createWorkflow,
   getActiveWorkflow,
   getWorkflowHistory,
+  getStageUserActiveWorkflow,
 };

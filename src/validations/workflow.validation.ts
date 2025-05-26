@@ -42,4 +42,10 @@ const createWorkFlowSchema = {
   }),
 };
 
-export default { createWorkFlowSchema };
+const getStageUserActiveWorkflowSchema = {
+  params: Joi.object({
+    workFlowId: Joi.string().required(),
+  }),
+};
+
+export default { createWorkFlowSchema, getStageUserActiveWorkflowSchema };

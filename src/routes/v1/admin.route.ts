@@ -99,4 +99,12 @@ router.get(
   workflowController.getWorkflowHistory
 );
 
+router.get(
+  "/workflow/active/stageUsers/:workFlowId",
+  auth(),
+  checkPermission("view_system_setting"),
+  validate(workflowValidation.getStageUserActiveWorkflowSchema),
+  workflowController.getStageUserActiveWorkflow
+);
+
 export default router;

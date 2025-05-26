@@ -2,16 +2,25 @@ import prisma from "../client";
 import { encryptPassword } from "../utils/encryption";
 
 async function main() {
-  const superadminUsername = "IamAdmin";
+  const superadminUsername = "IT-head";
   const superadminPassword = "SuperSecurePassword123";
+
+  const company = await prisma.company.create({
+    data: {
+      organizationName: "DIRRE DAWA REGIONAL HEALTH BUREAU",
+      phoneNumber: "1234567890",
+      companyCode: "DRD-001",
+      level: "MOHHEAD",
+    },
+  });
 
   // 1. Create or find superadmin role
   const superadminRole = await prisma.role.upsert({
     where: { name: "superadmin" },
     update: {},
     create: {
-      name: "superadmin",
-      companyId: "8abb28b9-9333-4cb2-9fa8-698dc329d677",
+      name: "superAdmin",
+      companyId: company.id,
       //   description: "Has all permissions",
     },
   });
@@ -46,8 +55,8 @@ async function main() {
       name: "Super Admin",
       password: await encryptPassword(superadminPassword),
       phoneNumber: "0931653136",
-      username: "superAdmin",
-      companyId: "aab64c86-6796-420d-aa47-e299158e02d2",
+      username: superadminUsername,
+      companyId: company.id,
       isSuperAdmin: true,
     },
   });
