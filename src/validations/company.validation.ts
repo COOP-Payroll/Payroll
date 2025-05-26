@@ -12,6 +12,7 @@ const createCompany = {
       })
       .required(),
     companyCode: Joi.string().required(),
+    notes: Joi.string(),
     level: Joi.string().valid(Level.MOHHEAD, Level.REGION),
   }),
 };
@@ -28,6 +29,7 @@ const updateCompany = {
       })
       .required(),
     companyCode: Joi.string().required(),
+    notes: Joi.string(),
     level: Joi.string().valid(Level.MOHHEAD, Level.REGION),
   }),
 };
