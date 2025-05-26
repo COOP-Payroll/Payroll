@@ -1,18 +1,25 @@
-import express from 'express';
-import {companyController} from '../../controllers'
-import validate from '../../middlewares/validate';
-import companyValidation from '../../validations/company.validation';
-import auth from '../../middlewares/auth';
+import express from "express";
+import { companyController } from "../../controllers";
+import validate from "../../middlewares/validate";
+import companyValidation from "../../validations/company.validation";
+import auth from "../../middlewares/auth";
 
 const router = express.Router();
 
-router.post('/register', validate(companyValidation.createCompany), companyController.registerCompany);
-router.get('/profile', auth(), companyController.getCompany);
-
+router.post(
+  "/register",
+  validate(companyValidation.createCompany),
+  companyController.registerCompany
+);
+router.get("/profile", auth(), companyController.getCompany);
+router.post(
+  "/update",
+  auth(),
+  validate(companyValidation.updateCompany),
+  companyController.updateCompany
+);
 
 export default router;
-
-
 
 /**
  * @swagger

@@ -14,6 +14,7 @@ model Company {
   phoneNumber      String
   companyCode      String
   email            String?
+  notes            String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   level            Level?
@@ -32,15 +33,12 @@ model Account {
   companyId  String
   company    Company  @relation(fields: [companyId], references: [id])
   accountNumber  String
-  letterId   String?     @unique
-  letter     Document?   @relation("AccountDocument", fields: [letterId], references: [id])
-
   isMaster   Boolean   @default(false)
   isVerified Boolean   @default(false)
   isActive   Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
- // documents     Document[]
+  documents     Document[]
 }
 
 
@@ -181,11 +179,15 @@ model Document {
   campaignParticipantId String?
   campaign              Campaign?            @relation(fields: [campaignId], references: [id])
   campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
-  account               Account?             @relation("AccountDocument")
+  account               Account?             @relation(fields: [accountId], references: [id])
+  accountId             String?
+
 
   @@index([fileName])
   @@index([campaignId])
   @@index([campaignParticipantId])
+  @@index([accountId])
+
 
 
 }

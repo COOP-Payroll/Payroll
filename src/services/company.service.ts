@@ -13,6 +13,7 @@ const createCompany = async (
   phoneNumber: string,
   companyCode: string,
   email?: string,
+  notes?: string,
   level: Level = Level.REGION
 ): Promise<Company> => {
   if (email && (await getCompanyByEmail(email))) {
@@ -25,6 +26,7 @@ const createCompany = async (
       phoneNumber,
       companyCode,
       email,
+      notes,
       level,
     },
   });
@@ -90,4 +92,37 @@ const getCompanyProfile = async (companyId: string) => {
   return company;
 };
 
-export default { createCompany, getCompanyById, getCompanyProfile };
+export const updateCompanyProfile = async (
+  companyId: string,
+  updates: Partial<{
+    organizationName: string;
+    phoneNumber: string;
+    // companyCode: string;
+    email: string;
+    notes: string;
+    level: Level;
+  }>
+): Promise<Company> => {
+  const existing = await prisma.company.findUnique({
+    where: { id: companyId },
+  });
+  if (!existing) throw new ApiError(httpStatus.NOT_FOUND, "Company not found");
+  if (updates.email && updates.email !== existing.email) {
+    if (await prisma.company.findFirst({ where: { email: updates.email } })) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");
+    }
+  }
+   // 3. Destructure to remove any companyCode property
+  const { /* companyCode, */ ...allowedUpdates } = updates;
+  return prisma.company.update({
+    where: { id: companyId },
+    data: updates,
+  });
+};
+
+export default {
+  createCompany,
+  getCompanyById,
+  getCompanyProfile,
+  updateCompanyProfile,
+};

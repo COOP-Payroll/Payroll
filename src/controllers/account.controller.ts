@@ -90,13 +90,7 @@ const assignMasterAccount = catchAsync(async (req: Request, res: Response) => {
 
   const account = await accountService.assignMasterAccount(
     req.params.id,
-    user.companyId,
-    file && {
-      fileName: file.originalname,
-      filePath: path.basename(file.path),
-      mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-      size: file.size,
-    }
+    user.companyId
   );
   res.status(httpStatus.OK).json({
     message: "Master account assigned successfully",
