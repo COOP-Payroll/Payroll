@@ -55,9 +55,23 @@ const me = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ data: user });
 });
 
+const resetPassword = catchAsync(async (req, res) => {
+  const { username, password } = req.body;
+  await userService.resetPassword(username, password);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+const forgotPassword = catchAsync(async (req, res) => {
+  const { username } = req.body;
+  await userService.forgotPassword(username);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
 export default {
   // createUser,
   login,
   logout,
   me,
+  resetPassword,
+  forgotPassword,
 };

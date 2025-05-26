@@ -135,21 +135,31 @@ const getUserByUsername = async <Key extends keyof User>(
  * @returns {Promise<Pick<User, Key> | null>}
  */
 const getUserById = async <Key extends keyof User>(
-  id: string,
-  keys: Key[] = [
-    "id",
-    "phoneNumber",
-    "name",
-    "password",
-    "username",
-    "companyId",
-    "createdAt",
-    "updatedAt",
-  ] as Key[]
+  id: string
+  // keys: Key[] = [
+  //   "id",
+  //   "phoneNumber",
+  //   "name",
+  //   "username",
+  //   "companyId",
+  //   "createdAt",
+  //   "updatedAt",
+  // ] as Key[]
 ): Promise<Pick<User, Key> | null> => {
   return prisma.user.findUnique({
     where: { id },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+    select: {
+      id: true,
+      phoneNumber: true,
+      name: true,
+      username: true,
+      createdAt: true,
+      updatedAt: true,
+      department: { select: { id: true, deptName: true } },
+      position: { select: { id: true, positionName: true } },
+      userRoles: { select: { role: { select: { id: true, name: true } } } },
+    },
+    // select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
   }) as Promise<Pick<User, Key> | null>;
 };
 
@@ -169,6 +179,7 @@ const loginUserWithUsernameAndPassword = async (
     "name",
     "password",
     "phoneNumber",
+    "isFirstTimeLoggedIn",
     "isSuperAdmin",
     "companyId",
     "positionId",
@@ -297,9 +308,9 @@ const queryUsers = async (
         name: true,
         username: true,
         phoneNumber: true,
-        department: { select: { deptName: true } },
-        position: { select: { positionName: true } },
-        userRoles: { select: { role: { select: { name: true } } } },
+        department: { select: { id: true, deptName: true } },
+        position: { select: { id: true, positionName: true } },
+        userRoles: { select: { role: { select: { id: true, name: true } } } },
       },
       skip,
       take: limit,
@@ -319,6 +330,64 @@ const queryUsers = async (
   };
 };
 
+/**
+ * Reset password for a user
+ * @param {string} username - User's username
+ * @param {string} password - New password
+ * @returns {Promise<Omit<User, 'password'>>}
+ */
+const resetPassword = async (
+  username: string,
+  password: string
+): Promise<Omit<User, "password">> => {
+  const [hashedPassword, user] = await Promise.all([
+    encryptPassword(password),
+    prisma.user.findUnique({
+      where: { username },
+      select: { id: true },
+    }),
+  ]);
+
+  if (!user) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      isFirstTimeLoggedIn: false,
+      password: hashedPassword,
+    },
+  });
+
+  return exclude(updatedUser, ["password"]);
+};
+
+const forgotPassword = async (username: string) => {
+  // const password = generateRandomPassword();
+  const password = "SuperSecurePassword123";
+  const [hashedPassword, user] = await Promise.all([
+    encryptPassword(password),
+    prisma.user.findUnique({
+      where: { username },
+      select: { id: true },
+    }),
+  ]);
+
+  if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
+
+  //TODO: send new password through sms
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      isFirstTimeLoggedIn: true,
+      password: hashedPassword,
+    },
+  });
+
+  return exclude(updatedUser, ["password"]);
+};
+
 export default {
   createUser,
   queryUsers,
@@ -328,4 +397,6 @@ export default {
   logout,
   getUserById,
   getUserWithRoles,
+  resetPassword,
+  forgotPassword,
 };
