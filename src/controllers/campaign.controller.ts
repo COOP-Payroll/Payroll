@@ -22,25 +22,63 @@ const createCampaign = catchAsync(async (req: Request, res: Response) => {
   });
 
   // Then create and connect documents
-  if (files?.length) {
+  // if (files?.length) {
+  //   await Promise.all(
+  //     files.map(async (file) => {
+  //       await prisma.document.create({
+  //         data: {
+  //           fileName: file.originalname,
+  //           filePath: path.basename(file.path),
+  //           mimeType:
+  //             file.mimetype || mime.lookup(file.originalname) || undefined,
+  //           size: file.size,
+  //           campaign: {
+  //             connect: { id: campaign.id },
+  //           },
+  //         },
+  //       });
+  //     })
+  //   );
+  // }
+
+
+    // Step 2: Attach uploaded documents (if any)
+  // if (files?.length) {
+  //   await Promise.all(
+  //     files.map((file) =>
+  //       prisma.document.create({
+  //         data: {
+  //           fileName: file.originalname,
+  //           filePath: path.basename(file.path),
+  //           mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+  //           size: file.size,
+  //           campaign: {
+  //             connect: { id: campaign.id },
+  //           },
+  //         },
+  //       })
+  //     )
+  //   );
+  // }
+
+    // Step 2: Attach uploaded documents (if any)
+  if (files?.length > 0) {
     await Promise.all(
-      files.map(async (file) => {
-        await prisma.document.create({
+      files.map((file) =>
+        prisma.document.create({
           data: {
             fileName: file.originalname,
             filePath: path.basename(file.path),
-            mimeType:
-              file.mimetype || mime.lookup(file.originalname) || undefined,
+            mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
             size: file.size,
             campaign: {
               connect: { id: campaign.id },
             },
           },
-        });
-      })
+        })
+      )
     );
   }
-
   // Fetch the campaign with documents
   const campaignWithDocuments = await prisma.campaign.findUnique({
     where: { id: campaign.id },
