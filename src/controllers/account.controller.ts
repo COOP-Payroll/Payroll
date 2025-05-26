@@ -5,6 +5,7 @@ import accountService from "../services/account.service";
 import { AuthUser } from "../types/express";
 import path from "path";
 import mime from "mime-types";
+import ApiError from "../utils/api-error";
 
 const createAccount = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
@@ -78,10 +79,30 @@ const deleteAccount = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const assignMasterAccount = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as AuthUser;
+  const files = req.files as Express.Multer.File[]; // since upload.array() returns a flat array
+  const file = files?.[0]; // First (and only) file from the "letter" field
+
+  if (!file) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Letter file is required");
+  }
+
+  const account = await accountService.assignMasterAccount(
+    req.params.id,
+    user.companyId
+  );
+  res.status(httpStatus.OK).json({
+    message: "Master account assigned successfully",
+    data: account,
+  });
+});
+
 export default {
   createAccount,
   getAllAccounts,
   getAccountById,
   updateAccount,
   deleteAccount,
+  assignMasterAccount,
 };
