@@ -131,10 +131,69 @@ const deleteAccount = async (id: string, companyId: string) => {
   });
 };
 
+// Assign master account status
+const assignMasterAccount = async (
+  id: string,
+  companyId: string,
+  letter?: LetterFile
+) => {
+  const account = await prisma.account.findFirst({
+    where: { id, companyId },
+  });
+
+  if (!account) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
+  }
+
+  if (account.isMaster) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Account is already master account"
+    );
+  }
+
+  // Check if there's already a master account
+  const existingMaster = await prisma.account.findFirst({
+    where: { companyId, isMaster: true },
+  });
+
+  if (existingMaster && existingMaster.id !== id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Another account is already set as master. Please unassign it first."
+    );
+  }
+
+  let letterId = account.letterId;
+
+  if (letter) {
+    const letterDoc = await prisma.document.create({
+      data: {
+        fileName: letter.fileName,
+        filePath: letter.filePath,
+        mimeType: letter.mimeType,
+        size: letter.size,
+      },
+    });
+    letterId = letterDoc.id;
+  }
+
+  // Assign the new master account
+  return prisma.account.update({
+    where: { id },
+    data: {
+      isMaster: true,
+      letterId,
+    },
+    include: { letter: true },
+  });
+};
+
 export default {
   createAccount,
   getAllAccounts,
   getAccountById,
   updateAccount,
   deleteAccount,
+  assignMasterAccount,
 };
