@@ -362,6 +362,24 @@ const deleteDocumentsByIds = async (docIds: string[], campaignId: string) => {
   return docs;
 };
 
+const processCampaign = async (campaignId: string, companyId: string) => {
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId, companyId },
+  });
+
+  if (!campaign) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
+  }
+
+  return prisma.campaign.update({
+    where: { id: campaignId },
+    data: { status: "PROCESSED" },
+    include: {
+      documents: true,
+    },
+  });
+};
+
 export default {
   createCampaign,
   getAllCampaigns,
@@ -369,4 +387,5 @@ export default {
   updateCampaign,
   deleteCampaign,
   deleteDocumentsByIds,
+  processCampaign,
 };

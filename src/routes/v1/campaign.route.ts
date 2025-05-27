@@ -12,15 +12,13 @@ router
 
 router
   .route("/:id")
-  .get(
-    auth(),
-
-    campaignController.getCampaignById
-  )
+  .get(auth(), campaignController.getCampaignById)
   .put(auth(), upload.array("documents"), campaignController.updateCampaign);
 
 router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 
-router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
+// router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
+
+router.post("/process/:id", auth(), campaignController.processCampaign);
 
 export default router;

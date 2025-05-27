@@ -7,7 +7,7 @@ import accountValidation from "../../validations/account.validation";
 import multer from "multer";
 
 const router = express.Router();
-router.get("/verify", auth(), accountController.verifyAccountController);
+router.post("/verify", auth(), accountController.verifyAccountController);
 router
   .route("/")
   .post(auth(), upload.array("letter"), accountController.createAccount)

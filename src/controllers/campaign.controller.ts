@@ -50,7 +50,6 @@ import ApiError from "../utils/api-error";
 //   });
 // });
 
-
 export interface CreateCampaignDTO {
   name: string;
   description?: string;
@@ -114,39 +113,39 @@ export interface CreateCampaignDTO {
 //   });
 // });
 
+export const createCampaign = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+    const files = req.files as Express.Multer.File[];
 
+    // Map multer files into our DTO shape
+    const documents = (files || []).map((file) => ({
+      fileName: file.originalname,
+      filePath: path.basename(file.path),
+      mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+      size: file.size,
+    }));
 
-export const createCampaign = catchAsync(async (req: Request, res: Response) => {
-  const user = req.user as AuthUser;
-  const files = req.files as Express.Multer.File[];
+    const dto: CreateCampaignDTO = {
+      name: req.body.name,
+      description: req.body.description,
+      startDate: new Date(req.body.startDate),
+      endDate: new Date(req.body.endDate),
+      budget: parseFloat(req.body.budget),
+      budgetSource: req.body.budgetSource,
+      createdById: user.id,
+      companyId: user.companyId,
+      documents, // nested create
+    };
 
-  // Map multer files into our DTO shape
-  const documents = (files || []).map((file) => ({
-    fileName: file.originalname,
-    filePath: path.basename(file.path),
-    mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-    size: file.size,
-  }));
+    const campaign = await campaignService.createCampaign(dto);
 
-  const dto: CreateCampaignDTO = {
-    name: req.body.name,
-    description: req.body.description,
-    startDate: new Date(req.body.startDate),
-    endDate: new Date(req.body.endDate),
-    budget: parseFloat(req.body.budget),
-    budgetSource: req.body.budgetSource,
-    createdById: user.id,
-    companyId: user.companyId,
-    documents, // nested create
-  };
-
-  const campaign = await campaignService.createCampaign(dto);
-
-  res.status(httpStatus.CREATED).json({
-    message: "Campaign created successfully",
-    data: campaign,
-  });
-});
+    res.status(httpStatus.CREATED).json({
+      message: "Campaign created successfully",
+      data: campaign,
+    });
+  }
+);
 const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaigns = await campaignService.getAllCampaigns(user.companyId);
@@ -285,11 +284,26 @@ const deleteDocumentsByQuery = catchAsync(
   }
 );
 
+const processCampaign = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as AuthUser;
+  const campaignId = req.params.id;
+
+  const campaign = await campaignService.processCampaign(
+    campaignId,
+    user.companyId
+  );
+
+  res.status(httpStatus.OK).json({
+    message: "Campaign processed successfully",
+    data: campaign,
+  });
+});
+
 export default {
   createCampaign,
   getAllCampaigns,
+  getCampaignById,
   updateCampaign,
   deleteCampaign,
-  getCampaignById,
-  deleteDocumentsByQuery,
+  processCampaign,
 };

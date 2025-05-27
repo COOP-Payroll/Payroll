@@ -14,33 +14,33 @@ model Company {
   phoneNumber      String
   companyCode      String
   email            String?
-  notes            String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   level            Level?
+  notes            String?
+  accounts         Account[]
   workflows        ApprovalWorkflow[]
   campaigns        Campaign[]
   departments      Department[]
   participants     Participant[]
   positions        Position[]
   rateSetting      RateSetting?
-  users            User[]
   Role             Role[]
-  accounts         Account[]
-}
-model Account {
-  id         String   @id @default(uuid())
-  companyId  String
-  company    Company  @relation(fields: [companyId], references: [id])
-  accountNumber  String
-  isMaster   Boolean   @default(false)
-  isVerified Boolean   @default(false)
-  isActive   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  documents     Document[]
+  users            User[]
 }
 
+model Account {
+  id            String     @id @default(uuid())
+  companyId     String
+  accountNumber String
+  isMaster      Boolean    @default(false)
+  isVerified    Boolean    @default(false)
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  company       Company    @relation(fields: [companyId], references: [id])
+  documents     Document[]
+}
 
 model Department {
   id                      String   @id @default(uuid())
@@ -68,35 +68,33 @@ model Position {
 }
 
 model User {
-  id               String                @id @default(uuid())
-  name             String
-  username         String                @unique
-  phoneNumber      String
-  password         String
-  isSuperAdmin     Boolean               @default(false)
-  companyId        String
-  departmentId     String?
-  positionId       String?
-  isFirstTimeLoggedIn   Boolean          @default(true)
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-  campaignsCreated Campaign[]            @relation("UserCampaignsCreated")
-  approvals        CampaignStageStatus[] @relation("UserApprovals")
-  Token            Token[]
-  company          Company               @relation(fields: [companyId], references: [id])
-  department       Department?           @relation(fields: [departmentId], references: [id])
-  position         Position?             @relation(fields: [positionId], references: [id])
-  userRoles        UserRole[]
+  id                  String                @id @default(uuid())
+  name                String
+  username            String                @unique
+  phoneNumber         String
+  password            String
+  isSuperAdmin        Boolean               @default(false)
+  companyId           String
+  departmentId        String?
+  positionId          String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  isFirstTimeLoggedIn Boolean               @default(true)
+  campaignsCreated    Campaign[]            @relation("UserCampaignsCreated")
+  approvals           CampaignStageStatus[] @relation("UserApprovals")
+  Token               Token[]
+  company             Company               @relation(fields: [companyId], references: [id])
+  department          Department?           @relation(fields: [departmentId], references: [id])
+  position            Position?             @relation(fields: [positionId], references: [id])
+  userRoles           UserRole[]
 }
 
 model Role {
-  id        String @id @default(uuid())
-  name      String @unique
-  companyId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id          String           @id @default(uuid())
+  name        String           @unique
+  companyId   String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   company     Company          @relation(fields: [companyId], references: [id])
   permissions RolePermission[]
   stageRoles  StageRole[]
@@ -161,12 +159,12 @@ model Campaign {
   updatedAt            DateTime                   @updatedAt
   createdById          String
   companyId            String
+  status               CampaignStatus             @default(ACTIVE)
   company              Company                    @relation(fields: [companyId], references: [id])
   createdBy            User                       @relation("UserCampaignsCreated", fields: [createdById], references: [id])
   approvalInstances    CampaignApprovalInstance[]
   campaignParticipants CampaignParticipant[]
   documents            Document[]
-  status               CampaignStatus             @default(ACTIVE)
 }
 
 model Document {
@@ -178,19 +176,15 @@ model Document {
   uploadedAt            DateTime             @default(now())
   campaignId            String?
   campaignParticipantId String?
+  accountId             String?
+  account               Account?             @relation(fields: [accountId], references: [id])
   campaign              Campaign?            @relation(fields: [campaignId], references: [id])
   campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
-  account               Account?             @relation(fields: [accountId], references: [id])
-  accountId             String?
-
 
   @@index([fileName])
   @@index([campaignId])
   @@index([campaignParticipantId])
   @@index([accountId])
-
-
-
 }
 
 model Participant {
@@ -245,14 +239,12 @@ model RateSetting {
 }
 
 model ApprovalWorkflow {
-  id        String  @id @default(cuid())
-  name      String
-  companyId String
-  isActive  Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                       String                     @id @default(cuid())
+  name                     String
+  companyId                String
+  isActive                 Boolean                    @default(true)
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
   stages                   ApprovalStage[]
   company                  Company                    @relation(fields: [companyId], references: [id])
   CampaignApprovalInstance CampaignApprovalInstance[]
@@ -313,32 +305,29 @@ model CampaignStageStatus {
 }
 
 model Payment {
-  id                 String               @id @default(cuid())
+  id                 String              @id @default(cuid())
+  bulkId             String              @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   debitAccount       String
-  totalAmount        Decimal              @db.Decimal(10, 2)
-  bulkId             String               @unique
   participantId      String
-  participant        CampaignParticipant  @relation("ParticipantPayments", fields: [participantId], references: [id])
+  totalAmount        Decimal             @db.Decimal(10, 2)
   creditTransactions CreditTransaction[]
-
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  participant        CampaignParticipant @relation("ParticipantPayments", fields: [participantId], references: [id])
 }
 
 model CreditTransaction {
-  id              String               @id @default(cuid())
-  orderId         String               @unique
-  creditAccount   String
-  amount          Decimal              @db.Decimal(10, 2)
-  status          TransactionStatus    @default(PENDING)
-  transactionId   String?
-  failureReason   String?
-  paymentId       String
-
-  payment         Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  orderId       String            @unique
+  creditAccount String
+  amount        Decimal           @db.Decimal(10, 2)
+  status        TransactionStatus @default(PENDING)
+  transactionId String?
+  failureReason String?
+  paymentId     String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  payment       Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 }
 
 enum TokenType {
@@ -393,6 +382,8 @@ enum ApprovalStatus {
 
 enum CampaignStatus {
   ACTIVE
+  PROCESSED
+  APPROVED
   CLOSED
 }
 

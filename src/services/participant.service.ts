@@ -84,8 +84,9 @@ const createParticipant = async (data: {
   });
 };
 
-const getAllParticipants = async () => {
+const getAllParticipants = async (companyId: string) => {
   return prisma.participant.findMany({
+    where: { companyId: companyId },
     orderBy: { createdAt: "desc" },
   });
 };
