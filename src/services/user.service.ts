@@ -11,7 +11,10 @@ import roleService from "./role.service";
 import logger from "../config/logger";
 import { smsQueue } from "../queues";
 import { formatPhoneNumberForSms } from "../utils/format-phone-number";
-import { accountCreatedMessage } from "../templates/sms-template";
+import {
+  accountCreatedMessage,
+  forgotPasswordMessage,
+} from "../templates/sms-template";
 
 /**
  * Create a user with optimized database queries
@@ -85,7 +88,7 @@ const createUser = async (
     });
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      "Payment processing failed"
+      "send create account sms processing failed"
     );
   }
 
@@ -409,8 +412,6 @@ const forgotPassword = async (username: string) => {
 
   if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
 
-  //TODO: send new password through sms
-
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -418,6 +419,36 @@ const forgotPassword = async (username: string) => {
       password: hashedPassword,
     },
   });
+  try {
+    const message = forgotPasswordMessage(
+      updatedUser.name,
+      updatedUser.username,
+      password
+    );
+    const data = {
+      phoneNumber: formatPhoneNumberForSms(updatedUser.phoneNumber),
+      message,
+      jobId: uuidv4(),
+      type: "forgotPassword",
+    };
+
+    const job = await smsQueue.add("send-sms", data, {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 1000 },
+    });
+    logger.info(`SMS job queued for user ${user.id}`, {
+      bulkId: data.phoneNumber,
+      jobId: job.id,
+    });
+  } catch (error) {
+    logger.error(`Failed to queue send sms job for forgotPassword ${user.id}`, {
+      error,
+    });
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "send forgot SMS processing failed"
+    );
+  }
 
   return exclude(updatedUser, ["password"]);
 };
