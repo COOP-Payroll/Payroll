@@ -266,7 +266,7 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
 
 const getParticipantsByCampaignId = async (campaignId: string) => {
   return await prisma.campaignParticipant.findMany({
-    where: { campaignId },
+    where: { campaignId, isActive: true },
     include: {
       participant: true,
       documents: true,
@@ -276,14 +276,14 @@ const getParticipantsByCampaignId = async (campaignId: string) => {
 
 const getAllPublishedCampaigns = async (campaignId: string) => {
   return await prisma.campaignParticipant.findMany({
-    where: { campaignId: campaignId },
+    where: { campaignId: campaignId, isActive: true },
     include: { participant: true, documents: true },
   });
 };
 
 const getAllApprovedCampaigns = async (campaignId: string) => {
   return await prisma.campaignParticipant.findMany({
-    where: { campaignId: campaignId },
+    where: { campaignId: campaignId, isActive: true },
     include: { participant: true, documents: true },
   });
 };
