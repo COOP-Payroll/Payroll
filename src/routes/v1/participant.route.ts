@@ -12,12 +12,15 @@ router.post(
   participantController.createParticipant
 );
 
-router.get("/", participantController.getAllParticipants);
+router.get("/", auth(), participantController.getAllParticipants);
 
 router
   .route("/:id")
   .get(participantController.getParticipantById)
-  .post(validate(participantValidation.updateParticipant), participantController.updateParticipant)
+  .post(
+    validate(participantValidation.updateParticipant),
+    participantController.updateParticipant
+  )
   .delete(participantController.deleteParticipant);
 
 export default router;

@@ -15,8 +15,11 @@ const createParticipant = catchAsync(async (req: Request, res: Response) => {
     .send({ message: "Participant created", data: participant });
 });
 
-const getAllParticipants = catchAsync(async (_req: Request, res: Response) => {
-  const participants = await participantService.getAllParticipants();
+const getAllParticipants = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as AuthUser;
+  const companyId = user.companyId;
+
+  const participants = await participantService.getAllParticipants(companyId);
   res.send({ data: participants });
 });
 
