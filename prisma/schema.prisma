@@ -193,6 +193,9 @@ model Participant {
   gender               GENDER
   address              String?
   detail               String?
+  phoneNumber          String  
+  accountNumber        String?
+  paymentMethod        PaymentMethod   
   isActive             Boolean               @default(true)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt

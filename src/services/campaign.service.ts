@@ -445,7 +445,7 @@ const getCampaignsByStatus = async (companyId: string, status: string) => {
   });
 
   return campaigns;
-}
+};
 const updateCampaignStatus = async (
   campaignId: string,
   status: CampaignStatus

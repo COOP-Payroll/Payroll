@@ -58,4 +58,10 @@ router.post(
   campaignParticipantController.updateAccountVerification
 );
 
+router.get(
+  "/unassigned",
+  auth(),
+  campaignParticipantController.getUnassignedParticipants
+);
+
 export default router;
