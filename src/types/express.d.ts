@@ -5,7 +5,7 @@ export interface AuthUser {
   isSuperAdmin: boolean;
   roles: string[];
   permissions: string[];
-  companyId:string
+  companyId: string;
 }
 
 declare global {
@@ -18,6 +18,10 @@ declare global {
 
 export interface AuthenticatedRequest extends Request {
   user: AuthUser;
+}
+
+interface SmsError extends Error {
+  code?: string;
 }
 
 // types/express.d.ts or wherever your AuthUser is defined

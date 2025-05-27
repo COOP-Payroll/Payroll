@@ -21,7 +21,7 @@ router.post(
   auth(),
   checkPermission("create_system_setting"),
   validate(authValidation.forgotPassword),
-  authController.resetPassword
+  authController.forgotPassword
 );
 
 export default router;
