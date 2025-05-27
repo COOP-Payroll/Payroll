@@ -3,12 +3,26 @@ import validate from "../../middlewares/validate";
 import authValidation from "../../validations/auth.validation";
 import { authController } from "../../controllers";
 import auth from "../../middlewares/auth";
+import { checkPermission } from "../../middlewares/checkPermissions";
 
 const router = express.Router();
 
 router.post("/login", validate(authValidation.login), authController.login);
 router.post("/logout", validate(authValidation.logout), authController.logout);
 router.get("/me", auth(), authController.me);
+router.post(
+  "/resetPassword",
+  auth(),
+  validate(authValidation.login),
+  authController.resetPassword
+);
+router.post(
+  "/forgotPassword",
+  auth(),
+  checkPermission("create_system_setting"),
+  validate(authValidation.forgotPassword),
+  authController.resetPassword
+);
 
 export default router;
 

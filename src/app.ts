@@ -11,6 +11,24 @@ import httpStatus from "http-status";
 import { errorConverter, errorHandler } from "./middlewares/error";
 import config from "./config/config";
 import morgan from "./config/morgan";
+import { createBullBoard } from "@bull-board/api";
+import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
+import paymentQueue from "./mq-client";
+import { ExpressAdapter } from "@bull-board/express";
+
+const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath("/ui");
+
+createBullBoard({
+  queues: [new BullMQAdapter(paymentQueue)],
+  serverAdapter,
+});
+// const serverAdapter = createBullBoard({
+//   queues: [new BullMQAdapter(paymentQueue)],
+//   serverAdapter: new ExpressAdapter(),
+// });
+
+serverAdapter.setBasePath("/admin/queues");
 
 const app = express();
 
@@ -18,6 +36,8 @@ if (config.env !== "test") {
   app.use(morgan.successHandler);
   app.use(morgan.errorHandler);
 }
+
+app.use("/admin/queues", serverAdapter.getRouter());
 
 // set security HTTP headers
 app.use(helmet());

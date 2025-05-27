@@ -36,7 +36,18 @@ const getUsers = catchAsync(async (req, res) => {
     .send({ data: result, message: "User retrieved successfully" });
 });
 
+const getUserById = catchAsync(async (req, res) => {
+  const { userId } = req.body;
+
+  const result = await userService.getUserById(userId);
+
+  res
+    .status(httpStatus.OK)
+    .send({ data: result, message: "User retrieved successfully" });
+});
+
 export default {
   createUser,
   getUsers,
+  getUserById,
 };
