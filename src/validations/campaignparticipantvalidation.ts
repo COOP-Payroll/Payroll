@@ -2,6 +2,22 @@ import fs from "fs";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
 
+// src/validations/account.schema.ts (recommended new file)
+import Joi from "joi";
+
+const updateAccountVerificationSchema = {
+  params: Joi.object().keys({
+    id: Joi.string().uuid().required().label("Account ID"),
+  }),
+  body: Joi.object().keys({
+    isVerified: Joi.boolean().required().label("Verification Status"),
+  }),
+};
+
+export default {
+  updateAccountVerificationSchema,
+};
+
 interface Participant {
   fullName: string;
   gender: string;

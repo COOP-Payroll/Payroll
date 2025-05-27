@@ -4,9 +4,10 @@ import { upload } from "../../config/multer";
 import campaignParticipantController from "../../controllers/campaingparticipant.controller";
 import auth from "../../middlewares/auth";
 import { validateParticipants } from "../../validations/campaignparticipantvalidation";
-import parseAndValidateExcel  from '../../middlewares/parseAndValidateExcel';
+import parseAndValidateExcel from "../../middlewares/parseAndValidateExcel";
+import validate from "../../middlewares/validate";
 
-
+import campaignparticipantValidation from "../../validations/campaignparticipantvalidation";
 const router = express.Router();
 
 router
@@ -20,10 +21,9 @@ router
 router.put(
   "/:id",
   auth(),
-  upload.array("documents"), 
+  upload.array("documents"),
   campaignParticipantController.updateCampaignParticipant
 );
-
 
 router.get(
   "/participants",
@@ -35,10 +35,7 @@ router.get(
   campaignParticipantController.getAllPublishedCampaigns
 );
 
-router.get(
-  "/campaigns/approved",
-  campaignParticipantController.getAllApprovedCampaigns
-);
+router.get("/approved", campaignParticipantController.getAllApprovedCampaigns);
 
 router.get(
   "/download-template",
@@ -52,6 +49,13 @@ router.post(
   upload.single("file"),
   auth(),
   campaignParticipantController.registerBulkCampaignParticipants
+);
+
+router.post(
+  "/verify-status/:id",
+  auth(),
+  validate(campaignparticipantValidation.updateAccountVerificationSchema),
+  campaignParticipantController.updateAccountVerification
 );
 
 export default router;

@@ -8,89 +8,145 @@ import path from "path";
 import mime from "mime-types";
 import { AuthUser } from "../types/express";
 import ApiError from "../utils/api-error";
-const createCampaign = catchAsync(async (req: Request, res: Response) => {
-  const files = req.files as Express.Multer.File[];
+// const createCampaign = catchAsync(async (req: Request, res: Response) => {
+//   const files = req.files as Express.Multer.File[];
+//   const user = req.user as AuthUser;
+//   // First create the campaign without documents
+//   const campaign = await campaignService.createCampaign({
+//     ...req.body,
+//     startDate: new Date(req.body.startDate),
+//     endDate: new Date(req.body.endDate),
+//     budget: parseFloat(req.body.budget),
+//     createdById: user.id,
+//     companyId: user.companyId,
+//   });
+
+//   if (files?.length > 0) {
+//     await Promise.all(
+//       files.map((file) =>
+//         prisma.document.create({
+//           data: {
+//             fileName: file.originalname,
+//             filePath: path.basename(file.path),
+//             mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//             size: file.size,
+//             campaign: {
+//               connect: { id: campaign.id },
+//             },
+//           },
+//         })
+//       )
+//     );
+//   }
+//   // Fetch the campaign with documents
+//   const campaignWithDocuments = await prisma.campaign.findUnique({
+//     where: { id: campaign.id },
+//     include: { documents: true },
+//   });
+
+//   res.status(httpStatus.CREATED).json({
+//     message: "Campaign created",
+//     data: campaignWithDocuments,
+//   });
+// });
+
+
+export interface CreateCampaignDTO {
+  name: string;
+  description?: string;
+  startDate: Date;
+  endDate: Date;
+  budget: number;
+  budgetSource: string;
+  createdById: string;
+  companyId: string;
+  documents?: {
+    fileName: string;
+    filePath: string;
+    mimeType?: string;
+    size?: number;
+  }[];
+}
+// export const createCampaign = catchAsync(async (req: Request, res: Response) => {
+//   const user = req.user as AuthUser;
+//   const files = req.files as Express.Multer.File[];
+
+//   // 1️⃣ Step 1: Create the campaign row
+//   const dto: CreateCampaignDTO = {
+//     name: req.body.name,
+//     description: req.body.description,
+//     startDate: new Date(req.body.startDate),
+//     endDate: new Date(req.body.endDate),
+//     budget: parseFloat(req.body.budget),
+//     budgetSource: req.body.budgetSource,
+//     createdById: user.id,
+//     companyId: user.companyId,
+//   };
+//   const campaign = await campaignService.createCampaign(dto);
+
+//   // 2️⃣ Step 2: If any files were uploaded, create Document rows
+//   if (files && files.length > 0) {
+//     await Promise.all(
+//       files.map((file) =>
+//         prisma.document.create({
+//           data: {
+//             fileName: file.originalname,
+//             filePath: path.basename(file.path),
+//             mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//             size: file.size,
+//             campaign: { connect: { id: campaign.id } },
+//           },
+//         })
+//       )
+//     );
+//   }
+
+//   // 3️⃣ Fetch back the campaign including its documents
+//   const campaignWithDocuments = await prisma.campaign.findUnique({
+//     where: { id: campaign.id },
+//     include: { documents: true },
+//   });
+
+//   // 4️⃣ Return to client
+//   res.status(httpStatus.CREATED).json({
+//     message: "Campaign created successfully",
+//     data: campaignWithDocuments,
+//   });
+// });
+
+
+
+export const createCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
-  // First create the campaign without documents
-  const campaign = await campaignService.createCampaign({
-    ...req.body,
+  const files = req.files as Express.Multer.File[];
+
+  // Map multer files into our DTO shape
+  const documents = (files || []).map((file) => ({
+    fileName: file.originalname,
+    filePath: path.basename(file.path),
+    mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+    size: file.size,
+  }));
+
+  const dto: CreateCampaignDTO = {
+    name: req.body.name,
+    description: req.body.description,
     startDate: new Date(req.body.startDate),
     endDate: new Date(req.body.endDate),
     budget: parseFloat(req.body.budget),
+    budgetSource: req.body.budgetSource,
     createdById: user.id,
     companyId: user.companyId,
-  });
+    documents, // nested create
+  };
 
-  // Then create and connect documents
-  // if (files?.length) {
-  //   await Promise.all(
-  //     files.map(async (file) => {
-  //       await prisma.document.create({
-  //         data: {
-  //           fileName: file.originalname,
-  //           filePath: path.basename(file.path),
-  //           mimeType:
-  //             file.mimetype || mime.lookup(file.originalname) || undefined,
-  //           size: file.size,
-  //           campaign: {
-  //             connect: { id: campaign.id },
-  //           },
-  //         },
-  //       });
-  //     })
-  //   );
-  // }
-
-
-    // Step 2: Attach uploaded documents (if any)
-  // if (files?.length) {
-  //   await Promise.all(
-  //     files.map((file) =>
-  //       prisma.document.create({
-  //         data: {
-  //           fileName: file.originalname,
-  //           filePath: path.basename(file.path),
-  //           mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-  //           size: file.size,
-  //           campaign: {
-  //             connect: { id: campaign.id },
-  //           },
-  //         },
-  //       })
-  //     )
-  //   );
-  // }
-
-    // Step 2: Attach uploaded documents (if any)
-  if (files?.length > 0) {
-    await Promise.all(
-      files.map((file) =>
-        prisma.document.create({
-          data: {
-            fileName: file.originalname,
-            filePath: path.basename(file.path),
-            mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-            size: file.size,
-            campaign: {
-              connect: { id: campaign.id },
-            },
-          },
-        })
-      )
-    );
-  }
-  // Fetch the campaign with documents
-  const campaignWithDocuments = await prisma.campaign.findUnique({
-    where: { id: campaign.id },
-    include: { documents: true },
-  });
+  const campaign = await campaignService.createCampaign(dto);
 
   res.status(httpStatus.CREATED).json({
-    message: "Campaign created",
-    data: campaignWithDocuments,
+    message: "Campaign created successfully",
+    data: campaign,
   });
 });
-
 const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaigns = await campaignService.getAllCampaigns(user.companyId);

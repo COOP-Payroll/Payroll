@@ -16,7 +16,7 @@ const createCompany = {
     level: Joi.string().valid(Level.MOHHEAD, Level.REGION),
   }),
 };
-
+ 
 
 const updateCompany = {
   body: Joi.object().keys({

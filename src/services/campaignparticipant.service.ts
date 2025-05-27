@@ -132,8 +132,25 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
     paymentMethod,
     companyId,
     detail,
+    isVerified,
     files, // ✅ Access files from data
   } = data;
+
+  console.log(isVerified);
+  if (!isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Please add verification ");
+  }
+
+  // const isActuallyVerified =
+  //   isVerified === true ||
+  //   (typeof isVerified === "string" && isVerified === "true");
+
+  // if (!isActuallyVerified) {
+  //   throw new ApiError(
+  //     httpStatus.BAD_REQUEST,
+  //     "Please verify selected payment method"
+  //   );
+  // }
 
   if (!["PHONENUMBER", "ACCOUNTNUMBER"].includes(paymentMethod)) {
     throw new ApiError(
@@ -257,17 +274,17 @@ const getParticipantsByCampaignId = async (campaignId: string) => {
   });
 };
 
-const getAllPublishedCampaigns = async () => {
+const getAllPublishedCampaigns = async (campaignId: string) => {
   return await prisma.campaignParticipant.findMany({
-    where: { isPublished: true },
-    include: { documents: true },
+    where: { campaignId: campaignId },
+    include: { participant: true, documents: true },
   });
 };
 
-const getAllApprovedCampaigns = async () => {
+const getAllApprovedCampaigns = async (campaignId: string) => {
   return await prisma.campaignParticipant.findMany({
-    where: { approvalStatus: "APPROVED" },
-    include: { documents: true },
+    where: { campaignId: campaignId },
+    include: { participant: true, documents: true },
   });
 };
 
@@ -293,8 +310,7 @@ export const registerBulkCampaignParticipants = async (
 ) => {
   const { participants, companyId, campaignId } = data;
 
-
-  console.log("dlfjlasdfjsdhfjhdn")
+  console.log("dlfjlasdfjsdhfjhdn");
   return await prisma.$transaction(async (tx) => {
     const rateSetting = await tx.rateSetting.findUnique({
       where: { companyId },
@@ -388,6 +404,30 @@ export const registerBulkCampaignParticipants = async (
   });
 };
 
+const updateAccountVerification = async (
+  id: string,
+  companyId: string,
+  isVerified: boolean
+) => {
+  const existing = await prisma.campaignParticipant.findFirst({
+    where: { id },
+  });
+  if (!existing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
+  }
+
+  if (existing.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account already verified");
+  }
+  const account = await prisma.campaignParticipant.update({
+    where: { id },
+    data: { isVerified },
+    // include: { documents: true },
+  });
+
+  return account;
+};
+
 export default {
   registerCampaignParticipant,
   getParticipantsByCampaignId,
@@ -395,4 +435,5 @@ export default {
   getAllApprovedCampaigns,
   updateCampaignParticipant,
   registerBulkCampaignParticipants,
+  updateAccountVerification,
 };

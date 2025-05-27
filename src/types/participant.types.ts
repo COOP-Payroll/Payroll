@@ -9,14 +9,12 @@ export interface CampaignParticipantInput {
   accountNumber?: string;
   paymentMethod: "PHONENUMBER" | "ACCOUNTNUMBER";
   companyId: string;
-
+  isVerified: Boolean;
   detail?: string;
-  files?: Express.Multer.File[]; 
+  files?: Express.Multer.File[];
 }
 
-
 export interface CampaignParticipantUpdateInput {
-
   fullName: string;
   gender: "MALE" | "FEMALE";
   address?: string;

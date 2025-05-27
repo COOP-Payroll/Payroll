@@ -1,6 +1,8 @@
 import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
+import { CustomerInfo } from "../types/account";
+import axios from "axios";
 
 export type LetterFile = {
   fileName: string;
@@ -26,22 +28,33 @@ const createAccount = async (data: CreateAccountDTO) => {
   if (!accountNumber || !companyId) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Missing required fields");
   }
+  // **Check uniqueness first**
+  const existingAccount = await prisma.account.findFirst({
+    where: { companyId, accountNumber },
+  });
+  if (existingAccount) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Account number ${accountNumber} already exists`
+    );
+  }
 
   // Create account with nested documents
   const account = await prisma.account.create({
     data: {
       accountNumber,
       companyId,
-      documents: documents && documents.length > 0
-        ? {
-            create: documents.map((doc) => ({
-              fileName: doc.fileName,
-              filePath: doc.filePath,
-              mimeType: doc.mimeType,
-              size: doc.size,
-            })),
-          }
-        : undefined,
+      documents:
+        documents && documents.length > 0
+          ? {
+              create: documents.map((doc) => ({
+                fileName: doc.fileName,
+                filePath: doc.filePath,
+                mimeType: doc.mimeType,
+                size: doc.size,
+              })),
+            }
+          : undefined,
     },
     include: {
       documents: true,
@@ -88,16 +101,17 @@ const updateAccount = async (
     where: { id },
     data: {
       ...(accountNumber != null && { accountNumber }),
-      documents: documents && documents.length > 0
-        ? {
-            create: documents.map((doc) => ({
-              fileName: doc.fileName,
-              filePath: doc.filePath,
-              mimeType: doc.mimeType,
-              size: doc.size,
-            })),
-          }
-        : undefined,
+      documents:
+        documents && documents.length > 0
+          ? {
+              create: documents.map((doc) => ({
+                fileName: doc.fileName,
+                filePath: doc.filePath,
+                mimeType: doc.mimeType,
+                size: doc.size,
+              })),
+            }
+          : undefined,
     },
     include: { documents: true },
   });
@@ -130,10 +144,7 @@ const assignMasterAccount = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
   }
   if (account.isMaster) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Account is already the master"
-    );
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account is already the master");
   }
 
   // Ensure no other master exists
@@ -169,6 +180,79 @@ const assignMasterAccount = async (
   return updated;
 };
 
+export const verifyAccountByNumber = async (
+  accountNumber: string
+): Promise<CustomerInfo> => {
+  if (!accountNumber) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account number is required");
+  }
+
+  const url = "http://10.1.245.150:7081/v1/cbo/";
+  const payload = {
+    AccountDetailsRequest: {
+      ESBHeader: {
+        serviceCode: "180000",
+        channel: "USSD",
+        Service_name: "accountEnquiryMC",
+        Message_Id: Date.now().toString(),
+      },
+      ACCTCOMPANYVIEWType: [{ criteriaValue: accountNumber }],
+    },
+  };
+
+  let response;
+  try {
+    response = await axios.post(url, payload);
+  } catch (err) {
+    throw new ApiError(
+      httpStatus.SERVICE_UNAVAILABLE,
+      "Failed to connect to account verification service"
+    );
+  }
+
+  const status = response?.data?.AccountDetailsResponse?.ESBStatus?.Status;
+  if (status === "Failure") {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      `External verification failed for account number: ${accountNumber}`
+    );
+  }
+
+  const info = response.data.AccountDetailsResponse.CustomerInfo;
+  if (!info) {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Invalid response from external verification service"
+    );
+  }
+
+  return info as CustomerInfo;
+};
+
+const updateAccountVerification = async (
+  id: string,
+  companyId: string,
+  isVerified: boolean
+) => {
+  const existing = await prisma.account.findFirst({
+    where: { id, companyId },
+  });
+  if (!existing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Account not found");
+  }
+
+  if (existing.isVerified) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Account already verified");
+  }
+  const account = await prisma.account.update({
+    where: { id },
+    data: { isVerified },
+    include: { documents: true },
+  });
+
+  return account;
+};
+
 export default {
   createAccount,
   getAllAccounts,
@@ -176,4 +260,6 @@ export default {
   updateAccount,
   deleteAccount,
   assignMasterAccount,
+  verifyAccountByNumber,
+  updateAccountVerification,
 };
