@@ -308,6 +308,8 @@ model CampaignStageStatus {
   approvedBy       User?                    @relation("UserApprovals", fields: [approvedById], references: [id])
   campaignApproval CampaignApprovalInstance @relation(fields: [instanceId], references: [id])
   stage            ApprovalStage            @relation(fields: [stageId], references: [id])
+
+  @@unique([instanceId, stageId])
 }
 
 model Payment {
