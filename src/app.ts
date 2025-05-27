@@ -13,20 +13,16 @@ import config from "./config/config";
 import morgan from "./config/morgan";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import paymentQueue from "./mq-client";
 import { ExpressAdapter } from "@bull-board/express";
+import { paymentQueue, smsQueue } from "./queues";
 
 const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath("/ui");
 
 createBullBoard({
-  queues: [new BullMQAdapter(paymentQueue)],
+  queues: [new BullMQAdapter(paymentQueue), new BullMQAdapter(smsQueue)],
   serverAdapter,
 });
-// const serverAdapter = createBullBoard({
-//   queues: [new BullMQAdapter(paymentQueue)],
-//   serverAdapter: new ExpressAdapter(),
-// });
 
 serverAdapter.setBasePath("/admin/queues");
 

@@ -1,20 +1,13 @@
 import httpStatus from "http-status";
 import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
-import {
-  ApprovalStage,
-  ApprovalStatus,
-  CampaignApprovalInstance,
-  CampaignStatus,
-  StageStatus,
-} from "@prisma/client";
+import { ApprovalStatus, CampaignStatus, StageStatus } from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/api-error";
 import { AuthUser } from "../types/express";
 import logger from "../config/logger";
 import { PaymentJobData, paymentJobSchema } from "../types/payment";
-import paymentQueue from "../mq-client";
 import campaignService from "./campaign.service";
+import { paymentQueue } from "../queues";
 
 const createCampaignForApproval = async (campaignId: string) => {
   const campaign = await prisma.campaign.findUnique({

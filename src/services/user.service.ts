@@ -1,5 +1,6 @@
 import httpStatus from "http-status";
-import { User, TokenType, Permission } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
+import { User, TokenType } from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/api-error";
 import { encryptPassword, isPasswordMatch } from "../utils/encryption";
@@ -7,6 +8,10 @@ import exclude from "../utils/exclude";
 import { AuthUser } from "../types/express";
 import { generateRandomPassword, generateUsername } from "../utils/helper";
 import roleService from "./role.service";
+import logger from "../config/logger";
+import { smsQueue } from "../queues";
+import { formatPhoneNumberForSms } from "../utils/format-phone-number";
+import { accountCreatedMessage } from "../templates/sms-template";
 
 /**
  * Create a user with optimized database queries
@@ -40,8 +45,6 @@ const createUser = async (
 
   const hashedPassword = await encryptPassword(rawPassword);
 
-  //TODO: implement send OTP
-
   const user = await prisma.user.create({
     data: {
       username,
@@ -55,6 +58,36 @@ const createUser = async (
   });
 
   await roleService.assignRoleToUser(user.id, roleId);
+
+  try {
+    const message = accountCreatedMessage(
+      user.name,
+      user.username,
+      rawPassword
+    );
+    const data = {
+      phoneNumber: formatPhoneNumberForSms(phoneNumber),
+      message,
+      jobId: uuidv4(),
+      type: "createAccount",
+    };
+    const job = await smsQueue.add("send-sms", data, {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 1000 },
+    });
+    logger.info(`SMS job queued for user ${user.id}`, {
+      bulkId: data.phoneNumber,
+      jobId: job.id,
+    });
+  } catch (error) {
+    logger.error(`Failed to queue send sms job for createUser ${user.id}`, {
+      error,
+    });
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Payment processing failed"
+    );
+  }
 
   return user;
 };
@@ -377,6 +410,7 @@ const forgotPassword = async (username: string) => {
   if (!user) throw new ApiError(httpStatus.BAD_REQUEST, "User does not exist");
 
   //TODO: send new password through sms
+
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
