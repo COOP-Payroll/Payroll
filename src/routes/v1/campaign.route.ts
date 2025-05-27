@@ -10,6 +10,8 @@ router
   .post(auth(), upload.array("documents"), campaignController.createCampaign)
   .get(auth(), campaignController.getAllCampaigns);
 
+router.get("/status", auth(), campaignController.getCampaignsByStatus);
+
 router
   .route("/:id")
   .get(auth(), campaignController.getCampaignById)

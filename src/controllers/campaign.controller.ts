@@ -299,6 +299,24 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as AuthUser;
+  const { status } = req.query;
+
+  if (!status) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Status query parameter is required"
+    );
+  }
+
+  const campaigns = await campaignService.getCampaignsByStatus(
+    user.companyId,
+    status as string
+  );
+  res.status(httpStatus.OK).json({ data: campaigns });
+});
+
 export default {
   createCampaign,
   getAllCampaigns,
@@ -306,4 +324,5 @@ export default {
   updateCampaign,
   deleteCampaign,
   processCampaign,
+  getCampaignsByStatus,
 };

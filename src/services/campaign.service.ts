@@ -381,6 +381,71 @@ const processCampaign = async (campaignId: string, companyId: string) => {
   });
 };
 
+const getCampaignsByStatus = async (companyId: string, status: string) => {
+  // Validate status
+  const validStatuses = ["ACTIVE", "PROCESSED", "APPROVED", "CLOSED"];
+  if (!validStatuses.includes(status)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+    );
+  }
+
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      isActive: true,
+      companyId,
+      status: status as CampaignStatus,
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      startDate: true,
+      endDate: true,
+      budget: true,
+      budgetSource: true,
+      status: true,
+      company: {
+        select: {
+          id: true,
+          organizationName: true,
+        },
+      },
+      documents: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
+          mimeType: true,
+          size: true,
+        },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+          department: {
+            select: {
+              deptName: true,
+              shorthandRepresentation: true,
+            },
+          },
+          position: {
+            select: {
+              positionName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return campaigns;
+}
 const updateCampaignStatus = async (
   campaignId: string,
   status: CampaignStatus
@@ -410,5 +475,6 @@ export default {
   deleteCampaign,
   deleteDocumentsByIds,
   processCampaign,
+  getCampaignsByStatus,
   updateCampaignStatus,
 };
