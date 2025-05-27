@@ -564,7 +564,39 @@ async function handleFinalApproval(
   }
 }
 
+const rollbackCampaignApproval = async (campaignId: string, user: AuthUser) => {
+  const instance = await getCampaignApprovalInstance(campaignId);
+  // const firstStage = await prisma.approvalStage.findFirst({
+  //   where: { instanceId: instance.id },
+  // });
+
+  if (!instance)
+    throw new ApiError(httpStatus.BAD_REQUEST, "There is no campaign approval");
+
+  if (!instance.currentStageId) {
+    await updateStageStatus(instance, user, StageStatus.REJECTED);
+    await handleRejection(instance);
+    return "Campaign rollback successfully";
+  }
+
+  if (instance && instance.currentStage && instance.currentStage.order !== 1)
+    throw new ApiError(httpStatus.BAD_REQUEST, "You can't rollback approval");
+
+  const campaignStageStatus = await prisma.campaignStageStatus.findFirst({
+    where: { id: instance.currentStageId },
+  });
+
+  if (campaignStageStatus?.status === StageStatus.APPROVED) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "You can't rollback approval");
+  }
+
+  await updateStageStatus(instance, user, StageStatus.REJECTED);
+  await handleRejection(instance);
+  return "Campaign rollback successfully";
+};
+
 export default {
   createCampaignForApproval,
   approveOrRejectCampaignStage,
+  rollbackCampaignApproval,
 };

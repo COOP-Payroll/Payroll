@@ -25,4 +25,13 @@ router
     campaignApprovalController.approveOrRejectCampaignStage
   );
 
+router
+  .route("/campaigns/rollback")
+  .post(
+    auth(),
+    checkPermission("create_campaign_approval"),
+    validate(approvalValidation.createCampaignForApprovalSchema),
+    campaignApprovalController.rollbackCampaignApproval
+  );
+
 export default router;

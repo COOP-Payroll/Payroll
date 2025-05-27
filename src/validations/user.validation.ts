@@ -29,7 +29,14 @@ const getUsers = {
   }),
 };
 
+const getUserSchema = {
+  params: Joi.object().keys({
+    userId: Joi.string().required(),
+  }),
+};
+
 export default {
   createUser,
   getUsers,
+  getUserSchema,
 };

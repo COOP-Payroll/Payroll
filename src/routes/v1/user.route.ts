@@ -11,8 +11,12 @@ router
   .post(auth(), validate(userValidation.createUser), userController.createUser)
   .get(auth(), validate(userValidation.getUsers), userController.getUsers);
 
-// router
-//   .route('/:userId')
-//   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
+router
+  .route("/:userId")
+  .get(
+    auth(),
+    validate(userValidation.getUserSchema),
+    userController.getUserById
+  );
 
 export default router;
