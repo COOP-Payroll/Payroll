@@ -390,8 +390,11 @@ enum ApprovalStatus {
 
 enum CampaignStatus {
   ACTIVE
+  PROCESSED
+  APPROVED
   CLOSED
 }
+
 
 enum CampaignTransactionStatus {
   PENDING
