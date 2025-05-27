@@ -2,7 +2,7 @@ import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
 import fs from "fs/promises";
-import { CampaignStatus } from "@prisma/client"; // 👈 import enum from Prisma
+import { CampaignStatus, Prisma } from "@prisma/client";
 
 // const createCampaign = async (data: {
 //   name: string;
@@ -445,6 +445,26 @@ const getCampaignsByStatus = async (companyId: string, status: string) => {
   });
 
   return campaigns;
+}
+const updateCampaignStatus = async (
+  campaignId: string,
+  status: CampaignStatus
+) => {
+  try {
+    const updatedCampaign = await prisma.campaign.update({
+      where: { id: campaignId },
+      data: { status },
+    });
+    return updatedCampaign;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Campaign not found");
+    }
+    throw error;
+  }
 };
 
 export default {
@@ -456,4 +476,5 @@ export default {
   deleteDocumentsByIds,
   processCampaign,
   getCampaignsByStatus,
+  updateCampaignStatus,
 };

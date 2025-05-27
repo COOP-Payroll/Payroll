@@ -30,7 +30,7 @@ const approveOrRejectCampaignStage = catchAsync(async (req, res) => {
 });
 
 const rollbackCampaignApproval = catchAsync(async (req, res) => {
-  const { campaignId } = req.body;
+  const { campaignId } = req.params;
   const user = req.user as AuthUser;
 
   await campaignForApprovalService.rollbackCampaignApproval(campaignId, user);

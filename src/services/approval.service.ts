@@ -5,6 +5,7 @@ import {
   ApprovalStage,
   ApprovalStatus,
   CampaignApprovalInstance,
+  CampaignStatus,
   StageStatus,
 } from "@prisma/client";
 import prisma from "../client";
@@ -13,6 +14,7 @@ import { AuthUser } from "../types/express";
 import logger from "../config/logger";
 import { PaymentJobData, paymentJobSchema } from "../types/payment";
 import paymentQueue from "../mq-client";
+import campaignService from "./campaign.service";
 
 const createCampaignForApproval = async (campaignId: string) => {
   const campaign = await prisma.campaign.findUnique({
@@ -566,9 +568,6 @@ async function handleFinalApproval(
 
 const rollbackCampaignApproval = async (campaignId: string, user: AuthUser) => {
   const instance = await getCampaignApprovalInstance(campaignId);
-  // const firstStage = await prisma.approvalStage.findFirst({
-  //   where: { instanceId: instance.id },
-  // });
 
   if (!instance)
     throw new ApiError(httpStatus.BAD_REQUEST, "There is no campaign approval");
@@ -576,6 +575,10 @@ const rollbackCampaignApproval = async (campaignId: string, user: AuthUser) => {
   if (!instance.currentStageId) {
     await updateStageStatus(instance, user, StageStatus.REJECTED);
     await handleRejection(instance);
+    await campaignService.updateCampaignStatus(
+      campaignId,
+      CampaignStatus["ACTIVE"]
+    );
     return "Campaign rollback successfully";
   }
 
@@ -592,6 +595,10 @@ const rollbackCampaignApproval = async (campaignId: string, user: AuthUser) => {
 
   await updateStageStatus(instance, user, StageStatus.REJECTED);
   await handleRejection(instance);
+  await campaignService.updateCampaignStatus(
+    campaignId,
+    CampaignStatus["ACTIVE"]
+  );
   return "Campaign rollback successfully";
 };
 

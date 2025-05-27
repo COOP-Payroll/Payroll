@@ -26,7 +26,7 @@ router
   );
 
 router
-  .route("/campaigns/rollback")
+  .route("/campaigns/:campaignId/rollback")
   .post(
     auth(),
     checkPermission("create_campaign_approval"),
