@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.campaignApprovalController = exports.workflowController = exports.adminController = exports.authController = exports.userController = exports.companyController = exports.testController = void 0;
+var test_1 = require("./test");
+Object.defineProperty(exports, "testController", { enumerable: true, get: function () { return __importDefault(test_1).default; } });
+var company_controller_1 = require("./company.controller");
+Object.defineProperty(exports, "companyController", { enumerable: true, get: function () { return __importDefault(company_controller_1).default; } });
+// export {default as departmentController} from './department.controller';
+var user_controller_1 = require("./user.controller");
+Object.defineProperty(exports, "userController", { enumerable: true, get: function () { return __importDefault(user_controller_1).default; } });
+var auth_controller_1 = require("./auth.controller");
+Object.defineProperty(exports, "authController", { enumerable: true, get: function () { return __importDefault(auth_controller_1).default; } });
+var admin_controller_1 = require("./admin.controller");
+Object.defineProperty(exports, "adminController", { enumerable: true, get: function () { return __importDefault(admin_controller_1).default; } });
+var workflow_controller_1 = require("./workflow.controller");
+Object.defineProperty(exports, "workflowController", { enumerable: true, get: function () { return __importDefault(workflow_controller_1).default; } });
+var approval_controller_1 = require("./approval.controller");
+Object.defineProperty(exports, "campaignApprovalController", { enumerable: true, get: function () { return __importDefault(approval_controller_1).default; } });
