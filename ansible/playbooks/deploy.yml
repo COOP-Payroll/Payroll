@@ -51,7 +51,7 @@
       args:
         chdir: "{{ app_dir }}"
     - name: Deploy Docker Compose
-      command: docker compose -f {{ app_dir }} up -d
+      command: docker compose -f up -d
       args:
         chdir: "{{ app_dir }}"
     - name: Reload Nginx
