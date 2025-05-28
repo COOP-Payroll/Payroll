@@ -15,19 +15,19 @@ services:
       - postgres
     restart: always
     command: ["pm2-runtime", "start", "dist/app.js", "--name", "api"]
-  worker:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL_DEV}
-      - DEFAULT_DEBIT_ACCOUNT=${DEFAULT_DEBIT_ACCOUNT}
-    depends_on:
-      - redis
-      - postgres
-    restart: always
-    command: ["pm2-runtime", "start", "dist/jobs/worker.js", "--name", "worker"]
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=${DATABASE_URL_DEV}
+  #     - DEFAULT_DEBIT_ACCOUNT=${DEFAULT_DEBIT_ACCOUNT}
+  #   depends_on:
+  #     - redis
+  #     - postgres
+  #   restart: always
+  #   command: ["pm2-runtime", "start", "dist/jobs/worker.js", "--name", "worker"]
   postgres:
     image: postgres:14
     environment:
