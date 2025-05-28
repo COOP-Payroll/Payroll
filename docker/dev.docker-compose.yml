@@ -17,8 +17,8 @@ services:
     command: ["pm2-runtime", "start", "dist/app.js", "--name", "api"]
   worker:
     build:
-      context: ..
-      dockerfile: campaign-management/docker/Dockerfile
+      context: .
+      dockerfile: docker/Dockerfile
     environment:
       - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL_DEV}
