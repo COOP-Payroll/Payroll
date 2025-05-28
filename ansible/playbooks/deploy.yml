@@ -14,7 +14,7 @@
       git:
         repo: "{{ git_repo }}"
         dest: "{{ app_dir }}"
-        version: moh-diredawa
+        version: moh-deploy
       environment:
         GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
     - name: Copy .env file
