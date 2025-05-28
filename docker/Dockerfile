@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
-RUN npm prisma db:push
+RUN npm run db:push
 RUN npx tsc
 RUN npm install -g pm2
 EXPOSE 3000
