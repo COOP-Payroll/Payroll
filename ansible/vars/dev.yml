@@ -1,0 +1,4 @@
+git_repo: "https://github.com/COOP-Payroll/Payroll.git"
+database_url: postgresql://moh_production_app:MoH%21App%232025%24Secure@10.12.53.67:5432/moh_dev_shadow_db?schema=public
+default_debit_account: 1022200021557
+env: dev

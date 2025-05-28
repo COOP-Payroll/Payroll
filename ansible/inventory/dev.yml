@@ -1,0 +1,8 @@
+all:
+  hosts:
+    10.12.53.43:
+      ansible_user: adugnat
+      ansible_ssh_pass: Cards@2025
+      # ansible_become: true
+  # vars_files:
+  #   - ../../vault.yml

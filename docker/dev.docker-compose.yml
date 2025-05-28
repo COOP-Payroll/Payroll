@@ -1,0 +1,61 @@
+version: "3.8"
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL_DEV}
+      - DEFAULT_DEBIT_ACCOUNT=${DEFAULT_DEBIT_ACCOUNT}
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - postgres
+    restart: always
+    command: ["pm2-runtime", "start", "dist/app.js", "--name", "api"]
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL_DEV}
+      - DEFAULT_DEBIT_ACCOUNT=${DEFAULT_DEBIT_ACCOUNT}
+    depends_on:
+      - redis
+      - postgres
+    restart: always
+    command: ["pm2-runtime", "start", "dist/jobs/worker.js", "--name", "worker"]
+  postgres:
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER_DEV}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DEV}
+      - POSTGRES_DB=campaign_dev
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+  redis:
+    image: redis:7
+    volumes:
+      - redis_data_dev:/data
+    ports:
+      - "6379:6379"
+    restart: always
+  nginx:
+    image: nginx:1.23
+    volumes:
+      - ../nginx/dev.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: always
+volumes:
+  postgres_data_dev:
+  redis_data_dev:

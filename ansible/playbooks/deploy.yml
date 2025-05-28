@@ -1,0 +1,51 @@
+---
+- name: Deploy Campaign Management Application
+  hosts: all
+  become: yes
+  vars:
+    app_dir: /opt/campaign-management
+  tasks:
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: "0755"
+    - name: Copy application code
+      git:
+        repo: "{{ git_repo }}"
+        dest: "{{ app_dir }}"
+        version: moh-diredawa
+      environment:
+        GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+    - name: Copy .env file
+      copy:
+        content: |
+          DATABASE_URL={{ database_url }}
+          DEFAULT_DEBIT_ACCOUNT={{ default_debit_account }}
+          PORT=3000
+        dest: "{{ app_dir }}/.env"
+        mode: "0600"
+    - name: Copy docker-compose.yml
+      copy:
+        src: "docker/{{ env }}.docker-compose.yml"
+        dest: "{{ app_dir }}/docker-compose.yml"
+        mode: "0644"
+    - name: Copy nginx configuration
+      copy:
+        src: "nginx/{{ env }}.conf"
+        dest: "/etc/nginx/conf.d/{{ env }}.conf"
+        mode: "0644"
+      when: env != 'prod' or (env == 'prod' and inventory_hostname in groups['api_servers'])
+    - name: Run Prisma migrations
+      command: docker run --rm -v {{ app_dir }}:/app -w /app --network host node:18-alpine npx prisma migrate deploy
+      args:
+        chdir: "{{ app_dir }}"
+    - name: Deploy Docker Compose
+      command: docker-compose -f {{ app_dir }}/docker-compose.yml up -d
+      args:
+        chdir: "{{ app_dir }}"
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
+      when: env != 'prod' or (env == 'prod' and inventory_hostname in groups['api_servers'])
