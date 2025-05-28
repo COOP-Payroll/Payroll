@@ -46,12 +46,12 @@
         dest: "/etc/nginx/conf.d/{{ env }}.conf"
         mode: "0644"
       when: env != 'prod' or (env == 'prod' and inventory_hostname in groups['api_servers'])
-    - name: Run Prisma migrations
-      command: docker run --rm -v {{ app_dir }}:/app -w /app --network host node:18-alpine npx prisma migrate deploy
-      args:
-        chdir: "{{ app_dir }}"
+    # - name: Run Prisma migrations
+    #   command: docker run --rm -v {{ app_dir }}:/app -w /app --network host node:18-alpine npx prisma migrate deploy
+    #   args:
+    #     chdir: "{{ app_dir }}"
     - name: Deploy Docker Compose
-      command: docker compose up --build -d
+      command: docker compose -f {{ app_dir }}/docker-compose.yml up -d
       args:
         chdir: "{{ app_dir }}"
     - name: Reload Nginx

@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: opt/campaign-management/docker/Dockerfile
     environment:
       - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL_DEV}
@@ -18,7 +18,7 @@ services:
   worker:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: opt/campaign-management/docker/Dockerfile
     environment:
       - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL_DEV}
