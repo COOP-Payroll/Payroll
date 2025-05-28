@@ -40,6 +40,11 @@
         src: "../../docker/{{ env }}.docker-compose.yml"
         dest: "{{ app_dir }}/docker-compose.yml"
         mode: "0644"
+    - name: Dockerfile
+      copy:
+        src: "../../docker/Dockerfile"
+        dest: "{{ app_dir }}/Dockerfile"
+        mode: "0644"
     - name: Copy nginx configuration
       copy:
         src: "../../nginx/{{ env }}.conf"
