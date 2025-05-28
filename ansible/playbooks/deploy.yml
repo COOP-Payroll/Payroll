@@ -17,12 +17,22 @@
         version: moh-deploy
       environment:
         GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
-    - name: Copy .env.dev file
+    - name: Copy .env file
       copy:
         content: |
           DATABASE_URL={{ database_url }}
           DEFAULT_DEBIT_ACCOUNT={{ default_debit_account }}
           PORT=3000
+          SMS_API_URL = "http://10.1.230.6:7081/v1/cbo/"
+          JWT_SECRET=mysecretkey
+          JWT_ACCESS_EXPIRATION_MINUTES=30
+          JWT_REFRESH_EXPIRATION_DAYS=30
+          JWT_RESET_PASSWORD_EXPIRATION_MINUTES=10
+          JWT_VERIFY_EMAIL_EXPIRATION_MINUTES=10
+          DATABASE_URL_DEV=postgresql://moh_production_app:MoH%21App%232025%24Secure@10.12.53.67:5432/moh_dev_shadow_db?schema=public
+          DEFAULT_DEBIT_ACCOUNT=1022200021557
+          POSTGRES_USER_DEV=moh_production_app
+          POSTGRES_PASSWORD_DEV=MoH%21App%232025%24Secure
         dest: "{{ app_dir }}/.env"
         mode: "0600"
     - name: Copy docker-compose.yml
@@ -36,10 +46,10 @@
         dest: "/etc/nginx/conf.d/{{ env }}.conf"
         mode: "0644"
       when: env != 'prod' or (env == 'prod' and inventory_hostname in groups['api_servers'])
-    # - name: Run Prisma migrations
-    #   command: docker run --rm -v {{ app_dir }}:/app -w /app --network host node:18-alpine npx prisma migrate deploy
-    #   args:
-    #     chdir: "{{ app_dir }}"
+    - name: Run Prisma migrations
+      command: docker run --rm -v {{ app_dir }}:/app -w /app --network host node:18-alpine npx prisma migrate deploy
+      args:
+        chdir: "{{ app_dir }}"
     - name: Deploy Docker Compose
       command: docker compose -f {{ app_dir }}/docker-compose.yml up -d
       args:
