@@ -5,7 +5,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
-    "postinstall": "prisma generate",
     "seed": "ts-node src/seeders/index.ts",
     "seed:admin": "ts-node src/seeders/superadmin.ts",
     "worker": "ts-node src/jobs/index.ts",
