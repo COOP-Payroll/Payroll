@@ -159,6 +159,7 @@ model Campaign {
   updatedAt            DateTime                   @updatedAt
   createdById          String
   companyId            String
+  remarks               String?
   status               CampaignStatus             @default(ACTIVE)
   company              Company                    @relation(fields: [companyId], references: [id])
   createdBy            User                       @relation("UserCampaignsCreated", fields: [createdById], references: [id])

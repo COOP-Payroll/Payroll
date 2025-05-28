@@ -21,6 +21,11 @@ router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 
 // router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 
-router.post("/process/:id", auth(), campaignController.processCampaign);
+router.post(
+  "/process/:id",
+  auth(),
+  upload.array("documents"),
+  campaignController.processCampaign
+);
 
 export default router;

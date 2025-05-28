@@ -288,9 +288,29 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaignId = req.params.id;
 
+  const files = req.files as Express.Multer.File[];
+  const remarks = req.body.remarks; // Get remarks from request body
+
+  if (!files || files.length === 0) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Documents are required for processing campaign"
+    );
+  }
+
+  // Map multer files into our DTO shape
+  const documents = files.map((file) => ({
+    fileName: file.originalname,
+    filePath: path.basename(file.path),
+    mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+    size: file.size,
+  }));
+
   const campaign = await campaignService.processCampaign(
     campaignId,
-    user.companyId
+    user.companyId,
+    remarks, // Pass remarks to service
+    documents
   );
 
   res.status(httpStatus.OK).json({

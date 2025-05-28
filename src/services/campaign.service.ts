@@ -4,79 +4,6 @@ import ApiError from "../utils/api-error";
 import fs from "fs/promises";
 import { CampaignStatus, Prisma } from "@prisma/client";
 
-// const createCampaign = async (data: {
-//   name: string;
-//   description?: string;
-//   startDate: Date;
-//   endDate: Date;
-//   budget: number;
-//   budgetSource: string;
-//   documents?: { fileName: string; filePath: string }[];
-//   createdById: string;
-//   companyId: string;
-// }) => {
-//   const {
-//     name,
-//     description,
-//     startDate,
-//     endDate,
-//     budget,
-//     budgetSource,
-//     documents = [],
-//     createdById,
-//     companyId,
-//   } = data;
-
-//   if (
-//     !name ||
-//     !budget ||
-//     !startDate ||
-//     !endDate ||
-//     !budgetSource ||
-//     !companyId ||
-//     !createdById
-//   ) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Missing required campaign fields"
-//     );
-//   }
-
-//   // ✅ Check for existing campaign with the same name in the company
-//   const existingCampaign = await prisma.campaign.findFirst({
-//     where: {
-//       name,
-//       companyId,
-//     },
-//   });
-
-//   if (existingCampaign) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       `Campaign with name ${name} already exists.`
-//     );
-//   }
-
-//   return await prisma.campaign.create({
-//     data: {
-//       name,
-//       description,
-//       startDate,
-//       endDate,
-//       budget,
-//       budgetSource,
-//       createdById,
-//       companyId,
-//       documents: {
-//         create: documents, // Nested document creation
-//       },
-//     },
-//     include: {
-//       documents: true,
-//     },
-//   });
-// };
-
 export interface CreateCampaignDTO {
   name: string;
   description?: string;
@@ -172,6 +99,7 @@ const getAllCampaigns = async (companyId: string) => {
       budget: true,
       budgetSource: true,
       status: true,
+      remarks: true,
       company: {
         select: {
           id: true,
@@ -363,18 +291,49 @@ const deleteDocumentsByIds = async (docIds: string[], campaignId: string) => {
   return docs;
 };
 
-const processCampaign = async (campaignId: string, companyId: string) => {
+const processCampaign = async (
+  campaignId: string,
+  companyId: string,
+  remarks: string,
+  documents: {
+    fileName: string;
+    filePath: string;
+    mimeType?: string;
+    size?: number;
+  }[]
+) => {
   const campaign = await prisma.campaign.findUnique({
     where: { id: campaignId, companyId },
+    include: { documents: true },
   });
 
   if (!campaign) {
     throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
   }
 
+  // Create documents for the campaign
+  await Promise.all(
+    documents.map((doc) =>
+      prisma.document.create({
+        data: {
+          fileName: doc.fileName,
+          filePath: doc.filePath,
+          mimeType: doc.mimeType,
+          size: doc.size,
+          campaign: {
+            connect: { id: campaignId },
+          },
+        },
+      })
+    )
+  );
+
   return prisma.campaign.update({
     where: { id: campaignId },
-    data: { status: "PROCESSED" },
+    data: {
+      status: "PROCESSED",
+      remarks: remarks,
+    },
     include: {
       documents: true,
     },
@@ -406,6 +365,7 @@ const getCampaignsByStatus = async (companyId: string, status: string) => {
       budget: true,
       budgetSource: true,
       status: true,
+      remarks: true,
       company: {
         select: {
           id: true,
