@@ -1,0 +1,14 @@
+# cls
+# version: "3.8"
+
+# services:
+#   payroll-backend:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: payroll-app
+#     ports:
+#       - "4400:4400"
+#     env_file:
+#       - .env # Automatically loads .env from the current directory
+#     restart: unless-stopped
