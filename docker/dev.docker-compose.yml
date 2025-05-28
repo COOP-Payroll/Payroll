@@ -1,8 +1,8 @@
 services:
   api:
     build:
-      context: ..
-      dockerfile: campaign-management/docker/Dockerfile
+      context: ./campaign-management
+      dockerfile: docker/Dockerfile
     environment:
       - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL_DEV}
