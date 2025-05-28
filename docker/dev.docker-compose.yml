@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: ./campaign-management
+      context: .
       dockerfile: docker/Dockerfile
     environment:
       - NODE_ENV=development
