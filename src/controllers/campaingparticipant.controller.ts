@@ -28,7 +28,11 @@ const registerCampaignParticipant = catchAsync(
 
       detail,
     } = req.body;
+    console.log("dafhdjsfhdhdjhd");
 
+    if (!campaignId || typeof campaignId !== "string") {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Invalid campaignId");
+    }
     const data = await campaignParticipantService.registerCampaignParticipant({
       campaignId,
       numberOfDaysInUrban: Number(numberOfDaysInUrban),

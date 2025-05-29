@@ -232,7 +232,7 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
         totalAmount,
       },
     });
-    console.log("filesddd");
+    console.log("filesddsfgfdhfjghd");
     console.log(files);
     console.log(files?.length); // Upload documents
     if (files?.length) {

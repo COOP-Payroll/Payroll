@@ -13,6 +13,7 @@ const router = express.Router();
 router
   .route("/")
   .post(
+    validate(campaignparticipantValidation.registerCampaignParticipantSchema),
     auth(),
     upload.array("documents"),
     campaignParticipantController.registerCampaignParticipant
