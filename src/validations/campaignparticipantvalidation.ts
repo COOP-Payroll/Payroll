@@ -14,8 +14,30 @@ const updateAccountVerificationSchema = {
   }),
 };
 
+export const registerCampaignParticipantSchema = {
+  body: Joi.object().keys({
+    campaignId: Joi.string().uuid().required().label("Campaign ID"),
+    fullName: Joi.string().required().label("Full Name"),
+    gender: Joi.string().valid("MALE", "FEMALE").required().label("Gender"),
+    address: Joi.string().required().label("Address"),
+    phoneNumber: Joi.string()
+      .pattern(/^[\d\s()+-]+$/)
+      .required()
+      .label("Phone Number"),
+    accountNumber: Joi.string().required().label("Account Number"),
+    paymentMethod: Joi.string()
+      .valid("PHONENUMBER", "ACCOUNTNUMBER")
+      .required()
+      .label("Payment Method"),
+    numberOfDaysInUrban: Joi.number().min(0).required().label("Urban Days"),
+    numberOfDaysInRural: Joi.number().min(0).required().label("Rural Days"),
+    isVerified: Joi.boolean().optional().label("Verification Status"),
+    detail: Joi.string().optional().label("Detail"),
+  }),
+};
 export default {
   updateAccountVerificationSchema,
+  registerCampaignParticipantSchema,
 };
 
 interface Participant {

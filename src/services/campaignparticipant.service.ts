@@ -209,9 +209,9 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
         fullName,
         gender,
         address,
-        // phoneNumber,
-        // accountNumber,
-        // paymentMethod,
+        phoneNumber,
+        accountNumber,
+        paymentMethod,
         companyId,
         detail,
       },
@@ -232,7 +232,7 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
         totalAmount,
       },
     });
-    console.log("filesddd");
+    console.log("filesddsfgfdhfjghd");
     console.log(files);
     console.log(files?.length); // Upload documents
     if (files?.length) {
@@ -372,6 +372,9 @@ export const registerBulkCampaignParticipants = async (
           address,
           companyId,
           detail,
+          phoneNumber,
+          accountNumber,
+          paymentMethod,
         },
       });
 
@@ -428,6 +431,34 @@ const updateAccountVerification = async (
   return account;
 };
 
+const getUnassignedParticipants = async (campaignId: string) => {
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId },
+  });
+
+  if (!campaign) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
+  }
+
+  // Get all participants that are not assigned to this campaign
+  const unassignedParticipants = await prisma.participant.findMany({
+    where: {
+      NOT: {
+        campaignParticipants: {
+          some: {
+            campaignId: campaignId,
+          },
+        },
+      },
+    },
+    // include: {
+    //   company: true,
+    // },
+  });
+
+  return unassignedParticipants;
+};
+
 export default {
   registerCampaignParticipant,
   getParticipantsByCampaignId,
@@ -436,4 +467,5 @@ export default {
   updateCampaignParticipant,
   registerBulkCampaignParticipants,
   updateAccountVerification,
+  getUnassignedParticipants,
 };

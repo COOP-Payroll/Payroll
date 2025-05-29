@@ -28,7 +28,11 @@ const registerCampaignParticipant = catchAsync(
 
       detail,
     } = req.body;
+    console.log("dafhdjsfhdhdjhd");
 
+    if (!campaignId || typeof campaignId !== "string") {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Invalid campaignId");
+    }
     const data = await campaignParticipantService.registerCampaignParticipant({
       campaignId,
       numberOfDaysInUrban: Number(numberOfDaysInUrban),
@@ -151,6 +155,22 @@ const getAllApprovedCampaigns = catchAsync(
       campaignId
     );
     res.status(httpStatus.OK).json({ data: campaigns });
+  }
+);
+
+const getUnassignedParticipants = catchAsync(
+  async (req: Request, res: Response) => {
+    const campaignId = req.query.campaignId as string;
+
+    if (!campaignId) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        message: "campaignId query parameter is required",
+      });
+    }
+
+    const participants =
+      await campaignParticipantService.getUnassignedParticipants(campaignId);
+    res.status(httpStatus.OK).json({ data: participants });
   }
 );
 
@@ -339,4 +359,5 @@ export default {
   updateCampaignParticipant,
   registerBulkCampaignParticipants,
   updateAccountVerification,
+  getUnassignedParticipants,
 };

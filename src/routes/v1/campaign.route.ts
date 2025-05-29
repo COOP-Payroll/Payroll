@@ -3,11 +3,21 @@ import campaignController from "../../controllers/campaign.controller";
 import { upload } from "../../config/multer";
 import auth from "../../middlewares/auth";
 
+import campaignparticipantvalidation from "../../validations/campaignparticipantvalidation";
+import validate from "../../middlewares/validate";
+
 const router = express.Router();
 
 router
   .route("/")
-  .post(auth(), upload.array("documents"), campaignController.createCampaign)
+
+  .post(
+
+    auth(),
+
+    upload.array("documents"),
+    campaignController.createCampaign
+  )
   .get(auth(), campaignController.getAllCampaigns);
 
 router.get("/status", auth(), campaignController.getCampaignsByStatus);
@@ -21,6 +31,11 @@ router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 
 // router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 
-router.post("/process/:id", auth(), campaignController.processCampaign);
+router.post(
+  "/process/:id",
+  auth(),
+  upload.array("documents"),
+  campaignController.processCampaign
+);
 
 export default router;

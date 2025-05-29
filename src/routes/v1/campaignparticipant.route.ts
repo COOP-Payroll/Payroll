@@ -13,6 +13,7 @@ const router = express.Router();
 router
   .route("/")
   .post(
+    validate(campaignparticipantValidation.registerCampaignParticipantSchema),
     auth(),
     upload.array("documents"),
     campaignParticipantController.registerCampaignParticipant
@@ -56,6 +57,12 @@ router.post(
   auth(),
   validate(campaignparticipantValidation.updateAccountVerificationSchema),
   campaignParticipantController.updateAccountVerification
+);
+
+router.get(
+  "/unassigned",
+  auth(),
+  campaignParticipantController.getUnassignedParticipants
 );
 
 export default router;

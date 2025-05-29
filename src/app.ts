@@ -46,16 +46,21 @@ app.use(express.urlencoded({ extended: true }));
 
 // gzip compression
 app.use(compression());
-
-// Enable CORS for all routes
-app.use(cors());
-
-// Enable pre-flight for all OPTIONS requests
-app.options("*name", cors());
-
 // parse urlencoded request body
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Enable CORS for all routes
+// app.use(cors());
+
+app.use(
+  cors({
+    origin: "*", // allow all origins
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+// Enable pre-flight for all OPTIONS requests
+app.options("*name", cors());
 
 // jwt authentication
 app.use(passport.initialize());
