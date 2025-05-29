@@ -34,4 +34,13 @@ router
     campaignApprovalController.rollbackCampaignApproval
   );
 
+router
+  .route("/campaigns/:campaignId/fetchCampaignApproval")
+  .get(
+    auth(),
+    checkPermission("view_campaign_approval"),
+    validate(approvalValidation.createCampaignForApprovalSchema),
+    campaignApprovalController.fetchCampaignApproval
+  );
+
 export default router;

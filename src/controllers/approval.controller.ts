@@ -39,8 +39,24 @@ const rollbackCampaignApproval = catchAsync(async (req, res) => {
   });
 });
 
+const fetchCampaignApproval = catchAsync(async (req, res) => {
+  const { campaignId } = req.params;
+  const user = req.user as AuthUser;
+
+  const result = await campaignForApprovalService.fetchCampaignApproval(
+    campaignId,
+    user
+  );
+
+  res.status(httpStatus.OK).send({
+    data: result,
+    message: "Campaign Approval retrieved successfully",
+  });
+});
+
 export default {
   createCampaignForApproval,
   approveOrRejectCampaignStage,
   rollbackCampaignApproval,
+  fetchCampaignApproval,
 };
