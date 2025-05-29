@@ -23,7 +23,7 @@
           DATABASE_URL={{ database_url }}
           DEFAULT_DEBIT_ACCOUNT={{ default_debit_account }}
           PORT=3000
-          SMS_API_URL = "http://10.1.230.6:7081/v1/cbo/"
+          SMS_API_URL=http://10.1.230.6:7081/v1/cbo/
           JWT_SECRET=mysecretkey
           JWT_ACCESS_EXPIRATION_MINUTES=30
           JWT_REFRESH_EXPIRATION_DAYS=30
