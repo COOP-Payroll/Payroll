@@ -16,7 +16,6 @@ const createCompany = {
     level: Joi.string().valid(Level.MOHHEAD, Level.REGION),
   }),
 };
- 
 
 const updateCompany = {
   body: Joi.object().keys({
@@ -28,12 +27,12 @@ const updateCompany = {
         "string.pattern.base": "Phone number must be 10 digits.",
       })
       .required(),
-    companyCode: Joi.string().required(),
+    companyCode: Joi.string().optional(),
     notes: Joi.string(),
     level: Joi.string().valid(Level.MOHHEAD, Level.REGION),
   }),
 };
 export default {
   createCompany,
-  updateCompany
+  updateCompany,
 };

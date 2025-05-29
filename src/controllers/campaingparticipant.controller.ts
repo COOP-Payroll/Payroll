@@ -277,9 +277,16 @@ export const registerBulkCampaignParticipants = catchAsync(
     }
 
     const file = req.file;
+
+    console.log("Received file:", file);
     if (!file) {
       throw new ApiError(httpStatus.BAD_REQUEST, "No Excel file uploaded");
     }
+
+    // const file = req.file;
+    // if (!file) {
+    //   throw new ApiError(httpStatus.BAD_REQUEST, "No Excel file uploaded");
+    // }
 
     const filePath = path.resolve(file.path);
     const workbook = XLSX.readFile(filePath);
