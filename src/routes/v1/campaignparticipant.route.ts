@@ -46,7 +46,6 @@ router.get(
 
 router.post(
   "/bulk/:id",
-
   upload.single("file"),
   auth(),
   campaignParticipantController.registerBulkCampaignParticipants

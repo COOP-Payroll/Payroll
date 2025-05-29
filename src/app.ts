@@ -56,15 +56,27 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // Enable CORS for all routes
 // app.use(cors());
 
+// app.use(
+//   cors({
+//     origin: "*", // allow all origins
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
+// // Enable pre-flight for all OPTIONS requests
+// app.options("*name", cors());
+
 app.use(
   cors({
-    origin: "*", // allow all origins
+    origin: "*", // Or better, use your frontend origin e.g. "http://localhost:3000"
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
-// Enable pre-flight for all OPTIONS requests
+
 app.options("*name", cors());
+
 
 // jwt authentication
 app.use(passport.initialize());
