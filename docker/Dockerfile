@@ -4,7 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
 RUN npx prisma generate
-RUN npx tsc
+RUN npm run build
 RUN npm install -g pm2
 EXPOSE 3000
-CMD ["pm2-runtime", "start", "dist/app.js", "--name", "api"]
+CMD ["pm2-runtime", "start", "build/src/index.js", "--name", "api"]
