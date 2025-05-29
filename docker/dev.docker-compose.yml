@@ -14,7 +14,7 @@ services:
       - redis
       - postgres
     restart: always
-    command: ["pm2-runtime", "start", "dist/app.js", "--name", "api"]
+    command: ["pm2-runtime", "start", "build/src/index.js", "--name", "api"]
   # worker:
   #   build:
   #     context: .
