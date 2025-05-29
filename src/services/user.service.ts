@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import { v4 as uuidv4 } from "uuid";
-import { User, TokenType } from "@prisma/client";
+import { User, TokenType, UserRole } from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/api-error";
 import { encryptPassword, isPasswordMatch } from "../utils/encryption";
@@ -197,6 +197,22 @@ const getUserById = async <Key extends keyof User>(
     },
     // select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
   }) as Promise<Pick<User, Key> | null>;
+};
+
+/**
+ * Get user by id
+ * @param {string} id
+ * @returns {Promise<UserRole[] | null>}
+ */
+const getUserRoleById = async (id: string): Promise<UserRole[] | null> => {
+  return prisma.userRole.findMany({
+    where: { id },
+    // select: {roleId: true}
+    // select: {
+    //   userRoles: { select: { role: { select: { id: true, name: true } } } },
+    // },
+    // select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+  });
 };
 
 /**
@@ -464,4 +480,5 @@ export default {
   getUserWithRoles,
   resetPassword,
   forgotPassword,
+  getUserRoleById,
 };
