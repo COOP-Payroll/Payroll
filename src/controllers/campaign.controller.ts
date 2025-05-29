@@ -118,6 +118,9 @@ export const createCampaign = catchAsync(
     const user = req.user as AuthUser;
     const files = req.files as Express.Multer.File[];
 
+    console.log("BODY:", req.body);
+    console.log("FILES:", req.files);
+
     // Map multer files into our DTO shape
     const documents = (files || []).map((file) => ({
       fileName: file.originalname,
