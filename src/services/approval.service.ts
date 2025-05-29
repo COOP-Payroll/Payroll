@@ -663,7 +663,14 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
     select: {
       currentStageId: true,
       stageStatuses: {
-        select: { status: true, approvedBy: { select: { name: true } } },
+        select: {
+          id: true,
+          status: true,
+          approvedBy: { select: { name: true } },
+          stage: {
+            select: { name: true },
+          },
+        },
       },
       currentStage: {
         select: {

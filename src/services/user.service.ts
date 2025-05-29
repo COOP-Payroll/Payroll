@@ -417,7 +417,7 @@ const resetPassword = async (
 
 const forgotPassword = async (username: string) => {
   // const password = generateRandomPassword();
-  const password = "SuperSecurePassword123";
+  const password = "SuperSecurePassword12";
   const [hashedPassword, user] = await Promise.all([
     encryptPassword(password),
     prisma.user.findUnique({
