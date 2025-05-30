@@ -19,7 +19,7 @@ router
     campaignParticipantController.registerCampaignParticipant
   );
 
-router.put(
+router.post(
   "/:id",
   auth(),
   upload.array("documents"),

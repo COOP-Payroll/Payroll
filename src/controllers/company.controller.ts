@@ -37,28 +37,65 @@ const getCompany = catchAsync(async (req, res) => {
   });
 });
 
+// export const updateCompany = catchAsync(async (req, res) => {
+//   const user = req.user as AuthUser;
+//   if (!user.companyId)
+//     throw new ApiError(httpStatus.BAD_REQUEST, "No company assigned");
+//   // const updates = req.body;
+
+//   // Ensure req.body exists before destructuring
+//   if (!req.body || typeof req.body !== "object") {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid request body");
+//   }
+
+//   const { companyCode, ...updates } = req.body;
+
+//   const company = await companyService.updateCompanyProfile(
+//     user.companyId,
+//     updates
+//   );
+//   res.status(httpStatus.OK).json({
+//     message: "Company updated successfully",
+//     data: company,
+//   });
+// });
+
 export const updateCompany = catchAsync(async (req, res) => {
   const user = req.user as AuthUser;
-  if (!user.companyId)
-    throw new ApiError(httpStatus.BAD_REQUEST, "No company assigned");
-  // const updates = req.body;
 
-  // Ensure req.body exists before destructuring
-  if (!req.body || typeof req.body !== "object") {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid request body");
+  if (!user.companyId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "No company assigned");
   }
 
-  const { companyCode, ...updates } = req.body;
+  // req.body will be strings (from form-data); convert if necessary
+  const {
+    //companyCode, // ignore this field
+    organizationName,
+    phoneNumber,
+    email,
+    notes,
+    level,
+  } = req.body;
+
+  const updates: any = {};
+
+  if (organizationName) updates.organizationName = organizationName;
+  if (phoneNumber) updates.phoneNumber = phoneNumber;
+  if (email) updates.email = email;
+  if (notes) updates.notes = notes;
+  if (level) updates.level = level;
 
   const company = await companyService.updateCompanyProfile(
     user.companyId,
     updates
   );
+
   res.status(httpStatus.OK).json({
     message: "Company updated successfully",
     data: company,
   });
 });
+
 export default {
   registerCompany,
   getCompany,

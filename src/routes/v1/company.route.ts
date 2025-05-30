@@ -3,6 +3,7 @@ import { companyController } from "../../controllers";
 import validate from "../../middlewares/validate";
 import companyValidation from "../../validations/company.validation";
 import auth from "../../middlewares/auth";
+import { upload } from "../../config/multer";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.get("/profile", auth(), companyController.getCompany);
 router.post(
   "/update",
   auth(),
+  upload.none(),
   validate(companyValidation.updateCompany),
   companyController.updateCompany
 );

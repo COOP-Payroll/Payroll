@@ -92,12 +92,38 @@ const getCompanyProfile = async (companyId: string) => {
   return company;
 };
 
+// export const updateCompanyProfile = async (
+//   companyId: string,
+//   updates: Partial<{
+//     organizationName: string;
+//     phoneNumber: string;
+//     // companyCode: string;
+//     email: string;
+//     notes: string;
+//     level: Level;
+//   }>
+// ): Promise<Company> => {
+//   const existing = await prisma.company.findUnique({
+//     where: { id: companyId },
+//   });
+//   if (!existing) throw new ApiError(httpStatus.NOT_FOUND, "Company not found");
+//   if (updates.email && updates.email !== existing.email) {
+//     if (await prisma.company.findFirst({ where: { email: updates.email } })) {
+//       throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");
+//     }
+//   }
+//    // 3. Destructure to remove any companyCode property
+//   //const { /* companyCode, */ ...allowedUpdates } = updates;
+//   return prisma.company.update({
+//     where: { id: companyId },
+//     data: updates,
+//   });
+// };
 export const updateCompanyProfile = async (
   companyId: string,
   updates: Partial<{
     organizationName: string;
     phoneNumber: string;
-    // companyCode: string;
     email: string;
     notes: string;
     level: Level;
@@ -106,14 +132,20 @@ export const updateCompanyProfile = async (
   const existing = await prisma.company.findUnique({
     where: { id: companyId },
   });
-  if (!existing) throw new ApiError(httpStatus.NOT_FOUND, "Company not found");
+
+  if (!existing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Company not found");
+  }
+
   if (updates.email && updates.email !== existing.email) {
-    if (await prisma.company.findFirst({ where: { email: updates.email } })) {
+    const emailTaken = await prisma.company.findFirst({
+      where: { email: updates.email },
+    });
+    if (emailTaken) {
       throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");
     }
   }
-   // 3. Destructure to remove any companyCode property
-  //const { /* companyCode, */ ...allowedUpdates } = updates;
+
   return prisma.company.update({
     where: { id: companyId },
     data: updates,
