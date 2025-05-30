@@ -459,6 +459,34 @@ const getUnassignedParticipants = async (campaignId: string) => {
   return unassignedParticipants;
 };
 
+const softDeleteCampaignParticipant = async (id: string, companyId: string) => {
+  const campaignParticipant = await prisma.campaignParticipant.findUnique({
+    where: { id },
+    include: { campaign: true },
+  });
+
+  if (!campaignParticipant) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Campaign participant not found");
+  }
+
+  if (campaignParticipant.campaign.companyId !== companyId) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "Not authorized to delete this participant"
+    );
+  }
+
+  return await prisma.campaignParticipant.update({
+    where: { id },
+    data: { isActive: false },
+    include: {
+      participant: true,
+      documents: true,
+      campaign: true,
+    },
+  });
+};
+
 export default {
   registerCampaignParticipant,
   getParticipantsByCampaignId,
@@ -468,4 +496,5 @@ export default {
   registerBulkCampaignParticipants,
   updateAccountVerification,
   getUnassignedParticipants,
+  softDeleteCampaignParticipant,
 };

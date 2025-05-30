@@ -5,6 +5,7 @@ import auth from "../../middlewares/auth";
 
 import campaignparticipantvalidation from "../../validations/campaignparticipantvalidation";
 import validate from "../../middlewares/validate";
+import campaignValidation from "../../validations/campaign.validation";
 
 const router = express.Router();
 
@@ -12,7 +13,6 @@ router
   .route("/")
 
   .post(
-
     auth(),
 
     upload.array("documents"),
@@ -28,6 +28,11 @@ router
   .put(auth(), upload.array("documents"), campaignController.updateCampaign);
 
 router.post("/delete/:id", auth(), campaignController.deleteCampaign);
+
+router.post("/document", 
+    
+  validate(campaignValidation.deleteDocument),
+  auth(), campaignController.deleteDocument);
 
 // router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 

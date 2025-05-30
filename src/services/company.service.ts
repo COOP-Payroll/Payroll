@@ -113,7 +113,7 @@ export const updateCompanyProfile = async (
     }
   }
    // 3. Destructure to remove any companyCode property
-  const { /* companyCode, */ ...allowedUpdates } = updates;
+  //const { /* companyCode, */ ...allowedUpdates } = updates;
   return prisma.company.update({
     where: { id: companyId },
     data: updates,

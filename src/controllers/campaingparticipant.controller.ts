@@ -357,6 +357,29 @@ const updateAccountVerification = catchAsync(
     });
   }
 );
+
+const softDeleteCampaignParticipant = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+    const participantId = req.params.id;
+
+    if (!participantId) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Participant ID is required");
+    }
+
+    const deletedParticipant =
+      await campaignParticipantService.softDeleteCampaignParticipant(
+        participantId,
+        user.companyId
+      );
+
+    res.status(httpStatus.OK).json({
+      message: "Campaign participant deleted successfully",
+      data: deletedParticipant,
+    });
+  }
+);
+
 export default {
   registerCampaignParticipant,
   downloadParticipantTemplate,
@@ -367,4 +390,5 @@ export default {
   registerBulkCampaignParticipants,
   updateAccountVerification,
   getUnassignedParticipants,
+  softDeleteCampaignParticipant,
 };
