@@ -29,10 +29,13 @@ router
 
 router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 
-router.post("/document", 
-    
-  validate(campaignValidation.deleteDocument),
-  auth(), campaignController.deleteDocument);
+// router.post(
+//   "/document",
+
+//   validate(campaignValidation.deleteDocument),
+//   auth(),
+//   campaignController.deleteDocument
+// );
 
 // router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 
