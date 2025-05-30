@@ -644,25 +644,25 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
   )
     throw new ApiError(httpStatus.BAD_REQUEST, "There is no campaign approval");
 
-  const userRoles = await prisma.userRole.findMany({
-    where: { userId: user.id },
-    select: { roleId: true },
-  });
+  // const userRoles = await prisma.userRole.findMany({
+  //   where: { userId: user.id },
+  //   select: { roleId: true },
+  // });
 
-  const currentStageRoleIds = instance.currentStage.stageRoles.map(
-    (r) => r.roleId
-  );
-  const userRoleIds = userRoles.map((r) => r.roleId);
+  // const currentStageRoleIds = instance.currentStage.stageRoles.map(
+  //   (r) => r.roleId
+  // );
+  // const userRoleIds = userRoles.map((r) => r.roleId);
 
-  const canUserApprove = userRoleIds.some((role) =>
-    currentStageRoleIds.includes(role)
-  );
-  if (!canUserApprove) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "You are not allowed to fetch campaign approval stages"
-    );
-  }
+  // const canUserApprove = userRoleIds.some((role) =>
+  //   currentStageRoleIds.includes(role)
+  // );
+  // if (!canUserApprove) {
+  //   throw new ApiError(
+  //     httpStatus.BAD_REQUEST,
+  //     "You are not allowed to fetch campaign approval stages"
+  //   );
+  // }
 
   const [campaign, totalParticipants] = await Promise.all([
     prisma.campaign.findUnique({
@@ -732,11 +732,41 @@ const fetchCampaignApprovalInstance = async (user: AuthUser) => {
   return campaigns;
 };
 
-// const fetchCampaignReport = async (campaignId: string, user: AuthUser) => {
-//   const campaignReport = await prisma.payment.findFirst({
-//     where: {participantId}
-//   })
-// }
+const fetchCampaignReport = async (campaignId: string, user: AuthUser) => {
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId },
+    include: {
+      campaignParticipants: {
+        include: {
+          participant: true,
+          payments: true,
+          documents: true,
+        },
+      },
+    },
+  });
+
+  if (!campaign) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Campaign not found");
+  }
+
+  const transactions = campaign.campaignParticipants.map((cp) => ({
+    participantId: cp.participantId,
+    fullName: cp.participant.fullName,
+    phoneNumber: cp.participant.phoneNumber,
+    accountNumber: cp.accountNumber,
+    paymentMethod: cp.paymentMethod,
+    totalAmount: cp.totalAmount,
+    paymentStatus: cp.paymentStatus,
+    approvalStatus: cp.approvalStatus,
+    isPublished: cp.isPublished,
+    isVerified: cp.isVerified,
+    documents: cp.documents,
+    payments: cp.payments,
+    createdAt: cp.createdAt,
+    updatedAt: cp.updatedAt,
+  }));
+};
 
 export default {
   createCampaignForApproval,
