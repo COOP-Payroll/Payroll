@@ -43,4 +43,12 @@ router
     campaignApprovalController.fetchCampaignApproval
   );
 
+router
+  .route("/campaigns/fetchActiveApproval")
+  .get(
+    auth(),
+    checkPermission("view_campaign_approval"),
+    campaignApprovalController.fetchCampaignApprovalInstance
+  );
+
 export default router;

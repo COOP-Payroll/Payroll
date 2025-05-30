@@ -406,14 +406,19 @@ async function getCampaignApprovalInstance(campaignId: string) {
       "Campaign approval instance not found"
     );
   }
+
   return instance;
 }
 
 async function checkCampaignReadyForApproval(instance: any) {
-  if (!instance.currentStage || !instance.currentStageId) {
+  if (
+    !instance.currentStage ||
+    !instance.currentStageId ||
+    instance.status === ApprovalStatus.REJECTED
+  ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Campaign is not ready for approval"
+      "Campaign is not ready for approval or rejected"
     );
   }
 }
@@ -423,6 +428,19 @@ async function updateStageStatus(
   user: AuthUser,
   action: StageStatus
 ) {
+  const alreadyApprovedStage = await prisma.campaignStageStatus.findFirst({
+    where: {
+      instanceId: instance.id,
+      stageId: instance.currentStageId,
+    },
+  });
+
+  if (alreadyApprovedStage?.status !== StageStatus["PENDING"]) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Campaign is already ${alreadyApprovedStage?.status}`
+    );
+  }
   const updatedCount = await prisma.campaignStageStatus.updateMany({
     where: {
       instanceId: instance.id,
@@ -694,9 +712,36 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
   };
 };
 
+const fetchCampaignApprovalInstance = async (user: AuthUser) => {
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      companyId: user.companyId,
+      isActive: true,
+      approvalInstances: {
+        some: {
+          status: ApprovalStatus.PENDING,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return campaigns;
+};
+
+// const fetchCampaignReport = async (campaignId: string, user: AuthUser) => {
+//   const campaignReport = await prisma.payment.findFirst({
+//     where: {participantId}
+//   })
+// }
+
 export default {
   createCampaignForApproval,
   approveOrRejectCampaignStage,
   rollbackCampaignApproval,
   fetchCampaignApproval,
+  fetchCampaignApprovalInstance,
 };
