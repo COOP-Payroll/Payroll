@@ -406,12 +406,18 @@ const processCampaign = async (
   return await prisma.$transaction(async (tx) => {
     const campaign = await tx.campaign.findUnique({
       where: { id: campaignId, companyId },
-      include: { documents: true },
+      include: { documents: true, approvalInstances: true },
     });
 
     if (!campaign) {
       throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
     }
+
+    if (campaign.approvalInstances)
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Campaign is already submitted for approval"
+      );
 
     if (campaign.status === "PROCESSED" || campaign.status === "CLOSED") {
       throw new ApiError(

@@ -406,14 +406,19 @@ async function getCampaignApprovalInstance(campaignId: string) {
       "Campaign approval instance not found"
     );
   }
+
   return instance;
 }
 
 async function checkCampaignReadyForApproval(instance: any) {
-  if (!instance.currentStage || !instance.currentStageId) {
+  if (
+    !instance.currentStage ||
+    !instance.currentStageId ||
+    instance.status === ApprovalStatus.REJECTED
+  ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Campaign is not ready for approval"
+      "Campaign is not ready for approval or rejected"
     );
   }
 }
@@ -423,6 +428,19 @@ async function updateStageStatus(
   user: AuthUser,
   action: StageStatus
 ) {
+  const alreadyApprovedStage = await prisma.campaignStageStatus.findFirst({
+    where: {
+      instanceId: instance.id,
+      stageId: instance.currentStageId,
+    },
+  });
+
+  if (alreadyApprovedStage?.status !== StageStatus["PENDING"]) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Campaign is already ${alreadyApprovedStage?.status}`
+    );
+  }
   const updatedCount = await prisma.campaignStageStatus.updateMany({
     where: {
       instanceId: instance.id,
@@ -597,73 +615,19 @@ const rollbackCampaignApproval = async (campaignId: string, user: AuthUser) => {
 };
 
 const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
-  // const instance = await getCampaignApprovalInstance(campaignId);
-  // const authUser = await userService.getUserRoleById(user.id);
-
-  // if (!instance || !authUser || !instance.currentStageId)
-  //   throw new ApiError(httpStatus.BAD_REQUEST, "There is no campaign approval");
-
-  // const currentStage = await prisma.stageRole.findMany({
-  //   where: { stageId: instance.currentStageId },
-  // });
-  // const currentStages = currentStage.map((stage) => stage.roleId);
-  // const authUserRole = authUser.map((user) => user.roleId);
-
-  // const canUserApprove = authUserRole.some((role) =>
-  //   currentStages.includes(role)
-  // );
-
-  // if (!canUserApprove)
-  //   throw new ApiError(
-  //     httpStatus.BAD_REQUEST,
-  //     "You are not allowed to fetch campaign approval stages"
-  //   );
-
-  // const [result, totalParticipant] = await Promise.all([
-  //   prisma.campaign.findMany({
-  //     where: { id: campaignId },
-  //     include: {
-  //       campaignParticipants: {
-  //         select: {
-  //           id: true,
-  //           totalAmount: true,
-  //           accountNumber: true,
-  //           phoneNumber: true,
-  //           isVerified: true,
-  //           numberOfDaysInUrban: true,
-  //           numberOfDaysInRural: true,
-  //           participant: { select: { id: true, fullName: true, gender: true } },
-  //           documents: { select: { filePath: true } },
-  //         },
-  //       },
-  //     },
-  //   }),
-  //   prisma.participant.count(),
-  // ]);
-
-  // const getStageWithApproveBy = await prisma.campaignApprovalInstance.findFirst(
-  //   {
-  //     where: { campaignId },
-  //     select: {
-  //       stageStatuses: {
-  //         select: { status: true, approvedBy: { select: { name: true } } },
-  //       },
-  //     },
-  //   }
-  // );
-
-  // return {
-  //   result,
-  //   getStageWithApproveBy,
-  //   totalParticipant,
-  //   totalPaying: 1000,
-  // };
   const instance = await prisma.campaignApprovalInstance.findFirst({
     where: { campaignId },
     select: {
       currentStageId: true,
       stageStatuses: {
-        select: { status: true, approvedBy: { select: { name: true } } },
+        select: {
+          id: true,
+          status: true,
+          approvedBy: { select: { name: true } },
+          stage: {
+            select: { name: true },
+          },
+        },
       },
       currentStage: {
         select: {
@@ -716,6 +680,7 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
             isVerified: true,
             numberOfDaysInUrban: true,
             numberOfDaysInRural: true,
+            paymentMethod: true,
             participant: {
               select: { id: true, fullName: true, gender: true },
             },
@@ -747,9 +712,36 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
   };
 };
 
+const fetchCampaignApprovalInstance = async (user: AuthUser) => {
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      companyId: user.companyId,
+      isActive: true,
+      approvalInstances: {
+        some: {
+          status: ApprovalStatus.PENDING,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return campaigns;
+};
+
+// const fetchCampaignReport = async (campaignId: string, user: AuthUser) => {
+//   const campaignReport = await prisma.payment.findFirst({
+//     where: {participantId}
+//   })
+// }
+
 export default {
   createCampaignForApproval,
   approveOrRejectCampaignStage,
   rollbackCampaignApproval,
   fetchCampaignApproval,
+  fetchCampaignApprovalInstance,
 };
