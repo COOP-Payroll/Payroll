@@ -53,6 +53,7 @@ model Department {
   updatedAt               DateTime @updatedAt
   company                 Company  @relation(fields: [companyId], references: [id])
   departmentUsers         User[]
+  departmentApprovalWorkflows       ApprovalWorkflow[]
 }
 
 model Position {
@@ -246,11 +247,13 @@ model ApprovalWorkflow {
   id                       String                     @id @default(cuid())
   name                     String
   companyId                String
+  departmentId             String
   isActive                 Boolean                    @default(true)
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
   stages                   ApprovalStage[]
   company                  Company                    @relation(fields: [companyId], references: [id])
+  department               Department                 @relation(fields: [departmentId], references: [id])
   CampaignApprovalInstance CampaignApprovalInstance[]
 }
 

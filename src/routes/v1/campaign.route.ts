@@ -6,6 +6,7 @@ import auth from "../../middlewares/auth";
 import campaignparticipantvalidation from "../../validations/campaignparticipantvalidation";
 import validate from "../../middlewares/validate";
 import campaignValidation from "../../validations/campaign.validation";
+import { checkPermission } from "../../middlewares/checkPermissions";
 
 const router = express.Router();
 
@@ -40,8 +41,10 @@ router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 // router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 
 router.post(
-  "/process/:id",
+  "/process",
   auth(),
+  checkPermission("create_campaign_approval"),
+  validate(campaignValidation.campaignProcessSchema),
   upload.array("documents"),
   campaignController.processCampaign
 );

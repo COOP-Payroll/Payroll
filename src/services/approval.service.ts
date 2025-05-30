@@ -618,6 +618,7 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
   const instance = await prisma.campaignApprovalInstance.findFirst({
     where: { campaignId },
     select: {
+      id: true,
       currentStageId: true,
       stageStatuses: {
         select: {
@@ -631,7 +632,10 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
       },
       currentStage: {
         select: {
-          stageRoles: { select: { roleId: true } },
+          order: true,
+          stageRoles: {
+            select: { roleId: true },
+          },
         },
       },
     },
@@ -663,6 +667,58 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
   //     "You are not allowed to fetch campaign approval stages"
   //   );
   // }
+
+  const currentCampaignApprovalOrder = instance.currentStage.order;
+
+  const campaignApprovalInstances =
+    await prisma.campaignApprovalInstance.findMany({
+      where: {
+        // Only include instances with a currentStage
+        currentStage: {
+          isNot: null,
+        },
+        // Check if there's at least one stageRole whose stage order <= currentStage.order
+        workflow: {
+          stages: {
+            some: {
+              order: {
+                lte: currentCampaignApprovalOrder, // you need to get this per-instance
+              },
+              stageRoles: {
+                some: {
+                  role: {
+                    userRoles: {
+                      some: {
+                        userId: user.id,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      include: {
+        currentStage: true,
+      },
+    });
+
+  if (campaignApprovalInstances.length === 0) return [];
+
+  console.log("----", campaignApprovalInstances);
+  // const userDetail = await prisma.userRole.findMany({
+  //   where: { instanceId: instance.id },
+  // });
+
+  // const userRoless = await prisma.userRole.findMany({
+  //   where: { userId: user.id },
+  //   select: { roleId: true },
+  // });
+
+  // const roleStage = await prisma.stageRole.findMany({
+  //   where: {roleId: userRoless}
+  // })
 
   const [campaign, totalParticipants] = await Promise.all([
     prisma.campaign.findUnique({
@@ -732,7 +788,7 @@ const fetchCampaignApprovalInstance = async (user: AuthUser) => {
   return campaigns;
 };
 
-const fetchCampaignReport = async (campaignId: string, user: AuthUser) => {
+const fetchCampaignReport = async (campaignId: string) => {
   const campaign = await prisma.campaign.findUnique({
     where: { id: campaignId },
     include: {
@@ -766,6 +822,7 @@ const fetchCampaignReport = async (campaignId: string, user: AuthUser) => {
     createdAt: cp.createdAt,
     updatedAt: cp.updatedAt,
   }));
+  return { campaignId, transactions };
 };
 
 export default {
@@ -774,4 +831,5 @@ export default {
   rollbackCampaignApproval,
   fetchCampaignApproval,
   fetchCampaignApprovalInstance,
+  fetchCampaignReport,
 };

@@ -17,6 +17,16 @@ const deleteDocument = {
   }),
 };
 
+const campaignProcessSchema = {
+  body: Joi.object({
+    campaignId: Joi.string()
+      .required()
+      .description("Campaign ID associated with the flow"),
+    workflowId: Joi.string().required().description("workflowId is required"),
+  }),
+};
+
 export default {
   deleteDocument,
+  campaignProcessSchema,
 };

@@ -401,13 +401,38 @@ const processCampaign = async (
     filePath: string;
     mimeType?: string;
     size?: number;
-  }[]
+  }[],
+  workflowId: string
 ) => {
   return await prisma.$transaction(async (tx) => {
     const campaign = await tx.campaign.findUnique({
       where: { id: campaignId, companyId },
       include: { documents: true, approvalInstances: true },
     });
+
+    const workflow = await tx.approvalWorkflow.findUnique({
+      where: { id: workflowId },
+      include: {
+        stages: {
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+
+    if (!workflow || workflow.stages.length === 0) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Approval workflow or stages not found for this company"
+      );
+    }
+
+    const firstStage = workflow.stages.find((stage) => stage.order === 1);
+    if (!firstStage) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "No initial approval stage found"
+      );
+    }
 
     if (!campaign) {
       throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
@@ -442,31 +467,16 @@ const processCampaign = async (
       )
     );
 
-    const workflow = await tx.approvalWorkflow.findFirst({
-      where: {
-        companyId: campaign.companyId,
-      },
-      include: {
-        stages: {
-          orderBy: { order: "asc" },
-        },
-      },
-    });
-
-    if (!workflow || workflow.stages.length === 0) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "Approval workflow or stages not found for this company"
-      );
-    }
-
-    const firstStage = workflow.stages.find((stage) => stage.order === 1);
-    if (!firstStage) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "No initial approval stage found"
-      );
-    }
+    // const workflow = await tx.approvalWorkflow.findFirst({
+    //   where: {
+    //     companyId: campaign.companyId,
+    //   },
+    //   include: {
+    //     stages: {
+    //       orderBy: { order: "asc" },
+    //     },
+    //   },
+    // });
 
     const approvalInstance = await tx.campaignApprovalInstance.create({
       data: {
