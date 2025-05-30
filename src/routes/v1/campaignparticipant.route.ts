@@ -64,4 +64,10 @@ router.get(
   campaignParticipantController.getUnassignedParticipants
 );
 
+router.delete(
+  "/:id",
+  auth(),
+  campaignParticipantController.softDeleteCampaignParticipant
+);
+
 export default router;
