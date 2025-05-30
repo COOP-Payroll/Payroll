@@ -18,20 +18,6 @@ const registerCompany = catchAsync(async (req, res) => {
     .send({ data: company, message: "Company created successfully!" });
 });
 
-// const getCompany = catchAsync(async (req, res) => {
-//     const user = req.user as User;
-//     const company = await companyService.getCompanyById(user.id);
-//     if (!user) {
-//     throw new ApiError(httpStatus.NOT_FOUND, 'Company not found');
-//   }
-//     res.status(httpStatus.OK).send({data: company, message: "Company retrieved successfully"})
-// })
-
-// const updateCompany = catchAsync(async (req, res) => {
-//   const user = await companyService.updateCompanyById(req.params.userId, req.body);
-//   res.send(user);
-// });
-
 const getCompany = catchAsync(async (req, res) => {
   const user = req.user as AuthUser;
 
@@ -56,7 +42,14 @@ export const updateCompany = catchAsync(async (req, res) => {
   if (!user.companyId)
     throw new ApiError(httpStatus.BAD_REQUEST, "No company assigned");
   // const updates = req.body;
+
+  // Ensure req.body exists before destructuring
+  if (!req.body || typeof req.body !== "object") {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid request body");
+  }
+
   const { companyCode, ...updates } = req.body;
+
   const company = await companyService.updateCompanyProfile(
     user.companyId,
     updates

@@ -20,7 +20,7 @@ export interface CreateCampaignDTO {
     size?: number;
   }[];
 }
-
+  
 export const createCampaign = async (data: CreateCampaignDTO) => {
   const {
     name,
