@@ -53,6 +53,9 @@ const updateCampaignParticipant = async (
         fullName,
         gender,
         address,
+        phoneNumber,
+        accountNumber,
+        paymentMethod,
         // companyId, // make sure companyId is included here
         detail,
       },
