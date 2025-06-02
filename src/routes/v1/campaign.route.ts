@@ -7,6 +7,7 @@ import campaignparticipantvalidation from "../../validations/campaignparticipant
 import validate from "../../middlewares/validate";
 import campaignValidation from "../../validations/campaign.validation";
 import { checkPermission } from "../../middlewares/checkPermissions";
+import { multerErrorHandler } from "../../middlewares/multerErrorHandler";
 
 const router = express.Router();
 
@@ -30,13 +31,13 @@ router
 
 router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 
-// router.post(
-//   "/document",
+router.post(
+  "/document",
 
-//   validate(campaignValidation.deleteDocument),
-//   auth(),
-//   campaignController.deleteDocument
-// );
+  validate(campaignValidation.deleteDocument),
+  auth(),
+  campaignController.deleteDocument
+);
 
 // router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 
@@ -44,6 +45,7 @@ router.post(
   "/process/:id",
   auth(),
   upload.array("documents"),
+  multerErrorHandler,
   campaignController.processCampaign
 );
 
