@@ -19,7 +19,7 @@ router
     campaignParticipantController.registerCampaignParticipant
   );
 
-router.put(
+router.post(
   "/:id",
   auth(),
   upload.array("documents"),
@@ -64,8 +64,8 @@ router.get(
   campaignParticipantController.getUnassignedParticipants
 );
 
-router.delete(
-  "/:id",
+router.post(
+  "/delete/:id",
   auth(),
   campaignParticipantController.softDeleteCampaignParticipant
 );

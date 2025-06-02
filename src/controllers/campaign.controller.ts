@@ -200,34 +200,145 @@ const deleteDocumentsByQuery = catchAsync(
   }
 );
 
+// const processCampaign = catchAsync(async (req: Request, res: Response) => {
+//   const user = req.user as AuthUser;
+//   const campaignId = req.params.id;
+
+//   const files = req.files as Express.Multer.File[];
+//   const remarks = req?.body?.remarks; // Get remarks from request body
+
+//   if (!files || files.length === 0) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       "Documents are required for processing campaign"
+//     );
+//   }
+
+//   // Map multer files into our DTO shape
+//   const documents = files.map((file) => ({
+//     fileName: file.originalname,
+//     filePath: path.basename(file.path),
+//     mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//     size: file.size,
+//   }));
+
+//   const campaign = await campaignService.processCampaign(
+//     campaignId,
+//     user?.companyId,
+//     remarks, // Pass remarks to service
+//     documents
+//   );
+
+//   res.status(httpStatus.OK).json({
+//     message: "Campaign processed successfully",
+//     data: campaign,
+//   });
+// });
+
+// const processCampaign = catchAsync(async (req: Request, res: Response) => {
+//   try {
+//     console.log("Processing campaign request");
+
+//     const user = req.user as AuthUser;
+//     const campaignId = req.params.id;
+//     const files = req.files as Express.Multer.File[];
+//     const remarks = req.body.remarks;
+
+//     console.log("User:", user?.id);
+//     console.log("Campaign ID:", campaignId);
+//     console.log("Files received:", files?.length);
+//     console.log("Remarks:", remarks);
+
+//     if (!files || files.length === 0) {
+//       throw new ApiError(httpStatus.BAD_REQUEST, "Documents are required");
+//     }
+
+//     const documents = files.map((file) => ({
+//       fileName: file.originalname,
+//       filePath: path.basename(file.path),
+//       mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//       size: file.size,
+//     }));
+
+//     const result = await campaignService.processCampaign(
+//       campaignId,
+//       user.companyId,
+//       remarks,
+//       documents
+//     );
+
+//     res.status(httpStatus.OK).json({
+//       message: "Campaign processed successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     console.error("Error processing campaign:", error);
+//     res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+//       message: "Server error during campaign processing",
+//       error: error,
+//     });
+//   }
+// });
 const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaignId = req.params.id;
 
-  const files = req.files as Express.Multer.File[];
-  const remarks = req.body.remarks; // Get remarks from request body
+  console.log(">> processCampaign called");
+  console.log(">> User:", user?.id, "Company:", user?.companyId);
+  console.log(">> Campaign ID:", campaignId);
 
+  const files = req.files as Express.Multer.File[];
+  const remarks = req?.body?.remarks;
+
+  if (!remarks) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
+  }
   if (!files || files.length === 0) {
+    console.warn(">> No documents provided");
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Documents are required for processing campaign"
     );
   }
 
-  // Map multer files into our DTO shape
-  const documents = files.map((file) => ({
-    fileName: file.originalname,
-    filePath: path.basename(file.path),
-    mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-    size: file.size,
-  }));
+  console.log(">> Mapping uploaded documents");
+  let documents;
+  try {
+    documents = files.map((file) => ({
+      fileName: file.originalname,
+      filePath: path.basename(file.path),
+      mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+      size: file.size,
+    }));
+  } catch (err) {
+    console.error(">> Error while mapping files:", err);
+    throw new ApiError(
+      httpStatus.SERVICE_UNAVAILABLE,
+      "Failed to process uploaded files"
+    );
+  }
 
-  const campaign = await campaignService.processCampaign(
-    campaignId,
-    user.companyId,
-    remarks, // Pass remarks to service
-    documents
-  );
+  console.log(">> Calling campaignService.processCampaign");
+
+  let campaign;
+  try {
+    campaign = await campaignService.processCampaign(
+      campaignId,
+      user?.companyId,
+      remarks,
+      documents
+    );
+  } catch (err) {
+    console.error(">> Error in campaignService.processCampaign1:", err);
+    throw new ApiError(
+      httpStatus.SERVICE_UNAVAILABLE,
+      `${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+  }
+
+  console.log(">> Campaign processed successfully");
 
   res.status(httpStatus.OK).json({
     message: "Campaign processed successfully",

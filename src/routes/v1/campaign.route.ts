@@ -41,10 +41,8 @@ router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 // router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 
 router.post(
-  "/process",
+  "/process/:id",
   auth(),
-  checkPermission("create_campaign_approval"),
-  validate(campaignValidation.campaignProcessSchema),
   upload.array("documents"),
   campaignController.processCampaign
 );

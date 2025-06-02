@@ -18,20 +18,6 @@ const registerCompany = catchAsync(async (req, res) => {
     .send({ data: company, message: "Company created successfully!" });
 });
 
-// const getCompany = catchAsync(async (req, res) => {
-//     const user = req.user as User;
-//     const company = await companyService.getCompanyById(user.id);
-//     if (!user) {
-//     throw new ApiError(httpStatus.NOT_FOUND, 'Company not found');
-//   }
-//     res.status(httpStatus.OK).send({data: company, message: "Company retrieved successfully"})
-// })
-
-// const updateCompany = catchAsync(async (req, res) => {
-//   const user = await companyService.updateCompanyById(req.params.userId, req.body);
-//   res.send(user);
-// });
-
 const getCompany = catchAsync(async (req, res) => {
   const user = req.user as AuthUser;
 
@@ -51,21 +37,65 @@ const getCompany = catchAsync(async (req, res) => {
   });
 });
 
+// export const updateCompany = catchAsync(async (req, res) => {
+//   const user = req.user as AuthUser;
+//   if (!user.companyId)
+//     throw new ApiError(httpStatus.BAD_REQUEST, "No company assigned");
+//   // const updates = req.body;
+
+//   // Ensure req.body exists before destructuring
+//   if (!req.body || typeof req.body !== "object") {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid request body");
+//   }
+
+//   const { companyCode, ...updates } = req.body;
+
+//   const company = await companyService.updateCompanyProfile(
+//     user.companyId,
+//     updates
+//   );
+//   res.status(httpStatus.OK).json({
+//     message: "Company updated successfully",
+//     data: company,
+//   });
+// });
+
 export const updateCompany = catchAsync(async (req, res) => {
   const user = req.user as AuthUser;
-  if (!user.companyId)
+
+  if (!user.companyId) {
     throw new ApiError(httpStatus.BAD_REQUEST, "No company assigned");
-  // const updates = req.body;
-  const { companyCode, ...updates } = req.body;
+  }
+
+  // req.body will be strings (from form-data); convert if necessary
+  const {
+    //companyCode, // ignore this field
+    organizationName,
+    phoneNumber,
+    email,
+    notes,
+    level,
+  } = req.body;
+
+  const updates: any = {};
+
+  if (organizationName) updates.organizationName = organizationName;
+  if (phoneNumber) updates.phoneNumber = phoneNumber;
+  if (email) updates.email = email;
+  if (notes) updates.notes = notes;
+  if (level) updates.level = level;
+
   const company = await companyService.updateCompanyProfile(
     user.companyId,
     updates
   );
+
   res.status(httpStatus.OK).json({
     message: "Company updated successfully",
     data: company,
   });
 });
+
 export default {
   registerCompany,
   getCompany,
