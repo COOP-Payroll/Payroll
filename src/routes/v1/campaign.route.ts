@@ -63,9 +63,31 @@ router.post(
 //   campaignController.processCampaign
 // );
 
+// router.post(
+//   "/process/:id",
+//   auth(),
+
+//   (req, res, next) => {
+//     console.log("🚦 Step 2: Multer starting");
+//     upload.array("documents")(req, res, function (err) {
+//       if (err) {
+//         console.error("❌ Multer error:", err);
+//         return res.status(400).json({ message: err.message });
+//       }
+//       console.log("✅ Step 3: Multer finished. Files:", req.files);
+//       next();
+//     });
+//   },
+//   (req, _res, next) => {
+//     console.log("🚦 Step 4: After multer");
+//     next();
+//   },
+//   campaignController.processCampaign
+// );
+
 router.post(
   "/process/:id",
-  auth(),
+  auth(), // ✅ Authentication middleware
 
   (req, res, next) => {
     console.log("🚦 Step 2: Multer starting");
@@ -74,15 +96,21 @@ router.post(
         console.error("❌ Multer error:", err);
         return res.status(400).json({ message: err.message });
       }
-      console.log("✅ Step 3: Multer finished. Files:", req.files);
-      next();
+
+      console.log("✅ Step 3: Multer finished.");
+      console.log("📁 Uploaded files:", req.files);
+      console.log("📝 Request body:", req.body);
+
+      next(); // ✅ Continue to next middleware
     });
   },
+
   (req, _res, next) => {
     console.log("🚦 Step 4: After multer");
     next();
   },
-  campaignController.processCampaign
+
+  campaignController.processCampaign // ✅ Final controller
 );
 
 export default router;
