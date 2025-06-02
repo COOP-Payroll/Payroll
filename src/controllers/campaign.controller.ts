@@ -204,30 +204,64 @@ const deleteDocumentsByQuery = catchAsync(
 //   const user = req.user as AuthUser;
 //   const campaignId = req.params.id;
 
-//   const files = req.files as Express.Multer.File[];
-//   const remarks = req?.body?.remarks; // Get remarks from request body
+//   console.log(">> processCampaign called");
+//   console.log(">> User:", user?.id, "Company:", user?.companyId);
+//   console.log(">> Campaign ID:", campaignId);
 
+//   const files = req.files as Express.Multer.File[];
+//   const remarks = req?.body?.remarks;
+
+//   if (!remarks) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
+//   }
 //   if (!files || files.length === 0) {
+//     console.warn(">> No documents provided");
 //     throw new ApiError(
 //       httpStatus.BAD_REQUEST,
 //       "Documents are required for processing campaign"
 //     );
 //   }
 
-//   // Map multer files into our DTO shape
-//   const documents = files.map((file) => ({
-//     fileName: file.originalname,
-//     filePath: path.basename(file.path),
-//     mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-//     size: file.size,
-//   }));
+//   console.log(">> Mapping uploaded documents");
+//   let documents;
+//   try {
 
-//   const campaign = await campaignService.processCampaign(
-//     campaignId,
-//     user?.companyId,
-//     remarks, // Pass remarks to service
-//     documents
-//   );
+//     documents = files.map((file) => ({
+
+//       fileName: file.originalname,
+//       filePath: path.basename(file.path),
+//       mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//       size: file.size,
+//     }));
+//   } catch (err) {
+//     console.error(">> Error while mapping files:", err);
+//     throw new ApiError(
+//       httpStatus.SERVICE_UNAVAILABLE,
+//       "Failed to process uploaded files"
+//     );
+//   }
+
+//   console.log(">> Calling campaignService.processCampaign");
+
+//   let campaign;
+//   try {
+//     campaign = await campaignService.processCampaign(
+//       campaignId,
+//       user?.companyId,
+//       remarks,
+//       documents
+//     );
+//   } catch (err) {
+//     console.error(">> Error in campaignService.processCampaign1:", err);
+//     throw new ApiError(
+//       httpStatus.SERVICE_UNAVAILABLE,
+//       `${
+//         err instanceof Error ? err.message : String(err)
+//       }`
+//     );
+//   }
+
+//   console.log(">> Campaign processed successfully");
 
 //   res.status(httpStatus.OK).json({
 //     message: "Campaign processed successfully",
@@ -235,50 +269,6 @@ const deleteDocumentsByQuery = catchAsync(
 //   });
 // });
 
-// const processCampaign = catchAsync(async (req: Request, res: Response) => {
-//   try {
-//     console.log("Processing campaign request");
-
-//     const user = req.user as AuthUser;
-//     const campaignId = req.params.id;
-//     const files = req.files as Express.Multer.File[];
-//     const remarks = req.body.remarks;
-
-//     console.log("User:", user?.id);
-//     console.log("Campaign ID:", campaignId);
-//     console.log("Files received:", files?.length);
-//     console.log("Remarks:", remarks);
-
-//     if (!files || files.length === 0) {
-//       throw new ApiError(httpStatus.BAD_REQUEST, "Documents are required");
-//     }
-
-//     const documents = files.map((file) => ({
-//       fileName: file.originalname,
-//       filePath: path.basename(file.path),
-//       mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-//       size: file.size,
-//     }));
-
-//     const result = await campaignService.processCampaign(
-//       campaignId,
-//       user.companyId,
-//       remarks,
-//       documents
-//     );
-
-//     res.status(httpStatus.OK).json({
-//       message: "Campaign processed successfully",
-//       data: result,
-//     });
-//   } catch (error) {
-//     console.error("Error processing campaign:", error);
-//     res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-//       message: "Server error during campaign processing",
-//       error: error,
-//     });
-//   }
-// });
 const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaignId = req.params.id;
@@ -293,6 +283,7 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   if (!remarks) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
   }
+
   if (!files || files.length === 0) {
     console.warn(">> No documents provided");
     throw new ApiError(
@@ -301,15 +292,33 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
+  console.log(
+    ">> Files received:",
+    files.map((f) => ({
+      originalname: f.originalname,
+      path: f.path,
+      size: f.size,
+      mimetype: f.mimetype,
+    }))
+  );
+
   console.log(">> Mapping uploaded documents");
+
   let documents;
   try {
-    documents = files.map((file) => ({
-      fileName: file.originalname,
-      filePath: path.basename(file.path),
-      mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-      size: file.size,
-    }));
+    documents = files.map((file, index) => {
+      if (!file.path) {
+        console.error(`>> File at index ${index} is missing 'path':`, file);
+        throw new Error(`File at index ${index} is missing 'path'`);
+      }
+
+      return {
+        fileName: file.originalname,
+        filePath: path.basename(file.path), // safer: use just the filename
+        mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+        size: file.size,
+      };
+    });
   } catch (err) {
     console.error(">> Error while mapping files:", err);
     throw new ApiError(
@@ -329,12 +338,10 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
       documents
     );
   } catch (err) {
-    console.error(">> Error in campaignService.processCampaign1:", err);
+    console.error(">> Error in campaignService.processCampaign:", err);
     throw new ApiError(
       httpStatus.SERVICE_UNAVAILABLE,
-      `${
-        err instanceof Error ? err.message : String(err)
-      }`
+      err instanceof Error ? err.message : String(err)
     );
   }
 
