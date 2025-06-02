@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import campaignController from "../../controllers/campaign.controller";
-import { upload, uploadArray } from "../../config/multer";
+import { upload } from "../../config/multer";
 import auth from "../../middlewares/auth";
 
 import campaignparticipantvalidation from "../../validations/campaignparticipantvalidation";
@@ -67,7 +67,7 @@ router.post(
   "/process/:id",
   auth(),
 
-  uploadArray("documents", 5),
+  upload.array("documents"),
   // (req: Request, res: Response, next: NextFunction) => {
   //   console.log(">> After multer, files:", req.files);
   //   next();
