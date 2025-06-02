@@ -68,6 +68,8 @@ router.post(
   auth(),
   (req: Request, res: Response, next: NextFunction) => {
     console.log(">> Before multer, files:", req.files);
+
+    //
     next();
   },
   upload.array("documents"),
