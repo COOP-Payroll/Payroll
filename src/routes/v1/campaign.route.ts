@@ -8,6 +8,8 @@ import validate from "../../middlewares/validate";
 import campaignValidation from "../../validations/campaign.validation";
 import { checkPermission } from "../../middlewares/checkPermissions";
 import { multerErrorHandler } from "../../middlewares/multerErrorHandler";
+import ApiError from "../../utils/api-error";
+import { HttpStatusCode } from "axios";
 
 const router = express.Router();
 
@@ -68,11 +70,26 @@ router.post(
     console.log(">> Route hit, before multer");
     next();
   },
-  upload.array("documents"),
+
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.array("documents")(req, res, (err: any) => {
+      if (err) {
+        console.error("Multer error:", err);
+        return next(new ApiError(400, err.message));
+      }
+      next();
+    });
+  },
   (req: Request, res: Response, next: NextFunction) => {
     console.log(">> After multer, files:", req.files);
+    console.log(">> Request body:", req.body);
     next();
   },
+  // upload.array("documents"),
+  // (req: Request, res: Response, next: NextFunction) => {
+  //   console.log(">> After multer, files:", req.files);
+  //   next();
+  // },
   multerErrorHandler,
   (req: Request, res: Response, next: NextFunction) => {
     console.log(">> After multerdddd, files:");
