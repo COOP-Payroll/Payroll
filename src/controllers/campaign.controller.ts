@@ -275,34 +275,28 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   console.log(">> processCampaign called");
   console.log(">> User:", user?.id, "Company:", user?.companyId);
   console.log(">> Campaign ID:", campaignId);
+  console.log(">> Request headers:", req.headers);
+  console.log(">> Content-Type:", req.headers["content-type"]);
+  console.log(">> Content-Length:", req.headers["content-length"]);
 
   const files = req.files as Express.Multer.File[];
   const remarks = req?.body?.remarks;
 
+
   if (!remarks) {
+    console.error(">> Missing remarks");
     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
   }
 
   if (!files || files.length === 0) {
-    console.warn(">> No documents provided");
+    console.error(">> No documents provided");
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Documents are required for processing campaign"
     );
   }
 
-  console.log(
-    ">> Files received:",
-    files.map((f) => ({
-      originalname: f.originalname,
-      path: f.path,
-      size: f.size,
-      mimetype: f.mimetype,
-    }))
-  );
-
   console.log(">> Mapping uploaded documents");
-
   let documents;
   try {
     documents = files.map((file, index) => {
@@ -311,12 +305,14 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
         throw new Error(`File at index ${index} is missing 'path'`);
       }
 
-      return {
+      const doc = {
         fileName: file.originalname,
-        filePath: path.basename(file.path), // safer: use just the filename
+        filePath: path.basename(file.path),
         mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
         size: file.size,
       };
+      console.log(`>> Document ${index} mapped:`, doc);
+      return doc;
     });
   } catch (err) {
     console.error(">> Error while mapping files:", err);
@@ -327,7 +323,6 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   }
 
   console.log(">> Calling campaignService.processCampaign");
-
   let campaign;
   try {
     campaign = await campaignService.processCampaign(
@@ -336,15 +331,18 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
       remarks,
       documents
     );
+    console.log(">> Campaign processed successfully:", campaign.id);
   } catch (err) {
     console.error(">> Error in campaignService.processCampaign:", err);
+    console.error(
+      ">> Error stack:",
+      err instanceof Error ? err.stack : "No stack trace"
+    );
     throw new ApiError(
       httpStatus.SERVICE_UNAVAILABLE,
       err instanceof Error ? err.message : String(err)
     );
   }
-
-  console.log(">> Campaign processed successfully");
 
   res.status(httpStatus.OK).json({
     message: "Campaign processed successfully",

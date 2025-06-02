@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction } from "express";
 import campaignController from "../../controllers/campaign.controller";
 import { upload } from "../../config/multer";
 import auth from "../../middlewares/auth";
@@ -44,8 +44,20 @@ router.post(
 router.post(
   "/process/:id",
   auth(),
+  (next: NextFunction) => {
+    console.log(">> Route hit, before multer");
+    next();
+  },
   upload.array("documents"),
+  (next: NextFunction) => {
+    console.log(">> After multer, files:");
+    next();
+  },
   multerErrorHandler,
+  (next: NextFunction) => {
+    console.log(">> After multerdddd, files:");
+    next();
+  },
   campaignController.processCampaign
 );
 
