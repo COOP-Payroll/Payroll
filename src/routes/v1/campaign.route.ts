@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import campaignController from "../../controllers/campaign.controller";
-import { upload } from "../../config/multer";
+import { upload, uploadArray } from "../../config/multer";
 import auth from "../../middlewares/auth";
 
 import campaignparticipantvalidation from "../../validations/campaignparticipantvalidation";
@@ -66,26 +66,8 @@ router.post(
 router.post(
   "/process/:id",
   auth(),
-  (req: Request, res: Response, next: NextFunction) => {
-    console.log(">> Route hit, before multer");
-    next();
-  },
 
-  (req: Request, res: Response, next: NextFunction) => {
-    upload.array("documents")(req, res, (err: any) => {
-      if (err) {
-        console.error("Multer error:", err);
-        return next(new ApiError(400, err.message));
-      }
-      next();
-    });
-  },
-  (req: Request, res: Response, next: NextFunction) => {
-    console.log(">> After multer, files:", req.files);
-    console.log(">> Request body:", req.body);
-    next();
-  },
-  // upload.array("documents"),
+  uploadArray("documents", 5),
   // (req: Request, res: Response, next: NextFunction) => {
   //   console.log(">> After multer, files:", req.files);
   //   next();
