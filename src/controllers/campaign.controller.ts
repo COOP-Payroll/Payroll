@@ -205,7 +205,7 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const campaignId = req.params.id;
 
   const files = req.files as Express.Multer.File[];
-  const remarks = req.body.remarks; // Get remarks from request body
+  const remarks = req?.body?.remarks; // Get remarks from request body
 
   if (!files || files.length === 0) {
     throw new ApiError(
@@ -224,7 +224,7 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
 
   const campaign = await campaignService.processCampaign(
     campaignId,
-    user.companyId,
+    user?.companyId,
     remarks, // Pass remarks to service
     documents
   );
@@ -234,6 +234,7 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
     data: campaign,
   });
 });
+
 // const processCampaign = catchAsync(async (req: Request, res: Response) => {
 //   try {
 //     console.log("Processing campaign request");
