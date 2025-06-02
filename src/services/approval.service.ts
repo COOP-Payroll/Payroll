@@ -720,32 +720,29 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
   //   where: {roleId: userRoless}
   // })
 
-  const [campaign, totalParticipants] = await Promise.all([
-    prisma.campaign.findUnique({
-      where: { id: campaignId },
-      select: {
-        id: true,
-        name: true,
-        documents: true,
-        campaignParticipants: {
-          select: {
-            id: true,
-            totalAmount: true,
-            accountNumber: true,
-            phoneNumber: true,
-            isVerified: true,
-            numberOfDaysInUrban: true,
-            numberOfDaysInRural: true,
-            paymentMethod: true,
-            participant: {
-              select: { id: true, fullName: true, gender: true },
-            },
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId },
+    select: {
+      id: true,
+      name: true,
+      documents: true,
+      campaignParticipants: {
+        select: {
+          id: true,
+          totalAmount: true,
+          accountNumber: true,
+          phoneNumber: true,
+          isVerified: true,
+          numberOfDaysInUrban: true,
+          numberOfDaysInRural: true,
+          paymentMethod: true,
+          participant: {
+            select: { id: true, fullName: true, gender: true },
           },
         },
       },
-    }),
-    prisma.participant.count(),
-  ]);
+    },
+  });
 
   if (!campaign) throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
 
@@ -761,7 +758,7 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
     currentStageId: instance.currentStageId,
     campaignTitle: campaign.name,
     totalPaying,
-    totalParticipants,
+    totalParticipants: campaign.campaignParticipants.length,
     stages: instance.stageStatuses,
     participants: campaign.campaignParticipants,
     documents: campaign.documents,

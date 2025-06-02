@@ -396,13 +396,13 @@ const processCampaign = async (
   campaignId: string,
   companyId: string,
   remarks: string,
+  workflowId: string,
   documents: {
     fileName: string;
     filePath: string;
     mimeType?: string;
     size?: number;
-  }[],
-  workflowId: string
+  }[]
 ) => {
   return await prisma.$transaction(async (tx) => {
     const campaign = await tx.campaign.findUnique({
