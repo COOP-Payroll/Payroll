@@ -91,7 +91,22 @@ router.post(
 
   (req, res, next) => {
     console.log("🚦 Step 2: Multer starting");
+    // upload.array("documents")(req, res, function (err) {
+    //   if (err) {
+    //     console.error("❌ Multer error:", err);
+    //     return res.status(400).json({ message: err.message });
+    //   }
+
+    //   console.log("✅ Step 3: Multer finished.");
+    //   console.log("📁 Uploaded files:", req.files);
+    //   console.log("📝 Request body:", req.body);
+
+    //   next(); // ✅ Continue to next middleware
+    // });
+
     upload.array("documents")(req, res, function (err) {
+      console.log("🔄 Inside multer callback");
+
       if (err) {
         console.error("❌ Multer error:", err);
         return res.status(400).json({ message: err.message });
@@ -101,7 +116,7 @@ router.post(
       console.log("📁 Uploaded files:", req.files);
       console.log("📝 Request body:", req.body);
 
-      next(); // ✅ Continue to next middleware
+      next();
     });
   },
 

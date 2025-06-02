@@ -27,7 +27,7 @@ createBullBoard({
 serverAdapter.setBasePath("/admin/queues");
 
 const app = express();
-
+app.set("trust proxy", 1);
 if (config.env !== "test") {
   app.use(morgan.successHandler);
   app.use(morgan.errorHandler);
