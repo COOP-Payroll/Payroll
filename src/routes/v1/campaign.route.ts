@@ -66,17 +66,12 @@ router.post(
 router.post(
   "/process/:id",
   auth(),
-  (req: Request, res: Response, next: NextFunction) => {
-    console.log(">> Before multer, files:", req.files);
-
-    //
-    next();
-  },
+  
   upload.array("documents"),
-  (req: Request, res: Response, next: NextFunction) => {
-    console.log(">> After multer, files:", req.files);
-    next();
-  },
+  // (req: Request, res: Response, next: NextFunction) => {
+  //   console.log(">> After multer, files:", req.files);
+  //   next();
+  // },
   multerErrorHandler,
   (req: Request, res: Response, next: NextFunction) => {
     console.log(">> After multerdddd, files:");
