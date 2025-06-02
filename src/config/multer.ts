@@ -4,43 +4,42 @@ import crypto from "crypto";
 import fs from "fs";
 
 const fileFilter = (_req: any, file: any, cb: any) => {
-  // Reject files that might be executable
+  console.log("fileFilter called for file:", file.originalname);
   const dangerousExtensions = [".exe", ".bat", ".sh", ".php", ".js", ".jar"];
   const ext = path.extname(file.originalname).toLowerCase();
 
   if (dangerousExtensions.includes(ext)) {
+    console.log("Rejected file due to dangerous extension:", ext);
     return cb(new Error("File type not allowed"), false);
   }
 
+  console.log("File passed fileFilter:", file.originalname);
   cb(null, true);
 };
 
 // Ensure the upload directory exists
 const uploadDir = path.join(__dirname, "..", "uploads", "documents");
+console.log("Upload directory path:", uploadDir);
+
 if (!fs.existsSync(uploadDir)) {
+  console.log("Upload directory does not exist, creating it...");
   fs.mkdirSync(uploadDir, { recursive: true });
+} else {
+  console.log("Upload directory exists.");
 }
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
+    console.log("Setting upload destination:", uploadDir);
     cb(null, uploadDir);
   },
 
-  // filename: (_req, file, cb) => {
-  //   const ext = path.extname(file.originalname);
-  //   const uniqueName = crypto.randomBytes(16).toString("hex") + ext;
-  //   cb(null, uniqueName);
-  // },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname +
-        "-" +
-        uniqueSuffix +
-        "." +
-        file.originalname.split(".").pop()
-    );
+    const ext = file.originalname.split(".").pop();
+    const filename = `${file.fieldname}-${uniqueSuffix}.${ext}`;
+    console.log("Setting filename:", filename);
+    cb(null, filename);
   },
 });
 
