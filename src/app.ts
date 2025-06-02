@@ -47,7 +47,7 @@ app.use(express.urlencoded({ extended: true }));
 // gzip compression
 app.use(compression());
 // parse urlencoded request body
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // Enable CORS for all routes
 // app.use(cors());
@@ -72,7 +72,6 @@ app.use(
 );
 
 app.options("*name", cors());
-
 
 // jwt authentication
 app.use(passport.initialize());
