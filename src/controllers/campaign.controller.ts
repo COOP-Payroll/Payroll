@@ -234,6 +234,50 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
     data: campaign,
   });
 });
+// const processCampaign = catchAsync(async (req: Request, res: Response) => {
+//   try {
+//     console.log("Processing campaign request");
+
+//     const user = req.user as AuthUser;
+//     const campaignId = req.params.id;
+//     const files = req.files as Express.Multer.File[];
+//     const remarks = req.body.remarks;
+
+//     console.log("User:", user?.id);
+//     console.log("Campaign ID:", campaignId);
+//     console.log("Files received:", files?.length);
+//     console.log("Remarks:", remarks);
+
+//     if (!files || files.length === 0) {
+//       throw new ApiError(httpStatus.BAD_REQUEST, "Documents are required");
+//     }
+
+//     const documents = files.map((file) => ({
+//       fileName: file.originalname,
+//       filePath: path.basename(file.path),
+//       mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//       size: file.size,
+//     }));
+
+//     const result = await campaignService.processCampaign(
+//       campaignId,
+//       user.companyId,
+//       remarks,
+//       documents
+//     );
+
+//     res.status(httpStatus.OK).json({
+//       message: "Campaign processed successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     console.error("Error processing campaign:", error);
+//     res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+//       message: "Server error during campaign processing",
+//       error: error,
+//     });
+//   }
+// });
 
 const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
