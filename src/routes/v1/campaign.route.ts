@@ -10,6 +10,7 @@ import { checkPermission } from "../../middlewares/checkPermissions";
 import { multerErrorHandler } from "../../middlewares/multerErrorHandler";
 import ApiError from "../../utils/api-error";
 import { HttpStatusCode } from "axios";
+import multer from "multer";
 
 const router = express.Router();
 
@@ -66,8 +67,19 @@ router.post(
 router.post(
   "/process/:id",
   auth(),
-
-  upload.array("documents"),
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.array("documents")(req, res, function (err: any) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: "Multer error: " + err.message });
+      } else if (err) {
+        return res
+          .status(500)
+          .json({ error: "Unexpected error: " + err.message });
+      }
+      next();
+    });
+  },
+  // upload.array("documents"),
   // (req: Request, res: Response, next: NextFunction) => {
   //   console.log(">> After multer, files:", req.files);
   //   next();
