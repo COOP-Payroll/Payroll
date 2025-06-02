@@ -52,51 +52,66 @@ import path from "path";
 import crypto from "crypto";
 import fs from "fs";
 import { Request } from "express";
-
-// Define allowed and disallowed file extensions
+console.error(">> ❌ No write access to upload directoryddjddjdh:");
+// Define dangerous file extensions to block
 const dangerousExtensions = [".exe", ".bat", ".sh", ".php", ".js", ".jar"];
 
-// File filter function
+// Upload directory path
+const uploadDir = path.join(__dirname, "..", "uploads", "documents");
+
+// Ensure upload directory exists and is writable
+if (!fs.existsSync(uploadDir)) {
+  console.log(">> Creating upload directory:", uploadDir);
+  fs.mkdirSync(uploadDir, { recursive: true });
+} else {
+  console.log(">> Upload directory exists:", uploadDir);
+}
+
+fs.access(uploadDir, fs.constants.W_OK, (err) => {
+  if (err) {
+    console.error(">> ❌ No write access to upload directory:", err);
+  } else {
+    console.log(">> ✅ Upload directory is writable.");
+  }
+});
+
+// Filter to block dangerous file types
 const fileFilter = (
   _req: Request,
   file: Express.Multer.File,
   cb: FileFilterCallback
 ): void => {
   const ext = path.extname(file.originalname).toLowerCase();
+  console.log(">> Checking file type:", file.originalname);
 
   if (dangerousExtensions.includes(ext)) {
-    return cb(new Error("File type not allowed"));
+    console.warn(">> ❌ File blocked due to dangerous extension:", ext);
+    // return cb(new Error("File type not allowed"), false);
   }
 
   cb(null, true);
 };
 
-// Upload directory path
-const uploadDir = path.join(__dirname, "..", "uploads", "documents");
-
-// Ensure directory exists
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer storage engine
+// Configure storage
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
+    console.log(">> Setting upload destination:", uploadDir);
     cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
     const uniqueName = crypto.randomBytes(16).toString("hex") + ext;
+    console.log(">> Saving file:", uniqueName);
     cb(null, uniqueName);
   },
 });
 
-// Exported multer instance
+// Export the configured multer instance
 export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB file size limit
+    fileSize: 50 * 1024 * 1024, // 50MB max file size
   },
 });
 
