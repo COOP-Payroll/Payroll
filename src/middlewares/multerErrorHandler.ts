@@ -15,10 +15,10 @@ export const multerErrorHandler: ErrorRequestHandler = (
 
   if (err) {
     console.error("Unknown upload error:", err);
-    res.status(500).json({ message: "File upload failed" });
+    res.status(503).json({ message: "File upload failed" });
     return;
   }
 
   // fallback (technically won't happen since this only runs when there's an error)
-  res.status(500).json({ message: "Unknown error occurred" });
+  res.status(503).json({ message: "Unknown error occurred" });
 };

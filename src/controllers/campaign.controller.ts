@@ -272,7 +272,6 @@ const deleteDocumentsByQuery = catchAsync(
 const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaignId = req.params.id;
-
   console.log(">> processCampaign called");
   console.log(">> User:", user?.id, "Company:", user?.companyId);
   console.log(">> Campaign ID:", campaignId);

@@ -46,7 +46,6 @@
 
 // export const upload = multer({ storage });
 
-
 import multer from "multer";
 import path from "path";
 import crypto from "crypto";
@@ -85,8 +84,8 @@ const storage = multer.diskStorage({
 export const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10 MB max file size
-    files: 10, // max 10 files
+    fileSize: 50 * 1024 * 1024, // 50 MB max file size
+    files: 20, // max 20 files
   },
   fileFilter,
 });
