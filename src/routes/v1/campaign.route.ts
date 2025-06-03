@@ -11,46 +11,44 @@ import { multerErrorHandler } from "../../middlewares/multerErrorHandler";
 import ApiError from "../../utils/api-error";
 import { HttpStatusCode } from "axios";
 
-const handleFileUpload = (req: Request, res: Response, next: NextFunction) => {
-  console.log("🚦 Step 2: Multer starting");
+// Connection stabilization wrapper
+const stableUpload = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  console.log("Multer start :  1");
+  let isConnectionAlive = true;
 
-  // Store the original response end function
-  const originalEnd = res.end;
+  // Heartbeat monitoring
+  const heartbeat = setInterval(() => {
+    if (!isConnectionAlive) {
+      clearInterval(heartbeat);
+      return;
+    }
+    res.write("\n"); // Keep connection alive
+  }, 5000); // 5-second heartbeat
 
-  upload.array("documents")(req, res, (err: any) => {
-    console.log("🔄 Inside multer callback");
+  // Connection state handlers
+  req.on("close", () => {
+    isConnectionAlive = false;
+    clearInterval(heartbeat);
+  });
 
+  res.on("finish", () => {
+    clearInterval(heartbeat);
+  });
+  console.log("Multer start :  2");
+  // Proceed with actual upload
+  upload.array("documents")(req, res, (err) => {
+    console.log("Multer start :  3");
+    clearInterval(heartbeat);
     if (err) {
-      console.error("❌ Multer error:", err);
-
-      // Handle specific error cases
-      if (err.code === "ECONNRESET") {
-        return res.status(499).json({ message: "Client closed connection" });
-      }
-      if (err.code === "LIMIT_FILE_SIZE") {
-        return res.status(413).json({ message: "File too large" });
-      }
-
-      return res.status(400).json({ message: "File upload failed" });
+      console.error("Upload error:", err);
+      return res.status(400).json({ error: err.message });
     }
-
-    console.log("✅ Step 3: Multer finished");
-    console.log("📁 Uploaded files:", req.files?.length);
-
-    // Restore original end function
-    res.end = originalEnd;
+    console.log("Multer start :  4");
     next();
-  });
-
-  // Handle connection termination
-  req.on("aborted", () => {
-    console.log("⚠️ Upload aborted by client");
-  });
-
-  res.on("close", () => {
-    if (!res.writableEnded) {
-      console.log("⚠️ Connection closed prematurely");
-    }
   });
 };
 const router = express.Router();
@@ -68,9 +66,8 @@ router.post(
   auth(),
 
   // Enhanced upload handler
-  handleFileUpload,
+  stableUpload,
 
-  
   campaignController.processCampaign
 );
 // router.post(
