@@ -8,3 +8,4 @@ export { default as adminController } from "./admin.controller";
 
 export { default as workflowController } from "./workflow.controller";
 export { default as campaignApprovalController } from "./approval.controller";
+export { default as campaignReportController } from "./report.controller";

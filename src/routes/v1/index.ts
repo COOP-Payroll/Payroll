@@ -14,6 +14,7 @@ import rateSettingRoute from "./rateSetting.route";
 import campaignParticipantRoute from "./campaignparticipant.route";
 import campaignApprovalRoute from "./approval.route";
 import accountManagementRoute from "./account.route";
+import campaignReportRoute from "./report.route";
 
 const router = express.Router();
 
@@ -72,6 +73,10 @@ const defaultRoutes = [
   {
     path: "/account",
     route: accountManagementRoute,
+  },
+  {
+    path: "/report",
+    route: campaignReportRoute,
   },
 ];
 
