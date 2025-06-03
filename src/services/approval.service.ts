@@ -1,6 +1,11 @@
 import httpStatus from "http-status";
 import { v4 as uuidv4 } from "uuid";
-import { ApprovalStatus, CampaignStatus, StageStatus } from "@prisma/client";
+import {
+  ApprovalStatus,
+  CampaignStatus,
+  PaymentStatus,
+  StageStatus,
+} from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/api-error";
 import { AuthUser } from "../types/express";
@@ -8,7 +13,6 @@ import logger from "../config/logger";
 import { PaymentJobData, paymentJobSchema } from "../types/payment";
 import campaignService from "./campaign.service";
 import { paymentQueue } from "../queues";
-import userService from "./user.service";
 
 const createCampaignForApproval = async (campaignId: string) => {
   const campaign = await prisma.campaign.findUnique({
@@ -785,48 +789,10 @@ const fetchCampaignApprovalInstance = async (user: AuthUser) => {
   return campaigns;
 };
 
-const fetchCampaignReport = async (campaignId: string) => {
-  const campaign = await prisma.campaign.findUnique({
-    where: { id: campaignId },
-    include: {
-      campaignParticipants: {
-        include: {
-          participant: true,
-          payments: true,
-          documents: true,
-        },
-      },
-    },
-  });
-
-  if (!campaign) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Campaign not found");
-  }
-
-  const transactions = campaign.campaignParticipants.map((cp) => ({
-    participantId: cp.participantId,
-    fullName: cp.participant.fullName,
-    phoneNumber: cp.participant.phoneNumber,
-    accountNumber: cp.accountNumber,
-    paymentMethod: cp.paymentMethod,
-    totalAmount: cp.totalAmount,
-    paymentStatus: cp.paymentStatus,
-    approvalStatus: cp.approvalStatus,
-    isPublished: cp.isPublished,
-    isVerified: cp.isVerified,
-    documents: cp.documents,
-    payments: cp.payments,
-    createdAt: cp.createdAt,
-    updatedAt: cp.updatedAt,
-  }));
-  return { campaignId, transactions };
-};
-
 export default {
   createCampaignForApproval,
   approveOrRejectCampaignStage,
   rollbackCampaignApproval,
   fetchCampaignApproval,
   fetchCampaignApprovalInstance,
-  fetchCampaignReport,
 };

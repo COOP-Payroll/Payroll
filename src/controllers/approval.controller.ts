@@ -66,22 +66,10 @@ const fetchCampaignApprovalInstance = catchAsync(async (req, res) => {
   });
 });
 
-const fetchCampaignReport = catchAsync(async (req, res) => {
-  const { campaignId } = req.params;
-  const result = await campaignForApprovalService.fetchCampaignReport(
-    campaignId
-  );
-
-  res
-    .status(httpStatus.OK)
-    .send({ data: result, message: "campaign report retrieved successfully" });
-});
-
 export default {
   createCampaignForApproval,
   approveOrRejectCampaignStage,
   rollbackCampaignApproval,
   fetchCampaignApproval,
   fetchCampaignApprovalInstance,
-  fetchCampaignReport,
 };
