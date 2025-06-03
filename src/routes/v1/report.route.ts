@@ -16,4 +16,11 @@ router
     campaignReportController.fetchCampaignReport
   );
 
+router.route("/campaigns/:campaignId/downloadCampaignReport").get(
+  // auth(),
+  //   checkPermission("view_campaign_reports"),
+  validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+  campaignReportController.downloadCampaignReport
+);
+
 export default router;
