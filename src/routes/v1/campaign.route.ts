@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import campaignController from "../../controllers/campaign.controller";
-import { upload } from "../../config/multer";
+import { multipleImageUpload, upload } from "../../config/multer";
 import auth from "../../middlewares/auth";
 
 import campaignparticipantvalidation from "../../validations/campaignparticipantvalidation";
@@ -12,6 +12,23 @@ import ApiError from "../../utils/api-error";
 import { HttpStatusCode } from "axios";
 import multer from "multer";
 
+const safeUpload = (req: Request, res: Response, next: NextFunction) => {
+  multipleImageUpload(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      console.log("------  multer", err);
+      // A Multer error occurred (like file too large)
+
+      return res.status(400).json({ success: false, message: err.message });
+    } else if (err) {
+      // Unknown error
+      console.log("another error", err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+
+    console.log("passed!");
+    next();
+  });
+};
 const router = express.Router();
 // router.post(
 //   "/process/:id",
@@ -22,23 +39,17 @@ const router = express.Router();
 //   campaignController.processCampaign
 // );
 
-const uploadHandler = (req: Request, res: Response, next: NextFunction) => {
-  upload.array("documents")(req, res, function (err: any) {
-    if (err instanceof multer.MulterError) {
-      console.error("Multer error:", err.message);
-      return res.status(400).json({ error: err.message });
-    } else if (err) {
-      console.error("Unknown error:", err);
-      return res.status(500).json({ error: "Unexpected error occurred." });
-    }
-    next();
-  });
-};
 router.post(
   "/process/:id",
   auth(),
   // uploadHandler,
-  upload.array("documents"),
+  // safeUpload,
+  // // upload.array("documents"),
+  upload.array("documents"), // Or .fields()/.array()
+  (req, res, next) => {
+    console.log("Middleware passed11");
+    next(); // ensure you call next() if you have middleware chaining
+  },
   campaignController.processCampaign
 );
 

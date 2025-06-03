@@ -118,7 +118,7 @@ const updateAccount = async (
 
   return account;
 };
-
+//DELETEACCOUNT
 const deleteAccount = async (id: string, companyId: string) => {
   const existing = await prisma.account.findFirst({
     where: { id, companyId },
@@ -131,7 +131,7 @@ const deleteAccount = async (id: string, companyId: string) => {
     data: { isActive: false },
   });
 };
-
+//ASSIGN MASTERACCOUNT
 const assignMasterAccount = async (
   id: string,
   companyId: string,
