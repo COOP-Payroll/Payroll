@@ -32,7 +32,6 @@ const storage = multer.diskStorage({
   //   cb(null, uniqueName);
   // },
   filename: function (req, file, cb) {
-
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(
       null,
@@ -45,7 +44,13 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ storage });
+export const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 20 * 1024 * 1024, // 50 MB max file size
+  },
+});
 
 // import multer, { FileFilterCallback } from "multer";
 // import path from "path";

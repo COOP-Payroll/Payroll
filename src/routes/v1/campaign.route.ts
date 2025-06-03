@@ -10,41 +10,8 @@ import { checkPermission } from "../../middlewares/checkPermissions";
 import { multerErrorHandler } from "../../middlewares/multerErrorHandler";
 import ApiError from "../../utils/api-error";
 import { HttpStatusCode } from "axios";
+import multer from "multer";
 
-// Connection stabilization wrapper
-const stableUpload = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  console.log("Multer start : 1");
-
-  let isConnectionAlive = true;
-
-  // Optional: log disconnection
-  req.on("close", () => {
-    isConnectionAlive = false;
-    console.warn("Client disconnected before upload completed.");
-  });
-
-  // Proceed with actual upload
-  upload.array("documents")(req, res, (err) => {
-    console.log("Multer start : 3");
-
-    if (!isConnectionAlive) {
-      console.log("connection is not live ");
-      return; // Don't continue if connection was dropped
-    }
-
-    if (err) {
-      console.error("Upload error:", err);
-      return res.status(400).json({ error: err.message });
-    }
-
-    console.log("Multer start : 4");
-    next();
-  });
-};
 const router = express.Router();
 // router.post(
 //   "/process/:id",
@@ -55,15 +22,25 @@ const router = express.Router();
 //   campaignController.processCampaign
 // );
 
+const uploadHandler = (req: Request, res: Response, next: NextFunction) => {
+  upload.array("documents")(req, res, function (err: any) {
+    if (err instanceof multer.MulterError) {
+      console.error("Multer error:", err.message);
+      return res.status(400).json({ error: err.message });
+    } else if (err) {
+      console.error("Unknown error:", err);
+      return res.status(500).json({ error: "Unexpected error occurred." });
+    }
+    next();
+  });
+};
 router.post(
   "/process/:id",
   auth(),
-
-  // Enhanced upload handler
-  stableUpload,
-
+  uploadHandler,
   campaignController.processCampaign
 );
+
 // router.post(
 //   "/process/:id",
 //   auth(), // ✅ Authentication middleware
