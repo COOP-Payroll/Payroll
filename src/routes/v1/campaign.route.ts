@@ -38,7 +38,20 @@ router.post(
   "/process/:id",
   auth(),
   // uploadHandler,
-  upload.array("documents"),
+  // upload.array("documents"),
+
+  (req, res, next) => {
+    upload.array("documents")(req, res, function (err) {
+      console.log("In Multer ");
+      if (err) {
+        console.error("📛 Multer upload error:", err);
+        return res
+          .status(400)
+          .json({ message: "File upload failed", error: err.message });
+      }
+      next(); // proceed to controller if no error
+    });
+  },
   campaignController.processCampaign
 );
 
