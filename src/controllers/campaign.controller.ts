@@ -279,6 +279,8 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   console.log(">> Content-Type:", req.headers["content-type"]);
   console.log(">> Content-Length:", req.headers["content-length"]);
 
+  console.log("dddddddddddd", req.body);
+
   const files = req.files as Express.Multer.File[];
   const remarks = req?.body?.remarks;
 

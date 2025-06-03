@@ -1,46 +1,108 @@
+// import multer from "multer";
+// import path from "path";
+// import crypto from "crypto";
+// import fs from "fs";
+// console.log("come here");
+// const fileFilter = (_req: any, file: any, cb: any) => {
+//   // Reject files that might be executable
+//   const dangerousExtensions = [".exe", ".bat", ".sh", ".php", ".js", ".jar"];
+//   const ext = path.extname(file.originalname).toLowerCase();
+
+//   if (dangerousExtensions.includes(ext)) {
+//     return cb(new Error("File type not allowed"), false);
+//   }
+
+//   cb(null, true);
+// };
+
+// // Ensure the upload directory exists
+// const uploadDir = path.join(__dirname, "..", "uploads", "documents");
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
+
+// const storage = multer.diskStorage({
+//   destination: (_req, _file, cb) => {
+//     cb(null, uploadDir);
+//   },
+
+//   // filename: (_req, file, cb) => {
+//   //   const ext = path.extname(file.originalname);
+//   //   const uniqueName = crypto.randomBytes(16).toString("hex") + ext;
+//   //   cb(null, uniqueName);
+//   // },
+//   filename: function (req, file, cb) {
+//     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+//     cb(
+//       null,
+//       file.fieldname +
+//         "-" +
+//         uniqueSuffix +
+//         "." +
+//         file.originalname.split(".").pop()
+//     );
+//   },
+// });
+
+// export const upload = multer({
+//   storage,
+//   fileFilter,
+//   limits: {
+//     fileSize: 20 * 1024 * 1024, // 50 MB max file size
+//   },
+// });
+
 import multer from "multer";
 import path from "path";
 import crypto from "crypto";
 import fs from "fs";
-console.log("come here");
+
+// Initial import log
+console.log("📦 Multer config file loaded");
+
 const fileFilter = (_req: any, file: any, cb: any) => {
-  // Reject files that might be executable
-  const dangerousExtensions = [".exe", ".bat", ".sh", ".php", ".js", ".jar"];
   const ext = path.extname(file.originalname).toLowerCase();
+  const dangerousExtensions = [".exe", ".bat", ".sh", ".php", ".js", ".jar"];
+
+  console.log(
+    `🛡️ File filter triggered for: ${file.originalname} (ext: ${ext})`
+  );
 
   if (dangerousExtensions.includes(ext)) {
+    console.warn("❌ Rejected dangerous file:", file.originalname);
     return cb(new Error("File type not allowed"), false);
   }
 
+  console.log("✅ File accepted by filter:", file.originalname);
   cb(null, true);
 };
 
-// Ensure the upload directory exists
+// Ensure upload directory exists
 const uploadDir = path.join(__dirname, "..", "uploads", "documents");
 if (!fs.existsSync(uploadDir)) {
+  console.log("📁 Upload directory does not exist, creating:", uploadDir);
   fs.mkdirSync(uploadDir, { recursive: true });
+} else {
+  console.log("📁 Upload directory exists:", uploadDir);
 }
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
+    console.log("📍 Setting upload destination to:", uploadDir);
     cb(null, uploadDir);
   },
 
-  // filename: (_req, file, cb) => {
-  //   const ext = path.extname(file.originalname);
-  //   const uniqueName = crypto.randomBytes(16).toString("hex") + ext;
-  //   cb(null, uniqueName);
-  // },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
+    const finalName =
       file.fieldname +
-        "-" +
-        uniqueSuffix +
-        "." +
-        file.originalname.split(".").pop()
-    );
+      "-" +
+      uniqueSuffix +
+      "." +
+      file.originalname.split(".").pop();
+
+    console.log("📝 Generated filename:", finalName);
+    cb(null, finalName);
   },
 });
 
@@ -48,7 +110,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 20 * 1024 * 1024, // 50 MB max file size
+    fileSize: 20 * 1024 * 1024, // 20 MB limit
   },
 });
 
