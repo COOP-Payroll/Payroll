@@ -23,7 +23,7 @@ router.post(
       console.log("🔄 Inside multer callback");
 
       if (err) {
-        console.error("❌ Multer error:", err);
+        console.error("❌ Multer error1:", err);
         return res.status(400).json({ message: err.message });
       }
 

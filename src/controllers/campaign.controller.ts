@@ -282,7 +282,6 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const files = req.files as Express.Multer.File[];
   const remarks = req?.body?.remarks;
 
-
   if (!remarks) {
     console.error(">> Missing remarks");
     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
