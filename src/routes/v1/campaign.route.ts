@@ -38,7 +38,7 @@ router.post(
   "/process/:id",
   auth(),
   // uploadHandler,
-  upload.fields([{ name: "documents", maxCount: 10 }]),
+  upload.array("documents"),
   campaignController.processCampaign
 );
 
