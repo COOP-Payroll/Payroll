@@ -37,7 +37,8 @@ const uploadHandler = (req: Request, res: Response, next: NextFunction) => {
 router.post(
   "/process/:id",
   auth(),
-  uploadHandler,
+  // uploadHandler,
+  upload.fields([{ name: "documents", maxCount: 10 }]),
   campaignController.processCampaign
 );
 
