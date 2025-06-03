@@ -43,9 +43,13 @@ router.post(
   "/process/:id",
   auth(),
   // uploadHandler,
-  safeUpload,
-  // upload.array("documents"),
-
+  // safeUpload,
+  // // upload.array("documents"),
+  upload.array("documents"), // Or .fields()/.array()
+  (req, res, next) => {
+    console.log("Middleware passed11");
+    next(); // ensure you call next() if you have middleware chaining
+  },
   campaignController.processCampaign
 );
 
