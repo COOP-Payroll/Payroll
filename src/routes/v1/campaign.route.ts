@@ -44,7 +44,7 @@ router.post(
   auth(),
   // uploadHandler,
   safeUpload,
-  upload.array("documents"),
+  // upload.array("documents"),
 
   campaignController.processCampaign
 );

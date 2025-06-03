@@ -86,13 +86,13 @@ const fileFilter = (
 
 export const multipleImageUpload = multer({
   storage,
-  fileFilter,
+  // fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, // 5MB per file
 }).array("files", 10);
 
 export const upload = multer({
   storage,
-  fileFilter,
+  // fileFilter,
   limits: {
     fileSize: 20 * 1024 * 1024, // 20 MB limit
   },
