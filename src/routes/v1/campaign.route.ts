@@ -17,37 +17,31 @@ const stableUpload = (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  console.log("Multer start :  1");
+  console.log("Multer start : 1");
+
   let isConnectionAlive = true;
 
-  // Heartbeat monitoring
-  const heartbeat = setInterval(() => {
-    if (!isConnectionAlive) {
-      clearInterval(heartbeat);
-      return;
-    }
-    res.write("\n"); // Keep connection alive
-  }, 5000); // 5-second heartbeat
-
-  // Connection state handlers
+  // Optional: log disconnection
   req.on("close", () => {
     isConnectionAlive = false;
-    clearInterval(heartbeat);
+    console.warn("Client disconnected before upload completed.");
   });
 
-  res.on("finish", () => {
-    clearInterval(heartbeat);
-  });
-  console.log("Multer start :  2");
   // Proceed with actual upload
   upload.array("documents")(req, res, (err) => {
-    console.log("Multer start :  3");
-    clearInterval(heartbeat);
+    console.log("Multer start : 3");
+
+    if (!isConnectionAlive) {
+      console.log("connection is not live ");
+      return; // Don't continue if connection was dropped
+    }
+
     if (err) {
       console.error("Upload error:", err);
       return res.status(400).json({ error: err.message });
     }
-    console.log("Multer start :  4");
+
+    console.log("Multer start : 4");
     next();
   });
 };
