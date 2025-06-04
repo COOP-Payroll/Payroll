@@ -8,7 +8,7 @@ import auth from "../../middlewares/auth";
 import { checkPermission } from "../../middlewares/checkPermissions";
 
 const router = express.Router();
-
+//get 
 router.get(
   "/active",
   auth(),
