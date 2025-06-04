@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // gzip compression
 app.use(compression());
 // parse urlencoded request body
-
+//
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // Enable CORS for all routes
 // app.use(cors());
