@@ -13,8 +13,9 @@ import { HttpStatusCode } from "axios";
 import multer from "multer";
 
 const safeUpload = (req: Request, res: Response, next: NextFunction) => {
-  console.log("request +++++++   dddddd", req);
+  console.log("request +++++++   dddddd", req.files);
   multipleImageUpload(req, res, function (err) {
+    console.log("dkddkdk");
     if (err instanceof multer.MulterError) {
       console.log("------  multer", err);
       // A Multer error occurred (like file too large)
@@ -31,25 +32,14 @@ const safeUpload = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 const router = express.Router();
-// router.post(
-//   "/process/:id",
-//   auth(),
-//   upload.array("documents"),
-
-//   multerErrorHandler,
-//   campaignController.processCampaign
-// );
-
 router.post(
   "/process/:id",
   auth(),
-  // uploadHandler,
   safeUpload,
-  // // upload.array("documents"),
-  // upload.array("documents"), // Or .fields()/.array()
+
   (req, res, next) => {
     console.log("Middleware passed11");
-    next(); // ensure you call next() if you have middleware chaining
+    next();
   },
   campaignController.processCampaign
 );

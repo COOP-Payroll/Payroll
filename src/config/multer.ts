@@ -61,6 +61,7 @@ import { NextFunction } from "express";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    console.log("object", req.files);
     cb(null, path.join(__dirname, "..", "uploads", "documents"));
   },
   filename: (req, file, cb) => {
@@ -77,12 +78,21 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-  } else {
-    cb(null, false);
-  }
+  console.log("🔍 Received file:", file.originalname, file.mimetype);
+  cb(null, true);
 };
+
+// const fileFilter = (
+//   req: Express.Request,
+//   file: Express.Multer.File,
+//   cb: multer.FileFilterCallback
+// ) => {
+//   if (file.mimetype.startsWith("image/")) {
+//     cb(null, true);
+//   } else {
+//     cb(null, false);
+//   }
+// };
 
 export const multipleImageUpload = multer({
   storage,
