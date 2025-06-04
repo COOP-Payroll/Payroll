@@ -191,7 +191,7 @@ const downloadCampaignReport = async (campaignId: string) => {
     },
     { totalPaidAmount: 0, totalUnpaidAmount: 0 }
   );
-
+  console.log("------", campaign.name);
   const response: DownloadCampaignReportResponse = {
     totalParticipant: totalParticipants,
     totalPaidAmount,
