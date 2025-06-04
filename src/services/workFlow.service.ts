@@ -194,9 +194,34 @@ const getStageUserActiveWorkflow = async (workFlowId: string) => {
   return stageUsers;
 };
 
+const getActiveWorkflowForCurrentUser = async (
+  companyId: string,
+  userId: string
+) => {
+  const userInfo = await prisma.user.findFirst({ where: { id: userId } });
+
+  // const result = await prisma.approvalWorkflow.findMany({
+  //   where: { companyId, isActive: true },
+  //   select: {
+  //     id: true,
+  //     name: true,
+  //     stages: {
+  //       select: {
+  //         name: true,
+  //         stageRoles: {
+  //           select: { role: { select: { id: true, name: true } } },
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
+
+  return userInfo;
+};
 export default {
   createWorkflow,
   getActiveWorkflow,
   getWorkflowHistory,
   getStageUserActiveWorkflow,
+  getActiveWorkflowForCurrentUser,
 };
