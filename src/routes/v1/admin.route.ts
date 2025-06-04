@@ -86,7 +86,7 @@ router.post(
 );
 
 router.get(
-  "/workflow/active",
+  "/workflow/:departmentId/active",
   auth(),
   checkPermission("view_system_setting"),
   validate(workflowValidation.fetchWorkFlowSchema),
@@ -94,7 +94,7 @@ router.get(
 );
 
 router.get(
-  "/workflow/history",
+  "/workflow/:departmentId/history",
   auth(),
   checkPermission("view_system_setting"),
   validate(workflowValidation.fetchWorkFlowSchema),
