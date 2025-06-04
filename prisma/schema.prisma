@@ -67,7 +67,7 @@ model Position {
   company       Company  @relation(fields: [companyId], references: [id])
   userPositions User[]
 }
-
+///
 model User {
   id                  String                @id @default(uuid())
   name                String
@@ -247,13 +247,13 @@ model ApprovalWorkflow {
   id                       String                     @id @default(cuid())
   name                     String
   companyId                String                    
-  departmentId             String                     
+  departmentId             String?                     
   isActive                 Boolean                    @default(true)
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
   stages                   ApprovalStage[]
   company                  Company                    @relation(fields: [companyId], references: [id])
-  department               Department                 @relation(fields: [departmentId], references: [id])
+  department               Department?                 @relation(fields: [departmentId], references: [id])
   CampaignApprovalInstance CampaignApprovalInstance[]
 }
 
