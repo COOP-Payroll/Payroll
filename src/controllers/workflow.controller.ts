@@ -65,10 +65,12 @@ const getActiveWorkflowForCurrentUser = catchAsync(async (req, res) => {
 
   const companyId = user?.companyId;
   const userId = user.id;
+  const departmentId = user?.departmentId;
 
   const activeWorkflow = await workFlowService.getActiveWorkflowForCurrentUser(
     companyId,
-    userId
+    userId,
+    
   );
 
   res

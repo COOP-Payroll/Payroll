@@ -200,24 +200,27 @@ const getActiveWorkflowForCurrentUser = async (
   userId: string
 ) => {
   const userInfo = await prisma.user.findFirst({ where: { id: userId } });
+  if (userInfo?.departmentId == null) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User don't have department");
+  }
 
-  // const result = await prisma.approvalWorkflow.findMany({
-  //   where: { companyId, isActive: true },
-  //   select: {
-  //     id: true,
-  //     name: true,
-  //     stages: {
-  //       select: {
-  //         name: true,
-  //         stageRoles: {
-  //           select: { role: { select: { id: true, name: true } } },
-  //         },
-  //       },
-  //     },
-  //   },
-  // });
+  const result = await prisma.approvalWorkflow.findMany({
+    where: { departmentId: userInfo.departmentId, companyId, isActive: true },
+    select: {
+      id: true,
+      name: true,
+      stages: {
+        select: {
+          name: true,
+          stageRoles: {
+            select: { role: { select: { id: true, name: true } } },
+          },
+        },
+      },
+    },
+  });
 
-  return userInfo;
+  return result;
 };
 export default {
   createWorkflow,

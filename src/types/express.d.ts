@@ -5,7 +5,7 @@ export interface AuthUser {
   isSuperAdmin: boolean;
   roles: string[];
   permissions: string[];
-  // companyId: string;
+  departmentId: string?;
 }
 
 declare global {

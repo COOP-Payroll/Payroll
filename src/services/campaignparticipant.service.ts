@@ -62,8 +62,8 @@ const updateCampaignParticipant = async (
     });
 
     // ✅ Get updated rate settings
-    const rateSetting = await tx.rateSetting.findUnique({
-      where: { companyId },
+    const rateSetting = await tx.rateSetting.findFirst({
+      where: { companyId, isActive: true },
     });
 
     if (!rateSetting) {
@@ -188,8 +188,8 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
     }
 
     // Get rate settings
-    const rateSetting = await tx.rateSetting.findUnique({
-      where: { companyId },
+    const rateSetting = await tx.rateSetting.findFirst({
+      where: { companyId, isActive: true },
     });
 
     if (!rateSetting) {
@@ -315,8 +315,8 @@ export const registerBulkCampaignParticipants = async (
 
   console.log("dlfjlasdfjsdhfjhdn");
   return await prisma.$transaction(async (tx) => {
-    const rateSetting = await tx.rateSetting.findUnique({
-      where: { companyId },
+    const rateSetting = await tx.rateSetting.findFirst({
+      where: { companyId, isActive: true },
     });
 
     if (!rateSetting) {
