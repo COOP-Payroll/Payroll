@@ -53,10 +53,10 @@ const defaultRoutes = [
     path: "/campaign",
     route: campaignRoute,
   },
-  {
-    path: "/uploads",
-    route: uploadRoute,
-  },
+  // {
+  //   path: "/uploads",
+  //   route: uploadRoute,
+  // },
   {
     path: "/ratesetting",
     route: rateSettingRoute,

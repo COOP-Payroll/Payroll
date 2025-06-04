@@ -45,8 +45,8 @@ router.post(
   // uploadHandler,
   // safeUpload,
   // // upload.array("documents"),
-  // upload.array("documents"), // Or .fields()/.array()
-  upload.fields([{ name: "documents", maxCount: 10 }]),
+  upload.array("documents"), // Or .fields()/.array()
+  // upload.fields([{ name: "documents", maxCount: 10 }]),
 
   campaignController.processCampaign
 );
