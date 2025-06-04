@@ -13,6 +13,7 @@ import { HttpStatusCode } from "axios";
 import multer from "multer";
 
 const safeUpload = (req: Request, res: Response, next: NextFunction) => {
+  console.log("request +++++++   dddddd", req);
   multipleImageUpload(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       console.log("------  multer", err);
@@ -43,9 +44,9 @@ router.post(
   "/process/:id",
   auth(),
   // uploadHandler,
-  // safeUpload,
+  safeUpload,
   // // upload.array("documents"),
-  upload.array("documents"), // Or .fields()/.array()
+  // upload.array("documents"), // Or .fields()/.array()
   (req, res, next) => {
     console.log("Middleware passed11");
     next(); // ensure you call next() if you have middleware chaining

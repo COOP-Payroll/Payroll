@@ -2,42 +2,83 @@ import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
 
+// const createRateSetting = async (
+//   data: {
+//     urbanRate: number;
+//     ruralRate: number;
+//   },
+//   companyId: string
+// ) => {
+
+//   const { urbanRate, ruralRate } = data;
+
+//   console.log("djhdjfdjfhdjjs");
+//   console.log(companyId);
+//   // Check if a RateSetting already exists for the company
+//   const existing = await prisma.rateSetting.findUnique({
+//     where: { companyId },
+//   });
+
+//   if (existing) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       "RateSetting already exists for this company"
+//     );
+//   }
+
+//   return prisma.rateSetting.create({
+//     data: {
+//       urbanRate,
+//       ruralRate,
+//       companyId,
+//     },
+//   });
+// };
+
 const createRateSetting = async (
   data: {
-    urbanRate: number;
-    ruralRate: number;
+    urbanRate: number | string;
+    ruralRate: number | string;
   },
   companyId: string
 ) => {
-  const { urbanRate, ruralRate } = data;
+  const urbanRate = Number(data.urbanRate);
+  const ruralRate = Number(data.ruralRate);
 
-  console.log("djhdjfdjfhdjjs");
-  console.log(companyId);
-  // Check if a RateSetting already exists for the company
-  const existing = await prisma.rateSetting.findUnique({
-    where: { companyId },
-  });
-
-  if (existing) {
+  if (isNaN(urbanRate) || isNaN(ruralRate)) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "RateSetting already exists for this company"
+      "urbanRate and ruralRate must be valid numbers"
     );
   }
 
+  // Deactivate existing active RateSetting for the company (if any)
+  await prisma.rateSetting.updateMany({
+    where: {
+      companyId,
+      isActive: true,
+    },
+    data: {
+      isActive: false,
+    },
+  });
+
+  // Create new RateSetting with isActive: true
   return prisma.rateSetting.create({
     data: {
       urbanRate,
       ruralRate,
       companyId,
+      isActive: true,
     },
   });
 };
 
 const getAllRateSettings = async (companyId: string) => {
-  return prisma.rateSetting.findMany({
+  return prisma.rateSetting.findFirst({
     where: {
       companyId,
+      isActive: true,
     },
     // include: {
     //   company: true,
@@ -49,9 +90,8 @@ const getAllRateSettings = async (companyId: string) => {
 };
 
 const getRateSettingByCompanyId = async (companyId: string) => {
-  return prisma.rateSetting.findUnique({
-    where: { companyId },
-    include: { company: true },
+  await prisma.rateSetting.findFirst({
+    where: { companyId, isActive: true },
   });
 };
 
@@ -91,7 +131,6 @@ const updateRateSetting = async (
 export default {
   createRateSetting,
   getAllRateSettings,
-  
 
   updateRateSetting,
 };

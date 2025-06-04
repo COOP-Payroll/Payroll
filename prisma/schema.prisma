@@ -24,7 +24,7 @@ model Company {
   departments      Department[]
   participants     Participant[]
   positions        Position[]
-  rateSetting      RateSetting?
+  rateSettings     RateSetting[]  
   Role             Role[]
   users            User[]
 }
@@ -236,11 +236,12 @@ model RateSetting {
   id        String   @id @default(uuid())
   urbanRate Float
   ruralRate Float
-  companyId String   @unique
+  companyId String   
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   company   Company  @relation(fields: [companyId], references: [id])
+   @@index([companyId])
 }
 
 model ApprovalWorkflow {

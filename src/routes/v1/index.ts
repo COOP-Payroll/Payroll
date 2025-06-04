@@ -15,7 +15,7 @@ import campaignParticipantRoute from "./campaignparticipant.route";
 import campaignApprovalRoute from "./approval.route";
 import accountManagementRoute from "./account.route";
 import campaignReportRoute from "./report.route";
-
+import workflowRoute from "./workflow.route";
 const router = express.Router();
 
 const defaultRoutes = [
@@ -78,6 +78,10 @@ const defaultRoutes = [
     path: "/report",
     route: campaignReportRoute,
   },
+  {
+    path: "/workflow",
+    route: workflowRoute,
+  },
 ];
 
 const devRoutes = [
@@ -85,6 +89,10 @@ const devRoutes = [
   {
     path: "/dev",
     route: healthRoute,
+  },
+  {
+    path: "/workflow",
+    route: workflowRoute,
   },
 ];
 

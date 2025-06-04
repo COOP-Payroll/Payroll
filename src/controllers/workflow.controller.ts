@@ -60,9 +60,27 @@ const getStageUserActiveWorkflow = catchAsync(async (req, res) => {
   });
 });
 
+const getActiveWorkflowForCurrentUser = catchAsync(async (req, res) => {
+  const user = req.user as AuthUser;
+
+  const companyId = user?.companyId;
+  const userId = user.id;
+  const departmentId = user?.departmentId;
+
+  const activeWorkflow = await workFlowService.getActiveWorkflowForCurrentUser(
+    companyId,
+    userId,
+    
+  );
+
+  res
+    .status(httpStatus.CREATED)
+    .send({ data: activeWorkflow, message: "workflow retrieved Successfully" });
+});
 export default {
   createWorkflow,
   getActiveWorkflow,
   getWorkflowHistory,
   getStageUserActiveWorkflow,
+  getActiveWorkflowForCurrentUser,
 };
