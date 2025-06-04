@@ -46,8 +46,10 @@ router.post(
   // safeUpload,
   // // upload.array("documents"),
   upload.array("documents"), // Or .fields()/.array()
-  // upload.fields([{ name: "documents", maxCount: 10 }]),
-
+  (req, res, next) => {
+    console.log("Middleware passed11");
+    next(); // ensure you call next() if you have middleware chaining
+  },
   campaignController.processCampaign
 );
 

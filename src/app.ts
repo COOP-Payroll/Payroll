@@ -15,7 +15,7 @@ import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { paymentQueue, smsQueue } from "./queues";
-import campaignRoutes from "./routes/v1/campaign.route";
+
 const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath("/ui");
 
@@ -37,7 +37,7 @@ app.use("/admin/queues", serverAdapter.getRouter());
 
 // set security HTTP headers
 app.use(helmet());
-app.use("/api/v1/campaign", campaignRoutes);
+
 // parse json request body
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
@@ -47,10 +47,22 @@ app.use(compression());
 // parse urlencoded request body
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Enable CORS for all routes
+// app.use(cors());
+
+// app.use(
+//   cors({
+//     origin: "*", // allow all origins
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
+// // Enable pre-flight for all OPTIONS requests
+// app.options("*name", cors());
 
 app.use(
   cors({
-    origin: "*",
+    origin: "*", // Or better, use your frontend origin e.g. "http://localhost:3000"
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
