@@ -223,7 +223,190 @@ const downloadCampaignReport = async (campaignId: string) => {
   return response;
 };
 
+const fetchPublishedCampaign = async (
+  campaignId: string,
+  options: {
+    limit?: string;
+    page?: string;
+  }
+) => {
+  const page = options.page ? parseInt(options.page) : 1;
+  const limit = options.limit ? parseInt(options.limit) : 10;
+  const skip = (page - 1) * limit;
+  const instance = await prisma.campaignApprovalInstance.findFirst({
+    where: { campaignId },
+    select: {
+      id: true,
+      currentStageId: true,
+      stageStatuses: {
+        select: {
+          id: true,
+          status: true,
+          approvedBy: { select: { name: true } },
+          stage: {
+            select: { name: true },
+          },
+        },
+      },
+      currentStage: {
+        select: {
+          order: true,
+          stageRoles: {
+            select: { roleId: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (
+    !instance ||
+    !instance.currentStageId ||
+    !instance.currentStage?.stageRoles
+  )
+    throw new ApiError(httpStatus.BAD_REQUEST, "There is no campaign approval");
+
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId },
+    select: {
+      id: true,
+      name: true,
+      documents: true,
+      campaignParticipants: {
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          totalAmount: true,
+          accountNumber: true,
+          phoneNumber: true,
+          isVerified: true,
+          numberOfDaysInUrban: true,
+          numberOfDaysInRural: true,
+          paymentMethod: true,
+          participant: {
+            select: { id: true, fullName: true, gender: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!campaign) throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
+
+  const totalPaying = campaign.campaignParticipants.reduce(
+    (sum, participant) => {
+      const amount = Number(participant.totalAmount || 0);
+      return sum + amount;
+    },
+    0
+  );
+  const totalPages = Math.ceil(campaign.campaignParticipants.length / limit);
+  return {
+    campaignId: campaign.id,
+    currentStageId: instance.currentStageId,
+    campaignTitle: campaign.name,
+    totalPaying,
+    totalParticipants: campaign.campaignParticipants.length,
+    stages: instance.stageStatuses,
+    participants: campaign.campaignParticipants,
+    documents: campaign.documents,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalItems: campaign.campaignParticipants.length,
+      limit,
+    },
+  };
+};
+
+const fetchCampaignPaymentHistory = async (
+  campaignId: string,
+  options: {
+    limit?: string;
+    page?: string;
+  }
+) => {
+  const page = options.page ? parseInt(options.page) : 1;
+  const limit = options.limit ? parseInt(options.limit) : 10;
+  const skip = (page - 1) * limit;
+  const [
+    paidTransactions,
+    failedTransactions,
+    pendingTransactions,
+    participantCount,
+    participantsList,
+  ] = await Promise.all([
+    prisma.campaignParticipant.aggregate({
+      where: { campaignId, paymentStatus: "COMPLETED" },
+      _count: true,
+      _sum: { totalAmount: true },
+    }),
+    prisma.campaignParticipant.aggregate({
+      where: { paymentStatus: "FAILED" },
+      _count: true,
+      _sum: { totalAmount: true },
+    }),
+    prisma.campaignParticipant.aggregate({
+      where: { paymentStatus: "PENDING" },
+      _count: true,
+      _sum: { totalAmount: true },
+    }),
+    prisma.campaignParticipant.count(),
+    prisma.campaignParticipant.findMany({
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        accountNumber: true,
+        isVerified: true,
+        phoneNumber: true,
+        paymentMethod: true,
+        totalAmount: true,
+        participant: {
+          select: {
+            fullName: true,
+            gender: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  const formattedParticipants = participantsList.map((p) => ({
+    id: p.id,
+    name: p.participant.fullName,
+    gender: p.participant.gender,
+    accountNumber: p.accountNumber,
+    isVerified: p.isVerified,
+    phoneNumber: p.phoneNumber,
+    paymentMethod: p.paymentMethod,
+    totalAmount: p.totalAmount,
+  }));
+
+  const totalPages = Math.ceil(participantCount / limit);
+
+  return {
+    totalPaidTransactions: paidTransactions._count,
+    totalFailedTransactions: failedTransactions._count,
+    totalPendingTransactions: pendingTransactions._count,
+    totalCampaignParticipants: participantCount,
+    totalAmountPaid: paidTransactions._sum.totalAmount || 0,
+    totalAmountFailed: failedTransactions._sum.totalAmount || 0,
+    totalAmountPending: pendingTransactions._sum.totalAmount,
+    campaignParticipants: formattedParticipants,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalItems: participantCount,
+      limit,
+    },
+  };
+};
+
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
+  fetchPublishedCampaign,
+  fetchCampaignPaymentHistory,
 };
