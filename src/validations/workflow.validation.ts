@@ -9,9 +9,9 @@ const createWorkFlowSchema = {
       .description("Name of the approval flow")
       .example("Campaign Approval Flow"),
 
-    // companyId: Joi.string()
-    //   .required()
-    //   .description("Company ID associated with the flow"),
+    departmentId: Joi.string()
+      .required()
+      .description("department ID associated with the flow"),
 
     stages: Joi.array()
       .min(1)
@@ -48,4 +48,14 @@ const getStageUserActiveWorkflowSchema = {
   }),
 };
 
-export default { createWorkFlowSchema, getStageUserActiveWorkflowSchema };
+const fetchWorkFlowSchema = {
+  params: Joi.object({
+    departmentId: Joi.string().required(),
+  }),
+};
+
+export default {
+  createWorkFlowSchema,
+  getStageUserActiveWorkflowSchema,
+  fetchWorkFlowSchema,
+};

@@ -50,7 +50,39 @@ const downloadCampaignReport = catchAsync(async (req, res) => {
   }
 });
 
+const fetchPublishedCampaign = catchAsync(async (req, res) => {
+  const { campaignId } = req.params;
+  const options = pick(req.query, ["limit", "page"]);
+
+  const result = await campaignReportService.fetchPublishedCampaign(
+    campaignId,
+    options
+  );
+
+  res.status(httpStatus.OK).send({
+    data: result,
+    message: "Published Campaign retrieved successfully",
+  });
+});
+
+const fetchCampaignPaymentHistory = catchAsync(async (req, res) => {
+  const { campaignId } = req.params;
+  const options = pick(req.query, ["limit", "page"]);
+
+  const result = await campaignReportService.fetchCampaignPaymentHistory(
+    campaignId,
+    options
+  );
+
+  res.status(httpStatus.OK).send({
+    data: result,
+    message: "Published Campaign retrieved successfully",
+  });
+});
+
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
+  fetchPublishedCampaign,
+  fetchCampaignPaymentHistory,
 };

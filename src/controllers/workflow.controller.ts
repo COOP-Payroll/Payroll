@@ -5,10 +5,11 @@ import workFlowService from "../services/workFlow.service";
 import { AuthUser } from "../types/express";
 
 const createWorkflow = catchAsync(async (req, res) => {
-  const { name, stages } = req.body as CampaignApprovalFlow;
+  const { name, departmentId, stages } = req.body as CampaignApprovalFlow;
   const user = req.user as AuthUser;
   const workflow = await workFlowService.createWorkflow(
     name,
+    departmentId,
     user.companyId,
     stages
   );
@@ -19,9 +20,13 @@ const createWorkflow = catchAsync(async (req, res) => {
 });
 
 const getActiveWorkflow = catchAsync(async (req, res) => {
+  const { departmentId } = req.params;
   const { companyId } = req.user as AuthUser;
 
-  const activeWorkflow = await workFlowService.getActiveWorkflow(companyId);
+  const activeWorkflow = await workFlowService.getActiveWorkflow(
+    companyId,
+    departmentId
+  );
 
   res
     .status(httpStatus.CREATED)
@@ -29,9 +34,13 @@ const getActiveWorkflow = catchAsync(async (req, res) => {
 });
 
 const getWorkflowHistory = catchAsync(async (req, res) => {
+  const { departmentId } = req.params;
   const { companyId } = req.user as AuthUser;
 
-  const activeWorkflow = await workFlowService.getWorkflowHistory(companyId);
+  const activeWorkflow = await workFlowService.getWorkflowHistory(
+    companyId,
+    departmentId
+  );
 
   res.status(httpStatus.CREATED).send({
     data: activeWorkflow,

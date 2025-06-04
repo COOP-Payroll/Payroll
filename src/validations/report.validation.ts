@@ -21,7 +21,14 @@ const downloadCampaignReportSchema = {
   }),
 };
 
+// const fetchCampaignPublishedSchema = {
+//   params: Joi.object().keys({
+//     campaignId: Joi.string(),
+//   }),
+// };
+
 export default {
   fetchCampaignReportSchema,
   downloadCampaignReportSchema,
+  // fetchCampaignPublishedSchema,
 };

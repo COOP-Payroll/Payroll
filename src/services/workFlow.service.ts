@@ -5,6 +5,7 @@ import ApiError from "../utils/api-error";
 
 const createWorkflow = async (
   name: CampaignApprovalFlow["name"],
+  departmentId: CampaignApprovalFlow["departmentId"],
   companyId: CampaignApprovalFlow["companyId"],
   stages: CampaignApprovalFlow["stages"]
 ) => {
@@ -28,6 +29,10 @@ const createWorkflow = async (
     (id) => !existingRoleIds.includes(id)
   );
 
+  const department = await prisma.department.findUnique({
+    where: { id: departmentId },
+  });
+
   if (!existing) {
     throw new ApiError(httpStatus.NOT_FOUND, "Company not found");
   }
@@ -36,13 +41,8 @@ const createWorkflow = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Invalid role IDs provided");
   }
 
-  // const oldWorkflows = await prisma.approvalWorkflow.findMany({
-  //   where: {companyId, isActive: true}
-  // })
-
-  // oldWorkflows.map(oldWorkflow => {
-
-  // })
+  if (!department)
+    throw new ApiError(httpStatus.BAD_REQUEST, "Department not found");
 
   const [deactivatedWorkflows, newWorkflow] = await prisma.$transaction([
     prisma.approvalWorkflow.updateMany({
@@ -60,6 +60,7 @@ const createWorkflow = async (
         companyId,
         isActive: true,
         name,
+        departmentId,
         stages: {
           create: stages.map((stage, index) => ({
             name: stage.name,
@@ -110,9 +111,9 @@ const createWorkflow = async (
   // return workflow;
 };
 
-const getActiveWorkflow = async (companyId: string) => {
+const getActiveWorkflow = async (companyId: string, departmentId: string) => {
   const result = await prisma.approvalWorkflow.findMany({
-    where: { companyId, isActive: true },
+    where: { companyId, isActive: true, departmentId },
     select: {
       id: true,
       name: true,
@@ -129,9 +130,9 @@ const getActiveWorkflow = async (companyId: string) => {
 
   return result;
 };
-const getWorkflowHistory = async (companyId: string) => {
+const getWorkflowHistory = async (companyId: string, departmentId: string) => {
   const result = await prisma.approvalWorkflow.findMany({
-    where: { companyId },
+    where: { companyId, departmentId },
     select: {
       id: true,
       name: true,

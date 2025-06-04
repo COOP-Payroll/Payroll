@@ -89,6 +89,7 @@ router.get(
   "/workflow/active",
   auth(),
   checkPermission("view_system_setting"),
+  validate(workflowValidation.fetchWorkFlowSchema),
   workflowController.getActiveWorkflow
 );
 
@@ -96,6 +97,7 @@ router.get(
   "/workflow/history",
   auth(),
   checkPermission("view_system_setting"),
+  validate(workflowValidation.fetchWorkFlowSchema),
   workflowController.getWorkflowHistory
 );
 

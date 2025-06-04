@@ -5,6 +5,7 @@ export type ApprovalStage = {
 
 export type CampaignApprovalFlow = {
   name: string;
+  departmentId: string;
   companyId: string;
   stages: ApprovalStage[];
 };
