@@ -199,97 +199,31 @@ const deleteDocumentsByQuery = catchAsync(
     });
   }
 );
-
-// const processCampaign = catchAsync(async (req: Request, res: Response) => {
-//   const user = req.user as AuthUser;
-//   const campaignId = req.params.id;
-
-//   console.log(">> processCampaign called");
-//   console.log(">> User:", user?.id, "Company:", user?.companyId);
-//   console.log(">> Campaign ID:", campaignId);
-
-//   const files = req.files as Express.Multer.File[];
-//   const remarks = req?.body?.remarks;
-
-//   if (!remarks) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
-//   }
-//   if (!files || files.length === 0) {
-//     console.warn(">> No documents provided");
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Documents are required for processing campaign"
-//     );
-//   }
-
-//   console.log(">> Mapping uploaded documents");
-//   let documents;
-//   try {
-
-//     documents = files.map((file) => ({
-
-//       fileName: file.originalname,
-//       filePath: path.basename(file.path),
-//       mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-//       size: file.size,
-//     }));
-//   } catch (err) {
-//     console.error(">> Error while mapping files:", err);
-//     throw new ApiError(
-//       httpStatus.SERVICE_UNAVAILABLE,
-//       "Failed to process uploaded files"
-//     );
-//   }
-
-//   console.log(">> Calling campaignService.processCampaign");
-
-//   let campaign;
-//   try {
-//     campaign = await campaignService.processCampaign(
-//       campaignId,
-//       user?.companyId,
-//       remarks,
-//       documents
-//     );
-//   } catch (err) {
-//     console.error(">> Error in campaignService.processCampaign1:", err);
-//     throw new ApiError(
-//       httpStatus.SERVICE_UNAVAILABLE,
-//       `${
-//         err instanceof Error ? err.message : String(err)
-//       }`
-//     );
-//   }
-
-//   console.log(">> Campaign processed successfully");
-
-//   res.status(httpStatus.OK).json({
-//     message: "Campaign processed successfully",
-//     data: campaign,
-//   });
-// });
-
 const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaignId = req.params.id;
+
   console.log(">> processCampaign called");
   console.log(">> User:", user?.id, "Company:", user?.companyId);
   console.log(">> Campaign ID:", campaignId);
   console.log(">> Request headers:", req.headers);
   console.log(">> Content-Type:", req.headers["content-type"]);
   console.log(">> Content-Length:", req.headers["content-length"]);
+  console.log(">> Body:", req.body);
+  console.log(">> Files:", req.files);
 
-  console.log("dddddddddddd", req.body);
-
-  const files = req.files as Express.Multer.File[];
-  const remarks = req?.body?.remarks;
+  const remarks = req.body.remarks;
 
   if (!remarks) {
     console.error(">> Missing remarks");
     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
   }
 
-  if (!files || files.length === 0) {
+  const filesArray = (
+    req.files as { [fieldname: string]: Express.Multer.File[] }
+  )?.["documents"];
+
+  if (!filesArray || filesArray.length === 0) {
     console.error(">> No documents provided");
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -300,7 +234,7 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   console.log(">> Mapping uploaded documents");
   let documents;
   try {
-    documents = files.map((file, index) => {
+    documents = filesArray.map((file, index) => {
       if (!file.path) {
         console.error(`>> File at index ${index} is missing 'path':`, file);
         throw new Error(`File at index ${index} is missing 'path'`);
@@ -324,15 +258,19 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   }
 
   console.log(">> Calling campaignService.processCampaign");
-  let campaign;
   try {
-    campaign = await campaignService.processCampaign(
+    const campaign = await campaignService.processCampaign(
       campaignId,
       user?.companyId,
       remarks,
       documents
     );
     console.log(">> Campaign processed successfully:", campaign.id);
+
+    res.status(httpStatus.OK).json({
+      message: "Campaign processed successfully",
+      data: campaign,
+    });
   } catch (err) {
     console.error(">> Error in campaignService.processCampaign:", err);
     console.error(
@@ -344,12 +282,89 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
       err instanceof Error ? err.message : String(err)
     );
   }
-
-  res.status(httpStatus.OK).json({
-    message: "Campaign processed successfully",
-    data: campaign,
-  });
 });
+
+// const processCampaign = catchAsync(async (req: Request, res: Response) => {
+//   const user = req.user as AuthUser;
+//   const campaignId = req.params.id;
+//   console.log(">> processCampaign called");
+//   console.log(">> User:", user?.id, "Company:", user?.companyId);
+//   console.log(">> Campaign ID:", campaignId);
+//   console.log(">> Request headers:", req.headers);
+//   console.log(">> Content-Type:", req.headers["content-type"]);
+//   console.log(">> Content-Length:", req.headers["content-length"]);
+
+//   console.log("dddddddddddd", req.body);
+
+//   const files = req.files as Express.Multer.File[];
+//   const remarks = req?.body?.remarks;
+
+//   if (!remarks) {
+//     console.error(">> Missing remarks");
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
+//   }
+
+//   if (!files || files.length === 0) {
+//     console.error(">> No documents provided");
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       "Documents are required for processing campaign"
+//     );
+//   }
+
+//   console.log(">> Mapping uploaded documents");
+//   let documents;
+//   try {
+//     documents = files.map((file, index) => {
+//       if (!file.path) {
+//         console.error(`>> File at index ${index} is missing 'path':`, file);
+//         throw new Error(`File at index ${index} is missing 'path'`);
+//       }
+
+//       const doc = {
+//         fileName: file.originalname,
+//         filePath: path.basename(file.path),
+//         mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//         size: file.size,
+//       };
+//       console.log(`>> Document ${index} mapped:`, doc);
+//       return doc;
+//     });
+//   } catch (err) {
+//     console.error(">> Error while mapping files:", err);
+//     throw new ApiError(
+//       httpStatus.SERVICE_UNAVAILABLE,
+//       "Failed to process uploaded files"
+//     );
+//   }
+
+//   console.log(">> Calling campaignService.processCampaign");
+//   let campaign;
+//   try {
+//     campaign = await campaignService.processCampaign(
+//       campaignId,
+//       user?.companyId,
+//       remarks,
+//       documents
+//     );
+//     console.log(">> Campaign processed successfully:", campaign.id);
+//   } catch (err) {
+//     console.error(">> Error in campaignService.processCampaign:", err);
+//     console.error(
+//       ">> Error stack:",
+//       err instanceof Error ? err.stack : "No stack trace"
+//     );
+//     throw new ApiError(
+//       httpStatus.SERVICE_UNAVAILABLE,
+//       err instanceof Error ? err.message : String(err)
+//     );
+//   }
+
+//   res.status(httpStatus.OK).json({
+//     message: "Campaign processed successfully",
+//     data: campaign,
+//   });
+// });
 
 const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
