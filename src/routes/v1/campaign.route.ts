@@ -39,13 +39,34 @@ const router = express.Router();
 //   campaignController.processCampaign
 // );
 
+export const tryUploadDocuments = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  upload.array("documents")(req, res, (err: any) => {
+    if (err instanceof multer.MulterError) {
+      console.error("Multer error:", err);
+      return res
+        .status(400)
+        .json({ error: "Multer error", details: err.message });
+    } else if (err) {
+      console.error("Unknown upload error:", err);
+      return res
+        .status(500)
+        .json({ error: "Upload failed", details: err.message });
+    }
+    next();
+  });
+};
 router.post(
   "/process/:id",
   auth(),
+  tryUploadDocuments,
   // uploadHandler,
   // safeUpload,
   // // upload.array("documents"),
-  upload.array("documents"), // Or .fields()/.array()
+  // upload.array("documents"), // Or .fields()/.array()
   (req, res, next) => {
     console.log("Middleware passed11");
     next(); // ensure you call next() if you have middleware chaining
