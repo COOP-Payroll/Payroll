@@ -78,6 +78,10 @@ const defaultRoutes = [
     path: "/report",
     route: campaignReportRoute,
   },
+  {
+    path: "/workflow",
+    route: workflowRoute,
+  },
 ];
 
 const devRoutes = [

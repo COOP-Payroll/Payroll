@@ -195,33 +195,131 @@ const getStageUserActiveWorkflow = async (workFlowId: string) => {
   return stageUsers;
 };
 
+// const getActiveWorkflowForCurrentUser = async (
+//   companyId: string,
+//   userId: string
+// ) => {
+//   const userInfo = await prisma.user.findFirst({ where: { id: userId } });
+//   // if (userInfo?.departmentId == null) {
+//   //   throw new ApiError(httpStatus.NOT_FOUND, "User don't have department");
+//   // }
+// const result =[];
+//   if (userInfo?.isSuperAdmin) {
+//      result = await prisma.approvalWorkflow.findMany({
+//       where: { departmentId: userInfo.departmentId, companyId, isActive: true },
+//       select: {
+//         id: true,
+//         name: true,
+//         stages: {
+//           select: {
+//             name: true,
+//             stageRoles: {
+//               select: { role: { select: { id: true, name: true } } },
+//             },
+//           },
+//         },
+//       },
+//     });
+//   } else {
+//     const result = await prisma.approvalWorkflow.findMany({
+//       where: { departmentId: userInfo?.departmentId, companyId, isActive: true },
+//       select: {
+//         id: true,
+//         name: true,
+//         stages: {
+//           select: {
+//             name: true,
+//             stageRoles: {
+//               select: { role: { select: { id: true, name: true } } },
+//             },
+//           },
+//         },
+//       },
+//     });
+//   }
+
+//   return result;
+// };
+
 const getActiveWorkflowForCurrentUser = async (
   companyId: string,
   userId: string
 ) => {
   const userInfo = await prisma.user.findFirst({ where: { id: userId } });
-  if (userInfo?.departmentId == null) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User don't have department");
+
+  if (!userInfo) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  const result = await prisma.approvalWorkflow.findMany({
-    where: { departmentId: userInfo.departmentId, companyId, isActive: true },
-    select: {
-      id: true,
-      name: true,
-      stages: {
-        select: {
-          name: true,
-          stageRoles: {
-            select: { role: { select: { id: true, name: true } } },
+  let workflows;
+
+  if (userInfo.isSuperAdmin) {
+    // Super admin gets all workflows in the company
+    workflows = await prisma.approvalWorkflow.findMany({
+      where: {
+        companyId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        stages: {
+          select: {
+            name: true,
+            stageRoles: {
+              select: {
+                role: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
-    },
-  });
+    });
+  } else {
+    if (!userInfo.departmentId) {
+      throw new ApiError(
+        httpStatus.NOT_FOUND,
+        "User doesn't belong to a department"
+      );
+    }
 
-  return result;
+    // Regular users only get workflows for their department
+    workflows = await prisma.approvalWorkflow.findMany({
+      where: {
+        companyId,
+        departmentId: userInfo.departmentId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        stages: {
+          select: {
+            name: true,
+            stageRoles: {
+              select: {
+                role: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  return workflows;
 };
+
 export default {
   createWorkflow,
   getActiveWorkflow,
