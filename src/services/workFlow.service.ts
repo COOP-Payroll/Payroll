@@ -321,10 +321,23 @@ const getActiveWorkflowForCurrentUser = async (
   return workflows;
 };
 
+const getAllActiveWorkflow = async (companyId: string) => {
+  const result = await prisma.approvalWorkflow.findMany({
+    where: { companyId, isActive: true },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  return result;
+};
+
 export default {
   createWorkflow,
   getActiveWorkflow,
   getWorkflowHistory,
   getStageUserActiveWorkflow,
   getActiveWorkflowForCurrentUser,
+  getAllActiveWorkflow,
 };

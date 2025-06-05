@@ -33,6 +33,16 @@ const getActiveWorkflow = catchAsync(async (req, res) => {
     .send({ data: activeWorkflow, message: "workflow retrieved Successfully" });
 });
 
+const getAllActiveWorkflow = catchAsync(async (req, res) => {
+  const { companyId } = req.user as AuthUser;
+
+  const activeWorkflow = await workFlowService.getAllActiveWorkflow(companyId);
+
+  res
+    .status(httpStatus.CREATED)
+    .send({ data: activeWorkflow, message: "workflow retrieved Successfully" });
+});
+
 const getWorkflowHistory = catchAsync(async (req, res) => {
   const { departmentId } = req.params;
   const { companyId } = req.user as AuthUser;
@@ -69,8 +79,7 @@ const getActiveWorkflowForCurrentUser = catchAsync(async (req, res) => {
 
   const activeWorkflow = await workFlowService.getActiveWorkflowForCurrentUser(
     companyId,
-    userId,
-    
+    userId
   );
 
   res
@@ -83,4 +92,5 @@ export default {
   getWorkflowHistory,
   getStageUserActiveWorkflow,
   getActiveWorkflowForCurrentUser,
+  getAllActiveWorkflow,
 };
