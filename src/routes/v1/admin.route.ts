@@ -94,6 +94,13 @@ router.get(
 );
 
 router.get(
+  "/workflow/all/active",
+  auth(),
+  checkPermission("view_system_setting"),
+  workflowController.getAllActiveWorkflow
+);
+
+router.get(
   "/workflow/:departmentId/history",
   auth(),
   checkPermission("view_system_setting"),
