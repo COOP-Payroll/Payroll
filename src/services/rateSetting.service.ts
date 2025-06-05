@@ -75,10 +75,10 @@ const createRateSetting = async (
 };
 
 const getAllRateSettings = async (companyId: string) => {
-  return prisma.rateSetting.findFirst({
+  return prisma.rateSetting.findMany({
     where: {
       companyId,
-      isActive: true,
+      // isActive: true,
     },
     // include: {
     //   company: true,

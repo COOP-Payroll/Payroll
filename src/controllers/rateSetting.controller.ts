@@ -20,7 +20,7 @@ const getAllRateSettings = catchAsync(async (req: Request, res: Response) => {
   const settings = await rateSettingService.getAllRateSettings(user.companyId);
   res.send({ data: settings });
 });
-
+  
 const updateRateSetting = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const { id } = req.params;

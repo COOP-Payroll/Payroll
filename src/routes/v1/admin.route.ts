@@ -94,7 +94,7 @@ router.get(
 );
 
 router.get(
-  "/workflow/all/active",
+  "/workflow/active",
   auth(),
   checkPermission("view_system_setting"),
   workflowController.getAllActiveWorkflow

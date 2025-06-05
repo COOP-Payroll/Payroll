@@ -49,7 +49,7 @@ const createWorkflow = async (
       where: {
         companyId,
         isActive: true,
-        departmentId
+        departmentId,
       },
       data: {
         isActive: false,
@@ -329,6 +329,8 @@ const getAllActiveWorkflow = async (companyId: string) => {
       name: true,
     },
   });
+
+  console.log("------", result);
 
   return result;
 };
