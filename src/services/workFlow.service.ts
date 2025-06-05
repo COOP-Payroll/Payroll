@@ -49,6 +49,7 @@ const createWorkflow = async (
       where: {
         companyId,
         isActive: true,
+        departmentId
       },
       data: {
         isActive: false,

@@ -47,6 +47,20 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
       "Missing required campaign fields"
     );
   }
+  const user = await prisma.user.findFirst({
+    where: {
+      id: createdById,
+    },
+  });
+
+  if (user?.departmentId == null) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "The user is not assigned to any department."
+    );
+  }
+
+  // return user;
 
   // Prevent duplicate name per company
   const exists = await prisma.campaign.findFirst({
@@ -69,6 +83,7 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
       budgetSource,
       createdById,
       companyId,
+      departmentId: user.departmentId,
       documents:
         documents && documents.length
           ? {
@@ -291,340 +306,11 @@ const deleteDocumentsByIds = async (docIds: string[], campaignId: string) => {
   return docs;
 };
 
-// const processCampaign = async (
-//   campaignId: string,
-//   companyId: string,
-//   remarks: string,
-//   documents: {
-//     fileName: string;
-//     filePath: string;
-//     mimeType?: string;
-//     size?: number;
-//   }[]
-// ) => {
-//   const campaign = await prisma.campaign.findUnique({
-//     where: { id: campaignId, companyId },
-//     include: { documents: true },
-//   });
-
-//   if (!campaign) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
-//   }
-
-//   // Create documents for the campaign
-//   await Promise.all(
-//     documents.map((doc) =>
-//       prisma.document.create({
-//         data: {
-//           fileName: doc.fileName,
-//           filePath: doc.filePath,
-//           mimeType: doc.mimeType,
-//           size: doc.size,
-//           campaign: {
-//             connect: { id: campaignId },
-//           },
-//         },
-//       })
-//     )
-//   );
-
-//   const workflow = await prisma.approvalWorkflow.findFirst({
-//     where: {
-//       companyId: campaign.companyId,
-//     },
-//     include: {
-//       stages: {
-//         orderBy: { order: "asc" },
-//       },
-//     },
-//   });
-
-//   if (!workflow || workflow.stages.length === 0) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Approval workflow or stages not found for this company"
-//     );
-//   }
-
-//   const firstStage = workflow.stages.find((stage) => stage.order === 1);
-//   if (!firstStage) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "No initial approval stage found"
-//     );
-//   }
-
-//   const approvalInstance = await prisma.campaignApprovalInstance.create({
-//     data: {
-//       campaignId: campaign.id,
-//       workflowId: workflow.id,
-//       status: "PENDING",
-//       currentStageId: firstStage.id,
-//     },
-//   });
-
-//   console.log("----instance", approvalInstance);
-
-//   // TODO: send notification to the first approval
-
-//   const campaignStageStatus = workflow.stages.map((stage) => ({
-//     instanceId: approvalInstance.id,
-//     stageId: stage.id,
-//     status:
-//       stage.id === firstStage.id
-//         ? StageStatus["PENDING"]
-//         : StageStatus["WAITING"],
-//   }));
-
-//   await prisma.campaignStageStatus.createMany({
-//     data: campaignStageStatus,
-//   });
-
-//   return prisma.campaign.update({
-//     where: { id: campaignId },
-//     data: {
-//       status: "PROCESSED",
-//       remarks: remarks,
-//     },
-//     include: {
-//       documents: true,
-//     },
-//   });
-// };
-
-// const processCampaign = async (
-//   campaignId: string,
-//   companyId: string,
-//   remarks: string,
-//   documents: {
-//     fileName: string;
-//     filePath: string;
-//     mimeType?: string;
-//     size?: number;
-//   }[]
-// ) => {
-//   return await prisma.$transaction(async (tx) => {
-//     const campaign = await tx.campaign.findUnique({
-//       where: { id: campaignId, companyId },
-//       include: { documents: true, approvalInstances: true },
-//     });
-
-//     if (!campaign) {
-//       throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
-//     }
-
-//     if (campaign.approvalInstances)
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "Campaign is already submitted for approval"
-//       );
-
-//     if (campaign.status === "PROCESSED" || campaign.status === "CLOSED") {
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "Campaign is already processed or closed"
-//       );
-//     }
-//     // Create documents for the campaign
-//     await Promise.all(
-//       documents.map((doc) =>
-//         tx.document.create({
-//           data: {
-//             fileName: doc.fileName,
-//             filePath: doc.filePath,
-//             mimeType: doc.mimeType,
-//             size: doc.size,
-//             campaign: {
-//               connect: { id: campaignId },
-//             },
-//           },
-//         })
-//       )
-//     );
-
-//     const workflow = await tx.approvalWorkflow.findFirst({
-//       where: {
-//         companyId: campaign.companyId,
-//       },
-//       include: {
-//         stages: {
-//           orderBy: { order: "asc" },
-//         },
-//       },
-//     });
-
-//     if (!workflow || workflow.stages.length === 0) {
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "Approval workflow or stages not found for this company"
-//       );
-//     }
-
-//     const firstStage = workflow.stages.find((stage) => stage.order === 1);
-//     if (!firstStage) {
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "No initial approval stage found"
-//       );
-//     }
-
-//     const approvalInstance = await tx.campaignApprovalInstance.create({
-//       data: {
-//         campaignId: campaign.id,
-//         workflowId: workflow.id,
-//         status: "PENDING",
-//         currentStageId: firstStage.id,
-//       },
-//     });
-
-//     const campaignStageStatus = workflow.stages.map((stage) => ({
-//       instanceId: approvalInstance.id,
-//       stageId: stage.id,
-//       status:
-//         stage.id === firstStage.id
-//           ? StageStatus["PENDING"]
-//           : StageStatus["WAITING"],
-//     }));
-
-//     await tx.campaignStageStatus.createMany({
-//       data: campaignStageStatus,
-//     });
-
-//     return tx.campaign.update({
-//       where: { id: campaignId },
-//       data: {
-//         status: "PROCESSED",
-//         remarks: remarks,
-//       },
-//       include: {
-//         documents: true,
-//       },
-//     });
-//   });
-// };
-// const processCampaign = async (
-//   campaignId: string,
-//   companyId: string,
-//   remarks: string,
-//   documents: {
-//     fileName: string;
-//     filePath: string;
-//     mimeType?: string;
-//     size?: number;
-//   }[]
-// ) => {
-//   // Validate input early
-//   if (!campaignId || !companyId || !remarks || !Array.isArray(documents)) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid input");
-//   }
-
-//   return await prisma.$transaction(async (tx) => {
-//     const campaign = await tx.campaign.findUnique({
-//       where: { id: campaignId },
-//       include: { documents: true, approvalInstances: true },
-//     });
-
-//     if (!campaign || campaign.companyId !== companyId) {
-//       throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
-//     }
-
-//     if (campaign.approvalInstances && campaign.approvalInstances.length > 0) {
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "Campaign is already submitted for approval"
-//       );
-//     }
-
-//     if (campaign.status === "PROCESSED" || campaign.status === "CLOSED") {
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "Campaign is already processed or closed"
-//       );
-//     }
-
-//     // Create documents
-//     await Promise.all(
-//       documents.map((doc) =>
-//         tx.document.create({
-//           data: {
-//             fileName: doc.fileName,
-//             filePath: doc.filePath,
-//             mimeType: doc.mimeType,
-//             size: doc.size,
-//             campaign: {
-//               connect: { id: campaignId },
-//             },
-//           },
-//         })
-//       )
-//     );
-
-//     const workflow = await tx.approvalWorkflow.findFirst({
-//       where: {
-//         companyId: campaign.companyId,
-//       },
-//       include: {
-//         stages: {
-//           orderBy: { order: "asc" },
-//         },
-//       },
-//     });
-
-//     if (!workflow || workflow.stages.length === 0) {
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "Approval workflow or stages not found for this company"
-//       );
-//     }
-
-//     const firstStage = workflow.stages.find((stage) => stage.order === 1);
-//     if (!firstStage) {
-//       throw new ApiError(
-//         httpStatus.BAD_REQUEST,
-//         "No initial approval stage found"
-//       );
-//     }
-
-//     const approvalInstance = await tx.campaignApprovalInstance.create({
-//       data: {
-//         campaignId: campaign.id,
-//         workflowId: workflow.id,
-//         status: "PENDING",
-//         currentStageId: firstStage.id,
-//       },
-//     });
-
-//     const campaignStageStatus = workflow.stages.map((stage) => ({
-//       instanceId: approvalInstance.id,
-//       stageId: stage.id,
-//       status:
-//         stage.id === firstStage.id
-//           ? StageStatus["PENDING"]
-//           : StageStatus["WAITING"],
-//     }));
-
-//     await tx.campaignStageStatus.createMany({
-//       data: campaignStageStatus,
-//     });
-
-//     // Return updated campaign after processing
-//     return await tx.campaign.update({
-//       where: { id: campaignId },
-//       data: {
-//         status: "PROCESSED",
-//         remarks: remarks,
-//       },
-//       include: {
-//         documents: true,
-//       },
-//     });
-//   });
-// };
-
 const processCampaign = async (
   campaignId: string,
   companyId: string,
   remarks: string,
+  id: string,
   documents: {
     fileName: string;
     filePath: string;
@@ -632,17 +318,33 @@ const processCampaign = async (
     size?: number;
   }[]
 ) => {
+  // const userInfo = await prisma.user.findFirst({
+  //   id:id,
+  // });
   if (!campaignId || !companyId || !remarks || !Array.isArray(documents)) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid input");
   }
+  const userInfo = await prisma.user.findFirst({
+    where: { id },
+  });
 
   return await prisma.$transaction(async (tx) => {
+    if (userInfo?.departmentId == null) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "The user is not assigned to any department."
+      );
+    }
     const campaign = await tx.campaign.findUnique({
-      where: { id: campaignId },
+      where: { id: campaignId, departmentId: userInfo.departmentId },
       include: { documents: true }, // removed approvalInstances check
     });
 
-    if (!campaign || campaign.companyId !== companyId) {
+    if (
+      !campaign ||
+      campaign.companyId !== companyId ||
+      campaign.departmentId !== userInfo?.departmentId
+    ) {
       throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
     }
 
@@ -674,6 +376,8 @@ const processCampaign = async (
     const workflow = await tx.approvalWorkflow.findFirst({
       where: {
         companyId: campaign.companyId,
+        departmentId: userInfo.departmentId,
+        // cam
       },
       include: {
         stages: {

@@ -85,7 +85,7 @@ router.get("/status", auth(), campaignController.getCampaignsByStatus);
 router
   .route("/:id")
   .get(auth(), campaignController.getCampaignById)
-  .put(auth(), upload.array("documents"), campaignController.updateCampaign);
+  .post(auth(), upload.array("documents"), campaignController.updateCampaign);
 
 router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 

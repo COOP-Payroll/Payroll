@@ -2,10 +2,10 @@ export interface AuthUser {
   id: string;
   name: string;
   companyId: string;
+  departmentId: string?;
   isSuperAdmin: boolean;
   roles: string[];
   permissions: string[];
-  departmentId: string?;
 }
 
 declare global {
