@@ -13,6 +13,7 @@ export interface CreateCampaignDTO {
   budgetSource: string;
   createdById: string;
   companyId: string;
+  departmentId?: string;
   documents?: {
     fileName: string;
     filePath: string;
@@ -21,6 +22,86 @@ export interface CreateCampaignDTO {
   }[];
 }
 
+// export const createCampaign = async (data: CreateCampaignDTO) => {
+//   const {
+//     name,
+//     description,
+//     startDate,
+//     endDate,
+//     budget,
+//     budgetSource,
+//     createdById,
+//     companyId,
+//     documents,
+//   } = data;
+
+//   if (
+//     !name ||
+//     !startDate ||
+//     !endDate ||
+//     !budgetSource ||
+//     !createdById ||
+//     !companyId
+//   ) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       "Missing required campaign fields"
+//     );
+//   }
+//   const user = await prisma.user.findFirst({
+//     where: {
+//       id: createdById,
+//     },
+//   });
+
+//   if (user?.departmentId == null) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       "The user is not assigned to any department."
+//     );
+//   }
+
+//   // return user;
+
+//   // Prevent duplicate name per company
+//   const exists = await prisma.campaign.findFirst({
+//     where: { name, companyId },
+//   });
+//   if (exists) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       `Campaign named "${name}" already exists.`
+//     );
+//   }
+
+//   return prisma.campaign.create({
+//     data: {
+//       name,
+//       description,
+//       startDate,
+//       endDate,
+//       budget,
+//       budgetSource,
+//       createdById,
+//       companyId,
+//       departmentId: user.departmentId,
+//       documents:
+//         documents && documents.length
+//           ? {
+//               create: documents.map((doc) => ({
+//                 fileName: doc.fileName,
+//                 filePath: doc.filePath,
+//                 mimeType: doc.mimeType,
+//                 size: doc.size,
+//               })),
+//             }
+//           : undefined,
+//     },
+//     include: {
+//       documents: true,
+//     },
+//   });
+// };
 export const createCampaign = async (data: CreateCampaignDTO) => {
   const {
     name,
@@ -32,6 +113,7 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
     createdById,
     companyId,
     documents,
+    departmentId, // may be undefined
   } = data;
 
   if (
@@ -47,29 +129,41 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
       "Missing required campaign fields"
     );
   }
+
   const user = await prisma.user.findFirst({
-    where: {
-      id: createdById,
-    },
+    where: { id: createdById },
   });
 
-  if (user?.departmentId == null) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "The user is not assigned to any department."
-    );
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  // return user;
+  let finalDepartmentId = departmentId;
 
-  // Prevent duplicate name per company
+  if (user.isSuperAdmin) {
+    if (!departmentId) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "SuperAdmin must specify departmentId"
+      );
+    }
+  } else {
+    if (!user.departmentId) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "The user is not assigned to any department."
+      );
+    }
+    finalDepartmentId = user.departmentId;
+  }
+
   const exists = await prisma.campaign.findFirst({
     where: { name, companyId },
   });
   if (exists) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      `Campaign named "${name}" already exists.`
+      `Campaign named ${name} already exists.`
     );
   }
 
@@ -83,18 +177,17 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
       budgetSource,
       createdById,
       companyId,
-      departmentId: user.departmentId,
-      documents:
-        documents && documents.length
-          ? {
-              create: documents.map((doc) => ({
-                fileName: doc.fileName,
-                filePath: doc.filePath,
-                mimeType: doc.mimeType,
-                size: doc.size,
-              })),
-            }
-          : undefined,
+      departmentId: finalDepartmentId,
+      documents: documents?.length
+        ? {
+            create: documents.map((doc) => ({
+              fileName: doc.fileName,
+              filePath: doc.filePath,
+              mimeType: doc.mimeType,
+              size: doc.size,
+            })),
+          }
+        : undefined,
     },
     include: {
       documents: true,
@@ -102,9 +195,98 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
   });
 };
 
-const getAllCampaigns = async (companyId: string) => {
+// const getAllCampaigns = async (companyId: string) => {
+//   const campaigns = await prisma.campaign.findMany({
+//     where: { isActive: true, companyId },
+//     select: {
+//       id: true,
+//       name: true,
+//       description: true,
+//       startDate: true,
+//       endDate: true,
+//       budget: true,
+//       budgetSource: true,
+//       status: true,
+//       remarks: true,
+//       company: {
+//         select: {
+//           id: true,
+//           organizationName: true,
+//         },
+//       },
+//       documents: {
+//         select: {
+//           id: true,
+//           fileName: true,
+//           filePath: true,
+//           mimeType: true,
+//           size: true,
+//         },
+//       },
+//       createdBy: {
+//         select: {
+//           id: true,
+//           name: true,
+//           department: {
+//             select: {
+//               deptName: true,
+//               shorthandRepresentation: true,
+//             },
+//           },
+//           position: {
+//             select: {
+//               positionName: true,
+//             },
+//           },
+//         },
+//       },
+//     },
+//     orderBy: {
+//       createdAt: "desc",
+//     },
+//   });
+
+//   return campaigns.map((campaign) => {
+//     const { createdBy, ...rest } = campaign;
+//     const flattenedCreatedBy = {
+//       id: createdBy.id,
+//       name: createdBy.name,
+//       deptName: createdBy.department?.deptName,
+//       shorthandRepresentation: createdBy.department?.shorthandRepresentation,
+//       positionName: createdBy.position?.positionName,
+//     };
+
+//     return {
+//       ...rest,
+//       createdBy: flattenedCreatedBy,
+//     };
+//   });
+// };
+interface GetCampaignsOptions {
+  companyId: string;
+  departmentId?: string;
+  isSuperAdmin?: boolean;
+}
+
+const getAllCampaigns = async ({
+  companyId,
+  departmentId,
+  isSuperAdmin,
+}: GetCampaignsOptions) => {
+  const where: any = {
+    isActive: true,
+    companyId,
+  };
+
+  if (!isSuperAdmin && departmentId) {
+    // Filter by department through the user who created the campaign
+    where.createdBy = {
+      departmentId: departmentId,
+    };
+  }
+
   const campaigns = await prisma.campaign.findMany({
-    where: { isActive: true, companyId },
+    where,
     select: {
       id: true,
       name: true,
@@ -121,6 +303,12 @@ const getAllCampaigns = async (companyId: string) => {
           organizationName: true,
         },
       },
+      department: {
+        select: {
+          id: true,
+          deptName: true,
+        },
+      },
       documents: {
         select: {
           id: true,
@@ -130,6 +318,7 @@ const getAllCampaigns = async (companyId: string) => {
           size: true,
         },
       },
+
       createdBy: {
         select: {
           id: true,
@@ -436,9 +625,19 @@ const processCampaign = async (
     });
   });
 };
+interface GetCampaignsByStatusOptions {
+  companyId: string;
+  departmentId?: string;
+  isSuperAdmin?: boolean;
+  status: string;
+}
 
-const getCampaignsByStatus = async (companyId: string, status: string) => {
-  // Validate status
+const getCampaignsByStatus = async ({
+  companyId,
+  departmentId,
+  isSuperAdmin,
+  status,
+}: GetCampaignsByStatusOptions) => {
   const validStatuses = ["ACTIVE", "PROCESSED", "APPROVED", "CLOSED"];
   if (!validStatuses.includes(status)) {
     throw new ApiError(
@@ -447,12 +646,20 @@ const getCampaignsByStatus = async (companyId: string, status: string) => {
     );
   }
 
+  const where: any = {
+    isActive: true,
+    companyId,
+    status: status as CampaignStatus,
+  };
+
+  if (!isSuperAdmin && departmentId) {
+    where.createdBy = {
+      departmentId,
+    };
+  }
+
   const campaigns = await prisma.campaign.findMany({
-    where: {
-      isActive: true,
-      companyId,
-      status: status as CampaignStatus,
-    },
+    where,
     select: {
       id: true,
       name: true,
@@ -467,6 +674,12 @@ const getCampaignsByStatus = async (companyId: string, status: string) => {
         select: {
           id: true,
           organizationName: true,
+        },
+      },
+      department: {
+        select: {
+          id: true,
+          deptName: true,
         },
       },
       documents: {
@@ -484,6 +697,7 @@ const getCampaignsByStatus = async (companyId: string, status: string) => {
           name: true,
           department: {
             select: {
+              id: true,
               deptName: true,
               shorthandRepresentation: true,
             },
@@ -501,8 +715,96 @@ const getCampaignsByStatus = async (companyId: string, status: string) => {
     },
   });
 
-  return campaigns;
+  return campaigns.map((campaign) => {
+    const { createdBy, ...rest } = campaign;
+    const flattenedCreatedBy = {
+      id: createdBy.id,
+      name: createdBy.name,
+      deptName: createdBy.department?.deptName,
+      shorthandRepresentation: createdBy.department?.shorthandRepresentation,
+      positionName: createdBy.position?.positionName,
+    };
+
+    return {
+      ...rest,
+      createdBy: flattenedCreatedBy,
+      // department: createdBy.department
+      //   ? {
+      //       id: createdBy.department.id,
+      //       name: createdBy.department.deptName,
+      //       shorthand: createdBy.department.shorthandRepresentation,
+      //     }
+      //   : null,
+    };
+  });
 };
+
+// const getCampaignsByStatus = async (companyId: string, status: string) => {
+//   // Validate status
+//   const validStatuses = ["ACTIVE", "PROCESSED", "APPROVED", "CLOSED"];
+//   if (!validStatuses.includes(status)) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+//     );
+//   }
+
+//   const campaigns = await prisma.campaign.findMany({
+//     where: {
+//       isActive: true,
+//       companyId,
+//       status: status as CampaignStatus,
+//     },
+//     select: {
+//       id: true,
+//       name: true,
+//       description: true,
+//       startDate: true,
+//       endDate: true,
+//       budget: true,
+//       budgetSource: true,
+//       status: true,
+//       remarks: true,
+//       company: {
+//         select: {
+//           id: true,
+//           organizationName: true,
+//         },
+//       },
+//       documents: {
+//         select: {
+//           id: true,
+//           fileName: true,
+//           filePath: true,
+//           mimeType: true,
+//           size: true,
+//         },
+//       },
+//       createdBy: {
+//         select: {
+//           id: true,
+//           name: true,
+//           department: {
+//             select: {
+//               deptName: true,
+//               shorthandRepresentation: true,
+//             },
+//           },
+//           position: {
+//             select: {
+//               positionName: true,
+//             },
+//           },
+//         },
+//       },
+//     },
+//     orderBy: {
+//       createdAt: "desc",
+//     },
+//   });
+
+//   return campaigns;
+// };
 const updateCampaignStatus = async (
   campaignId: string,
   status: CampaignStatus

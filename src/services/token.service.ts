@@ -29,7 +29,7 @@ const generateToken = (
   secret = config.jwt.secret
 ): string => {
   const payload = {
-    sub: { userId, companyId, departmentId, isSuperAdmin },
+    sub: { userId, companyId,departmentId, isSuperAdmin },
     iat: moment().unix(),
     exp: expires.unix(),
     type,

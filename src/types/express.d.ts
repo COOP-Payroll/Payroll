@@ -2,7 +2,7 @@ export interface AuthUser {
   id: string;
   name: string;
   companyId: string;
-  departmentId: string?;
+  departmentId: string;
   isSuperAdmin: boolean;
   roles: string[];
   permissions: string[];

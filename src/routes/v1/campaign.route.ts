@@ -77,8 +77,14 @@ router.post(
 router
   .route("/")
 
-  .post(auth(), upload.array("documents"), campaignController.createCampaign)
-  .get(auth(), campaignController.getAllCampaigns);
+  .post(
+    auth(),
+    upload.array("documents"),
+    validate(campaignValidation.createCampaign),
+    campaignController.createCampaign
+  );
+
+router.route("/").get(auth(), campaignController.getAllCampaigns);
 
 router.get("/status", auth(), campaignController.getCampaignsByStatus);
 

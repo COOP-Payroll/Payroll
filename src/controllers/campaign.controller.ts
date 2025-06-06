@@ -18,6 +18,8 @@ export interface CreateCampaignDTO {
   budgetSource: string;
   createdById: string;
   companyId: string;
+
+  departmentId?: string;
   documents?: {
     fileName: string;
     filePath: string;
@@ -30,7 +32,10 @@ export const createCampaign = catchAsync(
   async (req: Request, res: Response) => {
     const user = req.user as AuthUser;
     const files = req.files as Express.Multer.File[];
-
+    // res.status(httpStatus.CREATED).json({
+    //   message: "Campaign created successfully",
+    //   data: user,
+    // });
     console.log("BODY:", req.body);
     console.log("FILES:", req.files);
 
@@ -50,6 +55,7 @@ export const createCampaign = catchAsync(
       budget: parseFloat(req.body.budget),
       budgetSource: req.body.budgetSource,
       createdById: user.id,
+      departmentId: req.body.departmentId,
       companyId: user.companyId,
       documents, // nested create
     };
@@ -62,9 +68,24 @@ export const createCampaign = catchAsync(
     });
   }
 );
+// const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
+//   const user = req.user as AuthUser;
+
+//   // res.status(httpStatus.OK).json({ data: user });
+
+//   const campaigns = await campaignService.getAllCampaigns(user.companyId);
+//   res.status(httpStatus.OK).json({ data: campaigns });
+// });
+
 const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
-  const campaigns = await campaignService.getAllCampaigns(user.companyId);
+
+  const campaigns = await campaignService.getAllCampaigns({
+    companyId: user.companyId,
+    departmentId: user.departmentId, // might be undefined for superAdmin
+    isSuperAdmin: user.isSuperAdmin,
+  });
+
   res.status(httpStatus.OK).json({ data: campaigns });
 });
 
@@ -256,6 +277,24 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
+//   const user = req.user as AuthUser;
+//   const { status } = req.query;
+
+//   if (!status) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       "Status query parameter is required"
+//     );
+//   }
+
+//   const campaigns = await campaignService.getCampaignsByStatus(
+//     user.companyId,
+//     status as string
+//   );
+//   res.status(httpStatus.OK).json({ data: campaigns });
+// });
+
 const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const { status } = req.query;
@@ -267,10 +306,13 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
-  const campaigns = await campaignService.getCampaignsByStatus(
-    user.companyId,
-    status as string
-  );
+  const campaigns = await campaignService.getCampaignsByStatus({
+    companyId: user.companyId,
+    departmentId: user.departmentId,
+    isSuperAdmin: user.isSuperAdmin,
+    status: status as string,
+  });
+
   res.status(httpStatus.OK).json({ data: campaigns });
 });
 
