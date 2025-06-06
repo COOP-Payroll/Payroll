@@ -657,7 +657,7 @@ const getCampaignsByStatus = async ({
       departmentId,
     };
   }
-
+/// GET CAMPAIGN
   const campaigns = await prisma.campaign.findMany({
     where,
     select: {
