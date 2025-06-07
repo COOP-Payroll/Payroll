@@ -83,6 +83,7 @@ const jwtVerify: VerifyCallback = async (payload, done) => {
       name: user.name,
       isSuperAdmin: user.isSuperAdmin,
       companyId: user.companyId,
+      departmentId: user.departmentId,
       roles: user.userRoles.map((ur) => ur.role.name),
       permissions: Array.from(permissions),
     };

@@ -77,18 +77,12 @@ router.post(
 router
   .route("/")
 
-  .post(auth(), upload.array("documents"), campaignController.createCampaign)
-  .get(auth(), campaignController.getAllCampaigns);
-
-router.get("/status", auth(), campaignController.getCampaignsByStatus);
-
-router
-  .route("/:id")
-  .get(auth(), campaignController.getCampaignById)
-  .put(auth(), upload.array("documents"), campaignController.updateCampaign);
-
-router.post("/delete/:id", auth(), campaignController.deleteCampaign);
-
+  .post(
+    auth(),
+    upload.array("documents"),
+    validate(campaignValidation.createCampaign),
+    campaignController.createCampaign
+  );
 router.post(
   "/document",
 
@@ -96,6 +90,17 @@ router.post(
   auth(),
   campaignController.deleteDocument
 );
+
+router.route("/").get(auth(), campaignController.getAllCampaigns);
+
+router.get("/status", auth(), campaignController.getCampaignsByStatus);
+
+router
+  .route("/:id")
+  .get(auth(), campaignController.getCampaignById)
+  .post(auth(), upload.array("documents"), campaignController.updateCampaign);
+
+router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 
 router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 

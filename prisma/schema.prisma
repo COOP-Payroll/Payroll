@@ -54,6 +54,7 @@ model Department {
   company                 Company  @relation(fields: [companyId], references: [id])
   departmentUsers         User[]
   departmentApprovalWorkflows       ApprovalWorkflow[]
+  campaigns               Campaign[]  //
 }
 
 model Position {
@@ -160,8 +161,11 @@ model Campaign {
   updatedAt            DateTime                   @updatedAt
   createdById          String
   companyId            String
-  remarks               String?
-  status               CampaignStatus             @default(ACTIVE)
+  remarks              String?
+
+  status               CampaignStatus                @default(ACTIVE)
+  departmentId         String?
+  department           Department?                 @relation(fields: [departmentId], references: [id])
   company              Company                    @relation(fields: [companyId], references: [id])
   createdBy            User                       @relation("UserCampaignsCreated", fields: [createdById], references: [id])
   approvalInstances    CampaignApprovalInstance[]
