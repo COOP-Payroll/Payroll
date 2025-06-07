@@ -317,6 +317,7 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteDocument = catchAsync(async (req: Request, res: Response) => {
+  console.log("documetntsss");
   // const campaignId = req.params.id;
   const campaignId = req.query.campaignId as string;
   const documentId = req.query.documentId as string;

@@ -83,6 +83,13 @@ router
     validate(campaignValidation.createCampaign),
     campaignController.createCampaign
   );
+router.post(
+  "/document",
+
+  validate(campaignValidation.deleteDocument),
+  auth(),
+  campaignController.deleteDocument
+);
 
 router.route("/").get(auth(), campaignController.getAllCampaigns);
 
@@ -94,14 +101,6 @@ router
   .post(auth(), upload.array("documents"), campaignController.updateCampaign);
 
 router.post("/delete/:id", auth(), campaignController.deleteCampaign);
-
-router.post(
-  "/document",
-
-  validate(campaignValidation.deleteDocument),
-  auth(),
-  campaignController.deleteDocument
-);
 
 router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
 
