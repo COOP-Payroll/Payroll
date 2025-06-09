@@ -158,8 +158,9 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
   }
 
   const exists = await prisma.campaign.findFirst({
-    where: { name, companyId },
+    where: { name, companyId, departmentId: finalDepartmentId },
   });
+
   if (exists) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -177,7 +178,7 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
       budgetSource,
       createdById,
       companyId,
-      departmentId: finalDepartmentId,
+      departmentId: finalDepartmentId!,
       documents: documents?.length
         ? {
             create: documents.map((doc) => ({
@@ -518,22 +519,18 @@ const processCampaign = async (
   });
 
   return await prisma.$transaction(async (tx) => {
-    if (userInfo?.departmentId == null) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "The user is not assigned to any department."
-      );
-    }
+    // if (userInfo?.departmentId == null) {
+    //   throw new ApiError(
+    //     httpStatus.BAD_REQUEST,
+    //     "The user is not assigned to any department."
+    //   );
+    // }
     const campaign = await tx.campaign.findUnique({
-      where: { id: campaignId, departmentId: userInfo.departmentId },
+      where: { id: campaignId },
       include: { documents: true }, // removed approvalInstances check
     });
 
-    if (
-      !campaign ||
-      campaign.companyId !== companyId ||
-      campaign.departmentId !== userInfo?.departmentId
-    ) {
+    if (!campaign || campaign.companyId !== companyId) {
       throw new ApiError(httpStatus.NOT_FOUND, "Campaign not found");
     }
 
@@ -565,7 +562,7 @@ const processCampaign = async (
     const workflow = await tx.approvalWorkflow.findFirst({
       where: {
         companyId: campaign.companyId,
-        departmentId: userInfo.departmentId,
+        departmentId: campaign.departmentId,
         // cam
       },
       include: {
@@ -574,7 +571,7 @@ const processCampaign = async (
         },
       },
     });
-
+   console.log("workflow  data", campaign.departmentId  , campaign.companyId)
     if (!workflow || workflow.stages.length === 0) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
@@ -657,7 +654,7 @@ const getCampaignsByStatus = async ({
       departmentId,
     };
   }
-/// GET CAMPAIGN
+  /// GET CAMPAIGN
   const campaigns = await prisma.campaign.findMany({
     where,
     select: {

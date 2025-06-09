@@ -164,8 +164,8 @@ model Campaign {
   remarks              String?
 
   status               CampaignStatus                @default(ACTIVE)
-  departmentId         String?
-  department           Department?                 @relation(fields: [departmentId], references: [id])
+  departmentId         String
+  department           Department                @relation(fields: [departmentId], references: [id])
   company              Company                    @relation(fields: [companyId], references: [id])
   createdBy            User                       @relation("UserCampaignsCreated", fields: [createdById], references: [id])
   approvalInstances    CampaignApprovalInstance[]

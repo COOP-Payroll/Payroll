@@ -202,8 +202,10 @@ export const verifyAccountByNumber = async (
 
   let response;
   try {
+    console.log("kdkdkkdk",payload)
     response = await axios.post(url, payload);
   } catch (err) {
+    console.log("gemechu ", err);
     throw new ApiError(
       httpStatus.SERVICE_UNAVAILABLE,
       "Failed to connect to account verification service"

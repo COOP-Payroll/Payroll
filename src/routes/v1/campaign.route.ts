@@ -85,9 +85,8 @@ router
   );
 router.post(
   "/document",
-
-  validate(campaignValidation.deleteDocument),
   auth(),
+  validate(campaignValidation.deleteDocument),
   campaignController.deleteDocument
 );
 
