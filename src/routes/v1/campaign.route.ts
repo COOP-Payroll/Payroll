@@ -43,7 +43,12 @@ router.post(
   },
   campaignController.processCampaign
 );
-
+router.post(
+  "/document",
+  auth(),
+  // validate(campaignValidation.deleteDocument),
+  campaignController.deleteDocumentsByQuery
+);
 // router.post(
 //   "/process/:id",
 //   auth(), // ✅ Authentication middleware
@@ -83,12 +88,6 @@ router
     validate(campaignValidation.createCampaign),
     campaignController.createCampaign
   );
-router.post(
-  "/document",
-  auth(),
-  validate(campaignValidation.deleteDocument),
-  campaignController.deleteDocument
-);
 
 router.route("/").get(auth(), campaignController.getAllCampaigns);
 
@@ -101,6 +100,7 @@ router
 
 router.post("/delete/:id", auth(), campaignController.deleteCampaign);
 
-router.post("/document/:id", auth(), campaignController.deleteDocumentsByQuery);
+// router.post("/document/:id", auth(),
+// campaignController.deleteDocumentsByQuery);
 
 export default router;

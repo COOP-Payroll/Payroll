@@ -266,29 +266,6 @@ const getCampaignById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const deleteDocumentsByQuery = catchAsync(
-  async (req: Request, res: Response) => {
-    const campaignId = req.params.id;
-    const docIdsParam = req.query.docIds as string;
-
-    if (!docIdsParam) {
-      throw new ApiError(httpStatus.BAD_REQUEST, "No document IDs provided");
-    }
-
-    const docIds = docIdsParam.split(",").map((id) => id.trim());
-
-    const deletedDocs = await campaignService.deleteDocumentsByIds(
-      docIds,
-      campaignId
-    );
-
-    res.status(httpStatus.OK).json({
-      message: "Documents deleted successfully",
-      deletedDocuments: deletedDocs,
-    });
-  }
-);
-
 const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaignId = req.params.id;
@@ -376,7 +353,29 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   );
   res.status(httpStatus.OK).json({ data: campaigns });
 });
+const deleteDocumentsByQuery = catchAsync(
+  async (req: Request, res: Response) => {
+    const campaignId = req.params.campaignId;
+    const docIdsParam = req.query.documentId as string;
 
+    console.log("dkdfddjjdjdjdj", docIdsParam);
+    if (!docIdsParam) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "No document IDs provided");
+    }
+
+    const docIds = docIdsParam.split(",").map((id) => id.trim());
+
+    const deletedDocs = await campaignService.deleteDocumentsByIds(
+      docIds,
+      campaignId
+    );
+
+    res.status(httpStatus.OK).json({
+      message: "Documents deleted successfully",
+      deletedDocuments: deletedDocs,
+    });
+  }
+);
 export default {
   createCampaign,
   getAllCampaigns,
@@ -385,4 +384,5 @@ export default {
   deleteCampaign,
   processCampaign,
   getCampaignsByStatus,
+  deleteDocumentsByQuery,
 };
