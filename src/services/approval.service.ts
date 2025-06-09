@@ -365,18 +365,27 @@ async function checkUserAuthorization(instance: any, user: AuthUser) {
   }
 
   // Additional department check for first stage
-  const [approverUser, campaignCreator] = await Promise.all([
-    prisma.user.findUnique({ where: { id: user.id } }),
-    prisma.user.findUnique({ where: { id: instance.campaign.createdById } }),
-  ]);
+  // const [approverUser, campaignCreator] = await Promise.all([
+  //   prisma.user.findUnique({ where: { id: user.id } }),
+  //   prisma.user.findUnique({ where: { id: instance.campaign.createdById } }),
+  // ]);
 
-  if (!approverUser || !campaignCreator) {
+  const approverUser = await prisma.user.findUnique({ where: { id: user.id } });
+  const campaign = await prisma.campaign.findFirst({
+    where: { id: instance.campaign.id },
+  });
+
+  console.log("fjdhfjdjfhddddddjdjf", instance.campaign);
+
+  if (!approverUser) {
     throw new ApiError(httpStatus.BAD_REQUEST, "User data is missing");
   }
 
+  console.log("hjkhghjgghghghghhgh", approverUser.departmentId);
+  console.log("object", instance.campaign.departmentId);
   if (
     instance.currentStage.order === 1 &&
-    approverUser.departmentId !== campaignCreator.departmentId
+    approverUser.departmentId !== instance.campaign.departmentId
   ) {
     logger.info(
       `Unauthorized department approval attempt by user ${user.id} for campaign ${instance.campaignId}`
@@ -393,7 +402,7 @@ async function getCampaignApprovalInstance(campaignId: string) {
     where: { campaignId },
     include: {
       currentStage: { select: { id: true, order: true } },
-      campaign: { select: { createdById: true } },
+      campaign: { select: { createdById: true, departmentId: true } },
       workflow: {
         include: {
           stages: {
@@ -508,6 +517,10 @@ async function handleFinalApproval(
   await prisma.campaignApprovalInstance.update({
     where: { id: instance.id },
     data: { status: StageStatus.APPROVED },
+  });
+  await prisma.campaign.update({
+    where: { id: campaignId },
+    data: { status: "APPROVED" },
   });
 
   // Fetch approved participants
