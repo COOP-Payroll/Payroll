@@ -10,6 +10,7 @@ import {
 } from "@prisma/client";
 import userService from "../services/user.service";
 import { invalidateUserPermissionCache } from "../middlewares/checkPermissions";
+import { validatePermission } from "../utils/validate-permissions";
 
 /**
  * Create role
@@ -99,7 +100,7 @@ const assignPermissionToRoles = async (
   if (!(await getRoleById(roleId))) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Role not found");
   }
-
+  await validatePermission(permissions);
   // Create new permission assignments
   const rolePermissions = permissions.map((permissionId: string) => ({
     roleId,
@@ -175,20 +176,20 @@ const createAssignPermissionToRoles = async (
   permissions: [string],
   companyId: string
 ): Promise<string> => {
-  // if(!(await getRoleById(roleId))) {
-  //     throw new ApiError(httpStatus.BAD_REQUEST, "Role not found")
-  // }
+  await validatePermission(permissions);
+
   const role = await createRole(name, companyId);
-  // Create new permission assignments
-  const rolePermissions = permissions.map((permissionId: string) => ({
+
+  const rolePermissions = permissions.map((permissionId) => ({
     roleId: role.id,
     permissionId,
   }));
 
   await prisma.rolePermission.createMany({
     data: rolePermissions,
-    skipDuplicates: true, // just in case
+    skipDuplicates: true,
   });
+
   return "Permissions assigned to role successfully";
 };
 

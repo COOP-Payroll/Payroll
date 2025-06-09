@@ -8,6 +8,47 @@ import path from "path";
 import mime from "mime-types";
 import { AuthUser } from "../types/express";
 import ApiError from "../utils/api-error";
+// const createCampaign = catchAsync(async (req: Request, res: Response) => {
+//   const files = req.files as Express.Multer.File[];
+//   const user = req.user as AuthUser;
+//   // First create the campaign without documents
+//   const campaign = await campaignService.createCampaign({
+//     ...req.body,
+//     startDate: new Date(req.body.startDate),
+//     endDate: new Date(req.body.endDate),
+//     budget: parseFloat(req.body.budget),
+//     createdById: user.id,
+//     companyId: user.companyId,
+//   });
+
+//   if (files?.length > 0) {
+//     await Promise.all(
+//       files.map((file) =>
+//         prisma.document.create({
+//           data: {
+//             fileName: file.originalname,
+//             filePath: path.basename(file.path),
+//             mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//             size: file.size,
+//             campaign: {
+//               connect: { id: campaign.id },
+//             },
+//           },
+//         })
+//       )
+//     );
+//   }
+//   // Fetch the campaign with documents
+//   const campaignWithDocuments = await prisma.campaign.findUnique({
+//     where: { id: campaign.id },
+//     include: { documents: true },
+//   });
+
+//   res.status(httpStatus.CREATED).json({
+//     message: "Campaign created",
+//     data: campaignWithDocuments,
+//   });
+// });
 
 export interface CreateCampaignDTO {
   name: string;
@@ -18,8 +59,6 @@ export interface CreateCampaignDTO {
   budgetSource: string;
   createdById: string;
   companyId: string;
-
-  departmentId?: string;
   documents?: {
     fileName: string;
     filePath: string;
@@ -27,15 +66,58 @@ export interface CreateCampaignDTO {
     size?: number;
   }[];
 }
+// export const createCampaign = catchAsync(async (req: Request, res: Response) => {
+//   const user = req.user as AuthUser;
+//   const files = req.files as Express.Multer.File[];
+
+//   // 1️⃣ Step 1: Create the campaign row
+//   const dto: CreateCampaignDTO = {
+//     name: req.body.name,
+//     description: req.body.description,
+//     startDate: new Date(req.body.startDate),
+//     endDate: new Date(req.body.endDate),
+//     budget: parseFloat(req.body.budget),
+//     budgetSource: req.body.budgetSource,
+//     createdById: user.id,
+//     companyId: user.companyId,
+//   };
+//   const campaign = await campaignService.createCampaign(dto);
+
+//   // 2️⃣ Step 2: If any files were uploaded, create Document rows
+//   if (files && files.length > 0) {
+//     await Promise.all(
+//       files.map((file) =>
+//         prisma.document.create({
+//           data: {
+//             fileName: file.originalname,
+//             filePath: path.basename(file.path),
+//             mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+//             size: file.size,
+//             campaign: { connect: { id: campaign.id } },
+//           },
+//         })
+//       )
+//     );
+//   }
+
+//   // 3️⃣ Fetch back the campaign including its documents
+//   const campaignWithDocuments = await prisma.campaign.findUnique({
+//     where: { id: campaign.id },
+//     include: { documents: true },
+//   });
+
+//   // 4️⃣ Return to client
+//   res.status(httpStatus.CREATED).json({
+//     message: "Campaign created successfully",
+//     data: campaignWithDocuments,
+//   });
+// });
 
 export const createCampaign = catchAsync(
   async (req: Request, res: Response) => {
     const user = req.user as AuthUser;
     const files = req.files as Express.Multer.File[];
-    // res.status(httpStatus.CREATED).json({
-    //   message: "Campaign created successfully",
-    //   data: user,
-    // });
+
     console.log("BODY:", req.body);
     console.log("FILES:", req.files);
 
@@ -55,7 +137,6 @@ export const createCampaign = catchAsync(
       budget: parseFloat(req.body.budget),
       budgetSource: req.body.budgetSource,
       createdById: user.id,
-      departmentId: req.body.departmentId,
       companyId: user.companyId,
       documents, // nested create
     };
@@ -68,24 +149,11 @@ export const createCampaign = catchAsync(
     });
   }
 );
-// const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
-//   const user = req.user as AuthUser;
-
-//   // res.status(httpStatus.OK).json({ data: user });
-
-//   const campaigns = await campaignService.getAllCampaigns(user.companyId);
-//   res.status(httpStatus.OK).json({ data: campaigns });
-// });
-
 const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
-
   const campaigns = await campaignService.getAllCampaigns({
     companyId: user.companyId,
-    departmentId: user.departmentId, // might be undefined for superAdmin
-    isSuperAdmin: user.isSuperAdmin,
   });
-
   res.status(httpStatus.OK).json({ data: campaigns });
 });
 
@@ -136,6 +204,35 @@ const updateCampaign = catchAsync(async (req: Request, res: Response) => {
     data: updatedCampaign,
   });
 });
+
+// const updateCampaign = catchAsync(async (req: Request, res: Response) => {
+//   const user = req.user as AuthUser;
+//   // Handle file updates if needed
+//   if (req.files?.length) {
+//     const files = req.files as Express.Multer.File[];
+//     const documentCreations = files.map(async (file) => {
+//       return await prisma.document.create({
+//         data: {
+//           fileName: file.originalname,
+//           filePath: file.path,
+//           mimeType: file.mimetype,
+//           size: file.size,
+//           campaignId: req.params.id,
+//         },
+//       });
+//     });
+//     await Promise.all(documentCreations);
+//   }
+
+//   const campaign = await campaignService.updateCampaign(
+//     req.params.id,
+//     user.companyId,
+//     req.body
+//   );
+//   res
+//     .status(httpStatus.OK)
+//     .json({ message: "Campaign updated", data: campaign });
+// });
 
 const deleteCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
@@ -194,27 +291,20 @@ const deleteDocumentsByQuery = catchAsync(
 
 const processCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
-
   const campaignId = req.params.id;
+
   console.log(">> processCampaign called");
   console.log(">> User:", user?.id, "Company:", user?.companyId);
   console.log(">> Campaign ID:", campaignId);
-  console.log(">> Request headers:", req.headers);
-  console.log(">> Content-Type:", req.headers["content-type"]);
-  console.log(">> Content-Length:", req.headers["content-length"]);
-
-  console.log("dddddddddddd", req.body);
 
   const files = req.files as Express.Multer.File[];
   const remarks = req?.body?.remarks;
 
   if (!remarks) {
-    console.error(">> Missing remarks");
     throw new ApiError(httpStatus.BAD_REQUEST, "Remarks is required");
   }
-
   if (!files || files.length === 0) {
-    console.error(">> No documents provided");
+    console.warn(">> No documents provided");
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Documents are required for processing campaign"
@@ -224,21 +314,12 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   console.log(">> Mapping uploaded documents");
   let documents;
   try {
-    documents = files.map((file, index) => {
-      if (!file.path) {
-        console.error(`>> File at index ${index} is missing 'path':`, file);
-        throw new Error(`File at index ${index} is missing 'path'`);
-      }
-
-      const doc = {
-        fileName: file.originalname,
-        filePath: path.basename(file.path),
-        mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-        size: file.size,
-      };
-      console.log(`>> Document ${index} mapped:`, doc);
-      return doc;
-    });
+    documents = files.map((file) => ({
+      fileName: file.originalname,
+      filePath: path.basename(file.path),
+      mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
+      size: file.size,
+    }));
   } catch (err) {
     console.error(">> Error while mapping files:", err);
     throw new ApiError(
@@ -248,8 +329,8 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
   }
 
   console.log(">> Calling campaignService.processCampaign");
-  let campaign;
 
+  let campaign;
   try {
     campaign = await campaignService.processCampaign(
       campaignId,
@@ -258,42 +339,21 @@ const processCampaign = catchAsync(async (req: Request, res: Response) => {
       user.id,
       documents
     );
-    console.log(">> Campaign processed successfully:", campaign.id);
   } catch (err) {
-    console.error(">> Error in campaignService.processCampaign:", err);
-    console.error(
-      ">> Error stack:",
-      err instanceof Error ? err.stack : "No stack trace"
-    );
+    console.error(">> Error in campaignService.processCampaign1:", err);
     throw new ApiError(
       httpStatus.SERVICE_UNAVAILABLE,
-      err instanceof Error ? err.message : String(err)
+      `${err instanceof Error ? err.message : String(err)}`
     );
   }
+
+  console.log(">> Campaign processed successfully");
 
   res.status(httpStatus.OK).json({
     message: "Campaign processed successfully",
     data: campaign,
   });
 });
-
-// const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
-//   const user = req.user as AuthUser;
-//   const { status } = req.query;
-
-//   if (!status) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Status query parameter is required"
-//     );
-//   }
-
-//   const campaigns = await campaignService.getCampaignsByStatus(
-//     user.companyId,
-//     status as string
-//   );
-//   res.status(httpStatus.OK).json({ data: campaigns });
-// });
 
 const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
@@ -306,38 +366,15 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
-  const campaigns = await campaignService.getCampaignsByStatus({
-    companyId: user.companyId,
-    departmentId: user.departmentId,
-    isSuperAdmin: user.isSuperAdmin,
-    status: status as string,
-  });
-
-  res.status(httpStatus.OK).json({ data: campaigns });
-});
-
-const deleteDocument = catchAsync(async (req: Request, res: Response) => {
-  console.log("documetntsss");
-  // const campaignId = req.params.id;
-  const campaignId = req.query.campaignId as string;
-  const documentId = req.query.documentId as string;
-
-  if (!documentId) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Document ID is required");
-  }
-  if (!campaignId) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Campaign ID is required");
-  }
-
-  const deletedDoc = await campaignService.deleteDocumentsByIds(
-    [documentId],
-    campaignId
+  const campaigns = await campaignService.getCampaignsByStatus(
+    {
+      companyId: user.companyId,
+      status: status as string,
+    }
+    // user.companyId,
+    // status as string
   );
-
-  res.status(httpStatus.OK).json({
-    message: "Document deleted successfully",
-    data: deletedDoc[0],
-  });
+  res.status(httpStatus.OK).json({ data: campaigns });
 });
 
 export default {
@@ -348,6 +385,4 @@ export default {
   deleteCampaign,
   processCampaign,
   getCampaignsByStatus,
-  deleteDocument,
-  deleteDocumentsByQuery,
 };
