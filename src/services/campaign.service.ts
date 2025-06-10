@@ -571,7 +571,7 @@ const processCampaign = async (
         },
       },
     });
-   console.log("workflow  data", campaign.departmentId  , campaign.companyId)
+    console.log("workflow  data", campaign.departmentId, campaign.companyId);
     if (!workflow || workflow.stages.length === 0) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
@@ -654,6 +654,8 @@ const getCampaignsByStatus = async ({
       departmentId,
     };
   }
+
+  console.log("departmentid ", departmentId);
   /// GET CAMPAIGN
   const campaigns = await prisma.campaign.findMany({
     where,
