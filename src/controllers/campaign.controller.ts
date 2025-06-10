@@ -153,6 +153,7 @@ const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaigns = await campaignService.getAllCampaigns({
     companyId: user.companyId,
+    departmentId: user.departmentId,
   });
   res.status(httpStatus.OK).json({ data: campaigns });
 });
