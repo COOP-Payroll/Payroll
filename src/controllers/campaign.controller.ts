@@ -151,6 +151,7 @@ export const createCampaign = catchAsync(
 );
 const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
+  //fetch by department
   const campaigns = await campaignService.getAllCampaigns({
     companyId: user.companyId,
     departmentId: user.departmentId,
