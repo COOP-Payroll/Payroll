@@ -365,27 +365,21 @@ async function checkUserAuthorization(instance: any, user: AuthUser) {
   }
 
   // Additional department check for first stage
-  // const [approverUser, campaignCreator] = await Promise.all([
-  //   prisma.user.findUnique({ where: { id: user.id } }),
-  //   prisma.user.findUnique({ where: { id: instance.campaign.createdById } }),
-  // ]);
-
   const approverUser = await prisma.user.findUnique({ where: { id: user.id } });
   const campaign = await prisma.campaign.findFirst({
     where: { id: instance.campaign.id },
   });
 
-  console.log("fjdhfjdjfhddddddjdjf", instance.campaign);
-
-  if (!approverUser) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "User data is missing");
+  if (!approverUser || !campaign) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "User data or Campaign is missing"
+    );
   }
 
-  console.log("hjkhghjgghghghghhgh", approverUser.departmentId);
-  console.log("object", instance.campaign.departmentId);
   if (
     instance.currentStage.order === 1 &&
-    approverUser.departmentId !== instance.campaign.departmentId
+    approverUser.departmentId !== campaign.departmentId
   ) {
     logger.info(
       `Unauthorized department approval attempt by user ${user.id} for campaign ${instance.campaignId}`
@@ -402,7 +396,7 @@ async function getCampaignApprovalInstance(campaignId: string) {
     where: { campaignId },
     include: {
       currentStage: { select: { id: true, order: true } },
-      campaign: { select: { createdById: true, departmentId: true } },
+      campaign: { select: { createdById: true } },
       workflow: {
         include: {
           stages: {
@@ -517,10 +511,6 @@ async function handleFinalApproval(
   await prisma.campaignApprovalInstance.update({
     where: { id: instance.id },
     data: { status: StageStatus.APPROVED },
-  });
-  await prisma.campaign.update({
-    where: { id: campaignId },
-    data: { status: "APPROVED" },
   });
 
   // Fetch approved participants
@@ -723,20 +713,6 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
 
   if (campaignApprovalInstances.length === 0) return [];
 
-  console.log("----", campaignApprovalInstances);
-  // const userDetail = await prisma.userRole.findMany({
-  //   where: { instanceId: instance.id },
-  // });
-
-  // const userRoless = await prisma.userRole.findMany({
-  //   where: { userId: user.id },
-  //   select: { roleId: true },
-  // });
-
-  // const roleStage = await prisma.stageRole.findMany({
-  //   where: {roleId: userRoless}
-  // })
-
   const campaign = await prisma.campaign.findUnique({
     where: { id: campaignId },
     select: {
@@ -787,6 +763,8 @@ const fetchCampaignApprovalInstance = async (user: AuthUser) => {
     where: {
       companyId: user.companyId,
       isActive: true,
+      status: CampaignStatus.PROCESSED,
+      departmentId: user.departmentId,
       approvalInstances: {
         some: {
           status: ApprovalStatus.PENDING,
