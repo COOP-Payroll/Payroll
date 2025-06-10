@@ -759,6 +759,9 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
 };
 
 const fetchCampaignApprovalInstance = async (user: AuthUser) => {
+
+
+  
   const campaigns = await prisma.campaign.findMany({
     where: {
       companyId: user.companyId,

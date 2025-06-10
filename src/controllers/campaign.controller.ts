@@ -347,6 +347,7 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
     {
       companyId: user.companyId,
       status: status as string,
+      departmentId: user.departmentId,
     }
     // user.companyId,
     // status as string
