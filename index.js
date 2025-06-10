@@ -269,7 +269,7 @@ app.use((err, req, res, next) => {
 
 let isRunning = false;
 console.log(process.env.PORT);
-app.listen(process.env.PORT || 4400, () => {
+app.listen( 4400, () => {
   // cron.schedule("*/5 * * * * * * * *", async () => {
   //   if (!isRunning) {
   //     isRunning = true;

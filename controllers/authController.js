@@ -94,6 +94,7 @@ const signTokenSuperAdmin = (id, role, fullName, phoneNumber, email) => {
     //   expiresIn: "90d",
     // });
   } catch (err) {
+    console.log(err);
     return res.status(503).json("An error occurred, please try again later");
   }
 };
