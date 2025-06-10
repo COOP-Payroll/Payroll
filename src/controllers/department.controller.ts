@@ -64,19 +64,19 @@ const deleteDepartment = catchAsync(async (req: Request, res: Response) => {
     .send({ message: "Department deactivated", data: updated });
 });
 
-const getDepartmentsByCenter = catchAsync(
-  async (req: Request, res: Response) => {
-    const { centerId } = req.params;
-    const departments = await departmentService.getDepartmentsByCenter(
-      centerId
-    );
+// const getDepartmentsByCenter = catchAsync(
+//   async (req: Request, res: Response) => {
+//     const { centerId } = req.params;
+//     const departments = await departmentService.getDepartmentsByCenter(
+//       centerId
+//     );
 
-    res.json({
-      data: departments,
-      count: departments.length,
-    });
-  }
-);
+//     res.json({
+//       data: departments,
+//       count: departments.length,
+//     });
+//   }
+// );
 
 export default {
   createDepartment,
@@ -84,5 +84,5 @@ export default {
   getDepartmentById,
   updateDepartment,
   deleteDepartment,
-  getDepartmentsByCenter,
+  // getDepartmentsByCenter,
 };

@@ -139,7 +139,7 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
   }
 
   let finalDepartmentId = departmentId;
-
+  console.log("djfdhfjdhfjddhfddjjdhjd", data);
   if (user.isSuperAdmin) {
     if (!departmentId) {
       throw new ApiError(
