@@ -764,7 +764,7 @@ const fetchCampaignApprovalInstance = async (user: AuthUser) => {
       companyId: user.companyId,
       isActive: true,
       status: CampaignStatus.PROCESSED,
-      departmentId: user.departmentId,
+      // departmentId: user.departmentId,
       approvalInstances: {
         some: {
           status: ApprovalStatus.PENDING,
