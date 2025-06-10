@@ -355,6 +355,7 @@ async function checkUserAuthorization(instance: any, user: AuthUser) {
 
   const userRoleIds = userRoles.map((ur) => ur.roleId);
   const stageRoleIds = stageRoles.map((sr) => sr.roleId);
+
   const canAct = userRoleIds.some((id) => stageRoleIds.includes(id));
 
   if (!canAct) {
@@ -759,15 +760,52 @@ const fetchCampaignApproval = async (campaignId: string, user: AuthUser) => {
 };
 
 const fetchCampaignApprovalInstance = async (user: AuthUser) => {
+  // const campaigns = await prisma.campaign.findMany({
+  //   where: {
+  //     companyId: user.companyId,
+  //     isActive: true,
+  //     status: CampaignStatus.PROCESSED,
+  //     // departmentId: user.departmentId,
+  //     approvalInstances: {
+  //       some: {
+  //         status: ApprovalStatus.PENDING,
+  //       },
+  //     },
+  //   },
+  //   select: {
+  //     id: true,
+  //     name: true,
+  //     approvalInstances: {
+  //       select: { currentStageId: true },
+  //     },
+  //   },
+  // });
+  // const userFetch = await prisma.user.findFirst({
+  //   where: { id: user.id },
+  //   include: { userRoles: { select: { roleId: true } } },
+  // });
+  // const allUserRoleId = userFetch?.userRoles.map((userRole) => userRole.roleId);
+  // const CampaignInstances = campaigns.map(
+  //   (campaign) => campaign.approvalInstances[0].currentStageId
+  // );
   const campaigns = await prisma.campaign.findMany({
     where: {
-      companyId: user.companyId,
-      isActive: true,
-      status: CampaignStatus.PROCESSED,
-      // departmentId: user.departmentId,
       approvalInstances: {
         some: {
           status: ApprovalStatus.PENDING,
+          currentStage: {
+            stageRoles: {
+              some: {
+                role: {
+                  userRoles: {
+                    some: {
+                      userId: user.id,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -775,6 +813,9 @@ const fetchCampaignApprovalInstance = async (user: AuthUser) => {
       id: true,
       name: true,
     },
+    // include: {
+    //   approvalInstances: true,
+    // },
   });
 
   return campaigns;
