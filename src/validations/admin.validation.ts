@@ -63,6 +63,15 @@ const createRoleSchema = {
   }),
 };
 
+const getDepartmentsByCenterSchema = {
+  params: Joi.object().keys({
+    centerId: Joi.string().uuid().required().messages({
+      "any.required": "Department Center ID is required",
+      "string.guid": "Department Center ID must be a valid UUID",
+    }),
+  }),
+};
+
 export default {
   assignPermissionsToRoleSchema,
   createPermissionsToRoleSchema,
@@ -71,4 +80,5 @@ export default {
   getDepartmentSchema,
   updateDepartmentSchema,
   createRoleSchema,
+  getDepartmentsByCenterSchema,
 };

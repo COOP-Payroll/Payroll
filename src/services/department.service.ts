@@ -116,10 +116,33 @@ const deleteDepartment = async (id: string) => {
   });
 };
 
+const getDepartmentsByCenter = async (centerId: string) => {
+  const center = await prisma.departmentCenter.findUnique({
+    where: { id: centerId },
+    include: {
+      departments: {
+        where: {
+          isActive: true,
+        },
+        orderBy: {
+          deptName: "asc",
+        },
+      },
+    },
+  });
+
+  if (!center) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Department Center not found");
+  }
+
+  return center.departments;
+};
+
 export default {
   createDepartment,
   getAllDepartments,
   getDepartmentById,
   updateDepartment,
   deleteDepartment,
+  getDepartmentsByCenter,
 };

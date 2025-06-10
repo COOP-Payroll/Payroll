@@ -42,4 +42,12 @@ router
     departmentController.deleteDepartment
   );
 
+router
+  .route("/center/:centerId")
+  .get(
+    auth(),
+    validate(adminValidation.getDepartmentsByCenterSchema),
+    departmentController.getDepartmentsByCenter
+  );
+
 export default router;
