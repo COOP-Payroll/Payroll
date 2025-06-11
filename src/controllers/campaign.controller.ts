@@ -59,6 +59,7 @@ export interface CreateCampaignDTO {
   budgetSource: string;
   createdById: string;
   companyId: string;
+  departmentId: string;
   documents?: {
     fileName: string;
     filePath: string;
@@ -138,6 +139,7 @@ export const createCampaign = catchAsync(
       budgetSource: req.body.budgetSource,
       createdById: user.id,
       companyId: user.companyId,
+      departmentId: req.body.departmentId,
       documents, // nested create
     };
 
