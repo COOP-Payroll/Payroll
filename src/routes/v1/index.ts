@@ -16,7 +16,6 @@ import campaignApprovalRoute from "./approval.route";
 import accountManagementRoute from "./account.route";
 import campaignReportRoute from "./report.route";
 import workflowRoute from "./workflow.route";
-// import uploadfileRoute from "./uploadfile.route";
 
 const router = express.Router();
 
@@ -84,7 +83,6 @@ const defaultRoutes = [
     path: "/workflow",
     route: workflowRoute,
   },
- 
 ];
 
 const devRoutes = [
