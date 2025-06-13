@@ -32,13 +32,20 @@ router
     campaignReportController.fetchPublishedCampaign
   );
 
+router.route("/campaigns/fetchCampaignPublished").get(
+  auth(),
+  // checkPermission("view_campaign_published"),
+  // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+  campaignReportController.fetchPublishedCampaign
+);
+
 router
-  .route("/campaigns/:campaignId/fetchCampaignPaymentHistory")
+  .route("/campaigns/summary-report")
   .get(
     auth(),
     checkPermission("view_campaign_payment"),
     validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
-    campaignReportController.fetchCampaignPaymentHistory
+    campaignReportController.fetchCampaignSummaryReport
   );
 
 export default router;

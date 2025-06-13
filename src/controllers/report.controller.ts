@@ -5,6 +5,7 @@ import pick from "../utils/pick";
 import { generateExcelReport } from "../utils/generate-excel-report";
 
 import generatePDFReport from "../utils/generatePDFReport";
+import { AuthUser } from "../types/express";
 
 const fetchCampaignReport = catchAsync(async (req, res) => {
   const { campaignId } = req.params;
@@ -80,9 +81,19 @@ const fetchCampaignPaymentHistory = catchAsync(async (req, res) => {
   });
 });
 
+const fetchCampaignSummaryReport = catchAsync(async (req, res) => {
+  const user = req.user as AuthUser;
+  //fetch by department
+  const campaigns = await campaignReportService.fetchCampaignSummaryReport(
+    user.companyId
+  );
+  res.status(httpStatus.OK).json({ data: campaigns });
+});
+
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
   fetchPublishedCampaign,
   fetchCampaignPaymentHistory,
+  fetchCampaignSummaryReport,
 };
