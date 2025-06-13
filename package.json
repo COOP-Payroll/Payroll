@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
+    "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "postinstall": "prisma generate",
@@ -10,7 +11,8 @@
     "seed:admin": "ts-node src/seeders/superadmin.ts",
     "worker": "ts-node src/jobs/index.ts",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "build": "rimraf build && tsc -p tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -34,15 +36,15 @@
     "@types/node": "^22.15.18",
     "@types/passport": "^1.0.17",
     "@types/passport-jwt": "^4.0.1",
-    "@types/pdfkit": "^0.13.9",
     "prisma": "^6.8.2",
     "tsx": "^4.19.4",
+    "@types/pdfkit": "^0.13.9",
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "@bull-board/api": "^6.9.6",
     "@bull-board/express": "^6.9.6",
-    "@prisma/client": "^6.8.2",
     "@types/express": "^5.0.2",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",

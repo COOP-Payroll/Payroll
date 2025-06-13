@@ -509,10 +509,16 @@ async function handleFinalApproval(
   campaignId: string
 ) {
   // Mark instance as approved
-  await prisma.campaignApprovalInstance.update({
-    where: { id: instance.id },
-    data: { status: StageStatus.APPROVED },
-  });
+  await prisma.$transaction([
+    prisma.campaignApprovalInstance.update({
+      where: { id: instance.id },
+      data: { status: StageStatus.APPROVED },
+    }),
+    prisma.campaign.update({
+      where: { id: campaignId },
+      data: { status: CampaignStatus.APPROVED },
+    }),
+  ]);
 
   // Fetch approved participants
   const participants = await prisma.campaignParticipant.findMany({
