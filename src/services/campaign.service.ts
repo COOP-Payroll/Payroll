@@ -274,16 +274,15 @@ const getAllCampaigns = async ({
   departmentId,
   isSuperAdmin,
 }: GetCampaignsOptions) => {
+  // Base filter
   const where: any = {
     isActive: true,
     companyId,
   };
 
+  // If NOT super admin, filter campaigns by departmentId
   if (!isSuperAdmin && departmentId) {
-    // Filter by department through the user who created the campaign
-    where.createdBy = {
-      departmentId: departmentId,
-    };
+    where.departmentId = departmentId;
   }
 
   const campaigns = await prisma.campaign.findMany({
@@ -319,7 +318,6 @@ const getAllCampaigns = async ({
           size: true,
         },
       },
-
       createdBy: {
         select: {
           id: true,
@@ -738,6 +736,107 @@ const getCampaignsByStatus = async ({
   });
 };
 
+const fetchCampaignsByStatus = async ({
+  companyId,
+  // departmentId,
+  isSuperAdmin,
+  status,
+}: GetCampaignsByStatusOptions) => {
+  const validStatuses = ["ACTIVE", "PROCESSED", "APPROVED", "CLOSED"];
+  if (!validStatuses.includes(status)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+    );
+  }
+
+  const where: any = {
+    isActive: true,
+    companyId,
+    status: status as CampaignStatus,
+  };
+
+  /// GET CAMPAIGN
+  const campaigns = await prisma.campaign.findMany({
+    where,
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      startDate: true,
+      endDate: true,
+      budget: true,
+      budgetSource: true,
+      status: true,
+      remarks: true,
+      company: {
+        select: {
+          id: true,
+          organizationName: true,
+        },
+      },
+      department: {
+        select: {
+          id: true,
+          deptName: true,
+        },
+      },
+      documents: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
+          mimeType: true,
+          size: true,
+        },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+          department: {
+            select: {
+              id: true,
+              deptName: true,
+              shorthandRepresentation: true,
+            },
+          },
+          position: {
+            select: {
+              positionName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return campaigns.map((campaign) => {
+    const { createdBy, ...rest } = campaign;
+    const flattenedCreatedBy = {
+      id: createdBy.id,
+      name: createdBy.name,
+      deptName: createdBy.department?.deptName,
+      shorthandRepresentation: createdBy.department?.shorthandRepresentation,
+      positionName: createdBy.position?.positionName,
+    };
+
+    return {
+      ...rest,
+      createdBy: flattenedCreatedBy,
+      // department: createdBy.department
+      //   ? {
+      //       id: createdBy.department.id,
+      //       name: createdBy.department.deptName,
+      //       shorthand: createdBy.department.shorthandRepresentation,
+      //     }
+      //   : null,
+    };
+  });
+};
 // const getCampaignsByStatus = async (companyId: string, status: string) => {
 //   // Validate status
 //   const validStatuses = ["ACTIVE", "PROCESSED", "APPROVED", "CLOSED"];
@@ -835,4 +934,5 @@ export default {
   processCampaign,
   getCampaignsByStatus,
   updateCampaignStatus,
+  fetchCampaignsByStatus,
 };

@@ -157,6 +157,7 @@ const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const campaigns = await campaignService.getAllCampaigns({
     companyId: user.companyId,
     departmentId: user.departmentId,
+    isSuperAdmin: user.isSuperAdmin,
   });
   res.status(httpStatus.OK).json({ data: campaigns });
 });
@@ -358,6 +359,31 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   );
   res.status(httpStatus.OK).json({ data: campaigns });
 });
+
+const fetchCampaignsByStatus = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+    const { status } = req.query;
+
+    if (!status) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Status query parameter is required"
+      );
+    }
+
+    const campaigns = await campaignService.getCampaignsByStatus(
+      {
+        companyId: user.companyId,
+        status: status as string,
+        // departmentId: user.departmentId,
+      }
+      // user.companyId,
+      // status as string
+    );
+    res.status(httpStatus.OK).json({ data: campaigns });
+  }
+);
 const deleteDocumentsByQuery = catchAsync(
   async (req: Request, res: Response) => {
     const campaignId = req.params.campaignId;
@@ -390,4 +416,5 @@ export default {
   processCampaign,
   getCampaignsByStatus,
   deleteDocumentsByQuery,
+  fetchCampaignsByStatus,
 };
