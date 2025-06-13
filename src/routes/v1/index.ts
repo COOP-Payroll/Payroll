@@ -16,7 +16,11 @@ import campaignApprovalRoute from "./approval.route";
 import accountManagementRoute from "./account.route";
 import campaignReportRoute from "./report.route";
 import workflowRoute from "./workflow.route";
-// import uploadfileRoute from "./uploadfile.route";
+import shiftRoute from "./shift.route";
+import gradeRoute from "./grade.routes";
+import leaveRequestRoute from "./leaveType.route";
+import additionalDeductionRoute from "./additionalDeductionDefinition.route";
+import additionalPayment from "./additionalPayDefinition.route";
 
 const router = express.Router();
 
@@ -84,7 +88,26 @@ const defaultRoutes = [
     path: "/workflow",
     route: workflowRoute,
   },
- 
+  {
+    path: "/shifts",
+    route: shiftRoute,
+  },
+  {
+    path: "/grades",
+    route: gradeRoute,
+  },
+  {
+    path: "/leave-requests",
+    route: leaveRequestRoute,
+  },
+  {
+    path: "/additional-deduction-definitions",
+    route: additionalDeductionRoute,
+  },
+  {
+    path: "/additional-pay-definitions",
+    route: additionalDeductionRoute,
+  },
 ];
 
 const devRoutes = [

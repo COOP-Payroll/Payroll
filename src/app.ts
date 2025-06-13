@@ -15,7 +15,7 @@ import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
 import { ExpressAdapter } from "@bull-board/express";
 import { paymentQueue, smsQueue } from "./queues";
-
+import { setupSwagger } from "./swagger";
 const serverAdapter = new ExpressAdapter();
 serverAdapter.setBasePath("/ui");
 
@@ -27,6 +27,7 @@ createBullBoard({
 serverAdapter.setBasePath("/admin/queues");
 
 const app = express();
+setupSwagger(app);
 app.set("trust proxy", 1);
 if (config.env !== "test") {
   app.use(morgan.successHandler);
@@ -44,21 +45,9 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // gzip compression
 app.use(compression());
-// parse urlencoded request body
 //
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-// Enable CORS for all routes
-// app.use(cors());
 
-// app.use(
-//   cors({
-//     origin: "*", // allow all origins
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-// // Enable pre-flight for all OPTIONS requests
-// app.options("*name", cors());
 
 app.use(
   cors({
@@ -78,7 +67,6 @@ passport.use("jwt", jwtStrategy);
 // v1 api routes
 app.use("/api/v1", routes);
 
-// send back a 404 error for any unknown api request
 app.use((req, res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, "Not found"));
 });
