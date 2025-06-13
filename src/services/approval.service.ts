@@ -563,12 +563,13 @@ async function handleFinalApproval(
     debitAccount: account.accountNumber,
     totalAmount,
     bulkId: uuidv4(),
-    participantId: participants[0].id,
     creditTransactions: participants.map((p: any) => ({
       orderId: uuidv4(),
       creditAccount: p.accountNumber!,
       amount: p.totalAmount,
+      campaignParticipantId: p.id,
     })),
+    campaignId,
   };
 
   try {

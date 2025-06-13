@@ -171,7 +171,36 @@ model Campaign {
   approvalInstances    CampaignApprovalInstance[]
   campaignParticipants CampaignParticipant[]
   documents            Document[]
+  payment              Payment?                   @relation("CampaignPayments")
 }
+
+model CampaignParticipant {
+  id                  String         @id @default(uuid())
+  numberOfDaysInUrban Int            @default(0)
+  numberOfDaysInRural Int            @default(0)
+  urbanRate           Float          @default(0)
+  ruralRate           Float          @default(0)
+  totalAmount         Float          @default(0)
+  paymentStatus       PaymentStatus  @default(PENDING)
+  approvalStatus      ApprovalStatus @default(PENDING)
+  isPublished         Boolean        @default(false)
+  phoneNumber         String?
+  accountNumber       String?
+  paymentMethod       PaymentMethod
+  isVerified          Boolean        @default(false)
+  isActive            Boolean        @default(true)
+  campaignId          String
+  participantId       String
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @default(now())
+
+  campaign            Campaign       @relation(fields: [campaignId], references: [id])
+  participant         Participant    @relation(fields: [participantId], references: [id])
+  documents           Document[]
+
+  creditTransactions  CreditTransaction[]
+}
+
 
 model Document {
   id                    String               @id @default(uuid())
@@ -210,30 +239,20 @@ model Participant {
   company              Company               @relation(fields: [companyId], references: [id])
 }
 
-/// //COMPAIGNPARTICIPANTS
-model CampaignParticipant {
-  id                  String         @id @default(uuid())
-  numberOfDaysInUrban Int            @default(0)
-  numberOfDaysInRural Int            @default(0)
-  urbanRate           Float          @default(0)
-  ruralRate           Float          @default(0)
-  totalAmount         Float          @default(0)
-  paymentStatus       PaymentStatus  @default(PENDING)
-  approvalStatus      ApprovalStatus @default(PENDING)
-  isPublished         Boolean        @default(false)
-  phoneNumber         String?
-  accountNumber       String?
-  paymentMethod       PaymentMethod
-  isVerified          Boolean        @default(false)
-  isActive            Boolean        @default(true)
-  campaignId          String
-  participantId       String
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  campaign            Campaign       @relation(fields: [campaignId], references: [id])
-  participant         Participant    @relation(fields: [participantId], references: [id])
-  documents           Document[]
-  payments            Payment[]      @relation("ParticipantPayments")
+model CreditTransaction {
+  id            String            @id @default(cuid())
+  orderId       String            @unique
+  creditAccount String
+  amount        Decimal           @db.Decimal(10, 2)
+  status        TransactionStatus @default(PENDING)
+  transactionId String?
+  failureReason String?
+  paymentId     String
+  campaignParticipantId String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  payment       Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  campaignParticipant  CampaignParticipant @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
 }
 
 model RateSetting {
@@ -319,28 +338,16 @@ model CampaignStageStatus {
 model Payment {
   id                 String              @id @default(cuid())
   bulkId             String              @unique
+  campaignId         String              @unique
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   debitAccount       String
-  participantId      String
   totalAmount        Decimal             @db.Decimal(10, 2)
   creditTransactions CreditTransaction[]
-  participant        CampaignParticipant @relation("ParticipantPayments", fields: [participantId], references: [id])
+  campaign           Campaign @relation("CampaignPayments", fields: [campaignId], references: [id])
 }
 
-model CreditTransaction {
-  id            String            @id @default(cuid())
-  orderId       String            @unique
-  creditAccount String
-  amount        Decimal           @db.Decimal(10, 2)
-  status        TransactionStatus @default(PENDING)
-  transactionId String?
-  failureReason String?
-  paymentId     String
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  payment       Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-}
+
 
 enum TokenType {
   ACCESS
