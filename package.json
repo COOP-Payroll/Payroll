@@ -34,15 +34,15 @@
     "@types/node": "^22.15.18",
     "@types/passport": "^1.0.17",
     "@types/passport-jwt": "^4.0.1",
-    "@types/pdfkit": "^0.13.9",
     "prisma": "^6.8.2",
     "tsx": "^4.19.4",
+    "@types/pdfkit": "^0.13.9",
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "@bull-board/api": "^6.9.6",
     "@bull-board/express": "^6.9.6",
-    "@prisma/client": "^6.8.2",
     "@types/express": "^5.0.2",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",

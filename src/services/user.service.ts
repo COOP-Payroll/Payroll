@@ -15,6 +15,7 @@ import {
   accountCreatedMessage,
   forgotPasswordMessage,
 } from "../templates/sms-template";
+import config from "../config/config";
 
 /**
  * Create a user with optimized database queries
@@ -30,8 +31,10 @@ const createUser = async (
   departmentId: string
 ): Promise<User> => {
   const username = await generateUsername(name);
-  // const rawPassword = generateRandomPassword();
-  const rawPassword = "SuperSecurePassword123";
+  const rawPassword =
+    config.env === "development"
+      ? "SuperSecurePassword123"
+      : generateRandomPassword();
   const [role, company, department, position] = await Promise.all([
     prisma.role.findUnique({ where: { id: roleId } }),
     prisma.company.findUnique({ where: { id: companyId } }),
