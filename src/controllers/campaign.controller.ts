@@ -359,7 +359,7 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   );
   res.status(httpStatus.OK).json({ data: campaigns });
 });
-
+//fetchcampaign by status
 const fetchCampaignsByStatus = catchAsync(
   async (req: Request, res: Response) => {
     const user = req.user as AuthUser;
