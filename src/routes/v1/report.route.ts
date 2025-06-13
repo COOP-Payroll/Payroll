@@ -39,13 +39,18 @@ router.route("/campaigns/fetchCampaignPublished").get(
   campaignReportController.fetchPublishedCampaign
 );
 
-router
-  .route("/campaigns/summary-report")
-  .get(
-    auth(),
-    checkPermission("view_campaign_payment"),
-    validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
-    campaignReportController.fetchCampaignSummaryReport
-  );
+router.route("/campaigns/summary-report").get(
+  auth(),
+  checkPermission("view_campaign_payment"),
+  // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+  campaignReportController.fetchCampaignSummaryReport
+);
+
+router.route("/campaigns/participant-summary-report").get(
+  auth(),
+  // checkPermission("view_campaign_payment"),
+  // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+  campaignReportController.fetchCampaignparticipantsSummary
+);
 
 export default router;

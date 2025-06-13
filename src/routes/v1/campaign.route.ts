@@ -91,6 +91,7 @@ router
 
 router.route("/").get(auth(), campaignController.getAllCampaigns);
 
+router.route("/all").get(auth(), campaignController.fetchAllCampaigns);
 router.get("/status", auth(), campaignController.getCampaignsByStatus);
 router.get("/fetch/status", auth(), campaignController.fetchCampaignsByStatus);
 

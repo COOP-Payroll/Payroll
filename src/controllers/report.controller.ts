@@ -90,10 +90,19 @@ const fetchCampaignSummaryReport = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).json({ data: campaigns });
 });
 
+const fetchCampaignparticipantsSummary = catchAsync(async (req, res) => {
+  const user = req.user as AuthUser;
+  //fetch by department
+  const campaigns = await campaignReportService.fetchCampaignParticipantSummary (
+    user.companyId
+  );
+  res.status(httpStatus.OK).json({ data: campaigns });
+});
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
   fetchPublishedCampaign,
   fetchCampaignPaymentHistory,
   fetchCampaignSummaryReport,
+  fetchCampaignparticipantsSummary,
 };

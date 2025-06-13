@@ -358,8 +358,85 @@ const getAllCampaigns = async ({
   });
 };
 
+const fetchAllCampaigns = async ({ companyId }: GetCampaignsOptions) => {
+  // Base filter
+  const where: any = {
+    isActive: true,
+    companyId,
+  };
 
+  const campaigns = await prisma.campaign.findMany({
+    where,
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      startDate: true,
+      endDate: true,
+      budget: true,
+      budgetSource: true,
+      status: true,
+      remarks: true,
+      company: {
+        select: {
+          id: true,
+          organizationName: true,
+        },
+      },
+      department: {
+        select: {
+          id: true,
+          deptName: true,
+        },
+      },
+      documents: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
+          mimeType: true,
+          size: true,
+        },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+          department: {
+            select: {
+              deptName: true,
+              shorthandRepresentation: true,
+            },
+          },
+          position: {
+            select: {
+              positionName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
+  return campaigns.map((campaign) => {
+    const { createdBy, ...rest } = campaign;
+    const flattenedCreatedBy = {
+      id: createdBy.id,
+      name: createdBy.name,
+      deptName: createdBy.department?.deptName,
+      shorthandRepresentation: createdBy.department?.shorthandRepresentation,
+      positionName: createdBy.position?.positionName,
+    };
+
+    return {
+      ...rest,
+      createdBy: flattenedCreatedBy,
+    };
+  });
+};
 
 const getCampaignById = async (id: string, companyId: string) => {
   const campaign = await prisma.campaign.findUnique({
@@ -938,4 +1015,5 @@ export default {
   getCampaignsByStatus,
   updateCampaignStatus,
   fetchCampaignsByStatus,
+  fetchAllCampaigns,
 };
