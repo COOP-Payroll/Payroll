@@ -403,10 +403,85 @@ const fetchCampaignPaymentHistory = async (
     },
   };
 };
+const fetchCampaignSummaryReport = async (companyId: string) => {
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      isActive: true,
+      companyId,
+    },
+    select: {
+      id: true,
+      status: true,
+      department: {
+        select: {
+          deptName: true,
+        },
+      },
+    },
+  });
+
+  const totalCampaigns = campaigns.length;
+  let totalProcessed = 0;
+  let totalApproved = 0;
+  let totalActive = 0;
+  let totalClosed = 0;
+
+  const departments: Record<
+    string,
+    {
+      count: number;
+      statuses: Record<string, number>;
+    }
+  > = {};
+
+  for (const campaign of campaigns) {
+    const deptName = campaign.department?.deptName || "UNKNOWN";
+    const status = campaign.status.toUpperCase();
+
+    // Initialize department if not already present
+    if (!departments[deptName]) {
+      departments[deptName] = {
+        count: 0,
+        statuses: {
+          ACTIVE: 0,
+          PROCESSED: 0,
+          APPROVED: 0,
+          CLOSED: 0,
+        },
+      };
+    }
+
+    departments[deptName].count++;
+
+    if (departments[deptName].statuses[status] !== undefined) {
+      departments[deptName].statuses[status]++;
+    } else {
+      departments[deptName].statuses[status] = 1;
+    }
+
+    // Count global totals
+    if (status === "PROCESSED") totalProcessed++;
+    if (status === "APPROVED") totalApproved++;
+    if (status === "ACTIVE") totalActive++;
+    if (status === "CLOSED") totalClosed++;
+  }
+
+  const response = {
+    totalCampaigns,
+    totalProcessed,
+    totalApproved,
+    totalActive,
+    totalClosed,
+    departments,
+  };
+
+  return response;
+};
 
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
   fetchPublishedCampaign,
   fetchCampaignPaymentHistory,
+  fetchCampaignSummaryReport,
 };

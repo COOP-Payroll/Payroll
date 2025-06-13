@@ -358,6 +358,9 @@ const getAllCampaigns = async ({
   });
 };
 
+
+
+
 const getCampaignById = async (id: string, companyId: string) => {
   const campaign = await prisma.campaign.findUnique({
     where: { id, companyId },
