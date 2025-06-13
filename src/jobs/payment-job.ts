@@ -5,21 +5,9 @@ import logger from "../config/logger";
 
 export async function processPaymentJob(data: PaymentJobData): Promise<void> {
   try {
-    // const [participant, campaign] = await prisma.$transaction([
-    //   // prisma.campaignParticipant.findUnique({
-    //   //   where: { id: data.participantId },
-    //   // }),
-    //   prisma.campaign.findUnique({
-    //     where: { id: data.campaignId },
-    //   }),
-    // ]);
     const campaign = await prisma.campaign.findUnique({
       where: { id: data.campaignId },
     });
-
-    // if (!participant) {
-    //   throw new Error(`Participant with ID ${data.participantId} not found`);
-    // }
 
     if (!campaign) {
       throw new Error(`Campaign with ID ${data.campaignId} not found`);

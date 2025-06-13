@@ -535,7 +535,7 @@ async function handleFinalApproval(
   });
 
   if (!participants.length) {
-    logger.warn(`No approved participants found for campaign ${campaignId}`);
+    console.warn(`No approved participants found for campaign ${campaignId}`);
     return;
   }
 
@@ -552,7 +552,7 @@ async function handleFinalApproval(
   });
 
   if (!account) {
-    logger.error(
+    console.error(
       `No active master account found for company ${user.companyId}`
     );
     throw new ApiError(httpStatus.NOT_FOUND, "Master account not found");
@@ -583,9 +583,9 @@ async function handleFinalApproval(
       jobId: job.id,
     });
   } catch (error) {
-    logger.error(`Failed to queue payment job for campaign ${campaignId}`, {
-      error,
-    });
+    // console.error(`Failed to queue payment job for campaign ${campaignId}`, {
+    //   error,
+    // });
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
       "Payment processing failed"

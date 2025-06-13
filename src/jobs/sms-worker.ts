@@ -7,7 +7,7 @@ interface SmsJobData {
   phoneNumber: string;
   message: string;
   jobId: string;
-  type: "forgotPassword" | "notification" | "confirmation" | "createAccount"; // Add more types as needed
+  type: "forgotPassword" | "notification" | "confirmation" | "createAccount";
 }
 
 const smsWorker = new Worker<SmsJobData>(
@@ -47,22 +47,22 @@ const smsWorker = new Worker<SmsJobData>(
   }
 );
 
-smsWorker.on("active", (job) => {
-  logger.info(`SMS worker active, processing job ${job.id} (${job.data.type})`);
+smsWorker.on("ready", () => {
+  console.log("SMS Worker started!");
 });
 
-smsWorker.on("failed", (job, err) => {
-  if (job) {
-    logger.error(`SMS job ${job.id} (${job.data.type}) failed`, {
-      phoneNumber: job.data.phoneNumber,
-      error: err.message,
-    });
-  }
-});
+// smsWorker.on("failed", (job, err) => {
+//   if (job) {
+//     logger.error(`SMS job ${job.id} (${job.data.type}) failed`, {
+//       phoneNumber: job.data.phoneNumber,
+//       error: err.message,
+//     });
+//   }
+// });
 
-smsWorker.on("error", (err) => {
-  logger.error("SMS worker error", { error: err.message });
-});
+// smsWorker.on("error", (err) => {
+//   logger.error("SMS worker error", { error: err.message });
+// });
 
 process.on("SIGTERM", async () => {
   await smsWorker.close();
