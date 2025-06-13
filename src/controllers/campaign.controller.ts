@@ -162,6 +162,16 @@ const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   res.status(httpStatus.OK).json({ data: campaigns });
 });
 
+const fetchAllCampaigns = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as AuthUser;
+  //fetch by department
+  const campaigns = await campaignService.fetchAllCampaigns({
+    companyId: user.companyId,
+    // departmentId: user.departmentId,
+    // isSuperAdmin: user.isSuperAdmin,
+  });
+  res.status(httpStatus.OK).json({ data: campaigns });
+});
 const updateCampaign = catchAsync(async (req: Request, res: Response) => {
   const user = req.user as AuthUser;
   const campaignId = req.params.id;
@@ -417,4 +427,5 @@ export default {
   getCampaignsByStatus,
   deleteDocumentsByQuery,
   fetchCampaignsByStatus,
+  fetchAllCampaigns,
 };

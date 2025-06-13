@@ -367,11 +367,12 @@ async function checkUserAuthorization(instance: any, user: AuthUser) {
 
   // Additional department check for first stage
   const approverUser = await prisma.user.findUnique({ where: { id: user.id } });
-  const campaign = await prisma.campaign.findFirst({
-    where: { id: instance.campaign.id },
-  });
+  // const campaign = await prisma.campaign.findFirst({
+  //   where: { id: instance.campaign.id },
+  // });
 
-  if (!approverUser || !campaign) {
+  console.log("dkjfdhhdhddhudhudhudhuhddhu", approverUser);
+  if (!approverUser) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "User data or Campaign is missing"
@@ -380,8 +381,11 @@ async function checkUserAuthorization(instance: any, user: AuthUser) {
 
   if (
     instance.currentStage.order === 1 &&
-    approverUser.departmentId !== campaign.departmentId
+    approverUser.departmentId !== instance.campaign.departmentId
   ) {
+    // console.log("approver", approverUser.departmentId);
+    // console.log("campa", campaign.departmentId);
+    // console.log("dkjfdhhdhddhudhwertyudfghgfdhudhuhddhu", instance);
     logger.info(
       `Unauthorized department approval attempt by user ${user.id} for campaign ${instance.campaignId}`
     );
@@ -397,7 +401,7 @@ async function getCampaignApprovalInstance(campaignId: string) {
     where: { campaignId },
     include: {
       currentStage: { select: { id: true, order: true } },
-      campaign: { select: { createdById: true } },
+      campaign: { select: { createdById: true, departmentId: true } },
       workflow: {
         include: {
           stages: {
@@ -408,6 +412,8 @@ async function getCampaignApprovalInstance(campaignId: string) {
       },
     },
   });
+
+  console.log("dkjfdhhdhddhudhudhudhuhddhu", instance);
   if (!instance) {
     throw new ApiError(
       httpStatus.NOT_FOUND,

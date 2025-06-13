@@ -478,10 +478,45 @@ const fetchCampaignSummaryReport = async (companyId: string) => {
   return response;
 };
 
+const fetchCampaignParticipantSummary = async (companyId: string) => {
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      isActive: true,
+      companyId,
+    },
+    select: {
+      name: true,
+      campaignParticipants: {
+        where: { isActive: true },
+        select: {
+          id: true, // Just need count
+        },
+      },
+    },
+  });
+
+  let totalParticipant = 0;
+  const campaign: Record<string, number> = {};
+
+  for (const c of campaigns) {
+    const participantCount = c.campaignParticipants.length;
+    campaign[c.name] = participantCount;
+    totalParticipant += participantCount;
+  }
+
+  const response = {
+    totalParticipant,
+    campaign,
+  };
+
+  return response;
+};
+
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
   fetchPublishedCampaign,
   fetchCampaignPaymentHistory,
   fetchCampaignSummaryReport,
+  fetchCampaignParticipantSummary,
 };
