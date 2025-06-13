@@ -24,6 +24,12 @@ const envVarsSchema = Joi.object()
     JWT_VERIFY_EMAIL_EXPIRATION_MINUTES: Joi.number()
       .default(10)
       .description("minutes after which verify email token expires"),
+    REDIS_HOST: Joi.string()
+      .default("localhost")
+      .description("Redis host for caching"),
+    REDIS_PORT: Joi.number()
+      .default(6379)
+      .description("Redis port for caching"),
   })
   .unknown();
 
@@ -47,4 +53,6 @@ export default {
     verifyEmailExpirationMinutes: envVars.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES,
   },
   smsAPIURL: envVars.SMS_API_URL,
+  redisHost: envVars.REDIS_HOST,
+  redisPort: envVars.REDIS_PORT,
 };

@@ -10,8 +10,8 @@ declare const global: CustomRedisGlobal;
 const redisClient =
   global.redisClient ??
   new IORedis({
-    host: process.env.REDIS_HOST || "localhost",
-    port: parseInt(process.env.REDIS_PORT || "6379"),
+    host: config.redisHost,
+    port: config.redisPort,
     maxRetriesPerRequest: null,
   });
 
