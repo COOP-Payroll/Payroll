@@ -26,7 +26,19 @@ async function main() {
   });
 
   // 2. Fetch all permissions
-  const allPermissions = await prisma.permission.findMany();
+  // const allPermissions = await prisma.permission.findMany();
+  const allPermissions = await prisma.permission.findMany({
+    where: {
+      subject: {
+        in: [
+          "dashboard",
+          "system_setting",
+          "campaign_setup",
+          "campaign_reports",
+        ],
+      },
+    },
+  });
 
   // 3. Assign all permissions to superadmin role
   for (const permission of allPermissions) {
