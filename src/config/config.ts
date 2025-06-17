@@ -30,6 +30,21 @@ const envVarsSchema = Joi.object()
     REDIS_PORT: Joi.number()
       .default(6379)
       .description("Redis port for caching"),
+    PAYMENT_API_BASE_URL: Joi.string()
+      .default("http://localhost:8000")
+      .description("Base URL for payment API"),
+    PAYMENT_API_KEY: Joi.string()
+      .default("your-payment-api-key")
+      .description("API key for payment service"),
+    POLLING_INTERVAL_MS: Joi.number()
+      .default(5000)
+      .description("Polling interval in milliseconds for job status checks"),
+    MAX_RETRIES: Joi.number()
+      .default(3)
+      .description("Maximum number of retries for job status checks"),
+    WEBHOOK_SECRET: Joi.string()
+      .default("your-webhook-secret")
+      .description("Secret key for verifying webhook signatures"),
   })
   .unknown();
 
@@ -55,4 +70,9 @@ export default {
   smsAPIURL: envVars.SMS_API_URL,
   redisHost: envVars.REDIS_HOST,
   redisPort: envVars.REDIS_PORT,
+  paymentAPIURL: envVars.PAYMENT_API_BASE_URL,
+  paymentAPIKey: envVars.PAYMENT_API_KEY,
+  pollingIntervalMs: envVars.POLLING_INTERVAL_MS,
+  maxRetries: envVars.MAX_RETRIES,
+  webhookSecret: envVars.WEBHOOK_SECRET,
 };

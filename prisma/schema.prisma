@@ -251,6 +251,7 @@ model CreditTransaction {
   campaignParticipantId String
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+  processedAt   String?
   payment       Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   campaignParticipant  CampaignParticipant @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
 }
@@ -338,11 +339,14 @@ model CampaignStageStatus {
 model Payment {
   id                 String              @id @default(cuid())
   bulkId             String              @unique
+  jobId              String?
   campaignId         String              @unique
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+  status             PaymentType         @default(CREATED)
   debitAccount       String
   totalAmount        Decimal             @db.Decimal(10, 2)
+  progressPercentage Decimal             @db.Decimal(10, 2)    @default(0.0)
   creditTransactions CreditTransaction[]
   campaign           Campaign @relation("CampaignPayments", fields: [campaignId], references: [id])
 }
@@ -415,5 +419,12 @@ enum CampaignTransactionStatus {
 enum TransactionStatus {
   PENDING
   PAID
+  FAILED
+}
+
+enum PaymentType {
+  CREATED
+  PENDING
+  COMPLETED
   FAILED
 }

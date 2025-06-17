@@ -1,5 +1,4 @@
 import express from "express";
-// import { paymentController } from "../../controllers";
 import paymentController from "../../controllers/payment.controller";
 import campaignValidation from "../../validations/approve.validation";
 import auth from "../../middlewares/auth";
@@ -23,5 +22,6 @@ router
     validate(campaignValidation.createCampaignForApprovalSchema),
     paymentController.processPayment
   );
+router.route("/webhook").post(paymentController.paymentWebhook);
 
 export default router;
