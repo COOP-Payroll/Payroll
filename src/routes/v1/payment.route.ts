@@ -22,6 +22,14 @@ router
     validate(campaignValidation.createCampaignForApprovalSchema),
     paymentController.processPayment
   );
-router.route("/webhook").post(paymentController.paymentWebhook);
+router.route("/request/webhook").post(paymentController.paymentWebhook);
+router
+  .route("/paymentStatus/:campaignId")
+  .get(
+    auth(),
+    checkPermission("create_campaign_payment"),
+    validate(campaignValidation.createCampaignForApprovalSchema),
+    paymentController.paymentStatus
+  );
 
 export default router;

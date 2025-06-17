@@ -131,8 +131,18 @@ export const handlePaymentWebhook = async (payload: any) => {
   }
 };
 
+export const getPaymentStatus = async (campaignId: string) => {
+  const result = await prisma.payment.findFirst({
+    where: { campaignId },
+    select: { progressPercentage: true },
+  });
+
+  return result;
+};
+
 export default {
   getPaymentsByCampaignId,
   processPayment,
   handlePaymentWebhook,
+  getPaymentStatus,
 };
