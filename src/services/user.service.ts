@@ -16,6 +16,8 @@ import {
   forgotPasswordMessage,
 } from "../templates/sms-template";
 import config from "../config/config";
+import { AuthTokensResponse } from "../types/response";
+import tokenService from "./token.service";
 
 /**
  * Create a user with optimized database queries
@@ -33,7 +35,7 @@ const createUser = async (
   const username = await generateUsername(name);
   const rawPassword =
     config.env === "development"
-      ? "SuperSecurePassword123"
+      ? "SuperSecurePassword@123"
       : generateRandomPassword();
   const [role, company, department, position] = await Promise.all([
     prisma.role.findUnique({ where: { id: roleId } }),
@@ -473,6 +475,31 @@ const forgotPassword = async (username: string) => {
   return exclude(updatedUser, ["password"]);
 };
 
+/**
+ * Refresh auth tokens
+ * @param {string} refreshToken
+ * @returns {Promise<AuthTokensResponse>}
+ */
+const refreshAuth = async (
+  refreshToken: string
+): Promise<AuthTokensResponse> => {
+  try {
+    const refreshTokenData = await tokenService.verifyToken(
+      refreshToken,
+      TokenType.REFRESH
+    );
+    const { userId } = refreshTokenData;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Refresh token is not valid");
+    }
+    await prisma.token.delete({ where: { id: refreshTokenData.id } });
+    return tokenService.generateAuthTokens(user);
+  } catch (error) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Please authenticate");
+  }
+};
+
 export default {
   createUser,
   queryUsers,
@@ -485,4 +512,5 @@ export default {
   resetPassword,
   forgotPassword,
   getUserRoleById,
+  refreshAuth,
 };

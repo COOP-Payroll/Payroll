@@ -12,24 +12,22 @@ router
 
   .get(
     auth(),
-    checkPermission("view_campaign_payment"),
+    // checkPermission("view_campaign_payment"),
     validate(campaignValidation.createCampaignForApprovalSchema),
     paymentController.getPaymentsByCampaignId
   )
   .post(
     auth(),
-    checkPermission("create_campaign_payment"),
+    // checkPermission("create_campaign_payment"),
     validate(campaignValidation.createCampaignForApprovalSchema),
     paymentController.processPayment
   );
 router.route("/request/webhook").post(paymentController.paymentWebhook);
-router
-  .route("/paymentStatus/:campaignId")
-  .get(
-    auth(),
-    checkPermission("create_campaign_payment"),
-    validate(campaignValidation.createCampaignForApprovalSchema),
-    paymentController.paymentStatus
-  );
+router.route("/paymentStatus/:campaignId").get(
+  auth(),
+  // checkPermission("create_campaign_payment"),
+  validate(campaignValidation.createCampaignForApprovalSchema),
+  paymentController.paymentStatus
+);
 
 export default router;

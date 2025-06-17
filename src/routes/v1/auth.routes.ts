@@ -23,6 +23,11 @@ router.post(
   validate(authValidation.forgotPassword),
   authController.forgotPassword
 );
+router.post(
+  "/refresh-tokens",
+  validate(authValidation.refreshTokens),
+  authController.refreshTokens
+);
 
 export default router;
 

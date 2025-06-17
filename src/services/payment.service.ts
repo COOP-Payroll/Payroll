@@ -16,36 +16,119 @@ import { AuthUser } from "../types/express";
 import { createCampaignPayment } from "../utils/create-campaign-payment-";
 
 export const getPaymentsByCampaignId = async (campaignId: string) => {
-  const payments = await prisma.payment.findUnique({
-    where: { campaignId },
-    select: {
-      creditTransactions: {
-        select: {
-          amount: true,
-          creditAccount: true,
-          status: true,
-          campaignParticipant: {
-            select: {
-              accountNumber: true,
-              isVerified: true,
-              numberOfDaysInRural: true,
-              numberOfDaysInUrban: true,
-              totalAmount: true,
-              participant: {
-                select: {
-                  fullName: true,
-                  gender: true,
-                  phoneNumber: true,
+  // const payments = await prisma.payment.findUnique({
+  //   where: { campaignId },
+  //   select: {
+  //     totalAmount: true,
+  //     status: true,
+  //     creditTransactions: {
+  //       select: {
+  //         amount: true,
+  //         creditAccount: true,
+  //         status: true,
+  //         campaignParticipant: {
+  //           select: {
+  //             accountNumber: true,
+  //             isVerified: true,
+  //             paymentMethod: true,
+  //             numberOfDaysInRural: true,
+  //             numberOfDaysInUrban: true,
+  //             totalAmount: true,
+  //             participant: {
+  //               select: {
+  //                 fullName: true,
+  //                 gender: true,
+  //                 // phoneNumber: true,
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     campaign: {
+  //       select: { documents: true },
+  //     },
+  //   },
+  // });
+
+  // const totalParticipants = await prisma.campaignParticipant.count({
+  //   where: { campaignId },
+  // });
+  const [payments, totalParticipants] = await Promise.all([
+    prisma.payment.findUnique({
+      where: { campaignId },
+      select: {
+        totalAmount: true,
+        status: true,
+        creditTransactions: {
+          select: {
+            amount: true,
+            creditAccount: true,
+            status: true,
+            campaignParticipant: {
+              select: {
+                // accountNumber: true,
+                isVerified: true,
+                paymentMethod: true,
+                numberOfDaysInRural: true,
+                numberOfDaysInUrban: true,
+                totalAmount: true,
+                participant: {
+                  select: {
+                    fullName: true,
+                    gender: true,
+                    phoneNumber: true,
+                  },
                 },
               },
             },
           },
         },
+        campaign: {
+          select: {
+            documents: true,
+            // campaignParticipants: {
+            //   select: {
+            //     accountNumber: true,
+            //     isVerified: true,
+            //     paymentMethod: true,
+            //     numberOfDaysInRural: true,
+            //     numberOfDaysInUrban: true,
+            //     totalAmount: true,
+            //     participant: {
+            //       select: {
+            //         fullName: true,
+            //         gender: true,
+            //         // phoneNumber: true,
+            //       },
+            //     },
+            //   },
+            // },
+          },
+        },
       },
-    },
-  });
-
-  return payments || [];
+    }),
+    prisma.campaignParticipant.count({
+      where: { campaignId },
+    }),
+  ]);
+  const response = {
+    totalParticipant: totalParticipants,
+    totalPaidAmount: payments?.totalAmount,
+    status: payments?.status,
+    Documents: payments?.campaign.documents.map((doc) => ({
+      id: doc.id,
+      fileName: doc.fileName,
+      filePath: doc.filePath,
+      mimeType: doc.mimeType,
+      size: doc.size,
+      uploadedAt: doc.uploadedAt,
+    })),
+    participants: payments?.creditTransactions,
+    // participants:
+    // campaignParticipants: payments?.campaign.campaignParticipants.map()
+  };
+  return response || [];
 };
 
 export const processPayment = async (campaignId: string, user: AuthUser) => {
