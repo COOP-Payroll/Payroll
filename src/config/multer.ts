@@ -60,10 +60,16 @@ import { NextFunction } from "express";
 // }).array("files", 10);
 
 const storage = multer.diskStorage({
+  // destination: (req, file, cb) => {
+  //   console.log("object", req.files);
+  //   cb(null, path.join(__dirname, "..", "uploads", "documents"));
+  // },
+
   destination: (req, file, cb) => {
     console.log("object", req.files);
-    cb(null, path.join(__dirname, "..", "uploads", "documents"));
+    cb(null, path.resolve(__dirname, "../../src/uploads/documents"));
   },
+
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(
