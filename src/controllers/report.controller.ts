@@ -40,7 +40,7 @@ const downloadCampaignReport = catchAsync(async (req, res) => {
       `attachment; filename=campaign-report-${campaignId}.xlsx`
     );
     return res.send(buffer);
-  } else {
+  } else if (options.format === "downloadpdf") {
     const buffer = await generatePDFReport(reportData);
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

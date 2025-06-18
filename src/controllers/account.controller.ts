@@ -119,19 +119,70 @@ export const assignMasterAccount = catchAsync(
   }
 );
 
+// export const verifyAccountController = catchAsync(
+//   async (req: Request, res: Response) => {
+//     const { accountNumber } = req.body;
+
+//     const customerInfo = await accountService.verifyAccountByNumber(
+//       accountNumber
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Valid account number",
+//       data: customerInfo,
+//     });
+//   }
+// );
+
+// export const verifyAccountController = catchAsync(
+//   async (req: Request, res: Response) => {
+//     const { accountNumber, fullName } = req.body; // get submitted name from body
+
+//     const verificationData = await accountService.verifyAccountByNumber(
+//       accountNumber,
+//       fullName
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Valid account number and verification performed",
+//       data: verificationData,
+//     });
+//   }
+// );
+
 export const verifyAccountController = catchAsync(
   async (req: Request, res: Response) => {
-    const { accountNumber } = req.body;
+    const { accountNumber, fullName, paymentMethod, phoneNumber } = req.body;
 
-    const customerInfo = await accountService.verifyAccountByNumber(
-      accountNumber
-    );
+    if (paymentMethod === "ACCOUNTNUMBER") {
+      const verificationData = await accountService.verifyAccountByNumber(
+        accountNumber,
+        fullName
+      );
 
-    res.status(200).json({
-      success: true,
-      message: "Valid account number",
-      data: customerInfo,
-    });
+      return res.status(200).json({
+        success: true,
+        message: "Account number verification performed",
+        data: verificationData,
+      });
+    }
+
+    if (paymentMethod === "PHONENUMBER") {
+      const verificationData = await accountService.verifyPhoneNumber(
+        accountNumber,
+        phoneNumber
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Phone number verification performed",
+        data: verificationData,
+      });
+    }
+
+    throw new ApiError(400, "Unsupported payment method");
   }
 );
 

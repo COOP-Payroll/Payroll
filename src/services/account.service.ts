@@ -1,8 +1,10 @@
 import prisma from "../client";
 import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
-import { CustomerInfo } from "../types/account";
+// import { CustomerInfo } from "../types/account";
 import axios from "axios";
+import stringSimilarity from "string-similarity";
+import jaroWinkler from "jaro-winkler";
 
 export type LetterFile = {
   fileName: string;
@@ -179,22 +181,49 @@ const assignMasterAccount = async (
 
   return updated;
 };
+interface CustomerInfo {
+  FULLNAME: string;
+  ACCOUNTNUMBER: string;
+  PHONENUMBER?: string;
+  BIRTHDATE?: string;
+  CATEGORY?: string;
+  MARITAL?: string;
+  EMAIL?: any;
+  UnquieCustomerId?: string;
+  // add other fields as needed
+}
+interface VerificationResult {
+  similarity: string;
+  status: "Approved" | "Rejected" | "Review";
+  reason: string;
+}
+
+interface VerifyAccountResponse {
+  customerInfo: CustomerInfo;
+  verification: VerificationResult;
+}
 
 export const verifyAccountByNumber = async (
-  accountNumber: string
-): Promise<CustomerInfo> => {
+  accountNumber: string,
+  submittedName: string
+): Promise<VerifyAccountResponse> => {
   if (!accountNumber) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Account number is required");
   }
 
-  const url = "http://10.1.245.150:7081/v1/cbo/";
+  const url = "http://10.1.230.6:7081/v1/cbo/";
   const payload = {
     AccountDetailsRequest: {
       ESBHeader: {
-        serviceCode: "180000",
+        // serviceCode: "180000",
+        // channel: "USSD",
+        // Service_name: "accountEnquiryMC",
+        // Message_Id: Date.now().toString(),
+
+        serviceCode: "990000",
         channel: "USSD",
         Service_name: "accountEnquiryMC",
-        Message_Id: Date.now().toString(),
+        Message_Id: "6255726662",
       },
       ACCTCOMPANYVIEWType: [{ criteriaValue: accountNumber }],
     },
@@ -202,7 +231,7 @@ export const verifyAccountByNumber = async (
 
   let response;
   try {
-    console.log("kdkdkkdk",payload)
+    console.log("kdkdkkdk", payload);
     response = await axios.post(url, payload);
   } catch (err) {
     console.log("gemechu ", err);
@@ -219,7 +248,7 @@ export const verifyAccountByNumber = async (
       `External verification failed for account number: ${accountNumber}`
     );
   }
-
+  console.log("djjddjdddjjjjjjffffjjjf", response.status, response.data);
   const info = response.data.AccountDetailsResponse.CustomerInfo;
   if (!info) {
     throw new ApiError(
@@ -228,8 +257,116 @@ export const verifyAccountByNumber = async (
     );
   }
 
-  return info as CustomerInfo;
+  const officialName = info.FULLNAME;
+  const matchResult = matchNameTokens(submittedName, officialName);
+
+  return {
+    customerInfo: info as CustomerInfo,
+    verification: matchResult,
+  };
+  // return info as CustomerInfo;
+  // return matchResult;
 };
+function matchNameTokens(
+  submittedName: string,
+  officialName: string
+): VerificationResult {
+  const submittedTokens = submittedName.toLowerCase().trim().split(/\s+/);
+  const officialTokens = officialName.toLowerCase().trim().split(/\s+/);
+
+  if (submittedTokens.length < 2) {
+    return {
+      similarity: "0.00",
+      status: "Rejected",
+      reason: "First name only is not allowed",
+    };
+  }
+
+  let totalScore = 0;
+
+  for (const submittedToken of submittedTokens) {
+    const match = stringSimilarity.findBestMatch(
+      submittedToken,
+      officialTokens
+    );
+    // Only count the match if similarity is high enough (>= 0.7)
+    const tokenScore =
+      match.bestMatch.rating >= 0.7 ? match.bestMatch.rating : 0;
+    totalScore += tokenScore;
+  }
+
+  const averageScore = totalScore / submittedTokens.length;
+  const similarity = (averageScore * 100).toFixed(2);
+
+  if (averageScore >= 0.9) {
+    return {
+      similarity,
+      status: "Approved",
+      reason: "High name similarity",
+    };
+  } else if (averageScore >= 0.7) {
+    return {
+      similarity,
+      status: "Review",
+      reason: "Partial name similarity",
+    };
+  } else {
+    return {
+      similarity,
+      status: "Rejected",
+      reason: "Name mismatch",
+    };
+  }
+}
+
+// function matchNameTokens(
+//   submittedName: string,
+//   officialName: string
+// ): VerificationResult {
+//   const submittedTokens = submittedName.toLowerCase().trim().split(/\s+/);
+//   const officialTokens = officialName.toLowerCase().trim().split(/\s+/);
+
+//   if (submittedTokens.length < 2) {
+//     return {
+//       similarity: "0.00",
+//       status: "Rejected",
+//       reason: "First name only is not allowed",
+//     };
+//   }
+
+//   let totalScore = 0;
+
+//   for (const submittedToken of submittedTokens) {
+//     const match = stringSimilarity.findBestMatch(
+//       submittedToken,
+//       officialTokens
+//     );
+//     totalScore += match.bestMatch.rating;
+//   }
+
+//   const averageScore = totalScore / submittedTokens.length;
+//   const similarity = (averageScore * 100).toFixed(2); // gives values like 78.51, 82.34, etc.
+
+//   if (averageScore >= 0.9) {
+//     return {
+//       similarity,
+//       status: "Approved",
+//       reason: "High name similarity",
+//     };
+//   } else if (averageScore >= 0.7) {
+//     return {
+//       similarity,
+//       status: "Review",
+//       reason: "Partial name similarity",
+//     };
+//   } else {
+//     return {
+//       similarity,
+//       status: "Rejected",
+//       reason: "Name mismatch",
+//     };
+//   }
+// }
 
 const updateAccountVerification = async (
   id: string,
@@ -255,6 +392,25 @@ const updateAccountVerification = async (
   return account;
 };
 
+const verifyPhoneNumber = async (
+  accountNumber: string,
+  submittedPhone: string
+) => {
+  // Just check if it's 10 digits for now
+  const isValid = /^\d{10}$/.test(submittedPhone);
+
+  return {
+    customerInfo: {} as CustomerInfo, // Placeholder; you'll fetch this later
+    verification: {
+      similarity: isValid ? "100.00" : "0.00",
+      status: isValid ? "Approved" : "Rejected",
+      reason: isValid
+        ? "Phone number format is valid"
+        : "Phone number must be exactly 10 digits",
+    },
+  };
+};
+
 export default {
   createAccount,
   getAllAccounts,
@@ -263,5 +419,6 @@ export default {
   deleteAccount,
   assignMasterAccount,
   verifyAccountByNumber,
+  verifyPhoneNumber,
   updateAccountVerification,
 };

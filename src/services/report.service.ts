@@ -28,6 +28,7 @@ const fetchCampaignReport = async (
           },
         },
         campaignParticipants: {
+          where: { isActive: true },  
           skip,
           take: limit,
           include: {
