@@ -63,7 +63,7 @@ const getUploadedFile = catchAsync(
 
     const absoluteFilePath = path.resolve(
       __dirname,
-      "../../src/uploads/documents",
+      "./uploads/documents",
       doc.filePath
     );
 
