@@ -765,6 +765,21 @@ const getCampaignsByStatus = async ({
           size: true,
         },
       },
+      // _count: {
+      //   select: {
+      //     campaignParticipants: true, // <-- count total participants here
+      //   },
+      // },
+
+      _count: {
+        select: {
+          campaignParticipants: {
+            where: {
+              isActive: true,
+            },
+          },
+        },
+      },
       createdBy: {
         select: {
           id: true,
@@ -790,7 +805,7 @@ const getCampaignsByStatus = async ({
   });
 
   return campaigns.map((campaign) => {
-    const { createdBy, ...rest } = campaign;
+    const { createdBy, _count, ...rest } = campaign;
     const flattenedCreatedBy = {
       id: createdBy.id,
       name: createdBy.name,
@@ -802,6 +817,7 @@ const getCampaignsByStatus = async ({
     return {
       ...rest,
       createdBy: flattenedCreatedBy,
+      totalNumberOfParticipants: _count.campaignParticipants,
       // department: createdBy.department
       //   ? {
       //       id: createdBy.department.id,
