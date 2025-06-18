@@ -125,7 +125,7 @@ export const createCampaign = catchAsync(
     // Map multer files into our DTO shape
     const documents = (files || []).map((file) => ({
       fileName: file.originalname,
-      filePath: path.basename(file.path),
+      filePath: file?.filename,
       mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
       size: file.size,
     }));
@@ -184,7 +184,7 @@ const updateCampaign = catchAsync(async (req: Request, res: Response) => {
       prisma.document.create({
         data: {
           fileName: file.originalname,
-          filePath: file.path,
+          filePath: file.filename,
           mimeType: file.mimetype,
           size: file.size,
           campaignId: campaignId,
