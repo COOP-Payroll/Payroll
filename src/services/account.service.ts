@@ -244,8 +244,8 @@ export const verifyAccountByNumber = async (
   const status = response?.data?.AccountDetailsResponse?.ESBStatus?.Status;
   if (status === "Failure") {
     throw new ApiError(
-      httpStatus.NOT_FOUND,
-      `External verification failed for account number: ${accountNumber}`
+      httpStatus.OK,
+      `Account verification failed. Please check the account number and try again`
     );
   }
   console.log("djjddjdddjjjjjjffffjjjf", response.status, response.data);
