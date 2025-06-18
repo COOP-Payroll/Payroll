@@ -8,25 +8,29 @@ datasource db {
 }
 
 model Company {
-  id               String             @id @default(uuid())
-  status           CompanyStatus      @default(pending)
-  organizationName String
-  phoneNumber      String
-  companyCode      String
-  email            String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  level            Level?
-  notes            String?
-  accounts         Account[]
-  workflows        ApprovalWorkflow[]
-  campaigns        Campaign[]
-  departments      Department[]
-  participants     Participant[]
-  positions        Position[]
-  rateSettings     RateSetting[]  
-  Role             Role[]
-  users            User[]
+  id                            String                          @id @default(uuid())
+  status                        CompanyStatus                   @default(pending)
+  organizationName              String
+  phoneNumber                   String
+  companyCode                   String
+  email                         String?
+  createdAt                     DateTime                        @default(now())
+  updatedAt                     DateTime                        @updatedAt
+  level                         Level?
+  notes                         String?
+  accounts                      Account[]
+  AdditionalDeductionDefinition AdditionalDeductionDefinition[]
+  AdditionalPayDefinition       AdditionalPayDefinition[]
+  workflows                     ApprovalWorkflow[]
+  campaigns                     Campaign[]
+  departments                   Department[]
+  Grade                         Grade[]
+  participants                  Participant[]
+  positions                     Position[]
+  rateSettings                  RateSetting[]
+  Role                          Role[]
+  Shift                         Shift[]
+  users                         User[]
 }
 
 model Account {
@@ -43,18 +47,18 @@ model Account {
 }
 
 model Department {
-  id                      String   @id @default(uuid())
-  deptName                String
-  location                String?
-  shorthandRepresentation String?
-  companyId               String
-  isActive                Boolean  @default(true)
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  company                 Company  @relation(fields: [companyId], references: [id])
-  departmentUsers         User[]
-  departmentApprovalWorkflows       ApprovalWorkflow[]
-  campaigns               Campaign[]  //
+  id                          String             @id @default(uuid())
+  deptName                    String
+  location                    String?
+  shorthandRepresentation     String?
+  companyId                   String
+  isActive                    Boolean            @default(true)
+  createdAt                   DateTime           @default(now())
+  updatedAt                   DateTime           @updatedAt
+  departmentApprovalWorkflows ApprovalWorkflow[]
+  campaigns                   Campaign[]
+  company                     Company            @relation(fields: [companyId], references: [id])
+  departmentUsers             User[]
 }
 
 model Position {
@@ -68,6 +72,7 @@ model Position {
   company       Company  @relation(fields: [companyId], references: [id])
   userPositions User[]
 }
+
 ///
 model User {
   id                  String                @id @default(uuid())
@@ -162,16 +167,14 @@ model Campaign {
   createdById          String
   companyId            String
   remarks              String?
-
-  status               CampaignStatus                @default(ACTIVE)
+  status               CampaignStatus             @default(ACTIVE)
   departmentId         String
-  department           Department                @relation(fields: [departmentId], references: [id])
   company              Company                    @relation(fields: [companyId], references: [id])
   createdBy            User                       @relation("UserCampaignsCreated", fields: [createdById], references: [id])
+  department           Department                 @relation(fields: [departmentId], references: [id])
   approvalInstances    CampaignApprovalInstance[]
   campaignParticipants CampaignParticipant[]
   documents            Document[]
-  payment              Payment?                   @relation("CampaignPayments")
 }
 
 model CampaignParticipant {
@@ -192,15 +195,12 @@ model CampaignParticipant {
   campaignId          String
   participantId       String
   createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @default(now())
-
+  updatedAt           DateTime
   campaign            Campaign       @relation(fields: [campaignId], references: [id])
   participant         Participant    @relation(fields: [participantId], references: [id])
   documents           Document[]
-
-  creditTransactions  CreditTransaction[]
+  Payment             Payment[]
 }
-
 
 model Document {
   id                    String               @id @default(uuid())
@@ -228,9 +228,9 @@ model Participant {
   gender               GENDER
   address              String?
   detail               String?
-  phoneNumber          String  
+  phoneNumber          String
   accountNumber        String?
-  paymentMethod        PaymentMethod   
+  paymentMethod        PaymentMethod
   isActive             Boolean               @default(true)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -248,30 +248,29 @@ model CreditTransaction {
   transactionId String?
   failureReason String?
   paymentId     String
-  campaignParticipantId String
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   payment       Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  campaignParticipant  CampaignParticipant @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
 }
 
 model RateSetting {
   id        String   @id @default(uuid())
   urbanRate Float
   ruralRate Float
-  companyId String   
+  companyId String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   company   Company  @relation(fields: [companyId], references: [id])
-   @@index([companyId])
+
+  @@index([companyId])
 }
 
 model ApprovalWorkflow {
   id                       String                     @id @default(cuid())
   name                     String
-  companyId                String                    
-  departmentId             String                     
+  companyId                String
+  departmentId             String
   isActive                 Boolean                    @default(true)
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
@@ -336,18 +335,82 @@ model CampaignStageStatus {
 }
 
 model Payment {
-  id                 String              @id @default(cuid())
-  bulkId             String              @unique
-  campaignId         String              @unique
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  debitAccount       String
-  totalAmount        Decimal             @db.Decimal(10, 2)
-  creditTransactions CreditTransaction[]
-  campaign           Campaign @relation("CampaignPayments", fields: [campaignId], references: [id])
+  id                  String              @id @default(cuid())
+  bulkId              String              @unique
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  debitAccount        String
+  participantId       String
+  totalAmount         Decimal             @db.Decimal(10, 2)
+  creditTransactions  CreditTransaction[]
+  CampaignParticipant CampaignParticipant @relation(fields: [participantId], references: [id])
 }
 
+model AdditionalDeductionDefinition {
+  id        String        @id
+  name      String
+  type      DeductionType
+  companyId String
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime
+  Company   Company       @relation(fields: [companyId], references: [id])
+}
 
+model AdditionalPayDefinition {
+  id        String      @id
+  name      String
+  type      PAYMENTTYPE
+  companyId String
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime
+  Company   Company     @relation(fields: [companyId], references: [id])
+
+  @@unique([name, companyId, isActive])
+}
+
+model Grade {
+  id        String   @id
+  name      String
+  minSalary Float
+  maxSalary Float
+  companyId String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Company   Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+}
+
+model LeaveType {
+  id            String   @id
+  name          String
+  description   String?
+  maxDaysYearly Int
+  isPaid        Boolean  @default(true)
+  carryForward  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  isActive      Boolean  @default(true)
+}
+
+model Shift {
+  id          String   @id
+  name        String
+  startTime   DateTime
+  endTime     DateTime
+  breakTime   Int
+  gracePeriod Int
+  companyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Company     Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+}
 
 enum TokenType {
   ACCESS
@@ -416,4 +479,14 @@ enum TransactionStatus {
   PENDING
   PAID
   FAILED
+}
+
+enum DeductionType {
+  AMOUNT
+  PERCENT
+}
+
+enum PAYMENTTYPE {
+  AMOUNT
+  PERCENT
 }
