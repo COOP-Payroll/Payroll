@@ -6,16 +6,16 @@ import logger from "./config/logger";
 
 let server: Server;
 prisma.$connect().then(() => {
-  logger.info("Connected to SQL Database");
+  console.log("Connected to SQL Database");
   server = app.listen(config.port, () => {
-    logger.info(`Listening to port ${config.port}`);
+    console.log(`Server is running on port ${config.port}`);
   });
 });
 
 const exitHandler = () => {
   if (server) {
     server.close(() => {
-      logger.info("Server closed");
+      console.log("Server closed");
       process.exit(1);
     });
   } else {
@@ -24,7 +24,7 @@ const exitHandler = () => {
 };
 
 const unexpectedErrorHandler = (error: unknown) => {
-  logger.error(error);
+  console.error("Unexpected error:", error);
   exitHandler();
 };
 
@@ -32,7 +32,7 @@ process.on("uncaughtException", unexpectedErrorHandler);
 process.on("unhandledRejection", unexpectedErrorHandler);
 
 process.on("SIGTERM", () => {
-  logger.info("SIGTERM received");
+  console.log("SIGTERM received");
   if (server) {
     server.close();
   }

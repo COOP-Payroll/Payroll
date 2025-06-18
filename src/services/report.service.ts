@@ -41,16 +41,16 @@ const fetchCampaignReport = async (
                 paymentMethod: true,
               },
             },
-            payments: {
-              select: {
-                totalAmount: true,
-                creditTransactions: {
-                  select: {
-                    status: true,
-                  },
-                },
-              },
-            },
+            // payments: {
+            //   select: {
+            //     totalAmount: true,
+            //     creditTransactions: {
+            //       select: {
+            //         status: true,
+            //       },
+            //     },
+            //   },
+            // },
           },
         },
       },
@@ -149,16 +149,16 @@ const downloadCampaignReport = async (campaignId: string) => {
                 paymentMethod: true,
               },
             },
-            payments: {
-              select: {
-                totalAmount: true,
-                creditTransactions: {
-                  select: {
-                    status: true,
-                  },
-                },
-              },
-            },
+            // payments: {
+            //   select: {
+            //     totalAmount: true,
+            //     creditTransactions: {
+            //       select: {
+            //         status: true,
+            //       },
+            //     },
+            //   },
+            // },
           },
         },
       },

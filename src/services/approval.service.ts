@@ -541,7 +541,7 @@ async function handleFinalApproval(
   });
 
   if (!participants.length) {
-    logger.warn(`No approved participants found for campaign ${campaignId}`);
+    console.warn(`No approved participants found for campaign ${campaignId}`);
     return;
   }
 
@@ -558,7 +558,7 @@ async function handleFinalApproval(
   });
 
   if (!account) {
-    logger.error(
+    console.error(
       `No active master account found for company ${user.companyId}`
     );
     throw new ApiError(httpStatus.NOT_FOUND, "Master account not found");
@@ -569,12 +569,13 @@ async function handleFinalApproval(
     debitAccount: account.accountNumber,
     totalAmount,
     bulkId: uuidv4(),
-    participantId: participants[0].id,
     creditTransactions: participants.map((p: any) => ({
       orderId: uuidv4(),
       creditAccount: p.accountNumber!,
       amount: p.totalAmount,
+      campaignParticipantId: p.id,
     })),
+    campaignId,
   };
 
   try {
@@ -588,9 +589,9 @@ async function handleFinalApproval(
       jobId: job.id,
     });
   } catch (error) {
-    logger.error(`Failed to queue payment job for campaign ${campaignId}`, {
-      error,
-    });
+    // console.error(`Failed to queue payment job for campaign ${campaignId}`, {
+    //   error,
+    // });
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
       "Payment processing failed"

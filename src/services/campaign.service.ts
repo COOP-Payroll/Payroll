@@ -728,12 +728,9 @@ const getCampaignsByStatus = async ({
   };
 
   if (!isSuperAdmin && departmentId) {
-    where.createdBy = {
-      departmentId,
-    };
+    where.departmentId = departmentId;
   }
 
-  console.log("departmentid ", departmentId);
   /// GET CAMPAIGN
   const campaigns = await prisma.campaign.findMany({
     where,

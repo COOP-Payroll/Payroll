@@ -5,12 +5,12 @@ import logger from "../config/logger";
 
 export async function processPaymentJob(data: PaymentJobData): Promise<void> {
   try {
-    const participant = await prisma.campaignParticipant.findUnique({
-      where: { id: data.participantId },
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: data.campaignId },
     });
 
-    if (!participant) {
-      throw new Error(`Participant with ID ${data.participantId} not found`);
+    if (!campaign) {
+      throw new Error(`Campaign with ID ${data.campaignId} not found`);
     }
 
     await prisma.$transaction(async (tx) => {
@@ -19,7 +19,7 @@ export async function processPaymentJob(data: PaymentJobData): Promise<void> {
           debitAccount: data.debitAccount,
           totalAmount: data.totalAmount,
           bulkId: data.bulkId,
-          participantId: data.participantId,
+          campaignId: data.campaignId,
         },
       });
 
@@ -30,6 +30,7 @@ export async function processPaymentJob(data: PaymentJobData): Promise<void> {
           amount: tx.amount,
           status: TransactionStatus.PENDING,
           paymentId: payment.id,
+          campaignParticipantId: tx.campaignParticipantId,
         })),
       });
     });

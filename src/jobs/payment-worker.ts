@@ -4,21 +4,6 @@ import { PaymentJobData } from "../types/payment";
 import logger from "../config/logger";
 import redisClient from "../queues/redis-client";
 
-// const worker = new Worker(
-//   "payment-processing",
-//   async (job) => {
-//     logger.info(`Processing job ${job.id} for bulkId: ${job.data.bulkId}`);
-//     await processPaymentJob(job.data as PaymentJobData);
-//   },
-//   {
-//     connection: {
-//       host: "localhost",
-//       port: 6379,
-//     },
-//     concurrency: 5,
-//   }
-// );
-
 const paymentWorker = new Worker<PaymentJobData>(
   "payment-processing",
   async (job: Job<PaymentJobData>) => {
@@ -27,9 +12,9 @@ const paymentWorker = new Worker<PaymentJobData>(
         `Processing payment job ${job.id} for bulkId: ${job.data.bulkId}`
       );
       await processPaymentJob(job.data);
-      logger.info(`Payment job ${job.id} completed successfully`);
+      console.info(`Payment job ${job.id} completed successfully`);
     } catch (error: any) {
-      logger.error(`Payment job ${job.id} failed`, {
+      console.error(`Payment job ${job.id} failed`, {
         bulkId: job.data.bulkId,
         error: error.message,
       });
@@ -42,22 +27,26 @@ const paymentWorker = new Worker<PaymentJobData>(
   }
 );
 
-paymentWorker.on("active", (job) => {
-  logger.info(`Payment worker active, processing job ${job.id}`);
+paymentWorker.on("ready", () => {
+  console.log("Payment Worker started!");
 });
 
-paymentWorker.on("failed", (job, err) => {
-  if (job) {
-    logger.error(`Payment job ${job.id} failed`, {
-      bulkId: job.data.bulkId,
-      error: err.message,
-    });
-  }
-});
+// paymentWorker.on("active", (job) => {
+//   logger.info(`Payment worker active, processing job ${job.id}`);
+// });
 
-paymentWorker.on("error", (err) => {
-  logger.error("Payment worker error", { error: err.message });
-});
+// paymentWorker.on("failed", (job, err) => {
+//   if (job) {
+//     logger.error(`Payment job ${job.id} failed`, {
+//       bulkId: job.data.bulkId,
+//       error: err.message,
+//     });
+//   }
+// });
+
+// paymentWorker.on("error", (err) => {
+//   logger.error("Payment worker error", { error: err.message });
+// });
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {
