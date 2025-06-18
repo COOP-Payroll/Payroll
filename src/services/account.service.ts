@@ -220,6 +220,7 @@ export const verifyAccountByNumber = async (
         // Service_name: "accountEnquiryMC",
         // Message_Id: Date.now().toString(),
 
+
         serviceCode: "990000",
         channel: "USSD",
         Service_name: "accountEnquiryMC",
@@ -231,10 +232,10 @@ export const verifyAccountByNumber = async (
 
   let response;
   try {
-    console.log("kdkdkkdk", payload);
+ 
     response = await axios.post(url, payload);
   } catch (err) {
-    console.log("gemechu ", err);
+    
     throw new ApiError(
       httpStatus.SERVICE_UNAVAILABLE,
       "Failed to connect to account verification service"
@@ -244,8 +245,8 @@ export const verifyAccountByNumber = async (
   const status = response?.data?.AccountDetailsResponse?.ESBStatus?.Status;
   if (status === "Failure") {
     throw new ApiError(
-      httpStatus.NOT_FOUND,
-      `External verification failed for account number: ${accountNumber}`
+      httpStatus.OK,
+      `Account verification failed. Please check the account number and try again`
     );
   }
   console.log("djjddjdddjjjjjjffffjjjf", response.status, response.data);
