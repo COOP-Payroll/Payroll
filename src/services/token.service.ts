@@ -1,13 +1,21 @@
 import jwt from "jsonwebtoken";
 import moment, { Moment } from "moment";
-import httpStatus from "http-status";
 import { TokenType, Token } from "@prisma/client";
 import config from "../config/config";
-import userService from "./user.service";
-import ApiError from "../utils/api-error";
 import prisma from "../client";
 import { AuthTokensResponse } from "../types/response";
-import { AuthUser } from "../types/express";
+
+interface CustomJwtPayload {
+  sub: {
+    userId: string;
+    companyId: string;
+    departmentId: string | null;
+    isSuperAdmin: boolean;
+  };
+  iat: number;
+  exp: number;
+  type: string;
+}
 
 /**
  * Generate token
@@ -65,6 +73,15 @@ const saveToken = async (
   return createdToken;
 };
 
+function isCustomJwtPayload(payload: any): payload is CustomJwtPayload {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    typeof payload.sub?.userId === "string" &&
+    typeof payload.type === "string"
+  );
+}
+
 /**
  * Verify token and return token doc (or throw an error if it is not valid)
  * @param {string} token
@@ -72,15 +89,19 @@ const saveToken = async (
  * @returns {Promise<Token>}
  */
 const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
-  const payload = jwt.verify(token, config.jwt.secret);
-  const userId = payload.sub as string;
-  const tokenData = await prisma.token.findFirst({
-    where: { token, type, userId, blacklisted: false },
-  });
-  if (!tokenData) {
-    throw new Error("Token not found");
+  const decoded = jwt.verify(token, config.jwt.secret);
+  if (isCustomJwtPayload(decoded)) {
+    const userId = decoded.sub.userId;
+    const tokenData = await prisma.token.findFirst({
+      where: { token, type, userId, blacklisted: false },
+    });
+    if (!tokenData) {
+      throw new Error("Token not found");
+    }
+    return tokenData;
+  } else {
+    throw new Error("Invalid Token");
   }
-  return tokenData;
 };
 
 /**

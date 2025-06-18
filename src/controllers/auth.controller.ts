@@ -1,37 +1,9 @@
 import httpStatus from "http-status";
 import catchAsync from "../utils/catch-async";
 import userService from "../services/user.service";
-import exclude from "../utils/exclude";
 import tokenService from "../services/token.service";
 import { AuthUser } from "../types/express";
 import ApiError from "../utils/api-error";
-
-// const createUser = catchAsync(async (req, res) => {
-//   const {
-//     username,
-//     password,
-//     name,
-//     phoneNumber,
-//     departmentId,
-//     positionId,
-//     companyId,
-//   } = req.body;
-//   const user = await userService.createUser(
-//     username,
-//     password,
-//     name,
-//     phoneNumber,
-//     companyId,
-//     positionId,
-//     departmentId
-//   );
-//   const userWithoutPassword = exclude(user, [
-//     "password",
-//     "createdAt",
-//     "updatedAt",
-//   ]);
-//   res.status(httpStatus.CREATED).send({ data: userWithoutPassword });
-// });
 
 const login = catchAsync(async (req, res) => {
   const { username, password } = req.body;
@@ -67,11 +39,16 @@ const forgotPassword = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const refreshTokens = catchAsync(async (req, res) => {
+  const tokens = await userService.refreshAuth(req.body.refreshToken);
+  res.send({ ...tokens });
+});
+
 export default {
-  // createUser,
   login,
   logout,
   me,
   resetPassword,
   forgotPassword,
+  refreshTokens,
 };

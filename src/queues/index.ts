@@ -4,6 +4,7 @@ import redisClient from "./redis-client";
 interface CustomMQGlobal extends Global {
   paymentQueue?: Queue;
   smsQueue?: Queue;
+  statusCheckQueue?: Queue;
 }
 
 declare const global: CustomMQGlobal;
@@ -20,5 +21,12 @@ export const smsQueue =
     connection: redisClient,
   });
 
+export const statusCheckQueue =
+  global.statusCheckQueue ??
+  new Queue("status-check", {
+    connection: redisClient,
+  });
+
 if (!global.paymentQueue) global.paymentQueue = paymentQueue;
 if (!global.smsQueue) global.smsQueue = smsQueue;
+if (!global.statusCheckQueue) global.statusCheckQueue = statusCheckQueue;

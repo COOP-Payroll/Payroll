@@ -80,6 +80,7 @@ const createCampaign = {
     return value;
   }),
 };
+
 export default {
   createCampaign,
   deleteDocument,

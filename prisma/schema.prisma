@@ -250,6 +250,7 @@ model CreditTransaction {
   paymentId     String
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+  processedAt   String?
   payment       Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 }
 
@@ -335,82 +336,21 @@ model CampaignStageStatus {
 }
 
 model Payment {
-  id                  String              @id @default(cuid())
-  bulkId              String              @unique
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  debitAccount        String
-  participantId       String
-  totalAmount         Decimal             @db.Decimal(10, 2)
-  creditTransactions  CreditTransaction[]
-  CampaignParticipant CampaignParticipant @relation(fields: [participantId], references: [id])
+  id                 String              @id @default(cuid())
+  bulkId             String              @unique
+  jobId              String?
+  campaignId         String              @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  status             PaymentType         @default(CREATED)
+  debitAccount       String
+  totalAmount        Decimal             @db.Decimal(10, 2)
+  progressPercentage Decimal             @db.Decimal(10, 2)    @default(0.0)
+  creditTransactions CreditTransaction[]
+  campaign           Campaign @relation("CampaignPayments", fields: [campaignId], references: [id])
 }
 
-model AdditionalDeductionDefinition {
-  id        String        @id
-  name      String
-  type      DeductionType
-  companyId String
-  isActive  Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime
-  Company   Company       @relation(fields: [companyId], references: [id])
-}
 
-model AdditionalPayDefinition {
-  id        String      @id
-  name      String
-  type      PAYMENTTYPE
-  companyId String
-  isActive  Boolean     @default(true)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime
-  Company   Company     @relation(fields: [companyId], references: [id])
-
-  @@unique([name, companyId, isActive])
-}
-
-model Grade {
-  id        String   @id
-  name      String
-  minSalary Float
-  maxSalary Float
-  companyId String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  Company   Company  @relation(fields: [companyId], references: [id])
-
-  @@index([companyId])
-}
-
-model LeaveType {
-  id            String   @id
-  name          String
-  description   String?
-  maxDaysYearly Int
-  isPaid        Boolean  @default(true)
-  carryForward  Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime
-  isActive      Boolean  @default(true)
-}
-
-model Shift {
-  id          String   @id
-  name        String
-  startTime   DateTime
-  endTime     DateTime
-  breakTime   Int
-  gracePeriod Int
-  companyId   String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime
-  Company     Company  @relation(fields: [companyId], references: [id])
-
-  @@index([companyId])
-}
 
 enum TokenType {
   ACCESS
@@ -481,12 +421,9 @@ enum TransactionStatus {
   FAILED
 }
 
-enum DeductionType {
-  AMOUNT
-  PERCENT
-}
-
-enum PAYMENTTYPE {
-  AMOUNT
-  PERCENT
+enum PaymentType {
+  CREATED
+  PENDING
+  COMPLETED
+  FAILED
 }

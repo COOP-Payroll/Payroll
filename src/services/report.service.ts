@@ -274,6 +274,7 @@ const fetchPublishedCampaign = async (
       name: true,
       documents: true,
       campaignParticipants: {
+        where: { isActive: true },
         skip,
         take: limit,
         select: {

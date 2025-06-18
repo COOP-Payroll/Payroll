@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { format } from "date-fns/format";
+import { format } from "date-fns";
 import { DownloadCampaignReportResponse } from "../dto";
 
 // export async function generateExcelReport(

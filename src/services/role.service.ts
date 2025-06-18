@@ -40,6 +40,11 @@ const getRoles = async (): Promise<Role[] | null> => {
       permissions: {
         include: { permission: true },
       },
+      _count: {
+        select: {
+          userRoles: true,
+        },
+      },
     },
   });
 

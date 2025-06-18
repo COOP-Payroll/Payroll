@@ -1,5 +1,4 @@
 import express from "express";
-// import { paymentController } from "../../controllers";
 import paymentController from "../../controllers/payment.controller";
 import campaignValidation from "../../validations/approve.validation";
 import auth from "../../middlewares/auth";
@@ -13,15 +12,22 @@ router
 
   .get(
     auth(),
-    checkPermission("view_campaign_payment"),
+    // checkPermission("view_campaign_payment"),
     validate(campaignValidation.createCampaignForApprovalSchema),
     paymentController.getPaymentsByCampaignId
   )
   .post(
     auth(),
-    checkPermission("create_campaign_payment"),
+    // checkPermission("create_campaign_payment"),
     validate(campaignValidation.createCampaignForApprovalSchema),
     paymentController.processPayment
   );
+router.route("/request/webhook").post(paymentController.paymentWebhook);
+router.route("/paymentStatus/:campaignId").get(
+  auth(),
+  // checkPermission("create_campaign_payment"),
+  validate(campaignValidation.createCampaignForApprovalSchema),
+  paymentController.paymentStatus
+);
 
 export default router;
