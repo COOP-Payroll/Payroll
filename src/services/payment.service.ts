@@ -136,6 +136,23 @@ export const processPayment = async (campaignId: string, user: AuthUser) => {
     where: { campaignId },
   });
 
+  const unverifiedExists = await prisma.campaignParticipant.findFirst({
+    where: {
+      campaignId,
+      isVerified: false,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (unverifiedExists) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "There are participants with unverified account number in the campaign"
+    );
+  }
+
   if (payment && payment.status !== PaymentType.CREATED) {
     logger.info(
       `Payment for campaign ID ${campaignId} is not in CREATED state`
