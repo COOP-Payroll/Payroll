@@ -53,4 +53,12 @@ router.route("/campaigns/participant-summary-report").get(
   campaignReportController.fetchCampaignparticipantsSummary
 );
 
+router
+  .route("/campaigns/paid")
+  .get(
+    auth(),
+    checkPermission("view_campaign_payment"),
+    campaignReportController.fetchPaidCampaigns
+  );
+
 export default router;

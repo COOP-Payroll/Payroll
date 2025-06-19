@@ -1,7 +1,74 @@
 import httpStatus from "http-status";
 import prisma from "../client";
 import ApiError from "../utils/api-error";
-import { CampaignReportResponse, DownloadCampaignReportResponse } from "../dto";
+import { DownloadCampaignReportResponse } from "../dto";
+
+// const fetchCampaignReport = async (
+//   campaignId: string,
+//   options: {
+//     limit?: string;
+//     page?: string;
+//   }
+// ) => {
+//   const page = options.page ? parseInt(options.page) : 1;
+//   const limit = options.limit ? parseInt(options.limit) : 10;
+//   const skip = (page - 1) * limit;
+//   const paidCampaigns = await prisma.payment.findFirst({
+//     where: {
+//       campaignId,
+//       status: {
+//         not: "PENDING",
+//       },
+//     },
+//     select: {
+//       campaign: {
+//         select: {
+//           name: true,
+//           startDate: true,
+//           endDate: true,
+//           documents: {
+//             select: {
+//               id: true,
+//               fileName: true,
+//               filePath: true,
+//               mimeType: true,
+//               size: true,
+//               uploadedAt: true,
+//             },
+//           },
+//         },
+//       },
+//       creditTransactions: {
+//         select: {
+//           status: true,
+//           creditAccount: true,
+//           amount: true,
+//           transactionId: true,
+//           failureReason: true,
+//           campaignParticipant: {
+//             select: {
+//               numberOfDaysInUrban: true,
+//               numberOfDaysInRural: true,
+//               participant: {
+//                 select: {
+//                   fullName: true,
+//                   paymentMethod: true,
+//                   phoneNumber: true,
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+//     },
+//   });
+
+//   if (!paidCampaigns) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Campaign Not Found");
+//   }
+
+//   return paidCampaigns;
+// };
 
 const fetchCampaignReport = async (
   campaignId: string,
@@ -10,117 +77,115 @@ const fetchCampaignReport = async (
     page?: string;
   }
 ) => {
-  const page = options.page ? parseInt(options.page) : 1;
-  const limit = options.limit ? parseInt(options.limit) : 10;
+  const page = parseInt(options.page || "1");
+  const limit = parseInt(options.limit || "10");
   const skip = (page - 1) * limit;
-  const [campaign, totalParticipants] = await Promise.all([
-    prisma.campaign.findUnique({
-      where: { id: campaignId },
-      include: {
-        documents: {
-          select: {
-            id: true,
-            fileName: true,
-            filePath: true,
-            mimeType: true,
-            size: true,
-            uploadedAt: true,
-          },
-        },
-        campaignParticipants: {
-          where: { isActive: true },  
-          skip,
-          take: limit,
-          include: {
-            participant: {
-              select: {
-                fullName: true,
-                gender: true,
-                phoneNumber: true,
-                accountNumber: true,
-                paymentMethod: true,
-              },
-            },
-            // payments: {
-            //   select: {
-            //     totalAmount: true,
-            //     creditTransactions: {
-            //       select: {
-            //         status: true,
-            //       },
-            //     },
-            //   },
-            // },
-          },
-        },
-      },
-    }),
-    prisma.campaignParticipant.count({
-      where: { campaignId },
-    }),
-  ]);
 
-  if (!campaign) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Campaign Not Found");
+  const [totalParticipants, totalPaid, totalFailedTransactions, payment] =
+    await Promise.all([
+      prisma.campaignParticipant.count({
+        where: { campaignId },
+      }),
+      prisma.creditTransaction.aggregate({
+        where: {
+          payment: { campaignId },
+          status: "PAID",
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.creditTransaction.count({
+        where: {
+          payment: { campaignId },
+          status: "FAILED",
+        },
+      }),
+      prisma.payment.findFirst({
+        where: { campaignId, status: { in: ["COMPLETED", "FAILED"] } },
+      }),
+    ]);
+
+  if (!payment) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Campaign has no payment history"
+    );
   }
 
-  const allParticipants = await prisma.campaignParticipant.findMany({
-    where: { campaignId },
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId },
     select: {
-      totalAmount: true,
-      paymentStatus: true,
+      startDate: true,
+      endDate: true,
+      documents: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
+          mimeType: true,
+          size: true,
+          uploadedAt: true,
+        },
+      },
     },
   });
 
-  const { totalPaidAmount, totalUnpaidAmount } = allParticipants.reduce(
-    (acc, participant) => {
-      const participantTotal = Number(participant.totalAmount);
-      if (participant.paymentStatus !== "COMPLETED") {
-        acc.totalUnpaidAmount += participantTotal;
-      } else {
-        acc.totalPaidAmount += participantTotal;
-      }
-      return acc;
-    },
-    { totalPaidAmount: 0, totalUnpaidAmount: 0 }
-  );
+  if (!campaign) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Campaign not found");
+  }
 
-  const totalPages = Math.ceil(totalParticipants / limit);
-  const response: CampaignReportResponse = {
-    totalParticipant: totalParticipants,
-    totalPaidAmount,
-    totalUnpaidAmount,
-    campaignTitle: campaign.name,
-    Documents: campaign.documents.map((doc) => ({
-      id: doc.id,
-      fileName: doc.fileName,
-      filePath: doc.filePath,
-      mimeType: doc.mimeType,
-      size: doc.size,
-      uploadedAt: doc.uploadedAt,
-    })),
-    startDate: campaign.startDate,
-    endDate: campaign.endDate,
-    campaignParticipants: campaign.campaignParticipants.map((cp) => ({
-      id: cp.id,
-      fullName: cp.participant.fullName,
-      Gender: cp.participant.gender,
-      paymentMethod: cp.paymentMethod,
-      phoneNumber: cp.phoneNumber,
-      accountNumber: cp.accountNumber,
-      isVerified: cp.isVerified,
-      urbanDays: cp.numberOfDaysInUrban,
-      ruralDays: cp.numberOfDaysInRural,
-      totalAmount: Number(cp.totalAmount),
-    })),
-    pagination: {
-      currentPage: page,
-      totalPages,
-      totalItems: totalParticipants,
+  // Paginated list of creditTransactions with participant info
+  const creditTransactions = await prisma.creditTransaction.findMany({
+    where: {
+      payment: {
+        campaignId,
+        status: { not: "PENDING" },
+      },
+    },
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    select: {
+      status: true,
+      creditAccount: true,
+      amount: true,
+      transactionId: true,
+      campaignParticipant: {
+        select: {
+          numberOfDaysInUrban: true,
+          numberOfDaysInRural: true,
+          participant: {
+            select: {
+              fullName: true,
+              phoneNumber: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return {
+    meta: {
+      totalParticipants,
+      totalPaid: totalPaid._sum.amount ?? 0,
+      totalFailedTransactions,
+      page,
       limit,
     },
+    campaign,
+    transactions: creditTransactions.map((txn) => ({
+      status: txn.status,
+      creditAccount: txn.creditAccount,
+      amount: txn.amount,
+      transactionId: txn.transactionId,
+      numberOfDaysInUrban: txn.campaignParticipant.numberOfDaysInUrban,
+      numberOfDaysInRural: txn.campaignParticipant.numberOfDaysInRural,
+      fullName: txn.campaignParticipant.participant.fullName,
+      phoneNumber: txn.campaignParticipant.participant.phoneNumber,
+    })),
   };
-  return response;
 };
 
 const downloadCampaignReport = async (campaignId: string) => {
@@ -514,6 +579,29 @@ const fetchCampaignParticipantSummary = async (companyId: string) => {
   return response;
 };
 
+const fetchPaidCampaigns = async (companyId: string) => {
+  const paidCampaigns = await prisma.payment.findMany({
+    where: {
+      campaign: {
+        companyId,
+      },
+      status: {
+        in: ["COMPLETED", "FAILED"],
+      },
+    },
+    select: {
+      campaign: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return paidCampaigns;
+};
+
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
@@ -521,4 +609,5 @@ export default {
   fetchCampaignPaymentHistory,
   fetchCampaignSummaryReport,
   fetchCampaignParticipantSummary,
+  fetchPaidCampaigns,
 };
