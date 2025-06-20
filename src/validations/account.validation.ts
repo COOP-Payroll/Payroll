@@ -25,7 +25,14 @@ const updateAccountVerificationSchema = {
 
 const verifyAccountInputSchema = {
   body: Joi.object({
-    accountNumber: Joi.string().required().label("Account Number"),
+    // accountNumber: Joi.string().required().label("Account Number"),
+    accountNumber: Joi.string()
+      .when("paymentMethod", {
+        is: "PHONENUMBER",
+        then: Joi.optional(),
+        otherwise: Joi.required(),
+      })
+      .label("Account Number"),
 
     paymentMethod: Joi.string()
       .valid("ACCOUNTNUMBER", "PHONENUMBER")
