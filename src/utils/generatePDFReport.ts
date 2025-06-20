@@ -656,4 +656,270 @@ async function generatePDFReport(
   });
 }
 
-export default generatePDFReport;
+async function generatePayslipPDFReport(data: any): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    console.log("djfdfhhhhhhhhhhhhhhhhhhh");
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
+    const buffers: Buffer[] = [];
+
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+    doc.on("error", reject);
+
+    doc.registerFont("Arial", "Helvetica");
+    doc.registerFont("Arial-Bold", "Helvetica-Bold");
+
+    const watermarkPath = path.resolve(
+      __dirname,
+      "../assets/coopayroll-logo.png"
+    );
+
+    function drawWatermark() {
+      const centerX = doc.page.width / 2;
+      const centerY = doc.page.height / 2;
+      doc.save();
+      doc.opacity(0.2);
+      doc.translate(centerX, centerY);
+      doc.rotate(-45);
+      doc.image(watermarkPath, -200, -60, { width: 400 });
+      doc.restore();
+      doc.opacity(1);
+    }
+
+    function drawHeader(campaignName: string) {
+      try {
+        doc.image(path.resolve(__dirname, "../assets/logo.png"), 450, 20, {
+          width: 80,
+        });
+      } catch (err) {
+        // Ignore logo load error
+      }
+
+      doc.font("Arial-Bold").fontSize(14).fillColor("#004080");
+      doc.text("Cooperative Bank of Oromia S.C.", 50, 30);
+      doc.fontSize(12).text("Coopayroll Payslip Report");
+      doc.fontSize(10).text(`Campaign: ${campaignName}`);
+      doc.moveTo(50, 75).lineTo(550, 75).stroke();
+      doc.moveDown();
+    }
+
+    // Normalize data
+    const reports = Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data)
+      ? data
+      : [];
+
+    if (!reports.length) {
+      doc
+        .font("Arial-Bold")
+        .fontSize(14)
+        .fillColor("red")
+        .text("No payslip data available.");
+      doc.end();
+      return;
+    }
+
+    // Render each campaign report entry
+    reports.forEach((entry: any, index: number) => {
+      if (index > 0) doc.addPage();
+
+      drawWatermark();
+      drawHeader(entry.campaign.name);
+
+      doc.font("Arial").fontSize(10).fillColor("black");
+      doc.text(`Bulk ID: ${entry.bulkId}`);
+      doc.text(`Debit Account: ${entry.debitAccount}`);
+      doc.text(`Status: ${entry.status}`);
+      doc.text(`Total Amount: ETB ${entry.totalAmount}`);
+      doc.moveDown();
+
+      doc
+        .font("Arial-Bold")
+        .fontSize(12)
+        .fillColor("#004080")
+        .text("Participant Payslip Summary", { underline: true });
+      doc.moveDown(0.5);
+
+      const participants = entry.campaign?.campaignParticipants ?? [];
+
+      participants.forEach((p: any, i: number) => {
+        const part = p.participant;
+
+        if (!part) return; // Skip if participant is missing
+
+        if (doc.y > 700) {
+          doc.addPage();
+          drawWatermark();
+          drawHeader(entry.campaign.name);
+          doc
+            .font("Arial-Bold")
+            .fontSize(12)
+            .fillColor("#004080")
+            .text("Participant Payslip Summary", { underline: true });
+          doc.moveDown(0.5);
+        }
+
+        doc
+          .font("Arial-Bold")
+          .fontSize(10)
+          .text(`${i + 1}. ${part.fullName} (${part.gender})`);
+        doc.font("Arial").fontSize(10);
+        doc.text(`Phone: ${part.phoneNumber}`);
+        doc.text(`Account Number: ${part.accountNumber}`);
+        doc.text(`Payment Method: ${part.paymentMethod}`);
+        doc.text(`Urban Days: ${p.numberOfDaysInUrban}`);
+        doc.text(`Rural Days: ${p.numberOfDaysInRural}`);
+        doc.text(`Urban Rate: ETB ${p.urbanRate}`);
+        doc.text(`Rural Rate: ETB ${p.ruralRate}`);
+        doc.text(`Total Amount: ETB ${p.totalAmount}`);
+        doc.text(`Verified: ${p.isVerified ? "Yes" : "No"}`);
+        doc.text(`Payment Status: ${p.paymentStatus}`);
+        doc.moveDown(0.5);
+
+        doc
+          .moveTo(50, doc.y)
+          .lineTo(550, doc.y)
+          .dash(1, { space: 2 })
+          .stroke()
+          .undash();
+      });
+    });
+
+    doc.end();
+  });
+}
+
+async function generateSinglePayslipPDF(data: any): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
+    const buffers: Buffer[] = [];
+
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+    doc.on("error", reject);
+
+    doc.registerFont("Arial", "Helvetica");
+    doc.registerFont("Arial-Bold", "Helvetica-Bold");
+
+    const watermarkPath = path.resolve(
+      __dirname,
+      "../assets/coopayroll-logo.png"
+    );
+
+    const drawWatermark = () => {
+      doc.save();
+      const centerX = doc.page.width / 2;
+      const centerY = doc.page.height / 2;
+      doc.opacity(0.2);
+      doc.translate(centerX, centerY).rotate(-45);
+      doc.image(watermarkPath, -200, -60, { width: 400 });
+      doc.restore();
+      doc.opacity(1);
+    };
+
+    const drawHeader = () => {
+      try {
+        const logoPath = path.resolve(__dirname, "../assets/logo.png");
+        doc.image(logoPath, 450, 20, { width: 80 });
+      } catch (err) {}
+      doc.font("Arial-Bold").fontSize(14).fillColor("#004080");
+      doc.text("Cooperative Bank of Oromia S.C.", 50, 30);
+      doc.fontSize(12).text("Coopayroll - Individual Payslip");
+      doc.moveTo(50, 70).lineTo(550, 70).stroke();
+      doc.moveDown();
+    };
+
+    // ✅ Normalize data
+    const reportList = Array.isArray(data?.data) ? data.data : data;
+    if (!Array.isArray(reportList) || reportList.length === 0) {
+      throw new Error("No report data provided.");
+    }
+
+    const entry = reportList[0];
+    const campaignParticipant = entry?.campaignParticipant;
+    const campaign = campaignParticipant?.campaign;
+    const participant = campaignParticipant?.participant;
+
+    if (!campaignParticipant || !campaign || !participant) {
+      throw new Error(
+        "Missing campaignParticipant, campaign, or participant data."
+      );
+    }
+
+    // ✅ Draw content
+    drawWatermark();
+    drawHeader();
+
+    doc.moveDown();
+    doc
+      .font("Arial-Bold")
+      .fontSize(12)
+      .text("Campaign Info", { underline: true });
+    doc.font("Arial").fontSize(10);
+    doc.text(`Campaign Name: ${campaign.name}`);
+    doc.text(
+      `Campaign Period: ${new Date(
+        campaign.startDate
+      ).toLocaleDateString()} - ${new Date(
+        campaign.endDate
+      ).toLocaleDateString()}`
+    );
+    doc.text(`Campaign Status: ${campaign.status}`);
+    doc.moveDown();
+
+    doc
+      .font("Arial-Bold")
+      .fontSize(12)
+      .text("Participant Info", { underline: true });
+    doc.font("Arial").fontSize(10);
+    doc.text(`Full Name: ${participant.fullName}`);
+    doc.text(`Gender: ${participant.gender}`);
+    doc.text(`Address: ${participant.address}`);
+    doc.text(`Phone Number: ${campaignParticipant.phoneNumber}`);
+    doc.text(`Account Number: ${campaignParticipant.accountNumber}`);
+    doc.text(`Payment Method: ${campaignParticipant.paymentMethod}`);
+    doc.text(`Verified: ${campaignParticipant.isVerified ? "Yes" : "No"}`);
+    doc.moveDown();
+
+    doc
+      .font("Arial-Bold")
+      .fontSize(12)
+      .text("Payment Details", { underline: true });
+    doc.font("Arial").fontSize(10);
+    doc.text(`Order ID: ${entry.orderId}`);
+    doc.text(`Transaction ID: ${entry.transactionId || "N/A"}`);
+    doc.text(`Status: ${entry.status}`);
+    doc.text(`Amount: ETB ${entry.amount}`);
+    doc.text(`Failure Reason: ${entry.failureReason || "N/A"}`);
+    doc.moveDown();
+
+    doc
+      .font("Arial-Bold")
+      .fontSize(12)
+      .text("Work Summary", { underline: true });
+    doc.font("Arial").fontSize(10);
+    doc.text(`Urban Days: ${campaignParticipant.numberOfDaysInUrban}`);
+    doc.text(`Urban Rate: ETB ${campaignParticipant.urbanRate}`);
+    doc.text(`Rural Days: ${campaignParticipant.numberOfDaysInRural}`);
+    doc.text(`Rural Rate: ETB ${campaignParticipant.ruralRate}`);
+    doc.text(`Total Amount: ETB ${campaignParticipant.totalAmount}`);
+    doc.moveDown(2);
+
+    doc
+      .font("Arial-Bold")
+      .fontSize(12)
+      .text("Generated On: ", { continued: true });
+    doc.font("Arial").text(new Date().toLocaleString());
+
+    doc.end();
+  });
+}
+
+export { generateSinglePayslipPDF };
+
+export default {
+  generatePDFReport,
+  generatePayslipPDFReport,
+  generateSinglePayslipPDF,
+};

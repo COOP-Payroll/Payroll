@@ -12,7 +12,7 @@ router.post("/logout", validate(authValidation.logout), authController.logout);
 router.get("/me", auth(), authController.me);
 router.post(
   "/resetPassword",
-  auth(),
+  // auth(),
   validate(authValidation.login),
   authController.resetPassword
 );

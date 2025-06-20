@@ -289,6 +289,40 @@ const downloadCampaignReport = async (campaignId: string) => {
   return response;
 };
 
+const downloadpayslip = async (campaignId: string) => {
+  console.log("dkjdfdhfdjhfdjhfjdhfdh", campaignId);
+  const paidCampaigns = await prisma.payment.findMany({
+    where: {
+      campaign: {
+        // companyId,
+        id: campaignId,
+      },
+      status: {
+        in: ["COMPLETED", "FAILED"],
+      },
+    },
+    select: {
+      bulkId: true,
+      jobId: true,
+      status: true,
+      debitAccount: true,
+      totalAmount: true,
+      campaign: {
+        select: {
+          id: true,
+          name: true,
+          campaignParticipants: {
+            include: {
+              participant: true, // assumes 'participant' is a related model
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return paidCampaigns;
+};
 const fetchPublishedCampaign = async (
   campaignId: string,
   options: {
@@ -602,6 +636,40 @@ const fetchPaidCampaigns = async (companyId: string) => {
   return paidCampaigns;
 };
 
+const paysipReport = async (id: string) => {
+  console.log("jjdjdjjdjjdjddjdjjdjdjdjdjdj", id);
+  const paidCampaigns = await prisma.creditTransaction.findMany({
+    where: {
+      campaignParticipantId: id,
+
+      // campaign: {
+      //   companyId,
+      //   id: id,
+      // },
+      // status: {
+      //   in: ["COMPLETED", "FAILED"],
+      // },
+    },
+    include: {
+      payment: {},
+      campaignParticipant: {
+        include: {
+          campaign: {},
+          participant: {
+            select: {
+              fullName: true,
+              gender: true,
+              address: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return paidCampaigns;
+};
+
 export default {
   fetchCampaignReport,
   downloadCampaignReport,
@@ -610,4 +678,6 @@ export default {
   fetchCampaignSummaryReport,
   fetchCampaignParticipantSummary,
   fetchPaidCampaigns,
+  paysipReport,
+  downloadpayslip,
 };

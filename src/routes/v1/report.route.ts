@@ -23,6 +23,12 @@ router.route("/campaigns/:campaignId/downloadCampaignReport").get(
   campaignReportController.downloadCampaignReport
 );
 
+// router.route("/campaigns/:campaignId/downloadCampaignReport").get(
+//   auth(),
+//   //   checkPermission("view_campaign_reports"),
+//   validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+//   campaignReportController.downloadpayslip
+// );
 router
   .route("/campaigns/:campaignId/fetchCampaignPublished")
   .get(
@@ -41,20 +47,25 @@ router
     campaignReportController.fetchPublishedCampaign
   );
 
-router
-  .route("/campaigns/summary-report")
-  .get(
-    auth(),
-    // checkPermission("view_campaign_payment"),
-    validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
-    campaignReportController.fetchCampaignSummaryReport
-  );
+router.route("/campaigns/summary-report").get(
+  auth(),
+  // checkPermission("view_campaign_payment"),
+  validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+  campaignReportController.fetchCampaignSummaryReport
+);
 
 router.route("/campaigns/participant-summary-report").get(
   auth(),
   // checkPermission("view_campaign_payment"),
   // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
   campaignReportController.fetchCampaignparticipantsSummary
+);
+
+router.route("/campaigns/participant-summary-report/payslip/:id").get(
+  // auth(),
+  // checkPermission("view_campaign_payment"),
+  // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+  campaignReportController.downloadpayslip
 );
 
 router
