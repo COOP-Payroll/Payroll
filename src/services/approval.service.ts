@@ -464,6 +464,7 @@ async function updateStageStatus(
     data: {
       status: action,
       approvedById: user.id,
+      approvedAt: new Date(),
     },
   });
 
@@ -527,7 +528,7 @@ async function handleFinalApproval(
     }),
   ]);
 
-  await createCampaignPayment(campaignId, user);
+  createCampaignPayment(campaignId, user);
 }
 
 const rollbackCampaignApproval = async (campaignId: string, user: AuthUser) => {
