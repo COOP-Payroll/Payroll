@@ -11,7 +11,7 @@ router
   .route("/campaigns/:campaignId/fetchCampaignReport")
   .get(
     auth(),
-    checkPermission("view_campaign_reports"),
+    // checkPermission("view_campaign_reports"),
     validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
     campaignReportController.fetchCampaignReport
   );
@@ -27,7 +27,7 @@ router
   .route("/campaigns/:campaignId/fetchCampaignPublished")
   .get(
     auth(),
-    checkPermission("view_campaign_published"),
+    // checkPermission("view_campaign_published"),
     validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
     campaignReportController.fetchPublishedCampaign
   );
@@ -36,7 +36,7 @@ router
   .route("/campaigns/fetchCampaignPublished")
   .get(
     auth(),
-    checkPermission("view_campaign_published"),
+    // checkPermission("view_campaign_published"),
     validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
     campaignReportController.fetchPublishedCampaign
   );
@@ -45,14 +45,14 @@ router
   .route("/campaigns/summary-report")
   .get(
     auth(),
-    checkPermission("view_campaign_payment"),
+    // checkPermission("view_campaign_payment"),
     validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
     campaignReportController.fetchCampaignSummaryReport
   );
 
 router.route("/campaigns/participant-summary-report").get(
   auth(),
-  checkPermission("view_campaign_payment"),
+  // checkPermission("view_campaign_payment"),
   // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
   campaignReportController.fetchCampaignparticipantsSummary
 );
