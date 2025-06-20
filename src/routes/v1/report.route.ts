@@ -45,14 +45,14 @@ router
   .route("/campaigns/summary-report")
   .get(
     auth(),
-    checkPermission("view_campaign_payment"),
+    // checkPermission("view_campaign_payment"),
     validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
     campaignReportController.fetchCampaignSummaryReport
   );
 
 router.route("/campaigns/participant-summary-report").get(
   auth(),
-  checkPermission("view_campaign_payment"),
+  // checkPermission("view_campaign_payment"),
   // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
   campaignReportController.fetchCampaignparticipantsSummary
 );

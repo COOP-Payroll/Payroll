@@ -380,6 +380,85 @@ const softDeleteCampaignParticipant = catchAsync(
   }
 );
 
+
+
+export const registerBulkCampaignParticipantswithVerification = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+
+    if (!user?.companyId) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized access");
+    }
+
+    const campaignId = req.params.id;
+    if (!campaignId) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Campaign ID is required");
+    }
+
+    const file = req.file;
+
+    console.log("Received file:", file);
+    if (!file) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "No Excel file uploaded");
+    }
+
+    // const file = req.file;
+    // if (!file) {
+    //   throw new ApiError(httpStatus.BAD_REQUEST, "No Excel file uploaded");
+    // }
+
+    const filePath = path.resolve(file.path);
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    // const participants: any[] = XLSX.utils.sheet_to_json(sheet);
+    const rawParticipants: any[] = XLSX.utils.sheet_to_json(sheet, {
+      defval: "",
+    });
+    const participants = rawParticipants.map((row, index) => ({
+      fullName: row["Full Name"]?.toString().trim(),
+      gender: row["Gender"]?.toString().trim().toUpperCase(),
+      address: row["Address"]?.toString().trim(),
+      phoneNumber: row["Phone Number"]?.toString().trim(),
+      accountNumber: row["Account Number"]?.toString().trim(),
+      paymentMethod: row["Payment Method"]?.toString().trim().toUpperCase(),
+      numberOfDaysInUrban: row["Number of Days in Urban"],
+      numberOfDaysInRural: row["Number of Days in Rural"],
+      detail: row["Detail"]?.toString().trim() || "",
+    }));
+    if (!participants.length) {
+      fs.unlinkSync(filePath);
+      throw new ApiError(httpStatus.BAD_REQUEST, "Excel file is empty");
+    }
+
+    const requiredFields = [
+      "fullName",
+      "gender",
+      "address",
+      "phoneNumber",
+      "accountNumber",
+      "paymentMethod",
+      "numberOfDaysInUrban",
+      "numberOfDaysInRural",
+    ];
+
+    const result =
+      await campaignParticipantService.registerBulkCampaignParticipantswithVerification({
+        participants: participants.map((p) => ({ ...p })),
+        companyId: user.companyId,
+        campaignId,
+      });
+
+    fs.unlinkSync(filePath); // Cleanup file
+
+    res.status(httpStatus.CREATED).json({
+      message: "Participants registered successfully",
+      count: result.length,
+      data: result,
+    });
+  }
+);
+
 export default {
   registerCampaignParticipant,
   downloadParticipantTemplate,
@@ -391,4 +470,5 @@ export default {
   updateAccountVerification,
   getUnassignedParticipants,
   softDeleteCampaignParticipant,
+  registerBulkCampaignParticipantswithVerification
 };

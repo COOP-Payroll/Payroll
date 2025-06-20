@@ -7,6 +7,8 @@ import { CampaignParticipantInput } from "../types/participant.types";
 import { CampaignParticipantUpdateInput } from "../types/participant.types";
 import catchAsync from "../utils/catch-async";
 
+import accountverificationservice from "./account.service";
+
 const updateCampaignParticipant = async (
   id: string,
   companyId: string,
@@ -308,6 +310,22 @@ type BulkCampaignParticipantInput = {
   campaignId: string;
 };
 
+type BulkCampaignParticipantInputVerification = {
+  participants: {
+    //campaignId: string;
+    numberOfDaysInUrban: number;
+    numberOfDaysInRural: number;
+    fullName: string;
+    gender: "MALE" | "FEMALE";
+    address: string;
+    phoneNumber: string;
+    accountNumber: string;
+    paymentMethod: "PHONENUMBER" | "ACCOUNTNUMBER";
+    detail?: string;
+  }[];
+  companyId: string;
+  campaignId: string;
+};
 export const registerBulkCampaignParticipants = async (
   data: BulkCampaignParticipantInput
 ) => {
@@ -490,6 +508,127 @@ const softDeleteCampaignParticipant = async (id: string, companyId: string) => {
   });
 };
 
+export const registerBulkCampaignParticipantswithVerification = async (
+  data: BulkCampaignParticipantInput
+) => {
+  const { participants, companyId, campaignId } = data;
+
+  return await prisma.$transaction(async (tx) => {
+    const rateSetting = await tx.rateSetting.findFirst({
+      where: { companyId, isActive: true },
+    });
+
+    if (!rateSetting) {
+      throw new ApiError(
+        httpStatus.NOT_FOUND,
+        "Rate setting not found for the provided company"
+      );
+    }
+
+    const results = [];
+
+    for (const input of participants) {
+      const {
+        numberOfDaysInUrban,
+        numberOfDaysInRural,
+        fullName,
+        gender,
+        address,
+        phoneNumber,
+        accountNumber,
+        paymentMethod,
+        detail,
+      } = input;
+
+      const campaignExists = await tx.campaign.findUnique({
+        where: { id: campaignId },
+      });
+      if (!campaignExists) {
+        throw new ApiError(
+          httpStatus.NOT_FOUND,
+          `Campaign not found: ${campaignId}`
+        );
+      }
+
+      const existing = await tx.participant.findFirst({
+        where: {
+          fullName,
+          campaignParticipants: {
+            some: { campaignId },
+          },
+        },
+      });
+
+      if (existing) {
+        throw new ApiError(
+          httpStatus.CONFLICT,
+          `Participant '${fullName}' already registered`
+        );
+      }
+
+      // 🔍 Call the verification function
+      let isVerified = false;
+      let verificationSimilarity = "0.00";
+      let verificationStatus = "Rejected";
+      try {
+        const { verification } =
+          await accountverificationservice.verifyAccountByNumber(
+            accountNumber,
+            fullName
+          );
+        verificationSimilarity = verification.similarity;
+        verificationStatus = verification.status;
+        isVerified = parseFloat(verification.similarity) >= 80;
+      } catch (err) {
+        // Log but allow the flow to continue with isVerified = false
+        // console.warn(`Verification failed for ${accountNumber}:`, err.message);
+      }
+
+      const participant = await tx.participant.create({
+        data: {
+          fullName,
+          gender,
+          address,
+          companyId,
+          detail,
+          phoneNumber,
+          accountNumber,
+          paymentMethod,
+        },
+      });
+
+      const totalAmount =
+        rateSetting.urbanRate * numberOfDaysInUrban +
+        rateSetting.ruralRate * numberOfDaysInRural;
+
+      const campaignParticipant = await tx.campaignParticipant.create({
+        data: {
+          campaignId,
+          participantId: participant.id,
+          numberOfDaysInUrban,
+          numberOfDaysInRural,
+          phoneNumber,
+          accountNumber,
+          paymentMethod,
+          urbanRate: rateSetting.urbanRate,
+          ruralRate: rateSetting.ruralRate,
+          totalAmount,
+          isVerified, // ✅ Set based on similarity score
+        },
+      });
+
+      results.push({
+        participant,
+        campaignParticipant,
+        verificationSimilarity,
+        verificationStatus,
+      });
+    }
+
+    return results;
+  });
+};
+
 export default {
   registerCampaignParticipant,
   getParticipantsByCampaignId,
@@ -500,4 +639,5 @@ export default {
   updateAccountVerification,
   getUnassignedParticipants,
   softDeleteCampaignParticipant,
+  registerBulkCampaignParticipantswithVerification,
 };
