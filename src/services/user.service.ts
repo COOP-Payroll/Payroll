@@ -6,7 +6,7 @@ import ApiError from "../utils/api-error";
 import { encryptPassword, isPasswordMatch } from "../utils/encryption";
 import exclude from "../utils/exclude";
 import { AuthUser } from "../types/express";
-import { generateRandomPassword, generateUsername } from "../utils/helper";
+import { generatePassword, generateUsername } from "../utils/helper";
 import roleService from "./role.service";
 import logger from "../config/logger";
 import { smsQueue } from "../queues";
@@ -36,7 +36,7 @@ const createUser = async (
   const rawPassword =
     config.env === "development"
       ? "SuperSecurePassword@123"
-      : generateRandomPassword();
+      : generatePassword();
   const [role, company, department, position] = await Promise.all([
     prisma.role.findUnique({ where: { id: roleId } }),
     prisma.company.findUnique({ where: { id: companyId } }),
@@ -422,8 +422,10 @@ const resetPassword = async (
 };
 
 const forgotPassword = async (username: string) => {
-  // const password = generateRandomPassword();
-  const password = "SuperSecurePassword12";
+  const password =
+    config.env === "development"
+      ? "SuperSecurePassword@123"
+      : generatePassword();
   const [hashedPassword, user] = await Promise.all([
     encryptPassword(password),
     prisma.user.findUnique({

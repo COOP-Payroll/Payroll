@@ -72,7 +72,7 @@ router
   .route("/campaigns/paid")
   .get(
     auth(),
-    checkPermission("view_campaign_payment"),
+    checkPermission("view_campaign_reports"),
     campaignReportController.fetchPaidCampaigns
   );
 
