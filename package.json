@@ -12,7 +12,8 @@
     "worker": "cross-env NODE_ENV=development nodemon src/jobs/index.ts",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "build": "rimraf build && tsc -p tsconfig.json"
+    "build": "rimraf build && tsc -p tsconfig.json",
+    "postbuild": "cp -r \"src/assets//\" build/assets"
   },
   "repository": {
     "type": "git",

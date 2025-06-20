@@ -32,25 +32,37 @@ router
     campaignReportController.fetchPublishedCampaign
   );
 
-router.route("/campaigns/fetchCampaignPublished").get(
-  auth(),
-  // checkPermission("view_campaign_published"),
-  // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
-  campaignReportController.fetchPublishedCampaign
-);
+router
+  .route("/campaigns/fetchCampaignPublished")
+  .get(
+    auth(),
+    checkPermission("view_campaign_published"),
+    validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+    campaignReportController.fetchPublishedCampaign
+  );
 
-router.route("/campaigns/summary-report").get(
-  auth(),
-  checkPermission("view_campaign_payment"),
-  // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
-  campaignReportController.fetchCampaignSummaryReport
-);
+router
+  .route("/campaigns/summary-report")
+  .get(
+    auth(),
+    checkPermission("view_campaign_payment"),
+    validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
+    campaignReportController.fetchCampaignSummaryReport
+  );
 
 router.route("/campaigns/participant-summary-report").get(
   auth(),
-  // checkPermission("view_campaign_payment"),
+  checkPermission("view_campaign_payment"),
   // validate(fetchCampaignReportValidation.fetchCampaignReportSchema),
   campaignReportController.fetchCampaignparticipantsSummary
 );
+
+router
+  .route("/campaigns/paid")
+  .get(
+    auth(),
+    checkPermission("view_campaign_payment"),
+    campaignReportController.fetchPaidCampaigns
+  );
 
 export default router;
