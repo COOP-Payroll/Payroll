@@ -92,6 +92,7 @@ const fetchCampaignSummaryReport = catchAsync(async (req, res) => {
 
 const fetchCampaignparticipantsSummary = catchAsync(async (req, res) => {
   const user = req.user as AuthUser;
+  
   //fetch by department
   const campaigns = await campaignReportService.fetchCampaignParticipantSummary (
     user.companyId

@@ -51,6 +51,14 @@ router.post(
   campaignParticipantController.registerBulkCampaignParticipants
 );
 
+
+
+router.post(
+  "/bulk/verify/:id",
+  upload.single("file"),
+  auth(),
+  campaignParticipantController.registerBulkCampaignParticipantswithVerification
+);
 router.post(
   "/verify-status/:id",
   auth(),
