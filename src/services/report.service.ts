@@ -118,6 +118,7 @@ const fetchCampaignReport = async (
     select: {
       startDate: true,
       endDate: true,
+      name: true,
       documents: {
         select: {
           id: true,
