@@ -380,8 +380,6 @@ const softDeleteCampaignParticipant = catchAsync(
   }
 );
 
-
-
 export const registerBulkCampaignParticipantswithVerification = catchAsync(
   async (req: Request, res: Response) => {
     const user = req.user as AuthUser;
@@ -443,11 +441,13 @@ export const registerBulkCampaignParticipantswithVerification = catchAsync(
     ];
 
     const result =
-      await campaignParticipantService.registerBulkCampaignParticipantswithVerification({
-        participants: participants.map((p) => ({ ...p })),
-        companyId: user.companyId,
-        campaignId,
-      });
+      await campaignParticipantService.registerBulkCampaignParticipantswithVerification(
+        {
+          participants: participants.map((p) => ({ ...p })),
+          companyId: user.companyId,
+          campaignId,
+        }
+      );
 
     fs.unlinkSync(filePath); // Cleanup file
 
@@ -470,5 +470,5 @@ export default {
   updateAccountVerification,
   getUnassignedParticipants,
   softDeleteCampaignParticipant,
-  registerBulkCampaignParticipantswithVerification
+  registerBulkCampaignParticipantswithVerification,
 };

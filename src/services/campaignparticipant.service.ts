@@ -125,6 +125,11 @@ const updateCampaignParticipant = async (
   });
 };
 const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
+  // const isVerified2 = String(data.isVerified).toLowerCase() === "true";
+  const isVerified2 =
+    typeof data?.isVerified !== "undefined" &&
+    String(data.isVerified).toLowerCase() === "true";
+  console.log("dkfkddfdfdfdfdfsdfdf", data.isVerified);
   const {
     campaignId,
     numberOfDaysInUrban,
@@ -141,6 +146,7 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
     files, // ✅ Access files from data
   } = data;
 
+  // return data;
   console.log(isVerified);
   if (!isVerified) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Please add verification ");
@@ -235,6 +241,8 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
         urbanRate,
         ruralRate,
         totalAmount,
+
+        isVerified: isVerified2,
       },
     });
     console.log("filesddsfgfdhfjghd");

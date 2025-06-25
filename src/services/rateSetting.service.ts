@@ -52,16 +52,16 @@ const createRateSetting = async (
     );
   }
 
-  // Deactivate existing active RateSetting for the company (if any)
-  await prisma.rateSetting.updateMany({
-    where: {
-      companyId,
-      isActive: true,
-    },
-    data: {
-      isActive: false,
-    },
-  });
+  // // Deactivate existing active RateSetting for the company (if any)
+  // await prisma.rateSetting.updateMany({
+  //   where: {
+  //     companyId,
+  //     isActive: true,
+  //   },
+  //   data: {
+  //     isActive: false,
+  //   },
+  // });
 
   // Create new RateSetting with isActive: true
   return prisma.rateSetting.create({
@@ -128,9 +128,28 @@ const updateRateSetting = async (
   });
 };
 
+const deleteRateSetting = async (
+  companyId: string,
+  id: string
+) => {
+  const existing = await prisma.rateSetting.findFirst({
+    where: { id, companyId },
+  });
+
+  if (!existing) {
+    throw new ApiError(httpStatus.NOT_FOUND, "RateSetting not found");
+  }
+
+  // Hard delete
+  return prisma.rateSetting.delete({
+    where: { id },
+  });
+};
+
 export default {
   createRateSetting,
   getAllRateSettings,
 
   updateRateSetting,
+  deleteRateSetting,
 };

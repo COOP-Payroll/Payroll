@@ -14,6 +14,7 @@ export interface CreateCampaignDTO {
   createdById: string;
   companyId: string;
   departmentId?: string;
+  rateSettingId:string;
   documents?: {
     fileName: string;
     filePath: string;
@@ -113,6 +114,7 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
     createdById,
     companyId,
     documents,
+    rateSettingId,
     departmentId, // may be undefined
   } = data;
 
@@ -178,6 +180,7 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
       budgetSource,
       createdById,
       companyId,
+      rateSettingId,
       departmentId: finalDepartmentId!,
       documents: documents?.length
         ? {
@@ -707,6 +710,11 @@ interface GetCampaignsByStatusOptions {
   status: string;
 }
 
+interface GetCampaignPaymentOptions {
+  companyId: string;
+  departmentId?: string;
+  isSuperAdmin?: boolean;
+}
 const getCampaignsByStatus = async ({
   companyId,
   departmentId,
@@ -829,6 +837,141 @@ const getCampaignsByStatus = async ({
   });
 };
 
+const getCampaignsReadyforPayment = async ({
+  companyId,
+  departmentId,
+  isSuperAdmin,
+}: GetCampaignPaymentOptions) => {
+  // const validStatuses = ["APPROVED"];
+  // if (!validStatuses.includes(status)) {
+  //   throw new ApiError(
+  //     httpStatus.BAD_REQUEST,
+  //     `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+  //   );
+  // }
+
+  const where: any = {
+    isActive: true,
+    companyId,
+    // status: status as CampaignStatus,
+  };
+
+  if (!isSuperAdmin && departmentId) {
+    where.departmentId = departmentId;
+  }
+
+  /// GET CAMPAIGN
+  const campaigns = await prisma.campaign.findMany({
+    // where,
+    where: {
+      ...where,
+      payment: { is: { status: "CREATED" } },
+
+      // OR: [
+      //   {
+      //     payment: {
+      //       is: {
+      //         status: "CREATED", // ✅ has payment with CREATED status
+      //       },
+      //     },
+      //   },
+      //   {
+      //     payment: {
+      //       is: null, // ✅ no payment at all
+      //     },
+      //   },
+      // ],
+    },
+
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      startDate: true,
+      endDate: true,
+      budget: true,
+      budgetSource: true,
+      status: true,
+      remarks: true,
+      company: {
+        select: {
+          id: true,
+          organizationName: true,
+        },
+      },
+      department: {
+        select: {
+          id: true,
+          deptName: true,
+        },
+      },
+      documents: {
+        select: {
+          id: true,
+          fileName: true,
+          filePath: true,
+          mimeType: true,
+          size: true,
+        },
+      },
+
+      _count: {
+        select: {
+          campaignParticipants: {
+            where: {
+              isActive: true,
+            },
+          },
+        },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+          department: {
+            select: {
+              id: true,
+              deptName: true,
+              shorthandRepresentation: true,
+            },
+          },
+          position: {
+            select: {
+              positionName: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return campaigns.map((campaign) => {
+    const { createdBy, _count, ...rest } = campaign;
+    const flattenedCreatedBy = {
+      id: createdBy.id,
+      name: createdBy.name,
+      deptName: createdBy.department?.deptName,
+      shorthandRepresentation: createdBy.department?.shorthandRepresentation,
+      positionName: createdBy.position?.positionName,
+    };
+
+    return {
+      ...rest,
+      createdBy: flattenedCreatedBy,
+      totalNumberOfParticipants: _count.campaignParticipants,
+      // department: createdBy.department
+      //   ? {
+      //       id: createdBy.department.id,
+      //       name: createdBy.department.deptName,
+      //       shorthand: createdBy.department.shorthandRepresentation,
+      //     }
+      //   : null,
+    };
+  });
+};
 const fetchCampaignsByStatus = async ({
   companyId,
   // departmentId,
@@ -1029,4 +1172,5 @@ export default {
   updateCampaignStatus,
   fetchCampaignsByStatus,
   fetchAllCampaigns,
+  getCampaignsReadyforPayment,
 };

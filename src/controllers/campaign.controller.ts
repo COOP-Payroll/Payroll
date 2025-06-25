@@ -8,47 +8,6 @@ import path from "path";
 import mime from "mime-types";
 import { AuthUser } from "../types/express";
 import ApiError from "../utils/api-error";
-// const createCampaign = catchAsync(async (req: Request, res: Response) => {
-//   const files = req.files as Express.Multer.File[];
-//   const user = req.user as AuthUser;
-//   // First create the campaign without documents
-//   const campaign = await campaignService.createCampaign({
-//     ...req.body,
-//     startDate: new Date(req.body.startDate),
-//     endDate: new Date(req.body.endDate),
-//     budget: parseFloat(req.body.budget),
-//     createdById: user.id,
-//     companyId: user.companyId,
-//   });
-
-//   if (files?.length > 0) {
-//     await Promise.all(
-//       files.map((file) =>
-//         prisma.document.create({
-//           data: {
-//             fileName: file.originalname,
-//             filePath: path.basename(file.path),
-//             mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-//             size: file.size,
-//             campaign: {
-//               connect: { id: campaign.id },
-//             },
-//           },
-//         })
-//       )
-//     );
-//   }
-//   // Fetch the campaign with documents
-//   const campaignWithDocuments = await prisma.campaign.findUnique({
-//     where: { id: campaign.id },
-//     include: { documents: true },
-//   });
-
-//   res.status(httpStatus.CREATED).json({
-//     message: "Campaign created",
-//     data: campaignWithDocuments,
-//   });
-// });
 
 export interface CreateCampaignDTO {
   name: string;
@@ -60,6 +19,7 @@ export interface CreateCampaignDTO {
   createdById: string;
   companyId: string;
   departmentId: string;
+  rateSettingId: string;
   documents?: {
     fileName: string;
     filePath: string;
@@ -67,58 +27,22 @@ export interface CreateCampaignDTO {
     size?: number;
   }[];
 }
-// export const createCampaign = catchAsync(async (req: Request, res: Response) => {
-//   const user = req.user as AuthUser;
-//   const files = req.files as Express.Multer.File[];
-
-//   // 1️⃣ Step 1: Create the campaign row
-//   const dto: CreateCampaignDTO = {
-//     name: req.body.name,
-//     description: req.body.description,
-//     startDate: new Date(req.body.startDate),
-//     endDate: new Date(req.body.endDate),
-//     budget: parseFloat(req.body.budget),
-//     budgetSource: req.body.budgetSource,
-//     createdById: user.id,
-//     companyId: user.companyId,
-//   };
-//   const campaign = await campaignService.createCampaign(dto);
-
-//   // 2️⃣ Step 2: If any files were uploaded, create Document rows
-//   if (files && files.length > 0) {
-//     await Promise.all(
-//       files.map((file) =>
-//         prisma.document.create({
-//           data: {
-//             fileName: file.originalname,
-//             filePath: path.basename(file.path),
-//             mimeType: file.mimetype || mime.lookup(file.originalname) || undefined,
-//             size: file.size,
-//             campaign: { connect: { id: campaign.id } },
-//           },
-//         })
-//       )
-//     );
-//   }
-
-//   // 3️⃣ Fetch back the campaign including its documents
-//   const campaignWithDocuments = await prisma.campaign.findUnique({
-//     where: { id: campaign.id },
-//     include: { documents: true },
-//   });
-
-//   // 4️⃣ Return to client
-//   res.status(httpStatus.CREATED).json({
-//     message: "Campaign created successfully",
-//     data: campaignWithDocuments,
-//   });
-// });
 
 export const createCampaign = catchAsync(
   async (req: Request, res: Response) => {
     const user = req.user as AuthUser;
     const files = req.files as Express.Multer.File[];
+    // Validate that the provided rateSettingId exists and belongs to the same company
+    const rateSetting = await prisma.rateSetting.findUnique({
+      where: { id: req.body.rateSettingId },
+    });
 
+    if (!rateSetting || rateSetting.companyId !== user.companyId) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "Invalid or unauthorized Rate Setting ID"
+      );
+    }
     console.log("BODY:", req.body);
     console.log("FILES:", req.files);
 
@@ -140,6 +64,7 @@ export const createCampaign = catchAsync(
       createdById: user.id,
       companyId: user.companyId,
       departmentId: req.body.departmentId,
+      rateSettingId: req.body.rateSettingId,
       documents, // nested create
     };
 
@@ -369,6 +294,31 @@ const getCampaignsByStatus = catchAsync(async (req: Request, res: Response) => {
   );
   res.status(httpStatus.OK).json({ data: campaigns });
 });
+
+const getCampaignsReadyforPayment = catchAsync(
+  async (req: Request, res: Response) => {
+    const user = req.user as AuthUser;
+    // const { status } = req.query;
+
+    // if (!status) {
+    //   throw new ApiError(
+    //     httpStatus.BAD_REQUEST,
+    //     "Status query parameter is required"
+    //   );
+    // }
+
+    const campaigns = await campaignService.getCampaignsReadyforPayment(
+      {
+        companyId: user.companyId,
+
+        departmentId: user.departmentId,
+      }
+      // user.companyId,
+      // status as string
+    );
+    res.status(httpStatus.OK).json({ data: campaigns });
+  }
+);
 //fetchcampaign by status
 const fetchCampaignsByStatus = catchAsync(
   async (req: Request, res: Response) => {
@@ -386,7 +336,7 @@ const fetchCampaignsByStatus = catchAsync(
       {
         companyId: user.companyId,
         status: status as string,
-        // departmentId: user.departmentId,
+        departmentId: user.departmentId,
       }
       // user.companyId,
       // status as string
@@ -428,4 +378,5 @@ export default {
   deleteDocumentsByQuery,
   fetchCampaignsByStatus,
   fetchAllCampaigns,
+  getCampaignsReadyforPayment,
 };

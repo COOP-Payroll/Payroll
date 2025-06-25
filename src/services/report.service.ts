@@ -154,6 +154,7 @@ const fetchCampaignReport = async (
       transactionId: true,
       campaignParticipant: {
         select: {
+          id: true,
           numberOfDaysInUrban: true,
           numberOfDaysInRural: true,
           participant: {
@@ -177,6 +178,7 @@ const fetchCampaignReport = async (
     },
     campaign,
     transactions: creditTransactions.map((txn) => ({
+      campaignParticipantId:txn.campaignParticipant.id,
       status: txn.status,
       creditAccount: txn.creditAccount,
       amount: txn.amount,

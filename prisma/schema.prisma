@@ -172,6 +172,8 @@ model Campaign {
   campaignParticipants CampaignParticipant[]
   documents            Document[]
   payment              Payment?                   @relation("CampaignPayments")
+   rateSettingId        String
+  rateSetting          RateSetting   @relation(fields: [rateSettingId], references: [id])
 }
 
 model CampaignParticipant {
@@ -265,6 +267,10 @@ model RateSetting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   company   Company  @relation(fields: [companyId], references: [id])
+
+  campaigns Campaign[] 
+
+  
    @@index([companyId])
 }
 

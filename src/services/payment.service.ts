@@ -203,7 +203,7 @@ export const handlePaymentWebhook = async (payload: any) => {
                 : TransactionStatus.FAILED,
             transactionId: result.transactionId,
             failureReason: result.message,
-            updatedAt: new Date(),
+            updatedAt: new Date(result.processedAt),
           },
         });
       }

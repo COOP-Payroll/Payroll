@@ -93,6 +93,7 @@ router.route("/").get(auth(), campaignController.getAllCampaigns);
 
 router.route("/all").get(auth(), campaignController.fetchAllCampaigns);
 router.get("/status", auth(), campaignController.getCampaignsByStatus);
+router.get("/readyforpayment", auth(), campaignController.getCampaignsReadyforPayment);
 router.get("/fetch/status", auth(), campaignController.fetchCampaignsByStatus);
 
 router

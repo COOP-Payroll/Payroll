@@ -57,11 +57,11 @@ const downloadpayslip = catchAsync(async (req, res) => {
   const { id } = req.params;
   const options = pick(req.query, ["limit", "page", "format"]);
 
-  console.log("dkjflsfdjfjahdfuadsuofhdufhadshf", id);
+
 
   const reportData = await campaignReportService.paysipReport(id);
 
-  console.log("jdfdshfddddddddddddddddddddsf", reportData);
+  
 
   // const reportData = await paysipReport(companyId, id);
   // const buffer = await generateSinglePayslipPDF(reportData);

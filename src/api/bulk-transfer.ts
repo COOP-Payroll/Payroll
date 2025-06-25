@@ -44,7 +44,7 @@ export async function sendBulkTransfer(
   try {
     BulkTransferRequestSchema.parse(requestBody);
     const response = await apiClient.post(
-      "/api/async-fund-transfer/submit?priority=HIGH",
+      "/submit?priority=HIGH",
       requestBody
     );
 

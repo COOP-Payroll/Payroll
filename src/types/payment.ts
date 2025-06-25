@@ -46,7 +46,7 @@ export const TransactionResultSchema = z.object({
   transactionId: z.string().nullable(),
   status: z.enum(["SUCCESS", "FAILED"]),
   message: z.string().nullable(),
-  processedAt: z.string().nullable(),
+  processedAt: z.string(),
 });
 
 export const WebhookPayloadSchema = z.object({

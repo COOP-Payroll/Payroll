@@ -16,7 +16,7 @@ export const statusCheckWorker = new Worker(
 
     try {
       const response = await apiClient.get(
-        `/api/async-fund-transfer/status/${jobId}`
+        `/status/${jobId}`
       );
       console.log("Status check response:", response.data);
       const data = WebhookPayloadSchema.parse(response.data);

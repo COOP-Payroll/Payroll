@@ -67,6 +67,15 @@ const createCampaign = {
     departmentId: Joi.string().uuid().optional().messages({
       "string.guid": "Department ID must be a valid UUID",
     }),
+
+    rateSettingId: Joi.string()
+      .uuid({ version: "uuidv4" }) // optional, for specific UUID version
+      .required()
+      .messages({
+        "string.guid": "Rate Setting must be a valid UUID",
+        "any.required": "Rate Setting is required",
+        "string.empty": "Rate Setting cannot be empty",
+      }),
   }).custom((value, helpers) => {
     // Access the request object to determine if user is superAdmin
     const req: any = helpers?.prefs?.context?.req;

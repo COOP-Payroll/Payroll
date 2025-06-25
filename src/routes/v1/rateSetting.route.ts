@@ -16,4 +16,6 @@ router.get("/", auth(), rateSettingController.getAllRateSettings);
 
 router.route("/:id").post(auth(), rateSettingController.updateRateSetting);
 
+router.route("/delete/:id").post(auth(), rateSettingController.deleteRateSetting);
+
 export default router;
