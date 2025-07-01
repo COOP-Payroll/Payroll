@@ -792,151 +792,153 @@ async function generatePayslipPDFReport(data: any): Promise<Buffer> {
 
 
 
-// async function generateSinglePayslipPDF(data: any): Promise<Buffer> {
-//   return new Promise((resolve, reject) => {
-//     const doc = new PDFDocument({ size: "A4", margin: 50 });
-//     const buffers: Buffer[] = [];
+async function generateSinglePayslipPDF(data: any): Promise<Buffer> {
 
-//     doc.on("data", buffers.push.bind(buffers));
-//     doc.on("end", () => resolve(Buffer.concat(buffers)));
-//     doc.on("error", reject);
+  console.log("dfdfdhfdjhfdjhfdjdj")
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
+    const buffers: Buffer[] = [];
 
-//     doc.registerFont("Arial", "Helvetica");
-//     doc.registerFont("Arial-Bold", "Helvetica-Bold");
+    doc.on("data", buffers.push.bind(buffers));
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+    doc.on("error", reject);
 
-//     const watermarkPath = path.resolve(__dirname, "../assets/coopayroll-logo.png");
-//     const logoPath = path.resolve(__dirname, "../assets/logo.png");
+    doc.registerFont("Arial", "Helvetica");
+    doc.registerFont("Arial-Bold", "Helvetica-Bold");
 
-//     const reportList = Array.isArray(data?.data) ? data.data : data;
-//     if (!Array.isArray(reportList) || reportList.length === 0) {
-//       throw new Error("No report data provided.");
-//     }
+    const watermarkPath = path.resolve(__dirname, "../assets/coopayroll-logo.png");
+    const logoPath = path.resolve(__dirname, "../assets/logo.png");
 
-//     const entry = reportList[0];
-//     const campaignParticipant = entry?.campaignParticipant;
-//     const campaign = campaignParticipant?.campaign;
-//     const participant = campaignParticipant?.participant;
+    const reportList = Array.isArray(data?.data) ? data.data : data;
+    if (!Array.isArray(reportList) || reportList.length === 0) {
+      throw new Error("No report data provided.");
+    }
 
-//     if (!campaignParticipant || !campaign || !participant) {
-//       throw new Error("Missing campaignParticipant, campaign, or participant data.");
-//     }
+    const entry = reportList[0];
+    const campaignParticipant = entry?.campaignParticipant;
+    const campaign = campaignParticipant?.campaign;
+    const participant = campaignParticipant?.participant;
 
-//     // Watermark
-//     const drawWatermark = () => {
-//       doc.save();
-//       const centerX = doc.page.width / 2;
-//       const centerY = doc.page.height / 2;
-//       doc.opacity(0.1);
-//       doc.translate(centerX, centerY).rotate(-45);
-//       doc.image(watermarkPath, -200, -60, { width: 400 });
-//       doc.restore();
-//       doc.opacity(1);
-//     };
+    if (!campaignParticipant || !campaign || !participant) {
+      throw new Error("Missing campaignParticipant, campaign, or participant data.");
+    }
 
-//     // Header
-//     const drawHeader = () => {
-//       try {
-//         doc.image(logoPath, 50, 30, { width: 70 });
-//       } catch (err) {}
-//       doc.font("Arial-Bold").fontSize(16).fillColor("#004080")
-//         .text("Cooperative Bank of Oromia S.C.", 150, 35, { align: "center" });
-//       doc.font("Arial").fontSize(12)
-//         .text("Coopayroll - Individual Payslip", { align: "center" });
-//       doc.moveTo(50, 90).lineTo(550, 90).stroke();
-//     };
+    // Watermark
+    const drawWatermark = () => {
+      doc.save();
+      const centerX = doc.page.width / 2;
+      const centerY = doc.page.height / 2;
+      doc.opacity(0.1);
+      doc.translate(centerX, centerY).rotate(-45);
+      doc.image(watermarkPath, -200, -60, { width: 400 });
+      doc.restore();
+      doc.opacity(1);
+    };
 
-//     // Helper: Draw a table row
-//     const drawRow = (doc: PDFKit.PDFDocument, headers: string[], values: string[], startY: number) => {
-//       const startX = 50;
-//       const colWidth = 500 / headers.length;
-//       let y = startY;
+    // Header
+    const drawHeader = () => {
+      try {
+        doc.image(logoPath, 50, 30, { width: 70 });
+      } catch (err) {}
+      doc.font("Arial-Bold").fontSize(16).fillColor("#004080")
+        .text("Cooperative Bank of Oromia S.C.", 150, 35, { align: "center" });
+      doc.font("Arial").fontSize(12)
+        .text("Coopayroll - Individual Payslip", { align: "center" });
+      doc.moveTo(50, 90).lineTo(550, 90).stroke();
+    };
 
-//       // Headers
-//       headers.forEach((text, i) => {
-//         doc.font("Arial-Bold").fontSize(9).text(text, startX + i * colWidth, y, {
-//           width: colWidth,
-//           align: "left",
-//         });
-//       });
+    // Helper: Draw a table row
+    const drawRow = (doc: PDFKit.PDFDocument, headers: string[], values: string[], startY: number) => {
+      const startX = 50;
+      const colWidth = 500 / headers.length;
+      let y = startY;
 
-//       y += 15;
+      // Headers
+      headers.forEach((text, i) => {
+        doc.font("Arial-Bold").fontSize(9).text(text, startX + i * colWidth, y, {
+          width: colWidth,
+          align: "left",
+        });
+      });
 
-//       // Values
-//       values.forEach((text, i) => {
-//         doc.font("Arial").fontSize(9).text(text, startX + i * colWidth, y, {
-//           width: colWidth,
-//           align: "left",
-//         });
-//       });
+      y += 15;
 
-//       return y + 20;
-//     };
+      // Values
+      values.forEach((text, i) => {
+        doc.font("Arial").fontSize(9).text(text, startX + i * colWidth, y, {
+          width: colWidth,
+          align: "left",
+        });
+      });
 
-//     // Draw the document
-//     drawWatermark();
-//     drawHeader();
-//     doc.moveDown(2);
+      return y + 20;
+    };
 
-//     // Campaign Info
-//     doc.font("Arial-Bold").fontSize(12).text("Campaign Information", { underline: true });
-//     doc.font("Arial").fontSize(10);
-//     doc.text(`Name: ${campaign.name}`);
-//     doc.text(`Period: ${new Date(campaign.startDate).toLocaleDateString()} - ${new Date(campaign.endDate).toLocaleDateString()}`);
-//     doc.text(`Status: ${campaign.status}`);
-//     doc.moveDown(1);
+    // Draw the document
+    drawWatermark();
+    drawHeader();
+    doc.moveDown(2);
 
-//     doc.font("Arial-Bold").fontSize(12).text("Payslip Summary", { underline: true });
-//     doc.moveDown(0.5);
+    // Campaign Info
+    doc.font("Arial-Bold").fontSize(12).text("Campaign Information", { underline: true });
+    doc.font("Arial").fontSize(10);
+    doc.text(`Name: ${campaign.name}`);
+    doc.text(`Period: ${new Date(campaign.startDate).toLocaleDateString()} - ${new Date(campaign.endDate).toLocaleDateString()}`);
+    doc.text(`Status: ${campaign.status}`);
+    doc.moveDown(1);
 
-//     let currentY = doc.y;
+    doc.font("Arial-Bold").fontSize(12).text("Payslip Summary", { underline: true });
+    doc.moveDown(0.5);
 
-//     // Horizontal Table: Participant Info
-//     currentY = drawRow(
-//       doc,
-//       ["Full Name", "Gender", "Phone", "Address", "Account Number", "Payment Method", "Verified"],
-//       [
-//         participant.fullName,
-//         participant.gender,
-//         campaignParticipant.phoneNumber,
-//         participant.address,
-//         campaignParticipant.accountNumber,
-//         campaignParticipant.paymentMethod,
-//         campaignParticipant.isVerified ? "Yes" : "No"
-//       ],
-//       currentY
-//     );
+    let currentY = doc.y;
 
-//     // Horizontal Table: Payment/Work Info
-//     const status = entry.status;
-//     const paymentValues = [
-//       entry.transactionId || "N/A",
-//       entry.status,
-//       `ETB ${entry.amount.toFixed(2)}`,
-//       String(campaignParticipant.numberOfDaysInUrban),
-//       `ETB ${campaignParticipant.urbanRate.toFixed(2)}`,
-//       String(campaignParticipant.numberOfDaysInRural),
-//       `ETB ${campaignParticipant.ruralRate.toFixed(2)}`,
-//       `ETB ${campaignParticipant.totalAmount.toFixed(2)}`
-//     ];
+    // Horizontal Table: Participant Info
+    currentY = drawRow(
+      doc,
+      ["Full Name", "Gender", "Phone", "Address", "Account Number", "Payment Method", "Verified"],
+      [
+        participant.fullName,
+        participant.gender,
+        campaignParticipant.phoneNumber,
+        participant.address,
+        campaignParticipant.accountNumber,
+        campaignParticipant.paymentMethod,
+        campaignParticipant.isVerified ? "Yes" : "No"
+      ],
+      currentY
+    );
 
-//     currentY = drawRow(
-//       doc,
-//       ["Transaction ID", "Status", "Amount Paid", "Urban Days", "Urban Rate", "Rural Days", "Rural Rate", "Total Payable"],
-//       paymentValues,
-//       currentY
-//     );
+    // Horizontal Table: Payment/Work Info
+    const status = entry.status;
+    const paymentValues = [
+      entry.transactionId || "N/A",
+      entry.status,
+      `ETB ${entry.amount.toFixed(2)}`,
+      String(campaignParticipant.numberOfDaysInUrban),
+      `ETB ${campaignParticipant.urbanRate.toFixed(2)}`,
+      String(campaignParticipant.numberOfDaysInRural),
+      `ETB ${campaignParticipant.ruralRate.toFixed(2)}`,
+      `ETB ${campaignParticipant.totalAmount.toFixed(2)}`
+    ];
 
-//     // Footer
-//     doc.moveDown(2);
-//     doc.font("Arial-Bold").text("Generated on: ", { continued: true }).font("Arial").text(new Date().toLocaleString());
+    currentY = drawRow(
+      doc,
+      ["Transaction ID", "Status", "Amount Paid", "Urban Days", "Urban Rate", "Rural Days", "Rural Rate", "Total Payable"],
+      paymentValues,
+      currentY
+    );
 
-//     doc.moveDown(3);
-//     doc.text("Signature: __________________________", 50);
-//     doc.text("HR/Payroll Department", 50);
+    // Footer
+    doc.moveDown(2);
+    doc.font("Arial-Bold").text("Generated on: ", { continued: true }).font("Arial").text(new Date().toLocaleString());
 
-//     doc.end();
-//   });
-// }
+    doc.moveDown(3);
+    doc.text("Signature: __________________________", 50);
+    doc.text("HR/Payroll Department", 50);
+
+    doc.end();
+  });
+}
 
 
 
@@ -1109,132 +1111,132 @@ async function generatePayslipPDFReport(data: any): Promise<Buffer> {
 //   });
 // }
 
-async function generateSinglePayslipPDF(data: any): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: "A4", margin: 50 });
-    const buffers: Buffer[] = [];
+// async function generateSinglePayslipPDF(data: any): Promise<Buffer> {
+//   return new Promise((resolve, reject) => {
+//     const doc = new PDFDocument({ size: "A4", margin: 50 });
+//     const buffers: Buffer[] = [];
 
-    doc.on("data", buffers.push.bind(buffers));
-    doc.on("end", () => resolve(Buffer.concat(buffers)));
-    doc.on("error", reject);
+//     doc.on("data", buffers.push.bind(buffers));
+//     doc.on("end", () => resolve(Buffer.concat(buffers)));
+//     doc.on("error", reject);
 
-    doc.registerFont("Arial", "Helvetica");
-    doc.registerFont("Arial-Bold", "Helvetica-Bold");
+//     doc.registerFont("Arial", "Helvetica");
+//     doc.registerFont("Arial-Bold", "Helvetica-Bold");
 
-    const watermarkPath = path.resolve(__dirname, "../assets/coopayroll-logo.png");
-    const logoPath = path.resolve(__dirname, "../assets/logo.png");
+//     const watermarkPath = path.resolve(__dirname, "../assets/coopayroll-logo.png");
+//     const logoPath = path.resolve(__dirname, "../assets/logo.png");
 
-    const reportList = Array.isArray(data?.data) ? data.data : data;
-    if (!Array.isArray(reportList) || reportList.length === 0) {
-      throw new Error("No report data provided.");
-    }
+//     const reportList = Array.isArray(data?.data) ? data.data : data;
+//     if (!Array.isArray(reportList) || reportList.length === 0) {
+//       throw new Error("No report data provided.");
+//     }
 
-    const entry = reportList[0];
-    const campaignParticipant = entry?.campaignParticipant;
-    const campaign = campaignParticipant?.campaign;
-    const participant = campaignParticipant?.participant;
+//     const entry = reportList[0];
+//     const campaignParticipant = entry?.campaignParticipant;
+//     const campaign = campaignParticipant?.campaign;
+//     const participant = campaignParticipant?.participant;
 
-    if (!campaignParticipant || !campaign || !participant) {
-      throw new Error("Missing campaignParticipant, campaign, or participant data.");
-    }
+//     if (!campaignParticipant || !campaign || !participant) {
+//       throw new Error("Missing campaignParticipant, campaign, or participant data.");
+//     }
 
-    // Draw watermark
-    const drawWatermark = () => {
-      doc.save();
-      const centerX = doc.page.width / 2;
-      const centerY = doc.page.height / 2;
-      doc.opacity(0.1);
-      doc.translate(centerX, centerY).rotate(-45);
-      doc.image(watermarkPath, -200, -60, { width: 400 });
-      doc.restore();
-      doc.opacity(1);
-    };
+//     // Draw watermark
+//     const drawWatermark = () => {
+//       doc.save();
+//       const centerX = doc.page.width / 2;
+//       const centerY = doc.page.height / 2;
+//       doc.opacity(0.1);
+//       doc.translate(centerX, centerY).rotate(-45);
+//       doc.image(watermarkPath, -200, -60, { width: 400 });
+//       doc.restore();
+//       doc.opacity(1);
+//     };
 
-    // Draw header with logo and title
-    const drawHeader = () => {
-      try {
-        doc.image(logoPath, 50, 30, { width: 70 });
-      } catch (err) {}
-      doc.font("Arial-Bold").fontSize(16).fillColor("#004080")
-        .text("Cooperative Bank of Oromia S.C.", 150, 35, { align: "center" });
-      doc.font("Arial").fontSize(12)
-        .text("Coopayroll - Individual Payslip", { align: "center" });
-      doc.moveTo(50, 90).lineTo(550, 90).stroke();
-    };
+//     // Draw header with logo and title
+//     const drawHeader = () => {
+//       try {
+//         doc.image(logoPath, 50, 30, { width: 70 });
+//       } catch (err) {}
+//       doc.font("Arial-Bold").fontSize(16).fillColor("#004080")
+//         .text("Cooperative Bank of Oromia S.C.", 150, 35, { align: "center" });
+//       doc.font("Arial").fontSize(12)
+//         .text("Coopayroll - Individual Payslip", { align: "center" });
+//       doc.moveTo(50, 90).lineTo(550, 90).stroke();
+//     };
 
-    const drawKeyValueTable = (title: string, data: Record<string, string>, startY: number) => {
-      doc.font("Arial-Bold").fontSize(10).text(title);
-      let y = startY + 15;
-      const startX = 50;
-      const keyWidth = 150;
-      const valueWidth = 350;
-      const rowHeight = 18;
+//     const drawKeyValueTable = (title: string, data: Record<string, string>, startY: number) => {
+//       doc.font("Arial-Bold").fontSize(10).text(title);
+//       let y = startY + 15;
+//       const startX = 50;
+//       const keyWidth = 150;
+//       const valueWidth = 350;
+//       const rowHeight = 18;
 
-      Object.entries(data).forEach(([key, value]) => {
-        doc.font("Arial-Bold").fontSize(9).text(`${key}:`, startX, y);
-        doc.font("Arial").fontSize(9).text(value, startX + keyWidth, y);
-        y += rowHeight;
-      });
+//       Object.entries(data).forEach(([key, value]) => {
+//         doc.font("Arial-Bold").fontSize(9).text(`${key}:`, startX, y);
+//         doc.font("Arial").fontSize(9).text(value, startX + keyWidth, y);
+//         y += rowHeight;
+//       });
 
-      return y + 10;
-    };
+//       return y + 10;
+//     };
 
-    // Start drawing document
-    drawWatermark();
-    drawHeader();
-    doc.moveDown(2);
+//     // Start drawing document
+//     drawWatermark();
+//     drawHeader();
+//     doc.moveDown(2);
 
-    // Campaign Info section
-    doc.font("Arial-Bold").fontSize(12).text("Campaign Information", { underline: true });
-    doc.font("Arial").fontSize(10);
-    doc.text(`Name: ${campaign.name}`);
-    doc.text(`Period: ${new Date(campaign.startDate).toLocaleDateString()} - ${new Date(campaign.endDate).toLocaleDateString()}`);
-    doc.text(`Status: ${campaign.status}`);
-    doc.moveDown(1);
+//     // Campaign Info section
+//     doc.font("Arial-Bold").fontSize(12).text("Campaign Information", { underline: true });
+//     doc.font("Arial").fontSize(10);
+//     doc.text(`Name: ${campaign.name}`);
+//     doc.text(`Period: ${new Date(campaign.startDate).toLocaleDateString()} - ${new Date(campaign.endDate).toLocaleDateString()}`);
+//     doc.text(`Status: ${campaign.status}`);
+//     doc.moveDown(1);
 
-    doc.font("Arial-Bold").fontSize(12).text("Payslip Summary", { underline: true });
-    doc.moveDown(0.5);
+//     doc.font("Arial-Bold").fontSize(12).text("Payslip Summary", { underline: true });
+//     doc.moveDown(0.5);
 
-    let currentY = doc.y;
+//     let currentY = doc.y;
 
-    // Participant Info
-    const participantInfo = {
-      "Full Name": participant.fullName || "N/A",
-      "Gender": participant.gender || "N/A",
-      "Phone": campaignParticipant.phoneNumber || "N/A",
-      "Address": participant.address || "N/A",
-      "Account Number": campaignParticipant.accountNumber || "N/A",
-      "Payment Method": campaignParticipant.paymentMethod || "N/A",
-      "Verified": campaignParticipant.isVerified ? "Yes" : "No",
-    };
-    currentY = drawKeyValueTable("Participant Information", participantInfo, currentY);
+//     // Participant Info
+//     const participantInfo = {
+//       "Full Name": participant.fullName || "N/A",
+//       "Gender": participant.gender || "N/A",
+//       "Phone": campaignParticipant.phoneNumber || "N/A",
+//       "Address": participant.address || "N/A",
+//       "Account Number": campaignParticipant.accountNumber || "N/A",
+//       "Payment Method": campaignParticipant.paymentMethod || "N/A",
+//       "Verified": campaignParticipant.isVerified ? "Yes" : "No",
+//     };
+//     currentY = drawKeyValueTable("Participant Information", participantInfo, currentY);
 
-    // Payment Info
-    const paymentInfo = {
-      "Transaction ID": entry.transactionId || "N/A",
-      "Status": entry.status || "N/A",
-      "Amount Paid": `ETB ${entry.amount?.toFixed(2) || "0.00"}`,
-      "Urban Days": `${campaignParticipant.numberOfDaysInUrban}`,
-      "Urban Rate": `ETB ${campaignParticipant.urbanRate?.toFixed(2)}`,
-      "Rural Days": `${campaignParticipant.numberOfDaysInRural}`,
-      "Rural Rate": `ETB ${campaignParticipant.ruralRate?.toFixed(2)}`,
-      "Total Payable": `ETB ${campaignParticipant.totalAmount?.toFixed(2)}`,
-    };
-    currentY = drawKeyValueTable("Payment Information", paymentInfo, currentY);
+//     // Payment Info
+//     const paymentInfo = {
+//       "Transaction ID": entry.transactionId || "N/A",
+//       "Status": entry.status || "N/A",
+//       "Amount Paid": `ETB ${entry.amount?.toFixed(2) || "0.00"}`,
+//       "Urban Days": `${campaignParticipant.numberOfDaysInUrban}`,
+//       "Urban Rate": `ETB ${campaignParticipant.urbanRate?.toFixed(2)}`,
+//       "Rural Days": `${campaignParticipant.numberOfDaysInRural}`,
+//       "Rural Rate": `ETB ${campaignParticipant.ruralRate?.toFixed(2)}`,
+//       "Total Payable": `ETB ${campaignParticipant.totalAmount?.toFixed(2)}`,
+//     };
+//     currentY = drawKeyValueTable("Payment Information", paymentInfo, currentY);
 
-    // Footer: Generated on
-    doc.moveDown(3);
-    doc.font("Arial-Bold").fontSize(10).text("Generated on:");
-    const nowStr = new Date().toLocaleString();
-    const [datePart, timePart] = nowStr.split(", ");
-    doc.font("Arial").fontSize(10).text(datePart + ",");
-    doc.font("Arial").fontSize(10).text(timePart);
+//     // Footer: Generated on
+//     doc.moveDown(3);
+//     doc.font("Arial-Bold").fontSize(10).text("Generated on:");
+//     const nowStr = new Date().toLocaleString();
+//     const [datePart, timePart] = nowStr.split(", ");
+//     doc.font("Arial").fontSize(10).text(datePart + ",");
+//     doc.font("Arial").fontSize(10).text(timePart);
 
-    doc.end();
-  });
-}
+//     doc.end();
+//   });
+// }
 
-export { generateSinglePayslipPDF };
+// export { generateSinglePayslipPDF };
 
 export default {
   generatePDFReport,

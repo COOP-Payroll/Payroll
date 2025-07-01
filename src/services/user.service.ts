@@ -36,7 +36,8 @@ const createUser = async (
   const rawPassword =
     config.env === "development"
       ? "SuperSecurePassword@123"
-      : generatePassword();
+      :"SuperSecurePassword@123"
+      // : generatePassword();
   const [role, company, department, position] = await Promise.all([
     prisma.role.findUnique({ where: { id: roleId } }),
     prisma.company.findUnique({ where: { id: companyId } }),

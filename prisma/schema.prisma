@@ -172,7 +172,7 @@ model Campaign {
   campaignParticipants CampaignParticipant[]
   documents            Document[]
   payment              Payment?                   @relation("CampaignPayments")
-   rateSettingId        String
+  rateSettingId        String
   rateSetting          RateSetting   @relation(fields: [rateSettingId], references: [id])
 }
 
