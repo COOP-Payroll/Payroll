@@ -9,7 +9,7 @@ const router = express.Router();
 router.post(
   "/",
   auth(),
-  // validate(rateSettingValidation.createRateSetting),
+  validate(rateSettingValidation.createRateSetting),
   rateSettingController.createRateSetting
 );
 router.get("/", auth(), rateSettingController.getAllRateSettings);

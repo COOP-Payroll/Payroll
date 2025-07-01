@@ -260,6 +260,7 @@ model CreditTransaction {
 
 model RateSetting {
   id        String   @id @default(uuid())
+  name      String  
   urbanRate Float
   ruralRate Float
   companyId String   
