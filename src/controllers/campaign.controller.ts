@@ -8,18 +8,20 @@ import path from "path";
 import mime from "mime-types";
 import { AuthUser } from "../types/express";
 import ApiError from "../utils/api-error";
-
+import { Prisma } from "@prisma/client";
+import { CampaignType } from '@prisma/client';
 export interface CreateCampaignDTO {
   name: string;
   description?: string;
   startDate: Date;
   endDate: Date;
   budget: number;
-  budgetSource: string;
+  // budgetSource: string;
   createdById: string;
   companyId: string;
   departmentId: string;
   rateSettingId: string;
+  campaignType: CampaignType;
   documents?: {
     fileName: string;
     filePath: string;
@@ -60,12 +62,13 @@ export const createCampaign = catchAsync(
       startDate: new Date(req.body.startDate),
       endDate: new Date(req.body.endDate),
       budget: parseFloat(req.body.budget),
-      budgetSource: req.body.budgetSource,
+      // budgetSource: req.body.budgetSource,
       createdById: user.id,
+      campaignType: req.body.campaignType,
       companyId: user.companyId,
       departmentId: req.body.departmentId,
       rateSettingId: req.body.rateSettingId,
-      documents, // nested create
+            documents, // nested create
     };
 
     const campaign = await campaignService.createCampaign(dto);

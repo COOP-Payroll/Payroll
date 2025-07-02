@@ -60,10 +60,10 @@ const createCampaign = {
       "any.required": "Budget is required",
       "number.base": "Budget must be a number",
     }),
-    budgetSource: Joi.string().required().messages({
-      "any.required": "Budget source is required",
-      "string.empty": "Budget source cannot be empty",
-    }),
+    // budgetSource: Joi.string().required().messages({
+    //   "any.required": "Budget source is required",
+    //   "string.empty": "Budget source cannot be empty",
+    // }),
     departmentId: Joi.string().uuid().optional().messages({
       "string.guid": "Department ID must be a valid UUID",
     }),
@@ -75,6 +75,16 @@ const createCampaign = {
         "string.guid": "Rate Setting must be a valid UUID",
         "any.required": "Rate Setting is required",
         "string.empty": "Rate Setting cannot be empty",
+      }),
+
+    campaignType: Joi.string()
+      .valid("CAMPAIGN", "TRAINING", "WORKSHOP", "SUPERVISION")
+      .required()
+      .messages({
+        "any.required": "Campaign type is required",
+        "any.only":
+          "Campaign type must be one of: CAMPAIGN, TRAINING, WORKSHOP, SUPERVISION",
+        "string.empty": "Campaign type cannot be empty",
       }),
   }).custom((value, helpers) => {
     // Access the request object to determine if user is superAdmin

@@ -38,7 +38,14 @@ const updateCampaignParticipant = async (
   return await prisma.$transaction(async (tx) => {
     const campaignParticipant = await tx.campaignParticipant.findUnique({
       where: { id },
-      include: { participant: true },
+      include: {
+        participant: true,
+        campaign: {
+          include: {
+            rateSetting: true, // 👈 include rate setting directly
+          },
+        },
+      },
     });
 
     if (!campaignParticipant) {
@@ -63,11 +70,16 @@ const updateCampaignParticipant = async (
       },
     });
 
-    // ✅ Get updated rate settings
-    const rateSetting = await tx.rateSetting.findFirst({
-      where: { companyId, isActive: true },
+    const campaign = await tx.campaignParticipant.findFirst({
+      where: {
+        id: id,
+      },
     });
-
+    // ✅ Get updated rate settings
+    // const rateSetting = await tx.rateSetting.findFirst({
+    //   where: { companyId, isActive: true },
+    // });
+    const rateSetting = campaignParticipant?.campaign?.rateSetting;
     if (!rateSetting) {
       throw new ApiError(
         httpStatus.NOT_FOUND,
@@ -172,6 +184,9 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
   return await prisma.$transaction(async (tx) => {
     const campaignExists = await tx.campaign.findUnique({
       where: { id: campaignId },
+      include: {
+        rateSetting: true, // this pulls in the associated RateSetting
+      },
     });
 
     if (!campaignExists) {
@@ -196,10 +211,14 @@ const registerCampaignParticipant = async (data: CampaignParticipantInput) => {
     }
 
     // Get rate settings
-    const rateSetting = await tx.rateSetting.findFirst({
-      where: { companyId, isActive: true },
-    });
+    // const rateSetting = await tx.rateSetting.findFirst({
+    //   where: { companyId, isActive: true },
+    // });
 
+    // const rateSetting = await tx.rateSetting.findFirst({
+    //   where: { campaignid: campaignExists.id, companyId, isActive: true },
+    // });
+    const rateSetting = campaignExists?.rateSetting;
     if (!rateSetting) {
       throw new ApiError(
         httpStatus.NOT_FOUND,
@@ -341,9 +360,14 @@ export const registerBulkCampaignParticipants = async (
 
   console.log("dlfjlasdfjsdhfjhdn");
   return await prisma.$transaction(async (tx) => {
-    const rateSetting = await tx.rateSetting.findFirst({
-      where: { companyId, isActive: true },
+    const campaign = await tx.campaign.findUnique({
+      where: { id: campaignId },
+      include: {
+        rateSetting: true, // include the linked rate setting
+      },
     });
+
+    const rateSetting = campaign?.rateSetting;
 
     if (!rateSetting) {
       throw new ApiError(
@@ -522,10 +546,17 @@ export const registerBulkCampaignParticipantswithVerification = async (
   const { participants, companyId, campaignId } = data;
 
   return await prisma.$transaction(async (tx) => {
-    const rateSetting = await tx.rateSetting.findFirst({
-      where: { companyId, isActive: true },
+    // const rateSetting = await tx.rateSetting.findFirst({
+    //   where: { companyId, isActive: true },
+    // });
+    const campaign = await tx.campaign.findUnique({
+      where: { id: campaignId },
+      include: {
+        rateSetting: true, // include the linked rate setting
+      },
     });
 
+    const rateSetting = campaign?.rateSetting;
     if (!rateSetting) {
       throw new ApiError(
         httpStatus.NOT_FOUND,

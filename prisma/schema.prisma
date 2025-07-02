@@ -155,14 +155,14 @@ model Campaign {
   startDate            DateTime
   endDate              DateTime
   budget               Float
-  budgetSource         String
+  budgetSource         String?
   isActive             Boolean                    @default(true)
   createdAt            DateTime                   @default(now())
   updatedAt            DateTime                   @updatedAt
   createdById          String
   companyId            String
   remarks              String?
-
+  campaignType         CampaignType                @default(CAMPAIGN)  
   status               CampaignStatus                @default(ACTIVE)
   departmentId         String
   department           Department                @relation(fields: [departmentId], references: [id])
@@ -260,7 +260,7 @@ model CreditTransaction {
 
 model RateSetting {
   id        String   @id @default(uuid())
-  name      String  
+  name      String  @default("name")
   urbanRate Float
   ruralRate Float
   companyId String   
@@ -434,4 +434,10 @@ enum PaymentType {
   PENDING
   COMPLETED
   FAILED
+}
+enum CampaignType {
+  CAMPAIGN
+  TRAINING
+  WORKSHOP
+  SUPERVISION
 }

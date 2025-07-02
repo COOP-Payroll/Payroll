@@ -3,18 +3,19 @@ import httpStatus from "http-status";
 import ApiError from "../utils/api-error";
 import fs from "fs/promises";
 import { CampaignStatus, Prisma, StageStatus } from "@prisma/client";
-
+import { CampaignType } from '@prisma/client';
 export interface CreateCampaignDTO {
   name: string;
   description?: string;
   startDate: Date;
   endDate: Date;
   budget: number;
-  budgetSource: string;
+  // budgetSource: string;
   createdById: string;
   companyId: string;
   departmentId?: string;
-  rateSettingId:string;
+  campaignType:CampaignType; 
+  rateSettingId: string;
   documents?: {
     fileName: string;
     filePath: string;
@@ -110,11 +111,12 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
     startDate,
     endDate,
     budget,
-    budgetSource,
+    // budgetSource,
     createdById,
     companyId,
     documents,
     rateSettingId,
+    campaignType,
     departmentId, // may be undefined
   } = data;
 
@@ -122,7 +124,7 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
     !name ||
     !startDate ||
     !endDate ||
-    !budgetSource ||
+    !campaignType ||
     !createdById ||
     !companyId
   ) {
@@ -177,10 +179,11 @@ export const createCampaign = async (data: CreateCampaignDTO) => {
       startDate,
       endDate,
       budget,
-      budgetSource,
+      // budgetSource,
       createdById,
       companyId,
       rateSettingId,
+      campaignType ,
       departmentId: finalDepartmentId!,
       documents: documents?.length
         ? {
@@ -300,6 +303,16 @@ const getAllCampaigns = async ({
       budgetSource: true,
       status: true,
       remarks: true,
+      rateSettingId: true,
+      campaignType:true,
+      rateSetting: {
+        select: {
+          id: true,
+          name: true,
+          urbanRate: true,
+          ruralRate: true,
+        },
+      },
       company: {
         select: {
           id: true,
@@ -446,6 +459,7 @@ const getCampaignById = async (id: string, companyId: string) => {
     where: { id, companyId },
     include: {
       documents: true,
+      
       company: {
         select: {
           id: true,
@@ -501,7 +515,8 @@ const updateCampaign = async (
     startDate: Date;
     endDate: Date;
     budget: number;
-    budgetSource: string;
+    campaignType:CampaignType
+    // budgetSource: string;
   }>
 ) => {
   const existing = await prisma.campaign.findFirst({
@@ -513,7 +528,7 @@ const updateCampaign = async (
   }
 
   // Explicitly prevent isActive or other protected fields from being updated
-  const { name, description, startDate, endDate, budget, budgetSource } = data;
+  const { name, description, startDate, endDate, budget, campaignType } = data;
 
   return await prisma.campaign.update({
     where: { id },
@@ -523,7 +538,7 @@ const updateCampaign = async (
       ...(startDate && { startDate }),
       ...(endDate && { endDate }),
       ...(budget !== undefined && { budget }),
-      ...(budgetSource && { budgetSource }),
+      ...(campaignType && { campaignType }),
     },
   });
 };
